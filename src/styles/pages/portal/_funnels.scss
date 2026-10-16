@@ -1,0 +1,112 @@
+@use "../../abstracts" as *;
+
+.funnel-card {
+  @include stack(14px);
+  padding: 18px 20px;
+  border: 1px solid;
+  border-radius: 18px;
+  background: $white;
+
+  &--live {
+    border-color: rgba(16, 185, 129, 0.35);
+    box-shadow: 0 0 16px rgba(16, 185, 129, 0.1);
+  }
+
+  &--pending {
+    border-color: rgba(255, 153, 0, 0.4);
+    box-shadow: 0 0 16px rgba(255, 153, 0, 0.1);
+  }
+
+  &--pay {
+    border-color: rgba(219, 39, 119, 0.35);
+    box-shadow: 0 0 16px rgba(255, 153, 0, 0.1);
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  &__title {
+    @include stack(3px);
+    flex: 1 1 260px;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 16px;
+  }
+
+  &__url {
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 700;
+    color: $cyan-700;
+    word-break: break-all;
+  }
+
+  &__kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 10px;
+  }
+
+  &__kpi {
+    gap: 2px;
+    padding: 10px 12px;
+  }
+
+  &__kpi-value {
+    font-family: $font-mono;
+    font-size: 18px;
+    font-weight: 800;
+  }
+}
+
+// Step boxes joined by arrows with the conversion rate between them.
+.funnel-steps {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 6px;
+
+  &__step {
+    @include stack(2px);
+    min-width: 120px;
+    padding: 10px 12px;
+    border: 1px solid rgba(8, 145, 178, 0.25);
+    border-radius: $radius-lg;
+    background: $white;
+
+    &--live {
+      border-color: rgba(8, 145, 178, 0.2);
+      background: $bg;
+    }
+  }
+
+  &__name {
+    font-size: 13px;
+  }
+
+  &__arrow {
+    @include stack(0);
+    align-items: center;
+    justify-content: center;
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 800;
+    color: $cyan-700;
+  }
+
+  &__arrow-glyph {
+    font-size: 16px;
+  }
+}
+
+// Pink note on a funnel awaiting payment.
+.message--pay {
+  border-color: rgba(219, 39, 119, 0.3);
+  background: #fff5f7;
+}

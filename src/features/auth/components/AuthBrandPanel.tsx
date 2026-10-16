@@ -1,0 +1,42 @@
+import Image from "next/image";
+import logoWordmark from "@/assets/images/logo-wordmark.png";
+import { BRAND_PANEL } from "@/data/auth";
+import { toneClass } from "@/lib/tones";
+
+/** Left half of the sign-in page: logo, pitch and a live status card. */
+export function AuthBrandPanel() {
+  return (
+    <section className="auth-brand" aria-label="About GoCWGL">
+      <Image className="auth-brand__logo" src={logoWordmark} alt="GoCWGL" priority />
+
+      <div className="auth-brand__pitch hide-sm">
+        <span className="kicker">{BRAND_PANEL.kicker}</span>
+        <h1 className="auth-brand__title">{BRAND_PANEL.title}</h1>
+        <p className="auth-brand__body">{BRAND_PANEL.body}</p>
+      </div>
+
+      <div className="auth-status hide-sm">
+        <div className="auth-status__head">
+          <span className="auth-status__dot u-pulse" aria-hidden="true" />
+          <span className="auth-status__title">{BRAND_PANEL.panelTitle}</span>
+          <span className="auth-status__live">LIVE</span>
+        </div>
+        <div className="auth-status__rows">
+          {BRAND_PANEL.rows.map((row) => (
+            <div className="auth-status__row" key={row.label}>
+              <span className={`auth-status__icon ${toneClass(row.tone)}`} aria-hidden="true">
+                {row.icon}
+              </span>
+              <span className="auth-status__label">{row.label}</span>
+              <span className="auth-status__value">{row.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="auth-brand__legal hide-sm">
+        © 2026 GoCWGL · <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Status</a>
+      </p>
+    </section>
+  );
+}

@@ -1,0 +1,32 @@
+@use "../abstracts" as *;
+
+body {
+  min-height: 100vh;
+  background: $bg;
+}
+
+a {
+  color: $cyan-700;
+
+  &:hover {
+    color: $cyan-800;
+  }
+}
+
+input,
+select,
+textarea {
+  color: $ink;
+
+  &:focus {
+    @include focus-ring;
+  }
+}
+
+::placeholder {
+  color: $muted-light;
+}
+
+:focus-visible {
+  @include focus-ring;
+}

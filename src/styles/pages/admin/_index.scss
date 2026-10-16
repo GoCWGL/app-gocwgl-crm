@@ -1,0 +1,15 @@
+// Admin CRM (/admin) — one partial per section.
+@use "dashboard";
+@use "contacts";
+@use "pipeline";
+@use "calendar";
+@use "payments";
+@use "progress";
+@use "media";
+@use "email";
+@use "forms";
+@use "automation";
+@use "reporting";
+@use "bugs";
+@use "settings";
+@use "modals";

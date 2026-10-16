@@ -1,0 +1,104 @@
+@use "../../abstracts" as *;
+
+.dash-revenue {
+  flex: 3 1 440px;
+  gap: 18px;
+}
+
+.dash-snapshot {
+  flex: 2 1 300px;
+  gap: 16px;
+}
+
+.dash-recent {
+  flex: 3 1 480px;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.dash-activity {
+  flex: 2 1 300px;
+  gap: 4px;
+}
+
+// Horizontal bar split into one part per pipeline stage.
+.stacked-bar {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+
+  &__part {
+    width: var(--share);
+    height: 100%;
+    background: var(--tone-solid);
+  }
+}
+
+.legend-row {
+  font-size: 13px;
+
+  &__swatch {
+    width: 10px;
+    height: 10px;
+    flex: none;
+    border-radius: 3px;
+    background: var(--tone-solid);
+  }
+
+  &__count {
+    width: 28px;
+    font-weight: 800;
+    text-align: right;
+  }
+}
+
+// Weekday / date block in "Upcoming calls".
+.date-chip {
+  @include stack(0);
+  align-items: center;
+  width: 44px;
+  flex: none;
+  padding: 6px 0;
+  border-radius: $radius-md;
+  background: #fff1e6;
+
+  &__dow {
+    font-size: 10px;
+    font-weight: 700;
+    color: #c2410c;
+    text-transform: uppercase;
+  }
+
+  &__day {
+    font-size: 16px;
+    font-weight: 800;
+  }
+}
+
+// Clickable row in "Needs attention".
+.attention-row {
+  @include row(12px);
+  width: 100%;
+  min-height: 48px;
+  padding: 8px 0;
+  border: 0;
+  border-top: 1px solid $line-faint;
+  background: transparent;
+  color: $ink;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+
+  &__count {
+    @include center;
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border-radius: $radius-sm;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    font-weight: 800;
+  }
+}

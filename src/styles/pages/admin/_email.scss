@@ -1,0 +1,69 @@
+@use "../../abstracts" as *;
+
+// Composer card with a header bar and a tinted footer.
+.composer {
+  flex: 3 1 460px;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+
+  &__header {
+    @include row(10px);
+    padding: 16px 20px;
+    border-bottom: 1px solid $line-faint;
+  }
+
+  &__body {
+    @include stack(14px);
+    padding: 18px 20px;
+
+    .input,
+    .select {
+      min-height: 44px;
+    }
+  }
+
+  &__footer {
+    @include cluster(10px);
+    justify-content: flex-end;
+    padding: 14px 20px;
+    border-top: 1px solid $line-faint;
+    background: $bg-soft;
+  }
+}
+
+.sent-emails {
+  flex: 2 1 320px;
+  gap: 4px;
+  padding: 18px 20px;
+}
+
+.sent-email {
+  align-items: flex-start;
+  padding: 12px 0;
+
+  &__body {
+    min-width: 0;
+  }
+}
+
+// ------------------------------------------------------------ Templates
+.template-list {
+  flex: 2 1 320px;
+  min-width: 0;
+}
+
+.template-card {
+  gap: 8px;
+}
+
+.template-editor {
+  flex: 3 1 440px;
+  gap: 14px;
+  padding: 20px;
+
+  &--idle {
+    padding: 30px;
+    font-size: 14px;
+  }
+}

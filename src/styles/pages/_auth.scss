@@ -1,0 +1,443 @@
+@use "../abstracts" as *;
+
+// =============================================================================
+// Sign-in page (/login): brand panel on the left, form panel on the right.
+// One screen tall on desktop; stacks and scrolls on small screens.
+// =============================================================================
+
+.auth {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: $bg;
+
+  > section,
+  > main {
+    height: 100%;
+  }
+
+  @media (max-height: 820px) {
+    .auth-brand__title {
+      font-size: 30px;
+    }
+    .auth-status {
+      display: none;
+    }
+  }
+
+  @include down(lg) {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+
+    > section,
+    > main {
+      height: auto;
+    }
+
+    .hide-sm {
+      display: none;
+    }
+  }
+}
+
+// ------------------------------------------------------------ Brand panel
+.auth-brand {
+  position: relative;
+  @include stack(20px);
+  flex: 1 1 520px;
+  justify-content: space-between;
+  max-width: 100%;
+  padding: 32px 44px;
+  border-right: 1px solid $line;
+  background: $white;
+  @include grid-paper;
+  overflow: hidden;
+
+  @include down(lg) {
+    flex: none;
+    padding: 16px;
+    border-right: 0;
+    border-bottom: 1px solid $line;
+  }
+
+  &__logo {
+    width: 176px;
+    height: auto;
+  }
+
+  &__pitch {
+    @include stack(12px);
+    max-width: 520px;
+  }
+
+  &__title {
+    font-size: 40px;
+    line-height: 1.12;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  &__body {
+    max-width: 460px;
+    font-size: 16px;
+    line-height: 1.55;
+    color: $ink-soft;
+  }
+
+  &__legal {
+    font-size: 12px;
+    color: $muted;
+  }
+}
+
+// Glowing "system status" card on the brand panel.
+.auth-status {
+  max-width: 460px;
+  border: 1px solid $cyan-glow;
+  border-radius: $radius-2xl;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.2),
+    0 12px 36px rgba(8, 145, 178, 0.14);
+  overflow: hidden;
+
+  &__head {
+    @include row(8px);
+    padding: 10px 14px;
+    border-bottom: 1px solid $line-soft;
+    background: rgba(8, 145, 178, 0.05);
+  }
+
+  &__dot {
+    @include dot(8px, $green-500);
+  }
+
+  &__title {
+    @include mono-label;
+    flex: 1 1 auto;
+  }
+
+  &__live {
+    font-family: $font-mono;
+    font-size: 11px;
+    color: $muted;
+  }
+
+  &__rows {
+    @include stack(0);
+    padding: 6px 14px;
+  }
+
+  &__row {
+    @include row(10px);
+    min-height: 40px;
+
+    & + & {
+      border-top: 1px dashed rgba(8, 145, 178, 0.16);
+    }
+  }
+
+  &__icon {
+    @include center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border-radius: 7px;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__label {
+    flex: 1 1 auto;
+    font-size: 14px;
+    color: $ink-soft;
+  }
+
+  &__value {
+    font-family: $font-mono;
+    font-size: 14px;
+    font-weight: 800;
+  }
+}
+
+// ------------------------------------------------------------- Form panel
+.auth-panel {
+  display: flex;
+  flex: 1 1 480px;
+  align-items: safe center;
+  justify-content: center;
+  max-width: 100%;
+  padding: 24px;
+  overflow-y: auto;
+
+  &__inner {
+    @include stack(16px);
+    width: 100%;
+    max-width: 440px;
+    margin: auto 0;
+  }
+
+  &__title {
+    font-size: 26px;
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  &__sub {
+    font-size: 15px;
+    line-height: 1.5;
+    color: $muted;
+  }
+}
+
+// Inputs on this page are a little larger than in the apps.
+.auth-input {
+  padding: 0 14px;
+  font-size: 15px;
+}
+
+.auth-submit {
+  min-height: 44px;
+  font-size: 15px;
+}
+
+.auth-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.auth-label-hint {
+  font-weight: 500;
+  color: $muted;
+}
+
+.auth-check {
+  min-height: 28px;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.auth-demo-hint {
+  font-size: 12px;
+  color: $muted;
+  text-align: center;
+}
+
+// Single-sign-on buttons.
+.auth-sso {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  &__button {
+    @include center;
+    gap: 8px;
+    min-height: 44px;
+    border: 1px solid $line-strong;
+    border-radius: $radius-md;
+    background: $white;
+    color: $ink;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+      background: $bg;
+    }
+  }
+
+  &__mark {
+    @include center;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    font-size: 11px;
+    font-weight: 800;
+  }
+}
+
+// "—— OR WITH EMAIL ——"
+.auth-divider {
+  @include row(10px);
+  font-family: $font-mono;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: $muted;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: $line;
+  }
+}
+
+// Password field with a SHOW/HIDE button inside.
+.password-input {
+  position: relative;
+  display: flex;
+
+  &__control {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-right: 74px;
+  }
+
+  &__toggle {
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    height: 34px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 7px;
+    background: rgba(8, 145, 178, 0.08);
+    color: $cyan-700;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+}
+
+// Password strength meter (4 bars + label), colored by tone.
+.strength {
+  @include row(10px);
+
+  &__bars {
+    flex: 1 1 auto;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+
+  &__bar {
+    height: 5px;
+    border-radius: $radius-pill;
+    background: rgba(8, 145, 178, 0.15);
+
+    &--on {
+      background: var(--tone-solid);
+    }
+  }
+
+  &__label {
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--tone-fg);
+  }
+}
+
+.auth-agree {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: $ink-soft;
+  cursor: pointer;
+
+  input {
+    width: 17px;
+    height: 17px;
+    flex: none;
+    margin-top: 2px;
+    accent-color: $orange;
+  }
+}
+
+// 6-digit code input.
+.auth-code {
+  min-height: 58px;
+  border-radius: $radius-lg;
+  font-family: $font-mono;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-align: center;
+}
+
+// "New client? Create an account"
+.auth-switch {
+  font-size: 14px;
+  color: $muted;
+  text-align: center;
+
+  &__link {
+    @include button-reset;
+    padding: 4px 2px;
+    color: $cyan-700;
+    font-size: 14px;
+    font-weight: 800;
+
+    &:hover {
+      color: $cyan-800;
+    }
+  }
+}
+
+.auth-back {
+  align-self: center;
+}
+
+// Success card after signing in.
+.auth-done {
+  @include stack(16px);
+  padding: 22px;
+  border: 1px solid $cyan-glow;
+  border-radius: $radius-2xl;
+  background: $white;
+  box-shadow:
+    0 0 0 1px rgba(34, 211, 238, 0.2),
+    0 12px 32px rgba(8, 145, 178, 0.12);
+
+  &__who {
+    @include row(12px);
+  }
+
+  &__check {
+    @include center;
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-lg;
+    background: $green-50;
+    color: $green-700;
+  }
+
+  &__name {
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  &__step {
+    @include row(10px);
+    font-family: $font-mono;
+    font-size: 14px;
+    color: $ink-soft;
+  }
+
+  &__tick {
+    color: $green-700;
+    font-weight: 800;
+  }
+}
+
+.auth-secure {
+  @include center;
+  gap: 6px;
+  font-size: 12px;
+  color: $muted;
+}

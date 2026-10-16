@@ -1,0 +1,103 @@
+@use "../abstracts" as *;
+
+// Round initials avatar. Color comes from a tone class.
+.avatar {
+  @include center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--tone-bg, #{$cyan-50});
+  color: var(--tone-fg, #{$cyan-700});
+  font-size: 12px;
+  font-weight: 800;
+
+  &--sm {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+  &--md {
+    width: 36px;
+    height: 36px;
+    font-size: 13px;
+  }
+  &--lg {
+    width: 46px;
+    height: 46px;
+    font-size: 16px;
+  }
+  &--xl {
+    width: 64px;
+    height: 64px;
+    font-size: 22px;
+  }
+
+  // White + cyan ring around the avatar.
+  &--ring {
+    box-shadow:
+      0 0 0 2px $white,
+      0 0 0 3px rgba(34, 211, 238, 0.6);
+  }
+
+  // Orange gradient used for the signed-in user.
+  &--brand {
+    background: linear-gradient(135deg, $orange, $orange-light);
+    color: $on-orange;
+  }
+
+  &--square {
+    border-radius: $radius-md;
+    font-family: $font-mono;
+  }
+}
+
+// Small rounded square holding an icon, tinted by a tone.
+.icon-tile {
+  @include center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: $radius-sm;
+  background: var(--tone-bg, #{$cyan-50});
+  color: var(--tone-fg, #{$cyan-700});
+
+  &--xs {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+  }
+  &--sm {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+  }
+  &--md {
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+  }
+  &--lg {
+    width: 38px;
+    height: 38px;
+    border-radius: $radius-md;
+  }
+  &--xl {
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-lg;
+  }
+
+  // Orange gradient tile used in modal headers.
+  &--brand {
+    background: linear-gradient(135deg, $orange, $orange-light);
+    color: $on-orange;
+    box-shadow: 0 0 16px rgba(255, 153, 0, 0.4);
+  }
+
+  &--text {
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 800;
+  }
+}

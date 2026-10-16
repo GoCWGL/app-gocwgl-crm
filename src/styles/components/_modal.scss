@@ -1,0 +1,104 @@
+@use "../abstracts" as *;
+
+// <Modal variant="dialog|drawer"> — centered dialog or right-side drawer.
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 44px 16px;
+  overflow-y: auto;
+  background: rgba(11, 20, 36, 0.42);
+  backdrop-filter: blur(3px);
+  animation: fade-in 0.15s ease-out;
+
+  // Invisible full-screen button so a click outside closes the modal.
+  &__backdrop {
+    position: fixed;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    cursor: default;
+  }
+
+  &__panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: var(--modal-width, 620px);
+    border: 1px solid $cyan-glow;
+    border-radius: 20px;
+    background: $white;
+    box-shadow: $shadow-modal;
+    overflow: hidden;
+    animation: slide-up 0.2s ease-out;
+  }
+
+  &__header {
+    @include row(12px);
+    padding: 18px 22px;
+    border-bottom: 1px solid rgba(8, 145, 178, 0.15);
+    @include grid-paper(20px);
+  }
+
+  &__heading {
+    @include stack(2px);
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  &__body {
+    @include stack(16px);
+    max-height: 70vh;
+    padding: 18px 22px;
+    overflow-y: auto;
+  }
+
+  &__footer {
+    @include cluster(10px);
+    justify-content: flex-end;
+    padding: 14px 22px;
+    border-top: 1px solid rgba(8, 145, 178, 0.15);
+    background: rgba(242, 248, 252, 0.9);
+  }
+
+  // ------------------------------------------------- Drawer (right side)
+  &--drawer {
+    justify-content: flex-end;
+    align-items: stretch;
+    padding: 0;
+    overflow: hidden;
+
+    .modal__panel {
+      height: 100%;
+      border: 0;
+      border-left: 1px solid $cyan-glow;
+      border-radius: 0;
+      box-shadow: -10px 0 40px rgba(11, 20, 36, 0.25);
+      animation: none;
+    }
+
+    .modal__header {
+      align-items: flex-start;
+    }
+
+    .modal__body {
+      flex: 1 1 auto;
+      max-height: none;
+      gap: 18px;
+    }
+
+    .modal__footer {
+      justify-content: flex-start;
+    }
+  }
+}

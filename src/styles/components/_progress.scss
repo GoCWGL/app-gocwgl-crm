@@ -1,0 +1,67 @@
+@use "../abstracts" as *;
+
+// <ProgressBar value={42} variant="glow|solid|tone" size="xs|sm|md|lg" />
+.progress {
+  width: 100%;
+  height: 10px;
+  border-radius: 5px;
+  background: rgba(8, 145, 178, 0.12);
+  overflow: hidden;
+
+  &__fill {
+    height: 100%;
+    width: var(--progress, 0%);
+    border-radius: inherit;
+    background: var(--tone-solid, #{$cyan-600});
+    transition: width 0.3s ease;
+  }
+
+  // Cyan → violet → orange gradient with a soft glow (build progress).
+  &--glow &__fill {
+    background: linear-gradient(90deg, $cyan-glow, $violet-soft, $orange);
+    box-shadow: 0 0 12px rgba(255, 153, 0, 0.45);
+  }
+
+  // Cyan → orange (phase bars).
+  &--sweep &__fill {
+    background: $grad-progress;
+  }
+
+  &--xs {
+    height: 4px;
+  }
+  &--sm {
+    height: 6px;
+  }
+  &--md {
+    height: 8px;
+  }
+  &--lg {
+    height: 14px;
+  }
+}
+
+// Labelled horizontal bar row used by the funnel and source charts.
+.bar-row {
+  @include stack(6px);
+
+  &__head {
+    @include row(10px);
+    justify-content: space-between;
+    font-size: 13px;
+  }
+
+  &__label {
+    font-weight: 700;
+    color: $ink-soft;
+  }
+
+  &__value {
+    color: $muted;
+
+    strong {
+      color: $ink;
+      font-family: $font-mono;
+    }
+  }
+}

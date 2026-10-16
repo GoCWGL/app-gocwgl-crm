@@ -1,0 +1,248 @@
+@use "../../abstracts" as *;
+
+// "● AUTOMATION ENGINE // ONLINE"
+.engine-status {
+  @include row(10px);
+  font-family: $font-mono;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: $cyan-600;
+
+  &__dot {
+    @include dot(8px, $green-500);
+  }
+}
+
+// -------------------------------------------------------- Automation list
+.automation-card {
+  gap: 14px;
+  padding: 18px 20px;
+
+  &--off {
+    opacity: 0.7;
+  }
+
+  &__head {
+    align-items: flex-start;
+  }
+}
+
+.step-chain {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+}
+
+.step-chip {
+  @include row(6px);
+  padding: 4px 8px 4px 4px;
+  border: 1px solid $line;
+  border-radius: $radius-sm;
+  background: $white;
+  color: $ink-soft;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+// ------------------------------------------------------------- Builder
+// A vertical flow: trigger → steps → end, joined by glowing connectors.
+.flow {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 24px;
+
+  &__column {
+    @include stack(0);
+    width: 100%;
+    max-width: 720px;
+  }
+
+  &__step {
+    @include stack(0);
+  }
+
+  &__end {
+    @include row(8px);
+    align-self: center;
+    padding: 8px 16px;
+    border-radius: $radius-pill;
+    background: $bg-soft;
+    color: $ink-soft;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__end-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #8a909c;
+  }
+
+  &__error {
+    margin-top: 14px;
+    text-align: center;
+  }
+
+  &__join {
+    display: flex;
+    justify-content: center;
+
+    span {
+      margin-top: 8px;
+      padding: 3px 10px;
+      border-radius: $radius-pill;
+      background: $bg-soft;
+      font-size: 11px;
+      font-weight: 700;
+      color: $muted;
+    }
+  }
+}
+
+.flow-card {
+  @include stack(12px);
+  padding: 14px 16px;
+  border: 1px solid $line;
+  border-radius: $radius-2xl;
+  background: $white;
+  box-shadow: 0 2px 8px rgba(0, 229, 255, 0.08);
+
+  &--trigger {
+    padding: 16px 18px;
+    border-color: #f5b83d;
+    box-shadow:
+      0 0 0 1px rgba(255, 200, 87, 0.25),
+      0 0 28px rgba(255, 200, 87, 0.18);
+  }
+
+  &--condition {
+    border-color: $violet-soft;
+    box-shadow:
+      0 0 0 1px rgba(124, 77, 255, 0.3),
+      0 0 28px rgba(124, 77, 255, 0.2);
+  }
+}
+
+// Line + round "+" button between two steps.
+.flow-connector {
+  @include stack(0);
+  align-items: center;
+
+  &__line {
+    width: 2px;
+    height: 18px;
+    background: linear-gradient(#00e5ff, $violet-soft);
+    box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+  }
+
+  &__add {
+    width: 32px;
+    height: 32px;
+    border: 1.5px solid $cyan-glow;
+    border-radius: 50%;
+    background: $white;
+    color: $cyan-600;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+  }
+}
+
+// Menu of step types.
+.step-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid $line;
+  border-radius: $radius-xl;
+  background: $white;
+  box-shadow: 0 10px 30px rgba(15, 40, 80, 0.15);
+
+  &__item {
+    @include row(8px);
+    min-height: 44px;
+    padding: 0 10px;
+    border: 1px solid $line;
+    border-radius: $radius-md;
+    background: $white;
+    color: $ink;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $cyan-glow;
+    }
+  }
+
+  &--compact {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin: 0;
+    padding: 8px;
+
+    .step-menu__item {
+      min-height: 38px;
+      padding: 0 8px;
+      border: 0;
+      font-size: 12px;
+    }
+  }
+}
+
+// Yes / No columns under a condition.
+.branches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.branch {
+  @include stack(10px);
+  padding: 12px;
+  border: 1.5px dashed;
+  border-radius: $radius-xl;
+  background: rgba(255, 255, 255, 0.75);
+
+  &--yes {
+    border-color: rgba(16, 185, 129, 0.55);
+
+    .branch__label {
+      background: rgba(16, 185, 129, 0.12);
+      color: $green-700;
+    }
+  }
+
+  &--no {
+    border-color: rgba(219, 39, 119, 0.5);
+
+    .branch__label {
+      background: rgba(219, 39, 119, 0.1);
+      color: $pink-700;
+    }
+  }
+
+  &__label {
+    align-self: flex-start;
+    padding: 4px 12px;
+    border-radius: $radius-pill;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__step {
+    @include stack(8px);
+    padding: 10px 12px;
+    border: 1px solid $line;
+    border-radius: $radius-lg;
+    background: $white;
+  }
+}

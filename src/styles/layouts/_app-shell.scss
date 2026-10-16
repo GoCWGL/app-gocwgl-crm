@@ -1,0 +1,156 @@
+@use "../abstracts" as *;
+
+// Sidebar + main column used by the admin CRM and the client portal.
+.app-shell {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  min-height: 100vh;
+  background: $bg;
+  color: $ink;
+}
+
+.app-main {
+  position: relative;
+  isolation: isolate;
+  flex: 999 1 560px;
+  min-width: 0;
+  @include stack(24px);
+  padding: 28px 32px 48px;
+  overflow: hidden;
+
+  @include down(md) {
+    padding: 20px 16px 40px;
+  }
+}
+
+// Grid paper and three soft color blobs behind the page content.
+.app-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  @include grid-paper;
+
+  &__blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+
+    &--cyan {
+      top: -140px;
+      right: -100px;
+      width: 460px;
+      height: 460px;
+      background: $cyan-200;
+      opacity: 0.45;
+    }
+
+    &--violet {
+      top: 420px;
+      left: -160px;
+      width: 380px;
+      height: 380px;
+      background: #ddd6fe;
+      opacity: 0.5;
+    }
+
+    &--orange {
+      bottom: -140px;
+      right: 18%;
+      width: 400px;
+      height: 400px;
+      background: #ffd9a3;
+      opacity: 0.5;
+    }
+  }
+}
+
+// --------------------------------------------------------- Page sections
+// Vertical rhythm between blocks on a page.
+.page-stack {
+  @include stack(20px);
+}
+
+// Row of cards that wrap onto new lines on narrow screens.
+.card-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+
+  > * {
+    flex: 1 1 320px;
+  }
+
+  &--stretch {
+    align-items: stretch;
+  }
+}
+
+// Main + side columns (list on the left, detail on the right).
+.split {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+
+  &__main {
+    flex: 999 1 520px;
+    min-width: 0;
+  }
+
+  &__side {
+    flex: 1 1 300px;
+    min-width: 0;
+
+    &--sticky {
+      position: sticky;
+      top: 20px;
+    }
+  }
+}
+
+// Title row above a block: heading on the left, actions on the right.
+.section-head {
+  @include cluster(12px);
+  justify-content: space-between;
+
+  &--end {
+    align-items: flex-end;
+  }
+}
+
+// Responsive grid of equal cards.
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+
+  &--wide {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 330px), 1fr));
+  }
+}
+
+// Horizontal toolbar (filters, search, actions).
+.toolbar {
+  @include cluster(10px);
+
+  &--card {
+    @include card($radius-xl, 12px 14px);
+    box-shadow: $shadow-soft;
+  }
+
+  // Row of labelled filter fields aligned on their inputs.
+  &--fields {
+    align-items: flex-end;
+  }
+
+  &__grow {
+    flex: 1 1 220px;
+  }
+
+  &__count {
+    padding-bottom: 10px;
+  }
+}

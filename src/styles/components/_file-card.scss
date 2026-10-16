@@ -1,0 +1,80 @@
+@use "../abstracts" as *;
+
+// Grid of uploaded files (client assets, admin media folders).
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.file-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid $line;
+  border-radius: $radius-xl;
+  background: $white;
+  box-shadow: 0 4px 16px rgba(8, 145, 178, 0.07);
+  overflow: hidden;
+
+  &__thumb {
+    @include center;
+    height: 116px;
+    border-bottom: 1px solid rgba(8, 145, 178, 0.12);
+    background: var(--tone-bg, #{$bg});
+    color: var(--tone-fg, #{$ink-soft});
+
+    img {
+      max-width: 100%;
+      max-height: 116px;
+      object-fit: contain;
+    }
+  }
+
+  &__ext {
+    font-family: $font-mono;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+  }
+
+  &__body {
+    @include stack(6px);
+    padding: 10px 12px;
+  }
+
+  &__name {
+    @include truncate;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 2px;
+
+    > * {
+      flex: 1 1 auto;
+    }
+  }
+}
+
+// Small bordered link/button used inside file cards.
+.mini-action {
+  @include center;
+  min-height: 30px;
+  padding: 0 8px;
+  border: 1px solid $line-strong;
+  border-radius: 7px;
+  background: $white;
+  color: $cyan-700;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+
+  &--danger {
+    border-color: rgba(219, 39, 119, 0.35);
+    color: $pink-700;
+  }
+}

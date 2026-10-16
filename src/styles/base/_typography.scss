@@ -1,0 +1,104 @@
+@use "../abstracts" as *;
+
+body {
+  font-family: $font-sans;
+  font-size: 14px;
+  line-height: 1.4;
+  color: $ink;
+  -webkit-font-smoothing: antialiased;
+}
+
+code,
+.mono {
+  font-family: $font-mono;
+}
+
+// ------------------------------------------------------------ Text roles
+// Small mono label above a title, e.g. "PAID CLIENTS · 3".
+.kicker {
+  @include mono-label;
+
+  &--sm {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+  }
+
+  &--muted {
+    color: $muted-light;
+  }
+
+  &--violet {
+    color: #6d28d9;
+  }
+
+  &--brand {
+    color: $orange-ink;
+  }
+
+  &--amber {
+    color: #8a4b00;
+  }
+}
+
+// Page title, set in the page header.
+.page-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+// Heading above a group of cards, e.g. "Your results".
+.section-title {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+// Heading inside a card.
+.card-title {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.text-strong {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.text-body {
+  font-size: 14px;
+  line-height: 1.55;
+  color: $ink-soft;
+}
+
+.text-muted {
+  font-size: 13px;
+  color: $muted;
+}
+
+.text-small {
+  font-size: 12px;
+  color: $muted;
+}
+
+.text-tiny {
+  font-size: 11px;
+  color: $muted;
+}
+
+.text-error {
+  font-size: 13px;
+  font-weight: 700;
+  color: $pink-700;
+}
+
+// Big monospace number used on stat cards.
+.metric {
+  font-family: $font-mono;
+  font-weight: 800;
+  font-size: 22px;
+
+  &--lg {
+    font-size: 30px;
+    letter-spacing: -0.02em;
+  }
+}

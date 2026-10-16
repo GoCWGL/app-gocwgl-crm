@@ -1,0 +1,27 @@
+@use "../../abstracts" as *;
+
+.report-filter {
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+
+  &__summary {
+    flex: 1 1 100%;
+  }
+}
+
+.report-metric-card {
+  gap: 6px;
+  padding: 18px 20px;
+}
+
+.report-weekly {
+  flex: 3 1 420px;
+  gap: 16px;
+}
+
+.report-sources {
+  flex: 2 1 300px;
+  gap: 14px;
+}

@@ -1,0 +1,146 @@
+@use "../abstracts" as *;
+
+.sr-only {
+  @include visually-hidden;
+}
+
+// Pushes siblings apart inside a flex row.
+.u-spacer {
+  flex: 1 1 auto;
+}
+
+.u-grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.u-truncate {
+  @include truncate;
+}
+
+.u-strong {
+  font-weight: 700;
+}
+
+.u-muted {
+  color: $muted;
+}
+
+.u-ink {
+  color: $ink;
+}
+
+.u-cyan {
+  color: $cyan-700;
+}
+
+.u-brand {
+  color: $orange-ink;
+}
+
+.u-orange {
+  color: #c2410c;
+}
+
+.u-semibold {
+  font-weight: 600;
+}
+
+.u-amber {
+  color: #8a4b00;
+}
+
+.u-pink {
+  color: $pink-700;
+}
+
+.u-sky {
+  color: #0369a1;
+}
+
+.u-ink-soft {
+  color: $ink-soft;
+}
+
+.u-nowrap {
+  white-space: nowrap;
+}
+
+.u-push-right {
+  margin-left: auto;
+}
+
+.u-green {
+  color: $green-700;
+}
+
+.u-self-end {
+  align-self: flex-end;
+}
+
+.u-self-start {
+  align-self: flex-start;
+}
+
+.u-mono {
+  font-family: $font-mono;
+}
+
+.u-pre-line {
+  white-space: pre-line;
+}
+
+.stack {
+  @include stack(8px);
+
+  &--2 {
+    gap: 2px;
+  }
+  &--4 {
+    gap: 4px;
+  }
+  &--6 {
+    gap: 6px;
+  }
+  &--8 {
+    gap: 8px;
+  }
+  &--10 {
+    gap: 10px;
+  }
+  &--12 {
+    gap: 12px;
+  }
+  &--14 {
+    gap: 14px;
+  }
+  &--16 {
+    gap: 16px;
+  }
+  &--18 {
+    gap: 18px;
+  }
+  &--20 {
+    gap: 20px;
+  }
+}
+
+.cluster {
+  @include cluster(10px);
+
+  &--6 {
+    gap: 6px;
+  }
+  &--8 {
+    gap: 8px;
+  }
+  &--between {
+    justify-content: space-between;
+  }
+  &--end {
+    justify-content: flex-end;
+  }
+  &--nowrap {
+    flex-wrap: nowrap;
+  }
+}

@@ -1,0 +1,346 @@
+@use "../../abstracts" as *;
+
+.new-calendar {
+  gap: 16px;
+  padding: 22px;
+  box-shadow: 0 8px 24px rgba(8, 145, 178, 0.14);
+}
+
+// ------------------------------------------------------- Calendar cards
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.calendar-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid $line;
+  border-radius: $radius-2xl;
+  background: $white;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+
+  &--off {
+    opacity: 0.65;
+  }
+
+  &__stripe {
+    height: 6px;
+    background: var(--cal);
+  }
+
+  &__body {
+    @include stack(10px);
+    flex: 1 1 auto;
+    padding: 18px 20px;
+  }
+
+  &__name {
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  &__link {
+    font-size: 13px;
+    font-weight: 600;
+    color: $cyan-700;
+    word-break: break-all;
+  }
+
+  &__actions {
+    display: flex;
+    border-top: 1px solid $line-faint;
+  }
+
+  &__action {
+    flex: 1 1 0;
+    min-height: 46px;
+    border: 0;
+    background: $white;
+    color: $ink;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    & + & {
+      border-left: 1px solid $line-faint;
+    }
+
+    &--cyan {
+      color: $cyan-700;
+    }
+
+    &:hover {
+      background: $bg;
+    }
+  }
+}
+
+// ------------------------------------------------------ Booking preview
+.booking-preview {
+  border: 1px solid $line;
+  border-radius: $radius-2xl;
+  background: $white;
+  box-shadow: 0 8px 24px rgba(8, 145, 178, 0.14);
+  overflow: hidden;
+
+  &__bar {
+    @include cluster(10px);
+    justify-content: space-between;
+    padding: 12px 18px;
+    border-bottom: 1px solid $line;
+    background: $bg-soft;
+  }
+
+  &__body {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  &__info {
+    @include stack(12px);
+    flex: 1 1 240px;
+    padding: 24px;
+    border-right: 1px solid $line-faint;
+  }
+
+  &__title {
+    font-family: $font-mono;
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  &__meta {
+    @include row(8px);
+    font-size: 14px;
+    font-weight: 600;
+    color: $ink-soft;
+
+    svg {
+      color: $muted;
+    }
+  }
+
+  &__calendar {
+    @include stack(14px);
+    flex: 2 1 320px;
+    padding: 24px;
+  }
+
+  &__slots {
+    @include stack(10px);
+    flex: 1 1 200px;
+    padding: 24px;
+    border-left: 1px solid $line-faint;
+  }
+}
+
+// Month grid with round, clickable days.
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  text-align: center;
+
+  &__dow {
+    padding: 4px 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: $muted;
+  }
+
+  &__cell {
+    display: flex;
+    justify-content: center;
+  }
+
+  &__day {
+    @include center;
+    width: 42px;
+    height: 42px;
+    border: 0;
+    border-radius: 50%;
+    background: $cyan-50;
+    color: $cyan-700;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+
+    &[aria-pressed="true"] {
+      background: $cyan-600;
+      color: $white;
+    }
+
+    &--off {
+      background: transparent;
+      color: #a3a9b4;
+      font-weight: 400;
+      cursor: default;
+    }
+  }
+}
+
+.slot-list {
+  @include stack(8px);
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.slot {
+  flex: 1 1 auto;
+  min-height: 44px;
+  border: 1px solid $cyan-glow;
+  border-radius: $radius-sm;
+  background: $white;
+  color: $cyan-700;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &--selected {
+    border-color: $ink-soft;
+    background: $ink-soft;
+    color: $white;
+  }
+}
+
+// ------------------------------------------------------- Scheduled calls
+.schedule {
+  flex: 3 1 420px;
+  gap: 0;
+  padding: 8px 22px 12px;
+  box-shadow: none;
+
+  &__day {
+    margin: 14px 0 4px;
+    font-family: $font-mono;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: $ink-soft;
+  }
+
+  &__time {
+    @include row(8px);
+    width: 120px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: $cyan-600;
+  }
+}
+
+// ---------------------------------------------------------- Availability
+.availability {
+  max-width: 720px;
+  gap: 6px;
+  box-shadow: none;
+
+  &__day {
+    @include row(10px);
+    width: 110px;
+    min-height: 44px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+
+    input {
+      width: 18px;
+      height: 18px;
+      accent-color: $cyan-700;
+    }
+  }
+}
+
+// --------------------------------------------------------- Calendar sync
+.sync-intro {
+  flex: 2 1 340px;
+  gap: 6px;
+}
+
+.sync-target {
+  flex: 1 1 260px;
+  gap: 6px;
+  border-color: rgba(255, 153, 0, 0.45);
+  box-shadow: 0 0 16px rgba(255, 153, 0, 0.12);
+}
+
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+
+  &--compact {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+  }
+}
+
+.provider-card {
+  gap: 12px;
+  padding: 16px;
+  border-color: rgba(8, 145, 178, 0.2);
+  box-shadow: 0 4px 14px rgba(8, 145, 178, 0.05);
+
+  &--on {
+    border-color: rgba(16, 185, 129, 0.4);
+    box-shadow: $glow-green;
+  }
+
+  &--editing {
+    border-color: $cyan-glow;
+  }
+
+  &__account {
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 700;
+    color: $ink-soft;
+    word-break: break-all;
+  }
+
+  &__subs {
+    gap: 4px;
+    padding: 10px 12px;
+  }
+
+  &__swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--swatch);
+  }
+
+  &__form {
+    @include stack(10px);
+    padding: 12px;
+    border: 1px solid $cyan-glow;
+    border-radius: $radius-lg;
+    background: $bg;
+  }
+
+  &__actions {
+    margin-top: auto;
+  }
+}
+
+.feed-card {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+
+  &__url {
+    font-family: $font-mono;
+    font-size: 12px;
+    color: $cyan-700;
+    word-break: break-all;
+  }
+}

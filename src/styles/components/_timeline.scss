@@ -1,0 +1,196 @@
+@use "../abstracts" as *;
+
+// Vertical list of build phases: numbered node + connecting line + card.
+// Node state: .timeline__node--done | --current | (default upcoming)
+.timeline {
+  @include stack(0);
+
+  &__item {
+    display: flex;
+    gap: 14px;
+  }
+
+  &__rail {
+    @include stack(0);
+    align-items: center;
+    width: 30px;
+    flex: none;
+  }
+
+  &__node {
+    @include center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border: 2px solid $line-strong;
+    border-radius: 50%;
+    background: $bg-soft;
+    color: $muted;
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 800;
+
+    &--done {
+      border-color: $green-500;
+      background: $green-500;
+      color: $white;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+    }
+
+    &--current {
+      border-color: $orange;
+      background: $white;
+      color: #c2410c;
+      box-shadow: 0 0 12px rgba(255, 153, 0, 0.6);
+    }
+  }
+
+  &__line {
+    flex: 1 1 auto;
+    width: 2px;
+    min-height: 14px;
+    margin-top: 4px;
+    background: rgba(8, 145, 178, 0.25);
+
+    &--done {
+      background: $green-500;
+    }
+  }
+
+  &__card {
+    @include stack(10px);
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-bottom: 8px;
+    padding: 12px 14px;
+    border: 1px solid $line;
+    border-radius: $radius-xl;
+    background: $white;
+    box-shadow: 0 4px 16px rgba(8, 145, 178, 0.06);
+
+    &--current {
+      border-color: rgba(255, 153, 0, 0.45);
+    }
+  }
+}
+
+// One task inside a phase card.
+.task-row {
+  @include row(10px);
+  min-height: 34px;
+  padding: 0 8px;
+  border-radius: $radius-sm;
+  font-size: 13px;
+
+  &--done {
+    background: rgba(16, 185, 129, 0.06);
+  }
+
+  &__check {
+    @include center;
+    width: 17px;
+    height: 17px;
+    flex: none;
+    border-radius: 5px;
+    background: $slate-300;
+    color: $white;
+    font-size: 11px;
+    font-weight: 800;
+
+    &--done {
+      background: $green-500;
+    }
+  }
+
+  &__text {
+    flex: 1 1 auto;
+  }
+
+  &--done &__text {
+    color: $muted;
+    text-decoration: line-through;
+  }
+
+  input[type="checkbox"] {
+    width: 17px;
+    height: 17px;
+    flex: none;
+    accent-color: $orange;
+  }
+}
+
+// Dated update row ("Oct 13 · Your landing page is live").
+.update-row {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid $line-faint;
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: var(--dot, #{$orange});
+    box-shadow: 0 0 8px var(--dot, rgba(255, 153, 0, 0.7));
+  }
+
+  &__date {
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--who, #{$orange-ink});
+  }
+
+  &__text {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+// Chat-style message bubble used in threads and comments.
+.message {
+  padding: 10px 12px;
+  border: 1px solid $line-soft;
+  border-radius: $radius-md;
+  background: $bg-soft;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-line;
+
+  &__meta {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 11px;
+    font-weight: 800;
+    color: $cyan-700;
+  }
+
+  &--mine {
+    border-color: rgba(255, 153, 0, 0.25);
+    background: rgba(255, 153, 0, 0.08);
+
+    .message__meta {
+      color: $orange-ink;
+    }
+  }
+
+  &--violet {
+    border-color: rgba(124, 77, 255, 0.25);
+    background: rgba(124, 77, 255, 0.06);
+
+    .message__meta {
+      color: #6d28d9;
+    }
+  }
+
+  &--note {
+    border-color: rgba(217, 119, 6, 0.3);
+    background: #fff8e8;
+
+    .message__meta {
+      color: #8a4b00;
+    }
+  }
+}

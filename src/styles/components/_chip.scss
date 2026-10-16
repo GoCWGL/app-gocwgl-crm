@@ -1,0 +1,158 @@
+@use "../abstracts" as *;
+
+// Toggleable pill used for tags, filters and choice lists.
+// Selected state uses the tone (default: brand orange).
+.chip {
+  @include row(6px);
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid $line-strong;
+  border-radius: $radius-pill;
+  background: $white;
+  color: $ink-soft;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &[aria-pressed="true"],
+  &[aria-checked="true"],
+  &--on {
+    border-color: var(--tone-solid, rgba(255, 153, 0, 0.5));
+    background: var(--tone-bg, rgba(255, 153, 0, 0.12));
+    color: var(--tone-fg, #{$orange-ink});
+  }
+
+  &--square {
+    border-radius: $radius-md;
+  }
+
+  &--sm {
+    min-height: 30px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  &--lg {
+    min-height: 44px;
+    padding: 0 16px;
+  }
+
+  &--dark[aria-pressed="true"] {
+    border-color: $ink;
+    background: $ink;
+    color: $white;
+  }
+}
+
+// Read-only label chip, e.g. form field names on a form card.
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: $radius-sm;
+  background: var(--tone-bg, #{$bg-tint});
+  color: var(--tone-fg, #{$ink-soft});
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  &__remove {
+    @include button-reset;
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0.7;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+// Active-filter chip with a remove button.
+.filter-chip {
+  @include row(6px);
+  padding: 4px 6px 4px 12px;
+  border: 1px solid rgba(255, 153, 0, 0.45);
+  border-radius: $radius-pill;
+  background: rgba(255, 153, 0, 0.1);
+  color: $orange-ink;
+  font-size: 12px;
+  font-weight: 700;
+
+  button {
+    @include button-reset;
+    @include center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 14px;
+
+    &:hover {
+      background: rgba(255, 153, 0, 0.18);
+    }
+  }
+}
+
+// Cyan variant (active filters on the Clients page).
+.filter-chip--cyan {
+  border-color: transparent;
+  background: $cyan-50;
+  color: $cyan-700;
+
+  button:hover {
+    background: rgba(8, 145, 178, 0.15);
+  }
+}
+
+// Orange counter bubble on the Filters button.
+.filter-count {
+  @include center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: $grad-orange;
+  color: $on-orange;
+  font-size: 11px;
+  box-shadow: $glow-orange;
+}
+
+// Small button that inserts a merge field into a message.
+.insert-chip {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: $radius-xs;
+  background: $cyan-50;
+  color: $cyan-700;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &--mono {
+    font-family: $font-mono;
+  }
+}
+
+// Row of color swatches.
+.swatch {
+  width: 28px;
+  height: 28px;
+  flex: none;
+  padding: 0;
+  border: 3px solid var(--swatch);
+  border-radius: 50%;
+  background: var(--swatch);
+  box-shadow: 0 0 0 1px var(--swatch);
+  cursor: pointer;
+
+  &[aria-pressed="true"] {
+    border-color: $white;
+  }
+
+  &--lg {
+    width: 32px;
+    height: 32px;
+  }
+}

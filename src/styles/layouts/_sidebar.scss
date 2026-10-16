@@ -1,0 +1,236 @@
+@use "../abstracts" as *;
+
+// Left navigation shared by the admin CRM and the client portal.
+.sidebar {
+  @include stack(14px);
+  flex: 1 1 232px;
+  max-width: 100%;
+  padding: 16px 14px;
+  border-right: 1px solid $line;
+  background: $white;
+  box-shadow: $shadow-sidebar;
+
+  // Sticky full-height column on desktop, normal block on mobile.
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  align-self: flex-start;
+
+  @include down(md) {
+    position: static;
+    height: auto;
+    overflow: visible;
+    align-self: stretch;
+    border-right: 0;
+    border-bottom: 1px solid $line;
+  }
+
+  &__brand {
+    padding: 0 4px;
+
+    img {
+      width: 168px;
+      height: auto;
+    }
+  }
+
+  &__nav {
+    @include stack(12px);
+  }
+
+  &__group {
+    @include stack(2px);
+  }
+
+  &__label {
+    padding: 0 10px 2px;
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: $cyan-700;
+  }
+
+  &__footer {
+    @include stack(10px);
+    margin-top: auto;
+  }
+}
+
+// One navigation button with a tinted icon tile.
+.nav-item {
+  @include row(10px);
+  width: 100%;
+  min-height: 36px;
+  padding: 3px 10px;
+  border: 0;
+  border-radius: $radius-sm;
+  background: transparent;
+  color: $ink-muted;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(8, 145, 178, 0.06);
+  }
+
+  &[aria-current="page"],
+  &--active {
+    background: rgba(255, 153, 0, 0.14);
+    color: $orange-ink;
+  }
+
+  // Parent of an open sub-menu.
+  &--open {
+    background: rgba(255, 153, 0, 0.08);
+    color: $orange-ink;
+  }
+
+  &__label {
+    flex: 1 1 auto;
+  }
+
+  &__chevron {
+    margin-left: auto;
+    transition: transform 0.15s;
+
+    &--open {
+      transform: rotate(90deg);
+    }
+  }
+}
+
+// Nested "circuit" sub-menu under Contacts.
+.subnav {
+  position: relative;
+  @include stack(4px);
+  margin: 2px 0 4px 22px;
+  padding: 4px 0 4px 16px;
+
+  // Glowing vertical rail.
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 14px;
+    left: 0;
+    width: 2px;
+    border-radius: 1px;
+    background: linear-gradient($cyan-glow, $violet-soft);
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+  }
+
+  &__item {
+    position: relative;
+    @include row(10px);
+    width: 100%;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: $ink-soft;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+
+    // Horizontal branch from the rail.
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: -17px;
+      width: 12px;
+      height: 2px;
+      background: $cyan-glow;
+      box-shadow: 0 0 6px rgba(34, 211, 238, 0.7);
+    }
+
+    &[aria-current="page"] {
+      border-color: rgba(255, 153, 0, 0.45);
+      background: linear-gradient(90deg, rgba(255, 153, 0, 0.16), rgba(255, 153, 0, 0.04));
+      color: $orange-ink;
+      box-shadow: 0 0 14px rgba(255, 153, 0, 0.22);
+    }
+  }
+
+  // Diamond node on the rail.
+  &__node {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    border: 1.5px solid $cyan-glow;
+    background: $white;
+    box-shadow: 0 0 5px rgba(34, 211, 238, 0.5);
+    transform: rotate(45deg);
+
+    [aria-current="page"] > & {
+      border-color: $orange;
+      background: $orange;
+      box-shadow: 0 0 8px rgba(255, 153, 0, 0.8);
+    }
+  }
+
+  &__index {
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: $muted-light;
+  }
+
+  [aria-current="page"] .count-chip {
+    background: rgba(255, 153, 0, 0.18);
+    color: $orange-ink;
+  }
+}
+
+// Profile / account button pinned to the bottom of the sidebar.
+.profile-button {
+  @include row(10px);
+  width: 100%;
+  min-height: 48px;
+  padding: 6px 10px;
+  border: 1px solid $line;
+  border-radius: $radius-lg;
+  background: $bg;
+  text-align: left;
+  cursor: pointer;
+
+  &[aria-current="page"] {
+    border-color: rgba(255, 153, 0, 0.5);
+    background: rgba(255, 153, 0, 0.12);
+    box-shadow: 0 0 14px rgba(255, 153, 0, 0.2);
+  }
+
+  &__text {
+    @include stack(0);
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__name {
+    @include truncate;
+    font-size: 13px;
+    font-weight: 800;
+    color: $ink;
+  }
+
+  &__sub {
+    font-size: 11px;
+    color: $muted;
+  }
+
+  &__icon {
+    color: $cyan-700;
+  }
+
+  &[aria-current="page"] &__icon {
+    color: #c2410c;
+  }
+}

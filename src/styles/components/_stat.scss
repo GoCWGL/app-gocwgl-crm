@@ -1,0 +1,99 @@
+@use "../abstracts" as *;
+
+// Responsive grid for stat tiles and KPI cards.
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+
+  &--wide {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+}
+
+// Compact tile: colored glow bar, label and big number.
+.stat-tile {
+  @include card($radius-xl, 14px 16px);
+  @include row(12px);
+
+  &__bar {
+    width: 10px;
+    height: 34px;
+    flex: none;
+    border-radius: 5px;
+    background: var(--tone-solid, #{$cyan-glow});
+    box-shadow: 0 0 10px var(--tone-solid, #{$cyan-glow});
+  }
+
+  // Square glyph instead of the bar ("#", "$", "%").
+  &__glyph {
+    @include center;
+    width: 36px;
+    height: 36px;
+    flex: none;
+    border-radius: $radius-md;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  &__body {
+    @include stack(2px);
+    min-width: 0;
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    color: $muted;
+  }
+
+  &__value {
+    font-family: $font-mono;
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  // Stacked label over value, no bar.
+  &--plain {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+}
+
+// Large KPI card with icon, number and a trend line.
+.kpi-card {
+  @include card;
+  @include stack(10px);
+
+  &__head {
+    @include row(10px);
+    justify-content: space-between;
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: $muted;
+  }
+
+  &__value {
+    font-family: $font-mono;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  &__foot {
+    font-size: 12px;
+    color: $muted;
+
+    strong {
+      font-weight: 800;
+      color: var(--trend, #{$green-700});
+    }
+  }
+}

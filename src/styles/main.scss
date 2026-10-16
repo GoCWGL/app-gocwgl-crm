@@ -1,0 +1,48 @@
+// =============================================================================
+// GoCWGL — global stylesheet (imported once in src/app/layout.tsx)
+//
+//   abstracts/   tokens, functions, mixins, keyframes (no CSS output)
+//   base/        reset, typography, element defaults
+//   layouts/     app shell, sidebar, page header
+//   components/  reusable UI pieces (button, card, modal…)
+//   pages/       styles that belong to one screen (auth, portal, admin)
+//   utilities/   tone classes, animations, helpers (last, so they win)
+// =============================================================================
+
+// Base
+@use "base/reset";
+@use "base/typography";
+@use "base/global";
+
+// Layouts
+@use "layouts/app-shell";
+@use "layouts/sidebar";
+@use "layouts/page-header";
+
+// Components
+@use "components/button";
+@use "components/form";
+@use "components/card";
+@use "components/badge";
+@use "components/chip";
+@use "components/segmented";
+@use "components/toggle";
+@use "components/progress";
+@use "components/avatar";
+@use "components/table";
+@use "components/modal";
+@use "components/toast";
+@use "components/stat";
+@use "components/charts";
+@use "components/timeline";
+@use "components/file-card";
+
+// Pages
+@use "pages/auth";
+@use "pages/portal";
+@use "pages/admin";
+
+// Utilities
+@use "utilities/tones";
+@use "utilities/animations";
+@use "utilities/helpers";

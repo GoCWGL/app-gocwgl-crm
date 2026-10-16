@@ -1,0 +1,291 @@
+@use "../../abstracts" as *;
+
+// ------------------------------------------------------------ Todo drawer
+.drawer-kicker {
+  @include row(8px);
+  color: var(--tone-fg);
+
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--tone-solid);
+  }
+}
+
+.drawer-done {
+  flex: 1 1 auto;
+  font-size: 13px;
+  font-weight: 800;
+  color: $green-700;
+}
+
+// Numbered instruction step.
+.step-item {
+  flex-direction: row;
+  gap: 12px;
+  padding: 10px 12px;
+
+  &__number {
+    @include center;
+    width: 24px;
+    height: 24px;
+    flex: none;
+    border-radius: 50%;
+    background: rgba(255, 153, 0, 0.16);
+    color: $orange-ink;
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 800;
+  }
+}
+
+// Attached document row.
+.doc-row {
+  @include row(12px);
+  padding: 10px 12px;
+  border: 1px solid rgba(8, 145, 178, 0.2);
+  border-radius: $radius-lg;
+  background: $white;
+
+  &--active {
+    border-color: $cyan-glow;
+    background: $bg;
+  }
+
+  .icon-tile {
+    font-size: 10px;
+  }
+}
+
+// Framed preview of a document.
+.doc-preview {
+  border: 1px solid $line;
+  border-radius: $radius-xl;
+  overflow: hidden;
+
+  &__label {
+    padding: 8px 14px;
+    border-bottom: 1px solid rgba(8, 145, 178, 0.15);
+    background: $bg-soft;
+    color: $muted;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+  }
+}
+
+.copy-preview {
+  @include stack(12px);
+  padding: 18px;
+
+  &__block {
+    @include stack(4px);
+    padding-left: 12px;
+    border-left: 3px solid $cyan-glow;
+
+    &--headline {
+      border-left-color: $orange;
+    }
+  }
+
+  &__text {
+    line-height: 1.45;
+    white-space: pre-line;
+  }
+}
+
+// Mini browser window for the landing page mockup.
+.mockup {
+  padding: 16px;
+  background: $bg-tint;
+
+  &__window {
+    border-radius: $radius-md;
+    background: $white;
+    box-shadow: 0 8px 24px rgba(11, 20, 36, 0.12);
+    overflow: hidden;
+  }
+
+  &__bar {
+    @include row(6px);
+    padding: 8px 10px;
+    background: $ink;
+  }
+
+  &__light {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+
+    &--red {
+      background: #f87171;
+    }
+    &--amber {
+      background: #fbbf24;
+    }
+    &--green {
+      background: #34d399;
+    }
+  }
+
+  &__url {
+    margin-left: 8px;
+    font-family: $font-mono;
+    font-size: 10px;
+    color: #94a3b8;
+  }
+
+  &__hero {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 22px;
+    background: linear-gradient(135deg, #f5efe6, #e8f3ef);
+  }
+
+  &__pitch {
+    @include stack(10px);
+    flex: 1 1 220px;
+  }
+
+  &__headline {
+    font-size: 20px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: #1f3a34;
+  }
+
+  &__sub {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #3e5a53;
+  }
+
+  &__cta {
+    align-self: flex-start;
+    padding: 8px 14px;
+    border-radius: $radius-sm;
+    background: #1f3a34;
+    color: $white;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__form {
+    @include stack(8px);
+    flex: 1 1 180px;
+    padding: 14px;
+    border-radius: $radius-md;
+    background: $white;
+  }
+
+  &__form-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1f3a34;
+  }
+
+  &__field {
+    height: 26px;
+    border: 1px solid #d6e2de;
+    border-radius: 6px;
+  }
+
+  &__submit {
+    height: 28px;
+    border-radius: 6px;
+    background: #c9a77c;
+  }
+
+  &__features {
+    display: flex;
+    gap: 10px;
+    padding: 14px 22px;
+  }
+
+  &__feature {
+    flex: 1 1 0;
+    padding: 10px;
+    border-radius: $radius-sm;
+    background: #f7f9f8;
+    color: #1f3a34;
+    font-size: 11px;
+    font-weight: 700;
+  }
+}
+
+// -------------------------------------------------- Funnel request drawer
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.option-card__check {
+  width: 17px;
+  height: 17px;
+  flex: none;
+  accent-color: $orange;
+}
+
+.extra-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+
+  &__label {
+    flex: 1 1 160px;
+    width: auto;
+  }
+
+  &__url {
+    flex: 2 1 220px;
+  }
+}
+
+// Orange summary box with the one-time total.
+.billing-summary {
+  @include stack(10px);
+  padding: 16px;
+  border: 1px solid rgba(255, 153, 0, 0.45);
+  border-radius: $radius-xl;
+  background: rgba(255, 153, 0, 0.06);
+  box-shadow: 0 0 18px rgba(255, 153, 0, 0.1);
+
+  &__line {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  &__total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(217, 119, 6, 0.4);
+  }
+
+  &__amount {
+    font-family: $font-mono;
+    font-size: 26px;
+    font-weight: 800;
+  }
+}
+
+.pay-option {
+  flex: 1 1 200px;
+  width: auto;
+  padding: 10px 12px;
+  border-color: rgba(217, 119, 6, 0.3);
+  background: transparent;
+
+  &[aria-checked="true"] {
+    background: $white;
+  }
+}

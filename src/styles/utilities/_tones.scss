@@ -1,0 +1,13 @@
+@use "sass:map";
+@use "../abstracts" as *;
+
+// `.tone-green`, `.tone-amber`, ... expose a tone as three custom properties.
+// Any component can then color itself with var(--tone-bg / -fg / -solid),
+// so the TSX only says *which* tone, never the hex values.
+@each $name, $tone in $tones {
+  .tone-#{$name} {
+    --tone-bg: #{map.get($tone, bg)};
+    --tone-fg: #{map.get($tone, fg)};
+    --tone-solid: #{map.get($tone, solid)};
+  }
+}

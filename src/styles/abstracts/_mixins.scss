@@ -1,0 +1,112 @@
+@use "variables" as *;
+@use "functions" as *;
+
+// ----------------------------------------------------------------- Layout
+// Vertical stack with an even gap.
+@mixin stack($gap: 8px) {
+  display: flex;
+  flex-direction: column;
+  gap: $gap;
+}
+
+// Horizontal row that wraps, with items centered vertically.
+@mixin cluster($gap: 10px) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $gap;
+}
+
+// Horizontal row that does not wrap.
+@mixin row($gap: 10px) {
+  display: flex;
+  align-items: center;
+  gap: $gap;
+}
+
+@mixin center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Mobile-first width query: @include up(md) { ... }
+@mixin up($name) {
+  @media (min-width: breakpoint($name)) {
+    @content;
+  }
+}
+
+// Desktop-first width query: @include down(md) { ... }
+@mixin down($name) {
+  @media (max-width: breakpoint($name)) {
+    @content;
+  }
+}
+
+// ------------------------------------------------------------- Surfaces
+@mixin card($radius: $radius-2xl, $padding: 18px 20px) {
+  background: $white;
+  border: 1px solid $line;
+  border-radius: $radius;
+  padding: $padding;
+  box-shadow: $shadow-card;
+}
+
+// Faint cyan grid used behind the main content and the auth brand panel.
+@mixin grid-paper($size: 32px) {
+  background-image:
+    linear-gradient(rgba(8, 145, 178, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(8, 145, 178, 0.08) 1px, transparent 1px);
+  background-size: $size $size;
+}
+
+// ----------------------------------------------------------- Typography
+// Small uppercase monospace label, e.g. "// CLIENT PORTAL".
+@mixin mono-label($size: 11px, $spacing: 0.14em, $color: $cyan-700) {
+  font-family: $font-mono;
+  font-size: $size;
+  font-weight: 800;
+  letter-spacing: $spacing;
+  color: $color;
+}
+
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+// ----------------------------------------------------------- Controls
+@mixin button-reset {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+@mixin focus-ring {
+  outline: 2px solid $cyan-glow;
+  outline-offset: 1px;
+}
+
+// A small glowing status dot.
+@mixin dot($size: 8px, $color: $green-500) {
+  width: $size;
+  height: $size;
+  flex: none;
+  border-radius: 50%;
+  background: $color;
+  box-shadow: 0 0 8px $color;
+}

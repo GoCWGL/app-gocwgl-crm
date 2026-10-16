@@ -1,0 +1,63 @@
+@use "../abstracts" as *;
+
+// Group of buttons where one is selected (tabs, view switches, ranges).
+//   .segmented          white track, dark selected button
+//   .segmented--soft    tinted track, white raised selected button
+.segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid $line;
+  border-radius: $radius-md;
+  background: $white;
+
+  &__item {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: $radius-sm;
+    background: transparent;
+    color: $ink-soft;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &[aria-pressed="true"],
+    &[aria-selected="true"],
+    &[aria-checked="true"] {
+      background: $ink;
+      color: $white;
+    }
+  }
+
+  &__count {
+    margin-left: 4px;
+    font-family: $font-mono;
+    font-size: 11px;
+    opacity: 0.7;
+  }
+
+  &--soft {
+    border-color: transparent;
+    background: $bg-tint;
+
+    .segmented__item {
+      color: $muted;
+
+      &[aria-pressed="true"],
+      &[aria-selected="true"],
+      &[aria-checked="true"] {
+        background: $white;
+        color: $ink;
+        box-shadow: $shadow-raised;
+      }
+    }
+  }
+
+  &--sm .segmented__item {
+    min-height: 32px;
+    padding: 0 12px;
+  }
+}

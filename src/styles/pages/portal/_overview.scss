@@ -1,0 +1,77 @@
+@use "../../abstracts" as *;
+
+// System health summary at the top of the overview.
+.health-banner {
+  @include cluster(16px);
+  padding: 18px 20px;
+  border: 1px solid;
+  border-radius: 18px;
+  background: $white;
+
+  &--ok {
+    border-color: rgba(16, 185, 129, 0.45);
+    box-shadow: 0 0 22px rgba(16, 185, 129, 0.15);
+  }
+
+  &--warn {
+    border-color: rgba(245, 158, 11, 0.5);
+    box-shadow: 0 0 22px rgba(245, 158, 11, 0.15);
+  }
+
+  &__icon {
+    border-radius: $radius-xl;
+  }
+
+  &__text {
+    @include stack(2px);
+    flex: 1 1 260px;
+  }
+
+  &__title {
+    font-size: 16px;
+    font-weight: 800;
+  }
+}
+
+.overview-chart {
+  flex: 3 1 440px;
+}
+
+.overview-funnel {
+  flex: 2 1 300px;
+}
+
+// Compact build progress card.
+.build-mini {
+  border-color: rgba(255, 153, 0, 0.45);
+  box-shadow: 0 0 18px rgba(255, 153, 0, 0.12);
+
+  &__progress {
+    @include row(14px);
+  }
+
+  &__pct {
+    font-family: $font-mono;
+    font-size: 34px;
+    font-weight: 800;
+  }
+}
+
+// "2 items are waiting on you" button.
+.waiting-pill {
+  @include row(8px);
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(217, 119, 6, 0.4);
+  border-radius: $radius-md;
+  background: #fff8e8;
+  color: #8a4b00;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+
+  &__dot {
+    @include dot(8px, $amber-500);
+  }
+}

@@ -1,0 +1,108 @@
+@use "../abstracts" as *;
+
+// Simple vertical bar chart built from flex columns.
+//   <div class="bar-chart"><div class="bar-chart__col">…</div></div>
+//   <div class="bar-chart__axis">labels</div>
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 180px;
+  padding-top: 8px;
+
+  &__col {
+    @include stack(4px);
+    flex: 1 1 0;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    min-width: 0;
+  }
+
+  &__value {
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    color: $ink-soft;
+  }
+
+  &__bar {
+    width: 100%;
+    max-width: 44px;
+    height: var(--bar, 0%);
+    border-radius: 6px 6px 2px 2px;
+    background: var(--bar-color, #{$cyan-200});
+    transition: height 0.3s ease;
+  }
+
+  &__axis {
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid $line-faint;
+    padding-top: 6px;
+
+    span {
+      flex: 1 1 0;
+      min-width: 0;
+      font-family: $font-mono;
+      font-size: 10px;
+      color: $muted;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+  }
+
+  &--short {
+    height: 140px;
+  }
+}
+
+// Activity feed row: colored dot, text and time.
+.feed-item {
+  @include row(10px);
+  align-items: flex-start;
+  padding: 8px 0;
+
+  & + & {
+    border-top: 1px dashed $line-faint;
+  }
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    flex: none;
+    margin-top: 6px;
+    border-radius: 50%;
+    background: var(--dot, #{$cyan-600});
+    box-shadow: 0 0 6px var(--dot, #{$cyan-600});
+  }
+
+  // Dot colored by a tone class on the row.
+  &__dot--tone {
+    width: 10px;
+    height: 10px;
+    margin-top: 5px;
+    background: var(--tone-solid);
+    box-shadow: none;
+  }
+
+  &__body {
+    @include stack(2px);
+    min-width: 0;
+  }
+
+  &__text {
+    font-size: 13px;
+    color: $ink-soft;
+
+    strong {
+      color: $ink;
+    }
+  }
+
+  &__time {
+    font-size: 11px;
+    color: $muted;
+  }
+}

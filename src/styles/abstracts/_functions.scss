@@ -1,0 +1,12 @@
+@use "sass:map";
+@use "variables" as *;
+
+// Read one value from the $tones map, e.g. tone(green, fg).
+@function tone($name, $key) {
+  @return map.get(map.get($tones, $name), $key);
+}
+
+// Media query width for a named breakpoint.
+@function breakpoint($name) {
+  @return map.get($breakpoints, $name);
+}

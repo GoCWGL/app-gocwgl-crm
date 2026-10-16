@@ -1,0 +1,96 @@
+@use "../../abstracts" as *;
+
+// Drag-and-drop upload area.
+.drop-zone {
+  @include cluster(18px);
+  padding: 26px 22px;
+  border: 2px dashed rgba(8, 145, 178, 0.4);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 6px 22px rgba(8, 145, 178, 0.08);
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+
+  &--active {
+    border-color: $orange;
+    background: rgba(255, 153, 0, 0.08);
+    box-shadow: 0 0 24px rgba(255, 153, 0, 0.3);
+  }
+
+  &__icon {
+    @include center;
+    width: 56px;
+    height: 56px;
+    flex: none;
+    border-radius: $radius-2xl;
+    background: linear-gradient(135deg, $orange, $orange-light);
+    color: $on-orange;
+    box-shadow: 0 0 18px rgba(255, 153, 0, 0.4);
+  }
+
+  &__title {
+    font-size: 17px;
+    font-weight: 800;
+  }
+}
+
+.chip__count {
+  font-family: $font-mono;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.toolbar__search {
+  flex: 0 1 240px;
+  width: auto;
+  min-height: 40px;
+}
+
+// Editable brand colors with a dashed "+" tile.
+.brand-colors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+
+  &__item {
+    @include stack(4px);
+    align-items: center;
+  }
+
+  &__picker {
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border: 1px solid $line-strong;
+    border-radius: $radius-lg;
+    background: $white;
+    cursor: pointer;
+  }
+
+  &__hex {
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    color: $ink-soft;
+  }
+
+  &__remove {
+    @include button-reset;
+    font-size: 11px;
+    color: $pink-700;
+  }
+
+  &__add {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 36px;
+    border: 1.5px dashed $cyan-glow;
+    border-radius: $radius-lg;
+    background: $white;
+    color: $cyan-700;
+    font-size: 20px;
+    cursor: pointer;
+  }
+}

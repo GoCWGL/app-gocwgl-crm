@@ -1,0 +1,150 @@
+@use "../abstracts" as *;
+
+// <table class="data-table"> inside a .card--table or .table-scroll wrapper.
+.table-scroll {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  min-width: 680px;
+  font-size: 13px;
+
+  th {
+    padding: 12px 14px;
+    background: $bg-soft;
+    color: $muted;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 14px;
+    color: $ink-soft;
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    border-top: 1px solid $line-faint;
+  }
+
+  // Selected row with an orange left edge.
+  tr[aria-selected="true"] {
+    background: rgba(255, 153, 0, 0.07);
+    box-shadow: inset 3px 0 0 $orange;
+  }
+
+  &__strong {
+    color: $ink;
+    font-weight: 700;
+  }
+
+  &__mono {
+    color: $ink;
+    font-family: $font-mono;
+    font-weight: 800;
+  }
+
+  &__code {
+    color: $cyan-700;
+    font-family: $font-mono;
+    font-weight: 800;
+  }
+
+  &__actions {
+    text-align: right;
+    white-space: nowrap;
+
+    > * + * {
+      margin-left: 6px;
+    }
+  }
+
+  // No header background, used for compact tables inside cards.
+  &--plain th {
+    background: transparent;
+  }
+
+  &--compact {
+    min-width: 560px;
+
+    th,
+    td {
+      padding: 10px 8px;
+    }
+  }
+
+  &--roomy {
+    min-width: 1040px;
+    font-size: 14px;
+
+    th {
+      font-size: 12px;
+    }
+
+    th,
+    td {
+      padding: 14px 18px;
+      white-space: nowrap;
+    }
+  }
+}
+
+// Clickable cell that holds a name and a sub line.
+.cell-button {
+  @include button-reset;
+  @include stack(2px);
+  text-align: left;
+
+  &:hover strong {
+    color: $cyan-700;
+  }
+}
+
+// "No rows" message under a table.
+.table-empty {
+  padding: 22px 18px;
+  font-size: 14px;
+  color: $muted;
+}
+
+// Small text-style action in a table row (Pause, Mark paid, Void…).
+.row-action {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid $line-strong;
+  border-radius: $radius-sm;
+  background: $white;
+  color: $ink-soft;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &--cyan {
+    color: $cyan-700;
+  }
+
+  &--green {
+    border-color: rgba(16, 185, 129, 0.45);
+    background: rgba(16, 185, 129, 0.06);
+    color: $green-700;
+    font-weight: 800;
+  }
+
+  &--brand {
+    border-color: rgba(255, 153, 0, 0.45);
+    background: rgba(255, 153, 0, 0.06);
+    color: $orange-ink;
+    font-weight: 800;
+  }
+
+  &--danger {
+    border-color: rgba(219, 39, 119, 0.35);
+    color: $pink-700;
+  }
+}

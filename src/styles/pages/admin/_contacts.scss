@@ -1,0 +1,65 @@
+@use "../../abstracts" as *;
+
+// ------------------------------------------------------------------ Clients
+.clients-search {
+  flex: 0 1 280px;
+
+  .input {
+    min-height: 44px;
+  }
+}
+
+// Dropdown filters under the "Filters" button.
+.filter-panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(8, 145, 178, 0.12);
+}
+
+// --------------------------------------------------------------------- Tags
+.tag-creator {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 18px;
+
+  &__name {
+    flex: 1 1 260px;
+
+    .input {
+      min-height: 44px;
+    }
+  }
+
+  .swatch {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+.tag-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.tag-card {
+  flex-direction: row;
+  align-items: center;
+  padding: 16px;
+}
+
+// "+ Tag" dropdown on pipeline cards.
+.tag-picker {
+  height: 24px;
+  padding: 0 6px;
+  border: 1px dashed $cyan-glow;
+  border-radius: $radius-pill;
+  background: $white;
+  color: $cyan-700;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}

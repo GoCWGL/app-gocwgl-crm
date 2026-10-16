@@ -1,0 +1,212 @@
+@use "../../abstracts" as *;
+
+// Left tab list + right panel.
+.settings {
+  &__nav {
+    flex: 1 1 200px;
+    gap: 4px;
+    max-width: 100%;
+    padding: 10px;
+    align-self: flex-start;
+  }
+
+  &__tab {
+    @include row(10px);
+    min-height: 40px;
+    padding: 0 12px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    background: transparent;
+    color: $ink-soft;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(8, 145, 178, 0.06);
+    }
+
+    &[aria-current="page"] {
+      border-color: rgba(255, 153, 0, 0.45);
+      background: rgba(255, 153, 0, 0.12);
+      color: $orange-ink;
+    }
+  }
+
+  &__panel {
+    flex: 4 1 520px;
+    gap: 18px;
+  }
+
+  &__footer {
+    padding-top: 14px;
+    border-top: 1px solid $line-faint;
+  }
+}
+
+.settings-profile {
+  gap: 16px;
+
+  &__avatar {
+    box-shadow:
+      0 0 0 3px $white,
+      0 0 0 5px rgba(34, 211, 238, 0.6),
+      0 0 20px rgba(255, 153, 0, 0.35);
+  }
+
+  &__name {
+    font-size: 16px;
+    font-weight: 800;
+  }
+}
+
+.logo-row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+
+  img {
+    width: 150px;
+    height: auto;
+  }
+}
+
+.notify-email {
+  max-width: 360px;
+  padding-top: 14px;
+  border-top: 1px solid $line-faint;
+}
+
+// ------------------------------------------------------------------ Team
+.team-row {
+  @include cluster(12px);
+  padding: 12px 14px;
+  border: 1px solid $line-soft;
+  border-radius: $radius-lg;
+  background: $white;
+
+  &__who {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+}
+
+.invite-form {
+  @include cluster(10px);
+  align-items: flex-end;
+  padding: 14px;
+  border: 1px dashed rgba(8, 145, 178, 0.35);
+  border-radius: $radius-lg;
+  background: $bg-soft;
+}
+
+// -------------------------------------------------------------- Security
+.security-form {
+  max-width: 420px;
+}
+
+.security-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  max-width: 560px;
+  padding: 14px;
+}
+
+.security-devices {
+  max-width: 560px;
+}
+
+// --------------------------------------------------------------- Domains
+.domain-free {
+  gap: 10px;
+  padding: 16px;
+  background: $bg-soft;
+
+  &__input {
+    flex: 1 1 320px;
+    min-width: 0;
+
+    .input-group__addon {
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+      background: $bg;
+
+      &:first-child {
+        border-right: 1px solid rgba(8, 145, 178, 0.2);
+      }
+
+      &:last-child {
+        border-left: 1px solid rgba(8, 145, 178, 0.2);
+      }
+    }
+  }
+}
+
+.domain-card {
+  border: 1px solid $line;
+  border-radius: $radius-xl;
+  background: $white;
+  box-shadow: $shadow-soft;
+  overflow: hidden;
+
+  &--primary {
+    border-color: rgba(255, 153, 0, 0.5);
+    box-shadow: 0 0 18px rgba(255, 153, 0, 0.16);
+  }
+
+  &__head {
+    @include cluster(12px);
+    padding: 14px 16px;
+  }
+
+  &__host {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+
+  &__name {
+    font-family: $font-mono;
+    font-size: 15px;
+    font-weight: 800;
+    word-break: break-all;
+  }
+
+  &__actions {
+    padding: 0 16px 14px;
+  }
+
+  &__dns {
+    @include stack(10px);
+    padding: 14px 16px;
+    border-top: 1px solid rgba(8, 145, 178, 0.15);
+    background: $bg;
+  }
+}
+
+.dns-table-wrap {
+  border: 1px solid rgba(8, 145, 178, 0.2);
+  border-radius: $radius-md;
+  background: $white;
+}
+
+.dns-table {
+  font-size: 12px;
+
+  th {
+    font-size: 10px;
+  }
+
+  &__value {
+    word-break: break-all;
+  }
+}
+
+.domain-add {
+  gap: 12px;
+  padding: 16px;
+}

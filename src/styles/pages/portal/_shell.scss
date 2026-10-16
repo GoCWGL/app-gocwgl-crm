@@ -1,0 +1,38 @@
+@use "../../abstracts" as *;
+
+// Business badge at the top of the portal sidebar.
+.portal-brand {
+  @include row(10px);
+  padding: 4px 2px;
+
+  &__mark {
+    @include center;
+    width: 38px;
+    height: 38px;
+    flex: none;
+    border-radius: 11px;
+    background: linear-gradient(135deg, $cyan-700, $violet);
+    color: $white;
+    font-size: 14px;
+    font-weight: 800;
+    box-shadow: 0 0 14px rgba(124, 77, 255, 0.35);
+  }
+
+  &__name {
+    @include truncate;
+    font-size: 14px;
+    font-weight: 800;
+  }
+}
+
+// "POWERED BY GoCWGL" under the account button.
+.portal-powered {
+  @include center;
+  gap: 8px;
+  padding-top: 4px;
+
+  img {
+    width: 92px;
+    height: auto;
+  }
+}

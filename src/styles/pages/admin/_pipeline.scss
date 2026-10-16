@@ -1,0 +1,204 @@
+@use "../../abstracts" as *;
+
+.pipeline-picker {
+  min-height: 36px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+// ----------------------------------------------------------------- Editor
+.pipeline-editor {
+  gap: 14px;
+
+  &__name {
+    max-width: 420px;
+
+    .input {
+      font-size: 15px;
+    }
+  }
+
+  &__footer {
+    padding-top: 6px;
+    border-top: 1px solid $line-faint;
+  }
+}
+
+.stage-row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: $bg-soft;
+
+  &__index {
+    width: 22px;
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 800;
+    color: $muted;
+    text-align: center;
+  }
+
+  &__swatch {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    border-radius: 4px;
+    background: var(--tone-solid);
+  }
+
+  &__name {
+    flex: 1 1 180px;
+    width: auto;
+    font-weight: 600;
+  }
+}
+
+// ------------------------------------------------------------------ Board
+.board-scroll {
+  padding-bottom: 8px;
+  overflow-x: auto;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(var(--columns), minmax(260px, 1fr));
+  align-items: start;
+  gap: 16px;
+  min-width: var(--board-min);
+}
+
+.board-column {
+  @include stack(12px);
+  min-height: 520px;
+  padding: 14px;
+  border: 1px solid $line;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.65);
+  outline: 2px dashed transparent;
+  outline-offset: -2px;
+  transition: background-color 0.15s;
+
+  &--drop {
+    background: rgba(227, 246, 250, 0.9);
+    outline-color: $cyan-600;
+  }
+
+  &__header {
+    @include row(10px);
+    padding: 2px 2px 4px;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  &__dot {
+    width: 10px;
+    height: 10px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+  }
+
+  &__count {
+    @include center;
+    min-width: 26px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: $radius-pill;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .progress {
+    background: rgba(8, 145, 178, 0.13);
+  }
+
+  &__empty {
+    padding: 22px 14px;
+    border: 1.5px dashed $line-strong;
+    border-radius: $radius-xl;
+    font-size: 13px;
+    color: $muted;
+    text-align: center;
+  }
+}
+
+// One contact card on the board.
+.deal-card {
+  @include card($radius-xl, 14px);
+  @include stack(12px);
+  cursor: grab;
+  transition: opacity 0.15s;
+
+  &--dragging {
+    opacity: 0.4;
+  }
+
+  // Blue line above the card where a dragged card will land.
+  &--drop-above {
+    box-shadow:
+      0 -3px 0 0 $cyan-600,
+      0 1px 3px rgba(8, 145, 178, 0.12);
+  }
+
+  &__age {
+    font-size: 11px;
+    font-weight: 700;
+    color: $muted;
+    white-space: nowrap;
+  }
+
+  &__grip {
+    display: flex;
+    color: #a3a9b4;
+  }
+
+  &__details {
+    @include stack(6px);
+    padding: 10px 12px;
+    border-radius: $radius-md;
+    background: $bg-soft;
+  }
+
+  &__detail {
+    @include row(8px);
+    font-size: 12px;
+    font-weight: 600;
+    color: $ink-soft;
+
+    svg {
+      color: $muted;
+    }
+  }
+
+  &__advance {
+    flex: 1 1 auto;
+    min-height: 38px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__won {
+    @include center;
+    flex: 1 1 auto;
+    gap: 6px;
+    min-height: 38px;
+    border-radius: 9px;
+    background: $green-50;
+    color: #15803d;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+  }
+}

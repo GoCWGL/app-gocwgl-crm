@@ -1,0 +1,114 @@
+@use "../../abstracts" as *;
+
+// ----------------------------------------------------------- Form list
+.form-card {
+  gap: 14px;
+  padding: 18px 20px;
+
+  &--off {
+    opacity: 0.75;
+  }
+
+  &__head {
+    align-items: flex-start;
+  }
+
+  &__fields {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px;
+  }
+
+  &__field {
+    padding: 4px 9px;
+    border: 1px solid $line;
+    border-radius: 7px;
+    background: $white;
+    color: $ink-soft;
+    font-size: 11px;
+    font-weight: 700;
+  }
+}
+
+// ------------------------------------------------------- Form builder
+// Palette · fields · preview, wrapping on narrow screens.
+.builder {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 18px;
+
+  &__palette {
+    flex: 1 1 200px;
+    gap: 8px;
+    padding: 16px;
+  }
+
+  &__fields {
+    flex: 3 1 380px;
+    min-width: 0;
+  }
+
+  &__preview {
+    flex: 2 1 300px;
+    min-width: 0;
+  }
+}
+
+.palette-item {
+  @include row(10px);
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid rgba(8, 145, 178, 0.18);
+  border-radius: $radius-md;
+  background: $white;
+  color: $ink;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $cyan-glow;
+  }
+
+  &__plus {
+    margin-left: auto;
+    color: $cyan-700;
+    font-size: 16px;
+  }
+
+  &--custom {
+    min-height: 46px;
+    border: 1.5px dashed rgba(124, 77, 255, 0.5);
+    background: rgba(124, 77, 255, 0.05);
+    color: #4c1d95;
+    font-weight: 800;
+
+    .palette-item__plus {
+      color: #6d28d9;
+    }
+  }
+}
+
+.field-editor {
+  gap: 10px;
+}
+
+// Purple box with the settings of a custom question.
+.custom-field {
+  padding: 10px;
+  border: 1px dashed rgba(124, 77, 255, 0.35);
+  border-radius: $radius-md;
+  background: rgba(124, 77, 255, 0.05);
+}
+
+.form-preview {
+  gap: 14px;
+  padding: 22px;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px rgba(8, 145, 178, 0.04),
+    0 14px 40px rgba(8, 145, 178, 0.14);
+}

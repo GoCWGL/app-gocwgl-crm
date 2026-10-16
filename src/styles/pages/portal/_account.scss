@@ -1,0 +1,125 @@
+@use "../../abstracts" as *;
+
+.account-profile {
+  flex: 2 1 380px;
+  gap: 14px;
+}
+
+.social-links {
+  flex: 1 1 100%;
+  gap: 16px;
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  &__custom {
+    padding-top: 14px;
+    border-top: 1px solid $line-faint;
+  }
+}
+
+// URL input with a network badge on the left and a ✓ when valid.
+.link-input {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid $line-strong;
+  border-radius: $radius-md;
+  background: $white;
+  overflow: hidden;
+
+  &--invalid {
+    border-color: $pink-600;
+  }
+
+  &__badge {
+    @include center;
+    width: 42px;
+    flex: none;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__control {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 42px;
+    padding: 0 10px;
+    border: 0;
+    font-family: $font-mono;
+    font-size: 13px;
+    outline-offset: -2px;
+  }
+
+  &__ok {
+    @include row(0);
+    padding: 0 10px;
+    color: $green-700;
+    font-weight: 800;
+  }
+}
+
+// One custom link row (number · label · url · actions).
+.custom-link {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px;
+
+  &__index {
+    @include center;
+    width: 34px;
+    height: 42px;
+    flex: none;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+    color: $orange-ink;
+  }
+
+  &__label {
+    flex: 1 1 180px;
+  }
+
+  &__url {
+    flex: 2 1 260px;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 4px;
+    padding-top: 19px;
+
+    .icon-btn {
+      width: 34px;
+      height: 36px;
+    }
+  }
+}
+
+// Footer preview pill.
+.link-pill {
+  @include row(6px);
+  min-height: 32px;
+  padding: 0 12px;
+  border: 1px solid rgba(8, 145, 178, 0.25);
+  border-radius: $radius-pill;
+  background: $white;
+  color: $ink;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+
+  &__mark {
+    color: var(--tone-fg);
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 800;
+  }
+}

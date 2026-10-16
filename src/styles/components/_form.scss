@@ -1,0 +1,217 @@
+@use "../abstracts" as *;
+
+// <Field label hint error> wraps any control in a labelled column.
+.field {
+  @include stack(4px);
+  min-width: 0;
+
+  &--gap-6 {
+    gap: 6px;
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 700;
+    color: $muted;
+
+    &--strong {
+      font-size: 13px;
+      color: $ink;
+    }
+  }
+
+  &__required {
+    color: $pink-600;
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: $muted;
+  }
+
+  &__error {
+    font-size: 12px;
+    font-weight: 700;
+    color: $red-700;
+  }
+}
+
+// Shared look for <input>, <select> and <textarea>.
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid $line-strong;
+  border-radius: $radius-md;
+  background-color: $white;
+  font-size: 14px;
+  color: $ink;
+
+  &[aria-invalid="true"] {
+    border-color: $pink-600;
+  }
+
+  &:disabled {
+    background-color: $bg-soft;
+    color: $muted;
+  }
+
+  &--sm {
+    min-height: 36px;
+    padding: 0 10px;
+    border-radius: 9px;
+    font-size: 13px;
+  }
+
+  &--mono {
+    font-family: $font-mono;
+  }
+
+  &--auto {
+    width: auto;
+  }
+}
+
+.select {
+  padding: 0 10px;
+}
+
+.textarea {
+  min-height: auto;
+  padding: 10px 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+// Checkbox or radio with its label text.
+.check {
+  @include row(8px);
+  font-size: 13px;
+  font-weight: 600;
+  color: $ink-soft;
+  cursor: pointer;
+
+  input {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    margin: 0;
+    accent-color: $cyan-600;
+  }
+
+  &--brand input {
+    accent-color: $orange;
+  }
+}
+
+// Responsive grid of fields: two columns on wide screens.
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 14px;
+
+  &--narrow {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+
+// Text input with a fixed prefix/suffix, e.g. "https:// [ ] .platform.com".
+.input-group {
+  @include row(0);
+  border: 1px solid $line-strong;
+  border-radius: $radius-md;
+  background: $white;
+  overflow: hidden;
+
+  &__addon {
+    padding: 0 10px;
+    font-family: $font-mono;
+    font-size: 13px;
+    color: $muted;
+    white-space: nowrap;
+  }
+
+  .input {
+    border: 0;
+    border-radius: 0;
+    min-width: 80px;
+  }
+}
+
+// Dashed "+ Add …" select.
+.select--dashed {
+  border: 1.5px dashed $cyan-glow;
+  color: $cyan-700;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+// Large borderless title field (form / automation name).
+.title-input {
+  flex: 1 1 220px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: $bg-soft;
+  font-size: 17px;
+  font-weight: 800;
+
+  &:focus {
+    border-color: $line-strong;
+    background: $white;
+  }
+}
+
+// Search input with a magnifier icon inside.
+.search-input {
+  position: relative;
+  flex: 0 1 320px;
+
+  &__icon {
+    position: absolute;
+    top: 14px;
+    left: 12px;
+    color: $muted-light;
+    pointer-events: none;
+  }
+
+  .input {
+    min-height: 44px;
+    padding-left: 36px;
+  }
+}
+
+// "From → To" pair of date fields.
+.date-range {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+
+  &__arrow {
+    padding-bottom: 10px;
+    color: $muted;
+  }
+}
+
+// Dark code snippet (embed codes).
+.code-block {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 9px;
+  background: $ink;
+  color: $cyan-300;
+  font-family: $font-mono;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  margin: 6px 0;
+  border: 0;
+  background: rgba(8, 145, 178, 0.15);
+}

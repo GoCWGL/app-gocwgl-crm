@@ -1,0 +1,153 @@
+@use "../../abstracts" as *;
+
+// --------------------------------------------------- Edit contact drawer
+.status-box {
+  gap: 10px;
+  padding: 14px;
+  box-shadow: 0 0 16px rgba(255, 153, 0, 0.1);
+}
+
+// Lead / Active client / Inactive radio buttons.
+.status-choice {
+  @include row(8px);
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1.5px solid rgba(8, 145, 178, 0.25);
+  border-radius: $radius-md;
+  background: $white;
+  color: $ink-soft;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+
+  &__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--tone-fg);
+  }
+
+  &[aria-checked="true"] {
+    border-color: var(--tone-fg);
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    box-shadow: 0 0 12px var(--tone-bg);
+  }
+}
+
+// Client's social media and custom links.
+.client-links {
+  gap: 10px;
+  padding: 14px;
+  border-color: rgba(255, 153, 0, 0.5);
+  box-shadow: 0 0 18px rgba(255, 153, 0, 0.14);
+
+  &__row {
+    @include row(10px);
+    min-height: 30px;
+  }
+
+  &__badge {
+    width: 30px;
+    flex: none;
+    padding: 3px 0;
+    border-radius: 6px;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  &__label {
+    width: 120px;
+    flex: none;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  &__url {
+    @include truncate;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-family: $font-mono;
+    font-size: 12px;
+  }
+
+  &__funnels {
+    @include stack(4px);
+    padding-top: 8px;
+    border-top: 1px dashed rgba(217, 119, 6, 0.35);
+  }
+}
+
+// ------------------------------------------------------- View as client
+.view-as {
+  position: fixed;
+  inset: 0;
+  z-index: $z-overlay;
+  display: flex;
+  flex-direction: column;
+  background: $bg;
+
+  &__bar {
+    @include cluster(12px);
+    flex: none;
+    padding: 10px 18px;
+    background: $grad-orange;
+    color: $on-orange;
+    box-shadow: 0 0 22px rgba(255, 153, 0, 0.45);
+  }
+
+  &__icon {
+    @include center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: rgba(26, 15, 0, 0.12);
+  }
+
+  &__kicker {
+    color: $on-orange;
+  }
+
+  &__note {
+    padding: 4px 10px;
+    border-radius: $radius-pill;
+    background: rgba(26, 15, 0, 0.12);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__back {
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid rgba(26, 15, 0, 0.35);
+    border-radius: 9px;
+    background: transparent;
+    color: $on-orange;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  &__exit {
+    min-height: 38px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 9px;
+    background: $on-orange;
+    color: $orange-light;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  &__frame {
+    flex: 1 1 auto;
+    width: 100%;
+    border: 0;
+    background: $bg;
+  }
+}

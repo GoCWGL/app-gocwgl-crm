@@ -1,0 +1,110 @@
+// =============================================================================
+// Design tokens
+// Every color, font, radius and shadow used in the app lives here.
+// =============================================================================
+
+// ---------------------------------------------------------------- Brand colors
+$ink: #0b1424;
+$ink-soft: #2e3d55;
+$ink-muted: #3b4a61;
+$muted: #4f6280;
+$muted-light: #6b7a92;
+$white: #ffffff;
+$bg: #f6faff;
+$bg-soft: #f2f8fc;
+$bg-tint: #eef6fa;
+
+$cyan-50: #e3f6fa;
+$cyan-200: #a5f3fc;
+$cyan-300: #67e8f9;
+$cyan-glow: #22d3ee;
+$cyan-600: #0891b2;
+$cyan-700: #0e7490;
+$cyan-800: #155e75;
+
+$orange: #ff9900;
+$orange-light: #ffb23f;
+$orange-ink: #8a4500;
+$on-orange: #1a0f00;
+
+$violet: #7c3aed;
+$violet-soft: #7c4dff;
+$green-50: #e7f6ee;
+$green-500: #10b981;
+$green-700: #047857;
+$amber-500: #f59e0b;
+$amber-700: #b45309;
+$red-600: #d92d20;
+$red-700: #b42318;
+$pink-600: #db2777;
+$pink-700: #be185d;
+$slate-300: #cbd5e1;
+
+// Lines are the cyan hairlines used on almost every card and input.
+$line-faint: rgba(8, 145, 178, 0.13);
+$line-soft: rgba(8, 145, 178, 0.18);
+$line: rgba(8, 145, 178, 0.22);
+$line-strong: rgba(8, 145, 178, 0.3);
+
+// ------------------------------------------------------------------ Gradients
+$grad-orange: linear-gradient(90deg, $orange, $orange-light);
+$grad-cyan: linear-gradient(90deg, $cyan-700, $cyan-600);
+$grad-progress: linear-gradient(90deg, $cyan-glow, $orange);
+
+// ---------------------------------------------------------------------- Fonts
+$font-sans: var(--font-sans), "Manrope", system-ui, sans-serif;
+$font-mono: var(--font-mono), "JetBrains Mono", ui-monospace, monospace;
+
+// ---------------------------------------------------------------------- Radii
+$radius-xs: 6px;
+$radius-sm: 8px;
+$radius-md: 10px;
+$radius-lg: 12px;
+$radius-xl: 14px;
+$radius-2xl: 16px;
+$radius-pill: 999px;
+
+// -------------------------------------------------------------------- Shadows
+$shadow-card: 0 0 0 1px rgba(8, 145, 178, 0.03), 0 6px 22px rgba(8, 145, 178, 0.08);
+$shadow-soft: 0 4px 14px rgba(8, 145, 178, 0.06);
+$shadow-raised: 0 1px 3px rgba(8, 145, 178, 0.25);
+$shadow-sidebar: 4px 0 24px rgba(8, 145, 178, 0.06);
+$shadow-modal: 0 0 0 1px rgba(34, 211, 238, 0.25), 0 24px 60px rgba(11, 20, 36, 0.35);
+$glow-orange: 0 0 0 1px rgba(255, 153, 0, 0.4), 0 0 18px rgba(255, 153, 0, 0.35);
+$glow-orange-soft: 0 0 18px rgba(255, 153, 0, 0.18);
+$glow-green: 0 0 16px rgba(16, 185, 129, 0.12);
+
+// --------------------------------------------------------------- Breakpoints
+$breakpoints: (
+  sm: 640px,
+  md: 800px,
+  lg: 1000px,
+  xl: 1200px,
+);
+
+// ------------------------------------------------------------------- Z-index
+$z-toast: 60;
+$z-modal: 80;
+$z-overlay: 90;
+
+// --------------------------------------------------------------------- Tones
+// Each tone is a soft background, a readable foreground and a solid accent.
+// Components read them through the `.tone-*` classes (see utilities/_tones).
+// Keys are quoted so Sass doesn't read names like cyan or teal as colors.
+$tones: (
+  "cyan": (bg: #e3f6fa, fg: #0e7490, solid: #0891b2),
+  "sky": (bg: #e0f2fe, fg: #0369a1, solid: #0284c7),
+  "teal": (bg: #e6f7f5, fg: #0f766e, solid: #0d9488),
+  "green": (bg: rgba(16, 185, 129, 0.12), fg: #047857, solid: #10b981),
+  "lime": (bg: rgba(77, 124, 15, 0.12), fg: #4d7c0f, solid: #65a30d),
+  "amber": (bg: #fff0d9, fg: #8a4b00, solid: #f59e0b),
+  "orange": (bg: #fff1e6, fg: #c2410c, solid: #ea580c),
+  "brand": (bg: rgba(255, 153, 0, 0.14), fg: #8a4500, solid: #ff9900),
+  "red": (bg: #fde4e1, fg: #9b1c12, solid: #d92d20),
+  "pink": (bg: #fdedf5, fg: #be185d, solid: #db2777),
+  "purple": (bg: #f3eeff, fg: #6d28d9, solid: #7c3aed),
+  "indigo": (bg: #eef2ff, fg: #4f46e5, solid: #6366f1),
+  "slate": (bg: #eef0f3, fg: #3b4a61, solid: #8a909c),
+  "neutral": (bg: #eef6fa, fg: #4f6280, solid: #94a3b8),
+  "ink": (bg: #eef0f3, fg: #0b1424, solid: #0b1424),
+);

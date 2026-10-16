@@ -1,0 +1,205 @@
+@use "../abstracts" as *;
+
+// <Button variant="primary|secondary|accent|dark|cyan|soft|danger|link" size="sm|md|lg">
+.btn {
+  @include row(8px);
+  display: inline-flex;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: $radius-md;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    filter 0.15s,
+    box-shadow 0.15s,
+    background-color 0.15s;
+
+  &:hover {
+    filter: brightness(1.03);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  // ------------------------------------------------------------- Variants
+  // Orange glowing call to action.
+  &--primary {
+    background: $grad-orange;
+    color: $on-orange;
+    box-shadow: $glow-orange;
+    font-weight: 800;
+    padding: 0 20px;
+
+    &:hover {
+      color: $on-orange;
+    }
+  }
+
+  // White button with a cyan hairline.
+  &--secondary {
+    background: $white;
+    border-color: $line-strong;
+    color: $ink;
+
+    &:hover {
+      color: $ink;
+      background: $bg;
+    }
+  }
+
+  // White with cyan text: the most common in-card action.
+  &--outline {
+    background: $white;
+    border-color: $line-strong;
+    color: $cyan-700;
+
+    &:hover {
+      color: $cyan-800;
+      background: $bg;
+    }
+  }
+
+  // Soft orange outline, e.g. "Save & add another".
+  &--accent {
+    background: rgba(255, 153, 0, 0.06);
+    border-color: rgba(255, 153, 0, 0.45);
+    color: $orange-ink;
+    font-weight: 800;
+  }
+
+  &--dark {
+    background: $ink;
+    color: $white;
+
+    &:hover {
+      color: $white;
+    }
+  }
+
+  &--cyan {
+    background: $cyan-600;
+    color: $white;
+    box-shadow: 0 0 12px rgba(8, 145, 178, 0.3);
+
+    &:hover {
+      color: $white;
+    }
+  }
+
+  // Tinted cyan, used for low-emphasis actions inside cards.
+  &--soft {
+    background: rgba(8, 145, 178, 0.08);
+    border-color: rgba(8, 145, 178, 0.25);
+    color: $cyan-700;
+
+    &:hover {
+      color: $cyan-800;
+    }
+  }
+
+  &--danger {
+    background: $white;
+    border-color: rgba(219, 39, 119, 0.35);
+    color: $pink-700;
+  }
+
+  &--danger-solid {
+    background: $pink-600;
+    color: $white;
+    box-shadow: 0 0 14px rgba(219, 39, 119, 0.35);
+  }
+
+  // Dashed cyan outline for "+ Add …" actions.
+  &--dashed {
+    align-self: flex-start;
+    background: $white;
+    border: 1.5px dashed $cyan-glow;
+    color: $cyan-700;
+    font-weight: 800;
+  }
+
+  // Looks like a text link.
+  &--link {
+    min-height: auto;
+    padding: 0;
+    background: transparent;
+    color: $cyan-700;
+    font-weight: 700;
+
+    &:hover {
+      color: $cyan-800;
+      text-decoration: underline;
+    }
+  }
+
+  // ---------------------------------------------------------------- Sizes
+  &--sm {
+    min-height: 32px;
+    padding: 0 12px;
+    border-radius: $radius-sm;
+    font-size: 12px;
+  }
+
+  &--lg {
+    min-height: 46px;
+    padding: 0 22px;
+    font-size: 14px;
+  }
+
+  &--block {
+    width: 100%;
+  }
+}
+
+// Square icon-only button (up, down, delete, close...).
+.icon-btn {
+  @include center;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  padding: 0;
+  border: 1px solid $line;
+  border-radius: $radius-sm;
+  background: $white;
+  color: $ink-soft;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  &--lg {
+    width: 36px;
+    height: 36px;
+    border-color: $line-strong;
+    border-radius: $radius-md;
+    font-size: 18px;
+  }
+
+  &--sm {
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    font-size: 14px;
+  }
+
+  &--ghost {
+    border-color: transparent;
+    background: transparent;
+  }
+
+  &--danger {
+    color: $pink-600;
+  }
+}

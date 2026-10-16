@@ -1,0 +1,6 @@
+// Single entry point for tokens, functions and mixins.
+// Every partial starts with: @use "../abstracts" as *;
+@forward "variables";
+@forward "functions";
+@forward "mixins";
+@forward "keyframes";
