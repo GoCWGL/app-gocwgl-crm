@@ -15,6 +15,8 @@ export type BookingCalendar = {
   slug: string;
   on: boolean;
   desc: string;
+  /** Custom weekly hours for this calendar; when unset it uses the shared availability. */
+  hours?: DayAvailability[];
 };
 
 export const INITIAL_CALENDARS: BookingCalendar[] = [

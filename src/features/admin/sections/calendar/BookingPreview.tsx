@@ -18,7 +18,8 @@ export function BookingPreview({ calendar, onClose }: { calendar: BookingCalenda
   const [time, setTime] = useState("");
   const [confirmed, setConfirmed] = useState(false);
 
-  const availabilityOn = (day: number) => state.availability.find((a) => a.d === WEEKDAYS_SHORT[new Date(2026, 9, day).getDay()]);
+  const hours = calendar.hours ?? state.availability;
+  const availabilityOn = (day: number) => hours.find((a) => a.d === WEEKDAYS_SHORT[new Date(2026, 9, day).getDay()]);
 
   const bookedTimes = (day: number) =>
     state.contacts

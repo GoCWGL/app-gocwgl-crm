@@ -6,6 +6,21 @@
   box-shadow: 0 8px 24px rgba(8, 145, 178, 0.14);
 }
 
+// ----------------------------------------------------- Edit calendar drawer
+.edit-calendar {
+  &__dot {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-lg;
+    background: var(--cal);
+  }
+
+  &__hours {
+    padding: 4px 14px;
+  }
+}
+
 // ------------------------------------------------------- Calendar cards
 .calendar-grid {
   display: grid;

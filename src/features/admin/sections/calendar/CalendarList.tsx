@@ -6,6 +6,7 @@ import type { BookingCalendar } from "@/data/admin";
 import { cn, copyToClipboard } from "@/lib/utils";
 import { useAdmin } from "../../state/AdminContext";
 import { BookingPreview } from "./BookingPreview";
+import { EditCalendarDrawer } from "./EditCalendarDrawer";
 
 export const bookingLink = (cal: BookingCalendar) => `book.[yourdomain].com/${cal.slug}`;
 
@@ -14,9 +15,11 @@ export function CalendarList() {
   const { state, update } = useAdmin();
   const [previewId, setPreviewId] = useState("");
   const [copiedId, setCopiedId] = useState("");
+  const [editId, setEditId] = useState("");
 
   const scheduledThisWeek = state.contacts.filter((c) => c.stage === "booked" && c.day && ["Wed", "Thu", "Fri"].includes(c.day)).length;
   const preview = state.calendars.find((c) => c.id === previewId);
+  const editing = state.calendars.find((c) => c.id === editId);
 
   const toggle = (id: string) =>
     update((s) => ({ calendars: s.calendars.map((c) => (c.id === id ? { ...c, on: !c.on } : c)) }));
@@ -24,6 +27,7 @@ export function CalendarList() {
   return (
     <div className="page-stack">
       {preview && <BookingPreview key={preview.id} calendar={preview} onClose={() => setPreviewId("")} />}
+      {editing && <EditCalendarDrawer key={`edit-${editing.id}`} calendar={editing} onClose={() => setEditId("")} />}
 
       <div className="calendar-grid">
         {state.calendars.map((cal) => (
@@ -42,9 +46,13 @@ export function CalendarList() {
               <span className="calendar-card__link">{bookingLink(cal)}</span>
               <span className="text-small">
                 {cal.id === "discovery" ? scheduledThisWeek : 0} upcoming · {cal.on ? "Taking bookings" : "Turned off"}
+                {cal.hours && " · Custom hours"}
               </span>
             </div>
             <div className="calendar-card__actions">
+              <button type="button" className="calendar-card__action" onClick={() => setEditId(cal.id)}>
+                Edit
+              </button>
               <button
                 type="button"
                 className="calendar-card__action calendar-card__action--cyan"
@@ -56,7 +64,7 @@ export function CalendarList() {
                 {copiedId === cal.id ? "Link copied" : "Copy link"}
               </button>
               <button type="button" className="calendar-card__action" onClick={() => setPreviewId(cal.id)}>
-                Preview booking page
+                Preview
               </button>
             </div>
           </article>
