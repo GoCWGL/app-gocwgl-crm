@@ -1,0 +1,11 @@
+@use "../abstracts" as *;
+
+// Comments on a client's embed code (admin profile + portal).
+.embed-thread {
+  @include stack(8px);
+
+  .textarea {
+    min-height: 0;
+    font-size: 13px;
+  }
+}

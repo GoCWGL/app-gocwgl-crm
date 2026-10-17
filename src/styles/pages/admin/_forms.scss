@@ -79,6 +79,15 @@
     font-size: 16px;
   }
 
+  &--lead {
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.04);
+
+    .palette-item__plus {
+      color: $green-700;
+    }
+  }
+
   &--custom {
     min-height: 46px;
     border: 1.5px dashed rgba(124, 77, 255, 0.5);

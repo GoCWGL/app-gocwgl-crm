@@ -82,6 +82,67 @@
   }
 }
 
+// Embed codes the client pasted from their CRM.
+.client-embeds {
+  gap: 10px;
+  padding: 14px;
+  border-color: rgba(8, 145, 178, 0.35);
+
+  &__item {
+    border: 1px solid rgba(8, 145, 178, 0.2);
+    border-radius: $radius-lg;
+    background: $white;
+
+    &[data-issue] {
+      border-color: rgba(219, 39, 119, 0.4);
+    }
+  }
+
+  &__row {
+    @include row(8px);
+    flex-wrap: wrap;
+    padding: 6px 8px 6px 10px;
+  }
+
+  &__body {
+    @include stack(8px);
+    padding: 10px;
+    border-top: 1px dashed rgba(8, 145, 178, 0.25);
+  }
+
+  &__kind {
+    width: 34px;
+    flex: none;
+    padding: 3px 0;
+    border-radius: 6px;
+    background: rgba(8, 145, 178, 0.12);
+    color: $cyan-700;
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 800;
+    text-align: center;
+  }
+
+  &__label {
+    @include truncate;
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  &__count {
+    @include row(3px);
+  }
+
+  &__code {
+    max-height: 180px;
+    margin: 0;
+    overflow: auto;
+    white-space: pre-wrap;
+  }
+}
+
 // ------------------------------------------------------- View as client
 .view-as {
   position: fixed;

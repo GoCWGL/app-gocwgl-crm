@@ -63,6 +63,10 @@ export type PortalState = {
   /** Todo shown in the details drawer (0 = closed). */
   openTodoId: number;
   funnelRequestOpen: boolean;
+  /** Funnel whose request is being edited in the request drawer (0 = new request). */
+  editFunnelId: number;
+  /** Funnel shown in the embed code dialog (0 = closed). */
+  embedFunnelId: number;
 };
 
 const INITIAL_STATE: PortalState = {
@@ -86,6 +90,8 @@ const INITIAL_STATE: PortalState = {
   support: { view: "requests", type: "change", title: "", details: "" },
   openTodoId: 0,
   funnelRequestOpen: false,
+  editFunnelId: 0,
+  embedFunnelId: 0,
 };
 
 type Patch = Partial<PortalState> | ((state: PortalState) => Partial<PortalState>);

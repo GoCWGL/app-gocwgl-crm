@@ -24,7 +24,9 @@ const GROUPS: Array<{ title: string; links: NavLink[] }> = [
   { title: "Delivery", links: [link("progress", "Build Progress", "rocket", "brand"), link("media", "Client Media", "folder", "indigo")] },
   {
     title: "Marketing",
-    links: [link("email", "Email", "mail", "sky"), link("forms", "Forms", "form", "indigo"), link("automation", "Automation", "bolt", "amber")],
+    links: [link("email", "Email", "mail", "sky"), link("forms", "Forms", "form", "indigo"),
+      link("surveys", "Surveys", "survey", "purple"),
+      link("automation", "Automation", "bolt", "amber")],
   },
   { title: "Insights", links: [link("reporting", "Reporting", "chart", "teal")] },
 ];

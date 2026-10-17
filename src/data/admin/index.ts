@@ -5,6 +5,7 @@ export * from "./delivery";
 export * from "./marketing";
 export * from "./settings";
 export * from "./support";
+export * from "./surveys";
 
 /** Every page in the admin CRM. */
 export type AdminTab =
@@ -18,6 +19,7 @@ export type AdminTab =
   | "media"
   | "email"
   | "forms"
+  | "surveys"
   | "automation"
   | "reporting"
   | "bugs"
@@ -34,6 +36,7 @@ export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> 
   media: { title: "Client Media", subtitle: "One media folder per client. Files your clients upload from their portal land here." },
   email: { title: "Email", subtitle: "Send emails to one contact, a tag or a whole pipeline stage." },
   forms: { title: "Forms", subtitle: "Build forms for your landing pages. Every submission lands in your CRM." },
+  surveys: { title: "Surveys", subtitle: "Build surveys and quizzes with your own questions, then embed them on any page." },
   automation: { title: "Automation", subtitle: "Workflows that run when a lead signs up, books or pays." },
   reporting: { title: "Reporting", subtitle: "How well signups turn into calls and paying subscribers." },
   bugs: { title: "Report Bugs", subtitle: "Every bug your clients report from their own CRM, in one place." },

@@ -2,9 +2,11 @@
 
 import { Fragment } from "react";
 import { Badge, Button, Icon, IconTile, ProgressBar, StatGrid, buttonClass } from "@/components/ui";
-import { PAYMENT_CARD, type Funnel, type FunnelStatus } from "@/data/portal";
+import { PAYMENT_CARD, PORTAL_CLIENT_ID, type Funnel, type FunnelStatus } from "@/data/portal";
+import { useClientEmbeds } from "@/lib/embedStore";
 import type { Tone } from "@/lib/tones";
 import { cn, formatMoney } from "@/lib/utils";
+import { missingRequestDetails } from "../components/FunnelRequestDrawer";
 import { usePortal } from "../state/PortalContext";
 
 const STATUS: Record<FunnelStatus, { label: string; tone: Tone }> = {
@@ -18,13 +20,12 @@ const STATUS: Record<FunnelStatus, { label: string; tone: Tone }> = {
 export function FunnelsSection() {
   const { state, update, goTo, openSupport } = usePortal();
   const live = state.funnels.filter((f) => f.status === "live");
+  const embeds = useClientEmbeds(PORTAL_CLIENT_ID);
 
   const pay = (funnel: Funnel) =>
     update((s) => ({
       funnels: s.funnels.map((x) =>
-        x.id === funnel.id
-          ? { ...x, status: "queued", note: "Paid — thank you! Your team will start the build within 2 business days." }
-          : x,
+        x.id === funnel.id ? { ...x, status: "queued", note: "Paid — thank you! Your team will start the build within 2 business days." } : x,
       ),
       invoices: s.invoices.map((iv) => (iv.no === funnel.invoice ? { ...iv, status: "Paid" } : iv)),
       toast: `Paid ${formatMoney(funnel.price ?? 0)} with ${PAYMENT_CARD}. Your new funnel is queued for build.`,
@@ -46,7 +47,7 @@ export function FunnelsSection() {
           <h2 className="section-title">Your funnels</h2>
           <span className="text-muted">Every funnel your GoCWGL team built for you, with last 30 days results</span>
         </div>
-        <Button variant="primary" size="lg" onClick={() => update({ funnelRequestOpen: true })}>
+        <Button variant="primary" size="lg" onClick={() => update({ funnelRequestOpen: true, editFunnelId: 0 })}>
           <Icon name="plus" strokeWidth={2.4} />
           Request a new funnel
         </Button>
@@ -56,8 +57,12 @@ export function FunnelsSection() {
         <FunnelCard
           key={f.id}
           funnel={f}
+          embedCount={embeds.filter((e) => e.funnelId === f.id).length}
+          embedIssues={embeds.filter((e) => e.funnelId === f.id && e.issue).length}
           onBuild={() => goTo("build")}
           onPay={() => pay(f)}
+          onEdit={() => update({ funnelRequestOpen: true, editFunnelId: f.id })}
+          onEmbed={() => update({ embedFunnelId: f.id })}
           onChange={() => openSupport({ type: "change", title: `Change to “${f.name}”`, details: "" })}
         />
       ))}
@@ -67,14 +72,19 @@ export function FunnelsSection() {
 
 type FunnelCardProps = {
   funnel: Funnel;
+  embedCount: number;
+  embedIssues: number;
   onBuild: () => void;
   onPay: () => void;
+  onEdit: () => void;
+  onEmbed: () => void;
   onChange: () => void;
 };
 
-function FunnelCard({ funnel: f, onBuild, onPay, onChange }: FunnelCardProps) {
+function FunnelCard({ funnel: f, embedCount, embedIssues, onBuild, onPay, onEdit, onEmbed, onChange }: FunnelCardProps) {
   const status = STATUS[f.status];
   const isLive = f.status === "live";
+  const missing = missingRequestDetails(f);
   const base = f.steps[0][1] || 1;
   const leads = f.steps[1]?.[1] ?? 0;
 
@@ -87,8 +97,7 @@ function FunnelCard({ funnel: f, onBuild, onPay, onChange }: FunnelCardProps) {
       ]
     : [];
 
-  const stepMeta = (people: number, i: number) =>
-    isLive ? `${people} people` : f.status === "build" ? (i < 2 ? "Built" : "Up next") : "Planned";
+  const stepMeta = (people: number, i: number) => (isLive ? `${people} people` : f.status === "build" ? (i < 2 ? "Built" : "Up next") : "Planned");
 
   return (
     <article className={cn("funnel-card", isLive ? "funnel-card--live" : f.status === "pay" ? "funnel-card--pay" : "funnel-card--pending")}>
@@ -161,6 +170,31 @@ function FunnelCard({ funnel: f, onBuild, onPay, onChange }: FunnelCardProps) {
 
       {f.note && <div className={cn("message", f.status === "pay" && "message--pay")}>{f.note}</div>}
 
+      {embedIssues > 0 && (
+        <div className="inset funnel-card__missing funnel-card__missing--issue">
+          <span className="text-small">
+            <strong>
+              {embedIssues} embed code{embedIssues === 1 ? "" : "s"} need{embedIssues === 1 ? "s" : ""} a fix.
+            </strong>{" "}
+            Your team left a comment on what to change.
+          </span>
+          <Button variant="link" size="sm" onClick={onEmbed}>
+            See comments
+          </Button>
+        </div>
+      )}
+
+      {missing.length > 0 && (
+        <div className="inset funnel-card__missing">
+          <span className="text-small">
+            <strong>Still missing:</strong> {missing.join(" and ")}. Add them whenever you have them so your team can finish the copy.
+          </span>
+          <Button variant="link" size="sm" onClick={onEdit}>
+            Add details
+          </Button>
+        </div>
+      )}
+
       <div className="cluster cluster--8">
         {isLive && f.url && (
           <a className={buttonClass({ variant: "outline", size: "sm" })} href={`https://${f.url}`} target="_blank" rel="noopener">
@@ -175,6 +209,16 @@ function FunnelCard({ funnel: f, onBuild, onPay, onChange }: FunnelCardProps) {
         {f.status === "pay" && (
           <Button variant="primary" size="sm" onClick={onPay}>
             Pay {formatMoney(f.price ?? 0)} to start
+          </Button>
+        )}
+        <Button variant="outline" size="sm" onClick={onEmbed}>
+          <Icon name="code" size={14} />
+          Embed codes{embedCount > 0 && <span className="u-mono"> · {embedCount}</span>}
+        </Button>
+        {!isLive && (
+          <Button variant="outline" size="sm" onClick={onEdit}>
+            <Icon name="edit" size={14} />
+            Edit request
           </Button>
         )}
         <Button variant="secondary" size="sm" onClick={onChange}>

@@ -58,6 +58,21 @@
     padding: 10px 12px;
   }
 
+  // Nudge to fill in request details left empty.
+  &__missing {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+
+    &--issue {
+      border-color: rgba(219, 39, 119, 0.3);
+      background: #fff5f7;
+    }
+  }
+
   &__kpi-value {
     font-family: $font-mono;
     font-size: 18px;
@@ -109,4 +124,51 @@
 .message--pay {
   border-color: rgba(219, 39, 119, 0.3);
   background: #fff5f7;
+}
+
+// ------------------------------------------------------- Embed code dialog
+.embed-item {
+  @include stack(8px);
+  padding: 12px 14px;
+  border: 1px solid rgba(8, 145, 178, 0.2);
+  border-radius: $radius-lg;
+  background: $white;
+
+  &__head {
+    @include row(10px);
+    flex-wrap: wrap;
+  }
+
+  &[data-issue] {
+    border-color: rgba(219, 39, 119, 0.4);
+    box-shadow: 0 0 14px rgba(219, 39, 119, 0.08);
+  }
+
+  &__thread {
+    @include stack(8px);
+    padding-top: 10px;
+    border-top: 1px dashed rgba(8, 145, 178, 0.25);
+  }
+}
+
+.embed-code {
+  max-height: 220px;
+  margin: 0;
+  overflow: auto;
+  line-height: 1.55;
+  white-space: pre-wrap;
+
+  &--short {
+    max-height: 96px;
+  }
+}
+
+.embed-form {
+  gap: 12px;
+  padding: 14px 16px;
+}
+
+.embed-paste {
+  font-family: $font-mono;
+  font-size: 12px;
 }

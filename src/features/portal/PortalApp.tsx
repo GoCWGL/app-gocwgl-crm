@@ -5,6 +5,7 @@ import { useEffect, type ComponentType } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button, Toast } from "@/components/ui";
 import { PORTAL_PAGES, type PortalTab } from "@/data/portal";
+import { EmbedCodeDialog } from "./components/EmbedCodeDialog";
 import { FunnelRequestDrawer } from "./components/FunnelRequestDrawer";
 import { PortalSidebar } from "./components/PortalSidebar";
 import { TodoDrawer } from "./components/TodoDrawer";
@@ -66,6 +67,7 @@ function PortalLayout() {
         <>
           <TodoDrawer />
           <FunnelRequestDrawer />
+          <EmbedCodeDialog />
         </>
       }
     >

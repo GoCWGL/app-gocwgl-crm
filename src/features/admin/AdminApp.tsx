@@ -22,6 +22,7 @@ import { PipelineSection } from "./sections/pipeline/PipelineSection";
 import { ProgressSection } from "./sections/progress/ProgressSection";
 import { ReportingSection } from "./sections/reporting/ReportingSection";
 import { SettingsSection } from "./sections/settings/SettingsSection";
+import { SurveysSection } from "./sections/surveys/SurveysSection";
 import { AdminProvider, useAdmin } from "./state/AdminContext";
 
 const SECTIONS: Record<AdminTab, ComponentType> = {
@@ -35,6 +36,7 @@ const SECTIONS: Record<AdminTab, ComponentType> = {
   media: MediaSection,
   email: EmailSection,
   forms: FormsSection,
+  surveys: SurveysSection,
   automation: AutomationSection,
   reporting: ReportingSection,
   bugs: BugsSection,

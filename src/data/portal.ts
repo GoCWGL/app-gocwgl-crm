@@ -6,6 +6,9 @@ import type { Tone } from "@/lib/tones";
 // swap these for API calls when a backend exists.
 // =============================================================================
 
+/** Admin contact id of the sample portal client (Aisha Rahman). */
+export const PORTAL_CLIENT_ID = 9;
+
 // ------------------------------------------------------------------ Types
 export type PortalTab =
   | "overview"
@@ -67,6 +70,17 @@ export type Funnel = {
   links?: Array<{ label: string; url: string }>;
   /** [step name, people who reached it] */
   steps: Array<[string, number]>;
+  /** What the client filled in when requesting it (editable until it goes live). */
+  request?: FunnelRequestDetails;
+};
+
+export type FunnelRequestDetails = {
+  typeKey: FunnelTypeKey;
+  offer: string;
+  audience: string;
+  notes: string;
+  addons: string[];
+  speed: "standard" | "rush";
 };
 
 export type SocialKey = "facebook" | "instagram" | "tiktok" | "linkedin" | "youtube" | "x" | "google";
@@ -295,6 +309,7 @@ export const INITIAL_FUNNELS: Funnel[] = [
     url: "",
     pct: 41,
     steps: [["Landing page", 0], ["Signup form", 0], ["Booking page", 0], ["Checkout", 0]],
+    request: { typeKey: "booking", offer: "Free first week, no card needed", audience: "", notes: "", addons: ["emails"], speed: "standard" },
   },
 ];
 

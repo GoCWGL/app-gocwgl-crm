@@ -93,7 +93,9 @@ export function normalizeUrl(value: string): string {
 
 export function copyToClipboard(text: string): void {
   try {
-    void navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(text).catch(() => {
+      // Permission denied; ignore.
+    });
   } catch {
     // Clipboard is not available (insecure context); ignore.
   }

@@ -19,6 +19,7 @@ import {
   INITIAL_SENT_EMAILS,
   INITIAL_SETTINGS,
   INITIAL_SUBSCRIPTIONS,
+  INITIAL_SURVEYS,
   INITIAL_TAGS,
   INITIAL_TEAM,
   INITIAL_TEMPLATES,
@@ -43,6 +44,7 @@ import {
   type SentEmail,
   type Settings,
   type Subscription,
+  type Survey,
   type Tag,
   type TeamMember,
 } from "@/data/admin";
@@ -85,6 +87,7 @@ export type AdminState = {
   composer: ComposerDraft;
   emailView: "compose" | "templates";
   forms: LeadForm[];
+  surveys: Survey[];
   automations: Automation[];
 
   // Calendar
@@ -134,6 +137,7 @@ const INITIAL_STATE: AdminState = {
   composer: { mode: "one", contact: "", tag: "", stage: "", subject: "", body: "" },
   emailView: "compose",
   forms: INITIAL_FORMS,
+  surveys: INITIAL_SURVEYS,
   automations: INITIAL_AUTOMATIONS,
   calendars: INITIAL_CALENDARS,
   availability: INITIAL_AVAILABILITY,

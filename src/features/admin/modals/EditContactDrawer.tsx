@@ -6,6 +6,7 @@ import { CLIENT_LINKS, LEAD_SOURCES, PLAN_PRICE, SOCIAL_LABELS, type Contact, ty
 import { TODAY_SHORT } from "@/lib/dates";
 import { avatarTone, toneClass } from "@/lib/tones";
 import { cn, copyToClipboard, formatMoney, isEmail } from "@/lib/utils";
+import { ClientEmbedsCard } from "../components/ClientEmbedsCard";
 import { TagPicker } from "../components/TagPicker";
 import { CONTACT_STATUS, contactStatus, subscriptionOf, type ContactStatus } from "../lib/contacts";
 import { useAdmin } from "../state/AdminContext";
@@ -264,6 +265,8 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
           )}
         </div>
       )}
+
+      <ClientEmbedsCard clientId={c.id} />
 
       <button type="button" className="link-card link-card--glow" onClick={() => update({ viewAsId: c.id })}>
         <span className="link-card__icon" aria-hidden="true">
