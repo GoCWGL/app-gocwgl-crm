@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { errorMessage, fieldErrors } from "@/utils/errors";
 import { useResetPassword } from "@/utils/hooks/useAuth";
 import { passwordStrength } from "../lib/validation";
-import { PasswordInput } from "./PasswordInput";
+import { PasswordInput } from "@/components/ui";
 
 const STRENGTH_TONES = ["neutral", "red", "amber", "cyan", "green"] as const;
 
@@ -44,6 +44,7 @@ export function ResetPasswordForm({ token, onDone, onBack }: ResetPasswordFormPr
             New password
           </label>
           <PasswordInput
+            className="auth-input"
             id="rp-pw"
             autoComplete="new-password"
             placeholder="At least 8 characters"
@@ -68,6 +69,7 @@ export function ResetPasswordForm({ token, onDone, onBack }: ResetPasswordFormPr
             Confirm new password
           </label>
           <PasswordInput
+            className="auth-input"
             id="rp-pw2"
             autoComplete="new-password"
             placeholder="Type it again"

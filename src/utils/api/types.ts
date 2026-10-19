@@ -522,6 +522,66 @@ export interface paths {
         patch: operations["change_role_api_admin_team__user_id__patch"];
         trace?: never;
     };
+    "/api/admin/contacts/{contact_id}/portal-login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Contact Portal Login
+         * @description Whether the contact can sign in to their client portal with their own email.
+         */
+        get: operations["get_contact_portal_login_api_admin_contacts__contact_id__portal_login_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/contacts/{contact_id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Contact Password
+         * @description Owners and admins: set the contact's portal password, creating their login if they have none. Existing logins are signed out everywhere.
+         */
+        post: operations["set_contact_password_api_admin_contacts__contact_id__password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/contacts/{contact_id}/password-reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Contact Password Reset
+         * @description Email the contact a link to choose a new password. 409 `no_portal_login` when they have no login yet.
+         */
+        post: operations["send_contact_password_reset_api_admin_contacts__contact_id__password_reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/team": {
         parameters: {
             query?: never;
@@ -3527,6 +3587,8 @@ export interface components {
              * @default false
              */
             sendWelcome?: boolean;
+            /** Password */
+            password?: string | null;
         };
         /** ContactOut */
         ContactOut: {
@@ -4755,6 +4817,25 @@ export interface components {
             role?: "owner" | "viewer";
         };
         /**
+         * PortalLoginOut
+         * @description A contact's own portal login, as staff see it on the contact's profile.
+         */
+        PortalLoginOut: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "active" | "invited" | "disabled" | "none" | "taken";
+            /** Email */
+            email: string;
+            /** Lastloginat */
+            lastLoginAt?: string | null;
+            /** Passwordchangedat */
+            passwordChangedAt?: string | null;
+            /** Inviteexpiresat */
+            inviteExpiresAt?: string | null;
+        };
+        /**
          * Priority
          * @enum {string}
          */
@@ -5217,6 +5298,16 @@ export interface components {
              * @default false
              */
             mfaEnrollmentRequired?: boolean;
+        };
+        /** SetContactPassword */
+        SetContactPassword: {
+            /** Password */
+            password: string;
+            /**
+             * Notify
+             * @default false
+             */
+            notify?: boolean;
         };
         /** SlotsOut */
         SlotsOut: {
@@ -7121,6 +7212,136 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["MemberOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_contact_portal_login_api_admin_contacts__contact_id__portal_login_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PortalLoginOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_contact_password_api_admin_contacts__contact_id__password_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetContactPassword"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PortalLoginOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    send_contact_password_reset_api_admin_contacts__contact_id__password_reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
                     };
                 };
             };

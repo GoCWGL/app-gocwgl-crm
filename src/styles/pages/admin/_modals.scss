@@ -82,6 +82,22 @@
   }
 }
 
+// The contact's own portal login (set password / reset link / invite).
+.portal-login {
+  gap: 10px;
+  padding: 14px;
+  border-color: rgba(8, 145, 178, 0.35);
+
+  &__password {
+    @include row(6px);
+
+    .password-input {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+}
+
 // Embed codes the client pasted from their CRM.
 .client-embeds {
   gap: 10px;

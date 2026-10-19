@@ -25,7 +25,13 @@ export const useUpdateContact = () =>
 export const useDeleteContact = () => useApiMutation(api.deleteContact, { invalidate: CONTACT_KEYS });
 export const useArchiveContact = () => useApiMutation(api.archiveContact, { invalidate: CONTACT_KEYS });
 export const useUnarchiveContact = () => useApiMutation(api.unarchiveContact, { invalidate: CONTACT_KEYS });
-export const useSendPortalInvite = () => useApiMutation(api.sendPortalInvite);
+export const useSendPortalInvite = () => useApiMutation(api.sendPortalInvite, { invalidate: (_, id) => [qk.portalLogin(id)] });
+export const usePortalLogin = (id: string) => useQuery({ queryKey: qk.portalLogin(id), queryFn: () => api.getPortalLogin(id), enabled: !!id });
+export const useSetContactPassword = () =>
+  useApiMutation((v: { id: string; password: string; notify?: boolean }) => api.setContactPassword(v.id, { password: v.password, notify: v.notify }), {
+    invalidate: (_, v) => [qk.portalLogin(v.id)],
+  });
+export const useSendPasswordReset = () => useApiMutation(api.sendContactPasswordReset);
 
 // ------------------------------------------------------------------ Tags
 export const useTags = () => useQuery({ queryKey: qk.tags, queryFn: api.listTags });

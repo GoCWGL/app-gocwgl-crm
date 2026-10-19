@@ -6,6 +6,7 @@ export { FileCard } from "./FileCard";
 export { Checkbox, Field, Input, Select, Textarea, type SelectOption } from "./Form";
 export { FolderGlyph, GripIcon, Icon, ICONS, type IconName } from "./Icon";
 export { Modal } from "./Modal";
+export { PasswordInput } from "./PasswordInput";
 export { BarRow, ProgressBar } from "./ProgressBar";
 export { SegmentedControl, type SegmentOption } from "./SegmentedControl";
 export { KpiCard, StatGrid, StatTile, type StatItem } from "./Stats";

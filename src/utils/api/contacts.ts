@@ -7,6 +7,7 @@ import type {
   PipelineDetail,
   PipelineOut,
   PipelineUpdate,
+  PortalLoginOut,
   Stage,
   TagOut,
   TagWithCount,
@@ -32,6 +33,12 @@ export const deleteContact = (id: string) => del(`/admin/contacts/${id}`);
 export const archiveContact = (id: string) => post<ContactOut>(`/admin/contacts/${id}/archive`);
 export const unarchiveContact = (id: string) => post<ContactOut>(`/admin/contacts/${id}/unarchive`);
 export const sendPortalInvite = (id: string) => post<unknown>(`/admin/contacts/${id}/portal-invite`);
+export const getPortalLogin = (id: string) => get<PortalLoginOut>(`/admin/contacts/${id}/portal-login`);
+/** Owners and admins. Creates their portal login if they have none; an existing one is signed out everywhere. */
+export const setContactPassword = (id: string, body: { password: string; notify?: boolean }) =>
+  post<PortalLoginOut>(`/admin/contacts/${id}/password`, body);
+/** 409 `no_portal_login` when they have no login yet. */
+export const sendContactPasswordReset = (id: string) => post<unknown>(`/admin/contacts/${id}/password-reset`);
 
 /** Every contact, page by page (the API caps a page at 100). */
 export async function listAllContacts(filters: Omit<ContactFilters, "limit" | "offset"> = {}): Promise<ContactOut[]> {

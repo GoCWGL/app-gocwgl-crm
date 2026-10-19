@@ -88,3 +88,16 @@ export function copyToClipboard(text: string): void {
     // Clipboard is not available (insecure context); ignore.
   }
 }
+
+/** A random 14-character password with upper and lower case, digits and a symbol (no look-alike characters). */
+export function generatePassword(length = 14): string {
+  const sets = ["ABCDEFGHJKMNPQRSTUVWXYZ", "abcdefghjkmnpqrstuvwxyz", "23456789", "!@#$%*?"];
+  const all = sets.join("");
+  const pick = (chars: string) => chars[crypto.getRandomValues(new Uint32Array(1))[0] % chars.length];
+  const out = [...sets.map(pick), ...Array.from({ length: length - sets.length }, () => pick(all))];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = crypto.getRandomValues(new Uint32Array(1))[0] % (i + 1);
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out.join("");
+}

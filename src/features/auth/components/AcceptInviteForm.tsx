@@ -6,7 +6,7 @@ import { formatLong } from "@/utils/format/dates";
 import type { SessionResponse } from "@/utils/api/models";
 import { errorMessage, fieldErrors } from "@/utils/errors";
 import { useAcceptInvitation, usePreviewInvitation } from "@/utils/hooks/useAuth";
-import { PasswordInput } from "./PasswordInput";
+import { PasswordInput } from "@/components/ui";
 
 type AcceptInviteFormProps = {
   /** From the emailed link: /login?invite=… */
@@ -80,6 +80,7 @@ export function AcceptInviteForm({ token, onAccepted, onBack }: AcceptInviteForm
             Choose a password
           </label>
           <PasswordInput
+            className="auth-input"
             id="ai-pw"
             autoComplete="new-password"
             placeholder="At least 8 characters"

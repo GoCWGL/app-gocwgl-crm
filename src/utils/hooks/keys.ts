@@ -9,6 +9,7 @@ export const qk = {
 
   contacts: ["contacts"] as const,
   contact: (id: string) => ["contacts", "one", id] as const,
+  portalLogin: (id: string) => ["contacts", "portal-login", id] as const,
   tags: ["tags"] as const,
   salesBoard: ["sales-board"] as const,
   pipelines: ["pipelines"] as const,

@@ -9,7 +9,7 @@ import type { SessionResponse } from "@/utils/api/models";
 import { errorMessage, fieldErrors, hasCode } from "@/utils/errors";
 import { useLogin } from "@/utils/hooks/useAuth";
 import { emailError } from "../lib/validation";
-import { PasswordInput } from "./PasswordInput";
+import { PasswordInput } from "@/components/ui";
 
 type LoginFormProps = {
   email: string;
@@ -114,6 +114,7 @@ export function LoginForm({ email, onEmailChange, onSignedIn, onMfaRequired, onE
             </button>
           </div>
           <PasswordInput
+            className="auth-input"
             id="li-pw"
             autoComplete="current-password"
             placeholder="Your password"

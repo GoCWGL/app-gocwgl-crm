@@ -7,7 +7,7 @@ import { errorMessage, fieldErrors } from "@/utils/errors";
 import { useRegister } from "@/utils/hooks/useAuth";
 import { emailError, passwordStrength } from "../lib/validation";
 import type { SignupData } from "../types";
-import { PasswordInput } from "./PasswordInput";
+import { PasswordInput } from "@/components/ui";
 
 type SignupFormProps = {
   data: SignupData;
@@ -137,6 +137,7 @@ export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormPro
             Password
           </label>
           <PasswordInput
+            className="auth-input"
             id="su-pw"
             autoComplete="new-password"
             placeholder="At least 8 characters"

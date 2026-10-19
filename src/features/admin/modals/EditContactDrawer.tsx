@@ -19,7 +19,6 @@ import {
   useCustomPipelineDetails,
   useDeleteContact,
   usePipelines,
-  useSendPortalInvite,
   useTags,
   useUnarchiveContact,
 } from "@/utils/hooks/useContacts";
@@ -28,6 +27,7 @@ import { useApiMutation } from "@/utils/hooks/mutation";
 import { qk } from "@/utils/hooks/keys";
 import { useMe } from "@/utils/hooks/useUsers";
 import { ClientEmbedsCard } from "../components/ClientEmbedsCard";
+import { PortalLoginCard } from "../components/PortalLoginCard";
 import { TagPicker } from "../components/TagPicker";
 import { CONTACT_STATUS, contactName, contactStatus, getSalesStages, salesPipeline, subscriptionOf, type ContactStatus } from "../lib/contacts";
 import { useAdmin } from "../state/AdminContext";
@@ -82,7 +82,6 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
   const archive = useArchiveContact();
   const unarchive = useUnarchiveContact();
   const remove = useDeleteContact();
-  const invite = useSendPortalInvite();
 
   const [draft, setDraft] = useState<Draft>({
     first: c.firstName,
@@ -291,6 +290,8 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
         <span className="text-small">{statusHint}</span>
       </div>
 
+      <PortalLoginCard contact={c} />
+
       {linkItems.length > 0 && (
         <div className="inset inset--brand client-links">
           <div className="cluster cluster--nowrap">
@@ -357,25 +358,6 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
           →
         </span>
       </button>
-      {canWrite && (
-        <button
-          type="button"
-          className="link-card"
-          disabled={invite.isPending}
-          onClick={() => invite.mutate(c.id, { onSuccess: () => update({ toast: `Portal invite sent to ${c.email}.` }) })}
-        >
-          <span className="link-card__icon" aria-hidden="true">
-            <Icon name="mail" size={17} />
-          </span>
-          <span className="stack stack--2 u-grow">
-            <span className="text-strong">{invite.isPending ? "Sending portal invite…" : "Invite to client portal"}</span>
-            <span className="text-small">{invite.isError ? errorMessage(invite.error) : "Email them a link to set up their portal login"}</span>
-          </span>
-          <span className="link-card__arrow" aria-hidden="true">
-            →
-          </span>
-        </button>
-      )}
 
       <div className="stack stack--10">
         <span className="kicker">PROFILE</span>
