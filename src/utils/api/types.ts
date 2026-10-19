@@ -2261,6 +2261,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/intake-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Keys */
+        get: operations["list_keys_api_admin_intake_keys_get"];
+        put?: never;
+        /**
+         * Create Key
+         * @description The response is the only time the key is shown.
+         */
+        post: operations["create_key_api_admin_intake_keys_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/intake-keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Key */
+        delete: operations["revoke_key_api_admin_intake_keys__key_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/overview": {
         parameters: {
             query?: never;
@@ -2811,6 +2849,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/intake-keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Keys */
+        get: operations["my_keys_api_portal_intake_keys_get"];
+        put?: never;
+        /**
+         * Create My Key
+         * @description The portal owner connects their own CRM. The key is always for their business; it is shown once.
+         */
+        post: operations["create_my_key_api_portal_intake_keys_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/intake-keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke My Key */
+        delete: operations["revoke_my_key_api_portal_intake_keys__key_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/booking/{slug}": {
         parameters: {
             query?: never;
@@ -2945,6 +3021,26 @@ export interface paths {
         put?: never;
         /** Polar Webhook */
         post: operations["polar_webhook_api_billing_webhooks_polar_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/intake/bugs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report Bug
+         * @description Called from a client CRM's **server** (never the browser, which would expose the key).
+         */
+        post: operations["report_bug_api_intake_bugs_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3289,6 +3385,58 @@ export interface components {
             headingFont: string;
             /** Bodyfont */
             bodyFont: string;
+        };
+        /** BugReportIn */
+        BugReportIn: {
+            /** Title */
+            title: string;
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+            /**
+             * Area
+             * @default
+             */
+            area?: string;
+            /** @default Medium */
+            priority?: components["schemas"]["Priority"];
+            /**
+             * Device
+             * @default
+             */
+            device?: string;
+            /**
+             * Reportername
+             * @default
+             */
+            reporterName?: string;
+            /**
+             * Reporteremail
+             * @default
+             */
+            reporterEmail?: string | "";
+            /**
+             * Pageurl
+             * @default
+             */
+            pageUrl?: string | "";
+        };
+        /**
+         * BugReportOut
+         * @description Deliberately small: the caller learns the ticket code, nothing else about the account.
+         */
+        BugReportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Code */
+            code: string;
+            /** Status */
+            status: string;
         };
         /** CalendarCreate */
         CalendarCreate: {
@@ -4237,6 +4385,70 @@ export interface components {
             /** Fix */
             fix?: string | null;
         };
+        /** IntakeKeyCreated */
+        IntakeKeyCreated: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Name */
+            name: string;
+            /** Hint */
+            hint: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Lastusedat */
+            lastUsedAt: string | null;
+            /** Revokedat */
+            revokedAt: string | null;
+            /** Key */
+            key: string;
+        };
+        /** IntakeKeyIn */
+        IntakeKeyIn: {
+            /** Name */
+            name: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+        };
+        /** IntakeKeyOut */
+        IntakeKeyOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Name */
+            name: string;
+            /** Hint */
+            hint: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Lastusedat */
+            lastUsedAt: string | null;
+            /** Revokedat */
+            revokedAt: string | null;
+        };
         /**
          * Interval
          * @enum {string}
@@ -4796,6 +5008,11 @@ export interface components {
             name?: string | null;
             /** Stages */
             stages?: components["schemas"]["StageInput"][] | null;
+        };
+        /** PortalIntakeKeyIn */
+        PortalIntakeKeyIn: {
+            /** Name */
+            name: string;
         };
         /** PortalInvite */
         PortalInvite: {
@@ -5768,6 +5985,9 @@ export interface components {
             reporterEmail: string;
             /** Device */
             device: string;
+            source: components["schemas"]["TicketSource"];
+            /** Sourcename */
+            sourceName: string;
             /**
              * Createdat
              * Format: date-time
@@ -5793,6 +6013,12 @@ export interface components {
             status?: components["schemas"]["TicketStatus"] | null;
             type?: components["schemas"]["TicketType"] | null;
         };
+        /**
+         * TicketSource
+         * @description Where a ticket came from, so Report Bugs can show every platform side by side.
+         * @enum {string}
+         */
+        TicketSource: "team" | "portal" | "crm";
         /**
          * TicketStatus
          * @enum {string}
@@ -12482,6 +12708,7 @@ export interface operations {
                 contact_id?: string | null;
                 status?: components["schemas"]["TicketStatus"] | null;
                 type?: components["schemas"]["TicketType"] | null;
+                source?: components["schemas"]["TicketSource"] | null;
             };
             header?: never;
             path?: never;
@@ -13633,6 +13860,131 @@ export interface operations {
                         data: components["schemas"]["JobOut"];
                     };
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_keys_api_admin_intake_keys_get: {
+        parameters: {
+            query?: {
+                contact_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Keys Api Admin Intake Keys Get */
+                        data: components["schemas"]["IntakeKeyOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_key_api_admin_intake_keys_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntakeKeyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IntakeKeyCreated"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    revoke_key_api_admin_intake_keys__key_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -15189,6 +15541,120 @@ export interface operations {
             };
         };
     };
+    my_keys_api_portal_intake_keys_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Keys Api Portal Intake Keys Get */
+                        data: components["schemas"]["IntakeKeyOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_my_key_api_portal_intake_keys_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PortalIntakeKeyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["IntakeKeyCreated"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    revoke_my_key_api_portal_intake_keys__key_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     public_calendar_api_public_booking__slug__get: {
         parameters: {
             query?: never;
@@ -15559,6 +16025,50 @@ export interface operations {
                             [key: string]: unknown;
                         };
                     };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    report_bug_api_intake_bugs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BugReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BugReportOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Error */

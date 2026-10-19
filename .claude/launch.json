@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "gocwgl-admin",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["dev"],
+      "port": 3000
+    },
+    {
+      "name": "gocwgl-api",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "--directory", "/Users/christianlumapay/Coding/Projects/backendServer/gocwgl_server", "uvicorn", "main:app", "--reload", "--app-dir", "/Users/christianlumapay/Coding/Projects/backendServer/gocwgl_server", "--reload-dir", "/Users/christianlumapay/Coding/Projects/backendServer/gocwgl_server"],
+      "port": 8000,
+      "url": "http://127.0.0.1:8000"
+    }
+  ]
+}

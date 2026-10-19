@@ -8,6 +8,14 @@
     0 10px 30px rgba(8, 145, 178, 0.1);
 }
 
+// "Report a bug" shortcut above the request form.
+.bug-callout {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 14px;
+}
+
 .support-form {
   flex: 2 1 340px;
 }

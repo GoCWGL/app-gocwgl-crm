@@ -1,5 +1,5 @@
 import { del, get, patch, post } from "./client";
-import type { ChatOut, ClientTicketIn, InboxRow, StaffTicketIn, TicketOut, TicketPatch } from "./models";
+import type { ChatOut, ClientTicketIn, InboxRow, IntakeKeyCreated, IntakeKeyIn, IntakeKeyOut, PortalIntakeKeyIn, StaffTicketIn, TicketOut, TicketPatch } from "./models";
 
 // ------------------------------------------------------------------ Admin tickets
 export const listTickets = (filters: { status?: string; type?: string; contact_id?: string } = {}) =>
@@ -11,6 +11,12 @@ export const deleteTicket = (id: string) => del(`/admin/tickets/${id}`);
 /** `kind: "note"` is team-only and never shown to the client. */
 export const postTicketMessage = (id: string, body: { text: string; kind: "reply" | "note" }) =>
   post<TicketOut>(`/admin/tickets/${id}/messages`, body);
+
+// ------------------------------------------------------------------ Admin intake keys (client CRM bug buttons)
+export const listIntakeKeys = (filters: { contact_id?: string } = {}) => get<IntakeKeyOut[]>("/admin/intake-keys", filters);
+/** The plain `key` is in this response only. Admins only. */
+export const createIntakeKey = (body: IntakeKeyIn) => post<IntakeKeyCreated>("/admin/intake-keys", body);
+export const revokeIntakeKey = (id: string) => del(`/admin/intake-keys/${id}`);
 
 // ------------------------------------------------------------------ Admin client chat
 export const getInbox = () => get<InboxRow[]>("/admin/messages");
@@ -25,4 +31,8 @@ export const createPortalTicket = (body: ClientTicketIn) => post<TicketOut>("/po
 export const replyPortalTicket = (id: string, text: string) => post<TicketOut>(`/portal/tickets/${id}/messages`, { text });
 export const closePortalTicket = (id: string) => post<TicketOut>(`/portal/tickets/${id}/close`);
 export const listPortalMessages = () => get<ChatOut[]>("/portal/messages");
+/** The client's own CRM keys. Creating and revoking is for the portal owner; the `key` is in the create response only. */
+export const listPortalIntakeKeys = () => get<IntakeKeyOut[]>("/portal/intake-keys");
+export const createPortalIntakeKey = (body: PortalIntakeKeyIn) => post<IntakeKeyCreated>("/portal/intake-keys", body);
+export const revokePortalIntakeKey = (id: string) => del(`/portal/intake-keys/${id}`);
 export const sendPortalMessage = (text: string) => post<ChatOut>("/portal/messages", { text });

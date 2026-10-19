@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import logoMark from "@/assets/images/logo-mark.png";
-import { Badge, Button, Field, FormError, Input, LoadState, SegmentedControl, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Field, FormError, Icon, IconTile, Input, LoadState, SegmentedControl, Select, Textarea } from "@/components/ui";
 import { BUG_AREAS, PRIORITIES, REQUEST_TYPES, type RequestType } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ import {
   useReplyPortalTicket,
   useSendPortalMessage,
 } from "@/utils/hooks/useSupport";
+import { CrmBugButtonCard } from "../components/CrmBugButtonCard";
 import { usePortal, type SupportDraft } from "../state/PortalContext";
 
 const TICKET_TONES: Record<string, Tone> = {
@@ -46,7 +47,14 @@ export function SupportSection() {
           { value: "messages", label: "Messages" },
         ]}
       />
-      {draft.view === "requests" ? <RequestsView draft={draft} setDraft={setDraft} /> : <MessagesView />}
+      {draft.view === "requests" ? (
+        <>
+          <RequestsView draft={draft} setDraft={setDraft} />
+          <CrmBugButtonCard />
+        </>
+      ) : (
+        <MessagesView />
+      )}
     </div>
   );
 }
@@ -87,8 +95,41 @@ function RequestsView({ draft, setDraft }: { draft: SupportDraft; setDraft: (p: 
     );
   };
 
+  // Jump straight to a bug report: "Something is broken" selected and the summary ready to type.
+  const reportBug = () => {
+    setDraft({ type: "bug" });
+    setError("");
+    requestAnimationFrame(() => {
+      const title = document.getElementById("sp-title");
+      if (!title) return;
+      // Scroll vertically only: the decorative backdrop overflows .app-main sideways, and scrollIntoView would shift it.
+      const main = title.closest<HTMLElement>(".app-main");
+      if (main) {
+        const offset = title.getBoundingClientRect().top - main.getBoundingClientRect().top - main.clientHeight / 2;
+        main.scrollTo({ top: main.scrollTop + offset, behavior: "smooth" });
+      }
+      title.focus({ preventScroll: true });
+    });
+  };
+
   return (
-    <div className="card-row">
+    <>
+      {!readOnly && (
+        <section className="card bug-callout">
+          <IconTile tone="orange" size="lg">
+            <Icon name="bug" size={20} />
+          </IconTile>
+          <span className="stack stack--2 u-grow">
+            <span className="text-strong">Something not working?</span>
+            <span className="text-small">Tell us what broke and your GoCWGL team will look into it right away.</span>
+          </span>
+          <Button variant="primary" size="lg" onClick={reportBug} aria-pressed={draft.type === "bug"}>
+            <Icon name="bug" size={15} />
+            Report a bug
+          </Button>
+        </section>
+      )}
+      <div className="card-row">
       {!readOnly && (
       <form className="card card--glow support-form" onSubmit={submit}>
         <span className="kicker">NEW REQUEST</span>
@@ -168,6 +209,7 @@ function RequestsView({ draft, setDraft }: { draft: SupportDraft; setDraft: (p: 
                     <span className="text-strong">{t.title}</span>
                     <span className="text-small">
                       {TYPE_LABELS[t.type] ?? t.type} · {formatShort(t.createdAt)} · {t.priority}
+                      {t.source === "crm" && ` · via ${t.sourceName || "your CRM"}`}
                     </span>
                   </span>
                   <Badge tone={TICKET_TONES[t.status] ?? "cyan"} dot>
@@ -180,7 +222,8 @@ function RequestsView({ draft, setDraft }: { draft: SupportDraft; setDraft: (p: 
           </div>
         </LoadState>
       </section>
-    </div>
+      </div>
+    </>
   );
 }
 

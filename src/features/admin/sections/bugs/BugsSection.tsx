@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Avatar, Badge, Button, Field, FormError, IconButton, Input, LoadState, Select, StatGrid, Textarea } from "@/components/ui";
+import { Avatar, Badge, Button, Field, FormError, Icon, IconButton, Input, LoadState, Select, StatGrid, Textarea } from "@/components/ui";
 import {
   BUG_STATUSES,
   BUG_STATUS_TONES,
@@ -14,12 +14,13 @@ import {
 import type { Tone } from "@/lib/tones";
 import { cn, initials } from "@/lib/utils";
 import type { TicketOut } from "@/utils/api/models";
-import { canWriteCrm } from "@/utils/auth/session";
+import { canWriteCrm, isStaffAdmin } from "@/utils/auth/session";
 import { addDaysIso, formatShort, getTimeZone, isoDateIn, todayIso } from "@/utils/format/dates";
 import { useAllContacts } from "@/utils/hooks/useContacts";
-import { usePostTicketMessage, useTickets, useUpdateTicket } from "@/utils/hooks/useSupport";
+import { useIntakeKeys, usePostTicketMessage, useTickets, useUpdateTicket } from "@/utils/hooks/useSupport";
 import { useMe } from "@/utils/hooks/useUsers";
-import { businessName } from "../../lib/contacts";
+import { businessName, contactName } from "../../lib/contacts";
+import { CrmKeysDrawer } from "./CrmKeysDrawer";
 
 type DateFilter = "any" | "today" | "7" | "30" | "month" | "custom";
 
@@ -34,8 +35,19 @@ const MESSAGE_CLASS: Record<string, string> = {
 
 const isClosed = (t: TicketOut) => t.status === "Done";
 
+/** Where a ticket came from: the admin CRM, the client portal, or one of the clients' own CRMs. */
+const SOURCE_TONES: Record<TicketOut["source"], Tone> = { portal: "cyan", crm: "purple", team: "slate" };
+const sourceLabel = (t: TicketOut) =>
+  t.source === "crm" ? t.sourceName || "Client CRM" : t.source === "portal" ? "Client portal" : "Added by team";
+/** Filter values: a source ("portal", "team", "crm") or one CRM ("crm:<name>"). */
+const matchesSource = (t: TicketOut, filter: string) =>
+  !filter || (filter.startsWith("crm:") ? t.source === "crm" && t.sourceName === filter.slice(4) : t.source === filter);
+
 export function BugsSection() {
-  const canWrite = canWriteCrm(useMe().data);
+  const me = useMe().data;
+  const canWrite = canWriteCrm(me);
+  const [keysOpen, setKeysOpen] = useState(false);
+  const activeKeys = (useIntakeKeys().data ?? []).filter((k) => !k.revokedAt).length;
   const [type, setType] = useState("bug");
   const query = useTickets(type ? { type } : {});
   const tickets = query.data ?? [];
@@ -47,16 +59,25 @@ export function BugsSection() {
   const [client, setClient] = useState("");
   const [status, setStatus] = useState<"" | "open" | BugStatus>("open");
   const [severity, setSeverity] = useState("");
+  const [source, setSource] = useState("");
   const [dateFilter, setDateFilter] = useState<DateFilter>("any");
   const [from, setFrom] = useState(addDaysIso(today, -30));
   const [to, setTo] = useState(today);
   const [selectedId, setSelectedId] = useState("");
 
+  const contactOf = (t: TicketOut) => contacts.find((x) => x.id === t.contactId) ?? archived.find((x) => x.id === t.contactId);
   const clientName = (t: TicketOut) => {
-    const c = contacts.find((x) => x.id === t.contactId) ?? archived.find((x) => x.id === t.contactId);
+    const c = contactOf(t);
     return c ? businessName(c) : t.contactId ? "Client" : "No client";
   };
+  /** The client's own name, when the business name is their company. */
+  const personName = (t: TicketOut) => {
+    const c = contactOf(t);
+    const person = contactName(c);
+    return c && person !== businessName(c) ? person : "";
+  };
   const clients = Array.from(new Set(tickets.map(clientName)));
+  const crmNames = Array.from(new Set(tickets.filter((t) => t.source === "crm" && t.sourceName).map((t) => t.sourceName))).sort();
   const q = search.trim().toLowerCase();
 
   const inDateRange = (t: TicketOut) => {
@@ -75,8 +96,9 @@ export function BugsSection() {
         inDateRange(t) &&
         (!client || clientName(t) === client) &&
         (!severity || t.priority === severity) &&
+        matchesSource(t, source) &&
         (!status || (status === "open" ? !isClosed(t) : t.status === status)) &&
-        (!q || `${t.title} ${clientName(t)} ${t.reporterName} ${t.code}`.toLowerCase().includes(q)),
+        (!q || `${t.title} ${clientName(t)} ${personName(t)} ${t.reporterName} ${t.code} ${sourceLabel(t)}`.toLowerCase().includes(q)),
     )
     .sort(
       (a, b) =>
@@ -106,8 +128,21 @@ export function BugsSection() {
         <Field label={<span className="kicker kicker--sm">TYPE</span>} htmlFor="bug-type">
           <Select id="bug-type" value={type} placeholder="Any type" options={TICKET_TYPES} onChange={(e) => setType(e.target.value)} />
         </Field>
-        <Field label={<span className="kicker kicker--sm">CLIENT CRM</span>} htmlFor="bug-client">
+        <Field label={<span className="kicker kicker--sm">CLIENT</span>} htmlFor="bug-client">
           <Select id="bug-client" value={client} placeholder="All clients" options={clients} onChange={(e) => setClient(e.target.value)} />
+        </Field>
+        <Field label={<span className="kicker kicker--sm">SOURCE</span>} htmlFor="bug-source">
+          <Select id="bug-source" value={source} onChange={(e) => setSource(e.target.value)}>
+            <option value="">All sources</option>
+            <option value="portal">Client portal</option>
+            <option value="crm">All client CRMs</option>
+            {crmNames.map((n) => (
+              <option key={n} value={`crm:${n}`}>
+                CRM · {n}
+              </option>
+            ))}
+            <option value="team">Added by team</option>
+          </Select>
         </Field>
         <Field label={<span className="kicker kicker--sm">STATUS</span>} htmlFor="bug-status">
           <Select id="bug-status" value={status} onChange={(e) => setStatus(e.target.value as typeof status)}>
@@ -147,6 +182,10 @@ export function BugsSection() {
         <span className="text-small toolbar__count">
           Showing {rows.length} of {tickets.length}
         </span>
+        <Button size="sm" variant="outline" onClick={() => setKeysOpen(true)}>
+          <Icon name="link" size={13} />
+          Client CRM keys{activeKeys ? ` (${activeKeys})` : ""}
+        </Button>
       </div>
 
       <div className="split">
@@ -157,7 +196,8 @@ export function BugsSection() {
                 <tr>
                   <th>ID</th>
                   <th>Ticket</th>
-                  <th>Client CRM</th>
+                  <th>Client</th>
+                  <th>Source</th>
                   <th>Severity</th>
                   <th>Status</th>
                   <th>Reported</th>
@@ -180,8 +220,14 @@ export function BugsSection() {
                       <td>
                         <span className="cluster cluster--8 cluster--nowrap u-strong">
                           <Avatar text={initials(name)} tone={CLIENT_TONES[clients.indexOf(name) % CLIENT_TONES.length]} size="sm" square />
-                          {name}
+                          <span className="stack stack--2">
+                            {name}
+                            {personName(t) && <span className="text-small">{personName(t)}</span>}
+                          </span>
                         </span>
+                      </td>
+                      <td>
+                        <Badge tone={SOURCE_TONES[t.source] ?? "neutral"}>{sourceLabel(t)}</Badge>
                       </td>
                       <td>
                         <Badge tone={SEVERITY_TONES[t.priority as BugSeverity] ?? "neutral"}>{t.priority}</Badge>
@@ -202,13 +248,21 @@ export function BugsSection() {
         </section>
 
         {selected ? (
-          <BugDetails key={selected.id} ticket={selected} client={clientName(selected)} canWrite={canWrite} onClose={() => setSelectedId("")} />
+          <BugDetails
+            key={selected.id}
+            ticket={selected}
+            client={[clientName(selected), personName(selected)].filter(Boolean).join(" · ")}
+            canWrite={canWrite}
+            onClose={() => setSelectedId("")}
+          />
         ) : (
           <section className="split__side empty-state bug-placeholder">
             Click a ticket to see the details, change its status and reply to the client.
           </section>
         )}
       </div>
+
+      {keysOpen && <CrmKeysDrawer canManage={isStaffAdmin(me)} onClose={() => setKeysOpen(false)} />}
     </div>
   );
 }
@@ -217,7 +271,7 @@ function BugDetails({ ticket, client, canWrite, onClose }: { ticket: TicketOut; 
   const [reply, setReply] = useState("");
   const update = useUpdateTicket();
   const post = usePostTicketMessage();
-  const firstName = (ticket.reporterName || "the client").split(" ")[0];
+  const firstName = ticket.reporterName.trim().split(" ")[0] || "the client";
 
   const addMessage = (kind: "reply" | "note") => {
     const text = reply.trim();
@@ -247,8 +301,12 @@ function BugDetails({ ticket, client, canWrite, onClose }: { ticket: TicketOut; 
 
       <div className="bug-details__facts">
         <div className="stack stack--2">
+          <span className="u-muted">Client</span>
+          <span className="u-strong">{client}</span>
+        </div>
+        <div className="stack stack--2">
           <span className="u-muted">Reported by</span>
-          <span className="u-strong">{ticket.reporterName || "—"}</span>
+          <span className="u-strong">{ticket.reporterName || "Not given"}</span>
           <span className="u-muted">{ticket.reporterEmail}</span>
         </div>
         <div className="stack stack--2">
@@ -270,6 +328,11 @@ function BugDetails({ ticket, client, canWrite, onClose }: { ticket: TicketOut; 
           ) : (
             <span className="u-strong">{ticket.priority}</span>
           )}
+        </div>
+        <div className="stack stack--2">
+          <span className="u-muted">Sent from</span>
+          <span className="u-strong">{sourceLabel(ticket)}</span>
+          {ticket.source === "crm" && <span className="u-muted">Client CRM</span>}
         </div>
         <div className="stack stack--2">
           <span className="u-muted">Reported</span>

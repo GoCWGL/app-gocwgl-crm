@@ -39,6 +39,7 @@ export const qk = {
   adminFunnels: ["admin-funnels"] as const,
 
   tickets: ["tickets"] as const,
+  intakeKeys: ["intake-keys"] as const,
   inbox: ["inbox"] as const,
   clientChat: (id: string) => ["inbox", id] as const,
 
@@ -74,5 +75,6 @@ export const qk = {
   links: ["portal", "links"] as const,
   embeds: ["portal", "embeds"] as const,
   portalTickets: ["portal", "tickets"] as const,
+  portalIntakeKeys: ["portal", "intake-keys"] as const,
   portalMessages: ["portal", "messages"] as const,
 };

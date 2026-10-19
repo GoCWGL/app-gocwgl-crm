@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import type { ClientTicketIn, StaffTicketIn, TicketPatch } from "@/utils/api/models";
+import type { ClientTicketIn, IntakeKeyIn, PortalIntakeKeyIn, StaffTicketIn, TicketPatch } from "@/utils/api/models";
 import * as api from "@/utils/api/support";
 import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
@@ -17,6 +17,10 @@ export const usePostTicketMessage = () =>
     invalidate: [qk.tickets],
   });
 
+export const useIntakeKeys = () => useQuery({ queryKey: qk.intakeKeys, queryFn: () => api.listIntakeKeys() });
+export const useCreateIntakeKey = () => useApiMutation((v: IntakeKeyIn) => api.createIntakeKey(v), { invalidate: [qk.intakeKeys] });
+export const useRevokeIntakeKey = () => useApiMutation(api.revokeIntakeKey, { invalidate: [qk.intakeKeys] });
+
 export const useInbox = () => useQuery({ queryKey: qk.inbox, queryFn: api.getInbox });
 export const useClientChat = (contactId: string) =>
   useQuery({ queryKey: qk.clientChat(contactId), queryFn: () => api.getClientChat(contactId), enabled: !!contactId });
@@ -31,3 +35,7 @@ export const useReplyPortalTicket = () =>
 export const useClosePortalTicket = () => useApiMutation(api.closePortalTicket, { invalidate: [qk.portalTickets] });
 export const usePortalMessages = () => useQuery({ queryKey: qk.portalMessages, queryFn: api.listPortalMessages, refetchInterval: 15_000 });
 export const useSendPortalMessage = () => useApiMutation(api.sendPortalMessage, { invalidate: [qk.portalMessages] });
+export const usePortalIntakeKeys = () => useQuery({ queryKey: qk.portalIntakeKeys, queryFn: api.listPortalIntakeKeys });
+export const useCreatePortalIntakeKey = () =>
+  useApiMutation((v: PortalIntakeKeyIn) => api.createPortalIntakeKey(v), { invalidate: [qk.portalIntakeKeys] });
+export const useRevokePortalIntakeKey = () => useApiMutation(api.revokePortalIntakeKey, { invalidate: [qk.portalIntakeKeys] });
