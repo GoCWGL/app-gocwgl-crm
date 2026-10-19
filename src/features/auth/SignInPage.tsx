@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui";
+import { roleLabel } from "@/data/admin";
 import { refresh } from "@/utils/api/client";
 import type { SessionResponse, User } from "@/utils/api/models";
 import { getSession, useSession } from "@/utils/auth/session";
@@ -273,7 +274,7 @@ function getHeading(mode: AuthMode, ctx: { verifyReason: VerifyReason; doneAfter
 }
 
 function getSignedInSummary(user: User, ctx: { doneAfterSignup: boolean; enrollMfa: boolean }) {
-  const role = user.isStaff ? `${capitalize(user.role)} · GoCWGL team` : user.portalRole === "viewer" ? "Portal viewer" : "Client";
+  const role = user.isStaff ? `${roleLabel(user.role)} · GoCWGL team` : user.portalRole === "viewer" ? "Portal viewer" : "Client";
   const steps = ctx.doneAfterSignup
     ? ["Email verified", user.isStaff ? "Team account ready" : "Portal ready"]
     : ["Password checked", user.mfaEnabled ? "Two-step check passed" : user.isStaff ? "Team account" : "Client account"];
@@ -285,5 +286,3 @@ function getSignedInSummary(user: User, ctx: { doneAfterSignup: boolean; enrollM
     cta: user.isStaff ? "Go to the CRM" : "Go to my portal",
   };
 }
-
-const capitalize = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);

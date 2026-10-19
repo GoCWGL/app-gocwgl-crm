@@ -48,8 +48,8 @@ export const NOTIFICATION_OPTIONS = [
   { key: "digest", label: "Daily summary email", desc: "One email each morning with yesterday’s numbers", defaultOn: true },
 ];
 
-export const TEAM_ROLES: Array<{ value: "owner" | "admin" | "sales" | "viewer"; label: string }> = [
-  { value: "owner", label: "Owner" },
+export const TEAM_ROLES: Array<{ value: "super_admin" | "admin" | "sales" | "viewer"; label: string }> = [
+  { value: "super_admin", label: "Super Admin" },
   { value: "admin", label: "Admin" },
   { value: "sales", label: "Sales" },
   { value: "viewer", label: "Viewer" },
@@ -66,6 +66,10 @@ export const DOMAIN_PURPOSES: Array<{ value: DomainPurpose; label: string; short
   { value: "progress", label: "Client progress pages", short: "client progress pages" },
   { value: "email", label: "Sending email", short: "sending email" },
 ];
+
+/** "super_admin" → "Super Admin" (any staff role the API sends). */
+export const roleLabel = (role: string | null | undefined) =>
+  TEAM_ROLES.find((r) => r.value === role)?.label ?? (role ? role[0].toUpperCase() + role.slice(1).replace(/_/g, " ") : "");
 
 /** Shown as a hint; the API has the final list. */
 export const RESERVED_SUBDOMAINS = ["www", "app", "admin", "mail", "api", "portal", "login", "static", "cdn"];

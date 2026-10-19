@@ -83,9 +83,14 @@ export function canWriteCrm(user: User | null | undefined): boolean {
   return !!user?.isStaff && user.role !== "viewer";
 }
 
-/** Owners and admins: settings, team, domains, payment keys, audit log, jobs. */
+/** Super admins and admins: settings, team, domains, payment keys, audit log, jobs. */
 export function isStaffAdmin(user: User | null | undefined): boolean {
-  return !!user?.isStaff && (user.role === "owner" || user.role === "admin");
+  return !!user?.isStaff && (user.role === "super_admin" || user.role === "admin");
+}
+
+/** Only a super admin may add, promote, demote or remove admins and super admins (the API enforces it). */
+export function isSuperAdmin(user: User | null | undefined): boolean {
+  return !!user?.isStaff && user.role === "super_admin";
 }
 
 // ------------------------------------------------------------------ Restore and sign out

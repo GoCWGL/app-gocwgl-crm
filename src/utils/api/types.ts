@@ -5095,14 +5095,14 @@ export interface components {
          * @description Account type. Staff roles mirror the CRM team roles; everyone else is a portal client.
          * @enum {string}
          */
-        Role: "owner" | "admin" | "sales" | "viewer" | "client";
+        Role: "super_admin" | "admin" | "sales" | "viewer" | "client";
         /** RoleChange */
         RoleChange: {
             /**
              * Role
              * @enum {string}
              */
-            role: "owner" | "admin" | "sales" | "viewer";
+            role: "super_admin" | "admin" | "sales" | "viewer";
         };
         /** RunOut */
         RunOut: {
@@ -5242,7 +5242,7 @@ export interface components {
              * @default viewer
              * @enum {string}
              */
-            role?: "owner" | "admin" | "sales" | "viewer";
+            role?: "super_admin" | "admin" | "sales" | "viewer";
         };
         /** StaffMessageIn */
         StaffMessageIn: {

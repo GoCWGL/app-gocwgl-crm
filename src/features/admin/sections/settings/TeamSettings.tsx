@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Avatar, Badge, Button, Field, FormError, Input, LoadState, Select } from "@/components/ui";
+import { Avatar, Badge, Button, Field, FormError, Icon, IconTile, Input, LoadState, Modal, Select } from "@/components/ui";
 import { TEAM_ROLES } from "@/data/admin";
 import { avatarTone } from "@/lib/tones";
 import { isEmail } from "@/lib/utils";
 import type { StaffRole } from "@/utils/api/users";
-import { isStaffAdmin } from "@/utils/auth/session";
+import { isStaffAdmin, isSuperAdmin } from "@/utils/auth/session";
 import { fieldErrors } from "@/utils/errors";
 import {
   useCancelStaffInvitation,
@@ -21,44 +21,40 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
   const me = useMe().data;
   const canManage = isStaffAdmin(me);
   const team = useStaffTeam(canManage);
-  const invite = useInviteStaff();
   const changeRole = useChangeStaffRole();
   const remove = useRemoveStaff();
   const cancelInvite = useCancelStaffInvitation();
-  const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [role, setRole] = useState<StaffRole>("sales");
+  const [adding, setAdding] = useState(false);
 
-  // Only owners grant or take away the owner role (the API enforces it too).
-  const roleOptions = me?.role === "owner" ? TEAM_ROLES : TEAM_ROLES.filter((r) => r.value !== "owner");
-
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    const address = email.trim();
-    if (!isEmail(address)) return;
-    invite.mutate(
-      { email: address, fullName: fullName.trim(), role },
-      {
-        onSuccess: () => {
-          setEmail("");
-          setFullName("");
-          onMessage(`Invite sent to ${address}.`);
-        },
-      },
-    );
-  };
+  // Only a super admin grants or takes away the admin and super admin roles (the API enforces it too).
+  const superAdmin = isSuperAdmin(me);
+  const roleOptions = superAdmin ? TEAM_ROLES : TEAM_ROLES.filter((r) => r.value === "sales" || r.value === "viewer");
 
   if (!canManage) return <div className="empty-state">Ask an owner or admin to manage the team.</div>;
 
-  const apiFields = fieldErrors(invite.error);
-
   return (
     <div className="stack stack--14">
+      <div className="cluster cluster--end">
+        <Button variant="primary" onClick={() => setAdding(true)}>
+          <Icon name="userPlus" size={15} />
+          Add team member
+        </Button>
+      </div>
+      {adding && (
+        <AddTeamMemberDialog
+          roleOptions={roleOptions}
+          onClose={() => setAdding(false)}
+          onAdded={(text) => {
+            setAdding(false);
+            onMessage(text);
+          }}
+        />
+      )}
       <FormError error={changeRole.error ?? remove.error ?? cancelInvite.error} />
       <LoadState query={team}>
         {team.data?.members.map((m) => {
           const isSelf = m.id === me?.id;
-          const lockedOwner = m.role === "owner" && me?.role !== "owner";
+          const lockedOwner = !superAdmin && (m.role === "super_admin" || m.role === "admin");
           return (
             <div className="team-row" key={m.id}>
               <Avatar name={m.fullName || m.email} tone={avatarTone(m.id)} size="md" />
@@ -120,24 +116,99 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
         ))}
       </LoadState>
 
-      <form className="invite-form" onSubmit={submit}>
-        <Field label="Invite a team member" htmlFor="inv-email" className="u-grow" error={apiFields.email}>
-          <Input id="inv-email" type="email" value={email} placeholder="name@company.com" onChange={(e) => setEmail(e.target.value)} />
-        </Field>
-        <Field label="Name (optional)" htmlFor="inv-name">
-          <Input id="inv-name" value={fullName} placeholder="Their name" onChange={(e) => setFullName(e.target.value)} />
-        </Field>
-        <Field label="Role" htmlFor="inv-role">
-          <Select id="inv-role" value={role} options={roleOptions} onChange={(e) => setRole(e.target.value as StaffRole)} />
-        </Field>
-        <Button type="submit" variant="primary" disabled={invite.isPending}>
-          {invite.isPending ? "Sending…" : "Send invite"}
-        </Button>
-      </form>
-      {invite.error && !apiFields.email ? <FormError error={invite.error} /> : null}
       <span className="text-small">
-        Admin: everything except granting the owner role · Sales: contacts, pipeline, calendar and email · Viewer: read only.
+        Super Admin: everything · Admin: everything except managing admins · Sales: contacts, pipeline, calendar and email · Viewer: read only.
       </span>
     </div>
+  );
+}
+
+const ROLE_HELP: Record<StaffRole, string> = {
+  super_admin: "Everything, including who is an admin or super admin.",
+  admin: "Everything except adding, changing or removing admins and super admins.",
+  sales: "Contacts, pipeline, calendar, email and payments. No settings or team.",
+  viewer: "Can look at everything but can’t change anything.",
+};
+
+/**
+ * New team member: name, email and role. The API adds them by invitation: they get an email
+ * to choose their password, and show as "Invited" until they accept.
+ */
+function AddTeamMemberDialog({
+  roleOptions,
+  onClose,
+  onAdded,
+}: {
+  roleOptions: Array<{ value: StaffRole; label: string }>;
+  onClose: () => void;
+  onAdded: (message: string) => void;
+}) {
+  const invite = useInviteStaff();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<StaffRole>("sales");
+  const [tried, setTried] = useState(false);
+  const api = fieldErrors(invite.error);
+  const nameErr = !fullName.trim() ? "Enter their name." : api.fullName || "";
+  const emailErr = !isEmail(email) ? "Enter a valid email." : api.email || "";
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    setTried(true);
+    if (!fullName.trim() || !isEmail(email)) return;
+    const address = email.trim();
+    invite.mutate(
+      { email: address, fullName: fullName.trim(), role },
+      { onSuccess: () => onAdded(`${fullName.trim()} was added as ${TEAM_ROLES.find((r) => r.value === role)?.label}. An invite is on its way to ${address}.`) },
+    );
+  };
+
+  return (
+    <Modal
+      open
+      width={520}
+      onClose={onClose}
+      onSubmit={submit}
+      titleId="tm-title"
+      kicker="TEAM"
+      title="Add a team member"
+      subtitle="They get an email to set their password, then they can sign in to the CRM."
+      media={
+        <IconTile brand size="lg">
+          <Icon name="userPlus" size={18} />
+        </IconTile>
+      }
+      footer={
+        <>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button type="submit" variant="primary" disabled={invite.isPending}>
+            {invite.isPending ? "Adding…" : "Add team member"}
+          </Button>
+        </>
+      }
+    >
+      <div className="form-grid">
+        <Field label="Full name" htmlFor="tm-name" required error={tried && nameErr}>
+          <Input id="tm-name" autoComplete="off" value={fullName} placeholder="Jane Doe" onChange={(e) => setFullName(e.target.value)} />
+        </Field>
+        <Field label="Email" htmlFor="tm-email" required error={tried && emailErr}>
+          <Input
+            id="tm-email"
+            type="email"
+            autoComplete="off"
+            value={email}
+            placeholder="jane@company.com"
+            onChange={(e) => {
+              setEmail(e.target.value);
+              invite.reset();
+            }}
+          />
+        </Field>
+      </div>
+      <Field label="Role" htmlFor="tm-role" hint={ROLE_HELP[role]}>
+        <Select id="tm-role" value={role} options={roleOptions} onChange={(e) => setRole(e.target.value as StaffRole)} />
+      </Field>
+      {invite.error && !api.email && !api.fullName ? <FormError error={invite.error} /> : null}
+    </Modal>
   );
 }

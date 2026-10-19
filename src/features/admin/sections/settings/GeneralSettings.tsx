@@ -3,7 +3,7 @@
 import Image from "next/image";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { Avatar, Field, Input, Select, Toggle } from "@/components/ui";
-import { CURRENCIES, NOTIFICATION_OPTIONS, TIME_ZONES } from "@/data/admin";
+import { CURRENCIES, NOTIFICATION_OPTIONS, TIME_ZONES, roleLabel } from "@/data/admin";
 import type { User } from "@/utils/api/models";
 
 /** Editable profile fields (PATCH /users/me). Email changes aren't built yet (backend F-4). */
@@ -55,7 +55,6 @@ function zoneOptions(current: string) {
   return TIME_ZONES.some((z) => z.value === current) || !current ? TIME_ZONES : [{ value: current, label: current }, ...TIME_ZONES];
 }
 
-const roleLabel = (role: string) => (role ? role[0].toUpperCase() + role.slice(1) : "");
 
 export function ProfileSettings({
   user,
