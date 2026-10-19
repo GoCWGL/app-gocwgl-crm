@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { Button, SegmentedControl } from "@/components/ui";
+import { canWriteCrm } from "@/utils/auth/session";
+import { useMe } from "@/utils/hooks/useUsers";
 import { Availability } from "./Availability";
 import { CalendarList } from "./CalendarList";
 import { CalendarSync } from "./CalendarSync";
@@ -20,21 +22,24 @@ const VIEWS: Array<{ value: CalendarView; label: string }> = [
 export function CalendarSection() {
   const [view, setView] = useState<CalendarView>("types");
   const [creating, setCreating] = useState(false);
+  const canWrite = canWriteCrm(useMe().data);
 
   return (
     <div className="page-stack">
       <div className="section-head">
         <SegmentedControl kind="tabs" label="Calendar views" options={VIEWS} value={view} onChange={setView} />
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={() => {
-            setCreating(true);
-            setView("types");
-          }}
-        >
-          + New calendar
-        </Button>
+        {canWrite && (
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => {
+              setCreating(true);
+              setView("types");
+            }}
+          >
+            + New calendar
+          </Button>
+        )}
       </div>
 
       {creating && <NewCalendarForm onClose={() => setCreating(false)} />}

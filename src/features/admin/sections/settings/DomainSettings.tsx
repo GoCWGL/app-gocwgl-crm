@@ -1,78 +1,79 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Badge, Button, Field, Icon, IconTile, Input, Select } from "@/components/ui";
-import { DOMAIN_PURPOSES, RESERVED_SUBDOMAINS, type Domain, type DomainPurpose } from "@/data/admin";
-import { cn, copyToClipboard, newId } from "@/lib/utils";
-import { useAdmin } from "../../state/AdminContext";
+import { Badge, Button, Field, FormError, Icon, IconTile, Input, LoadState, Select } from "@/components/ui";
+import { DOMAIN_PURPOSES, type DomainPurpose } from "@/data/admin";
+import { cn, copyToClipboard } from "@/lib/utils";
+import type { DomainOut } from "@/utils/api/models";
+import { errorMessage, fieldErrors } from "@/utils/errors";
+import {
+  useAddDomain,
+  useDeleteDomain,
+  useDomains,
+  useMakeDomainPrimary,
+  useSetSubdomain,
+  useSettings,
+  useVerifyDomain,
+} from "@/utils/hooks/useSettings";
 
 const isSubdomain = (host: string) => host.split(".").length >= 3;
-const isValidHost = (host: string) => /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(host) && !host.includes("..");
 
-/** Deterministic verification token for a host (sample only). */
-const verifyToken = (host: string) =>
-  "gocwgl-verify=" + Array.from(host).reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7).toString(36) + "x9k2";
-
-function dnsRecords(d: Domain): Array<[string, string, string]> {
-  const label = isSubdomain(d.host) ? d.host.split(".")[0] : "@";
-  const records: Array<[string, string, string]> =
-    d.purpose === "email"
-      ? [
-          ["TXT", "@", "v=spf1 include:mail.[yourplatform].com ~all"],
-          ["CNAME", "crm1._domainkey", "dkim.[yourplatform].com"],
-          ["TXT", "_dmarc", "v=DMARC1; p=none;"],
-        ]
-      : isSubdomain(d.host)
-        ? [["CNAME", label, "cname.[yourplatform].com"]]
-        : [
-            ["A", "@", "[PLATFORM IP ADDRESS]"],
-            ["CNAME", "www", "cname.[yourplatform].com"],
-          ];
-  records.push(["TXT", label === "@" ? "_gocwgl" : `_gocwgl.${label}`, verifyToken(d.host)]);
-  return records;
+/** The TXT record that proves the domain is yours (from the API). */
+function dnsRecords(d: DomainOut): Array<[string, string, string]> {
+  const r = (d.verificationRecord ?? {}) as { type?: string; name?: string; value?: string };
+  return r.name ? [[r.type ?? "TXT", r.name, r.value ?? ""]] : [];
 }
 
 /** Free subdomain + custom domains with the DNS records to add. */
 export function DomainSettings() {
-  const { state, update } = useAdmin();
-  const { domains } = state;
+  const settings = useSettings();
+  const domainsQuery = useDomains();
+  const domains = domainsQuery.data ?? [];
+  const saveSub = useSetSubdomain();
+  const add = useAddDomain();
+  const verify = useVerifyDomain();
+  const makePrimary = useMakeDomainPrimary();
+  const remove = useDeleteDomain();
 
-  const [subDraft, setSubDraft] = useState(state.subdomain);
+  const subdomain = settings.data?.subdomain ?? "";
+  const [subEdit, setSubEdit] = useState<string | null>(null);
+  const subDraft = subEdit ?? subdomain;
   const [subMessage, setSubMessage] = useState<{ ok: boolean; text: string } | null>(null);
-  const [openId, setOpenId] = useState(0);
+  const [openId, setOpenId] = useState("");
   const [copiedKey, setCopiedKey] = useState("");
   const [newHost, setNewHost] = useState("");
   const [purpose, setPurpose] = useState<DomainPurpose>("all");
   const [error, setError] = useState("");
 
-  const host = newHost.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "");
-  const setDomains = (fn: (list: Domain[]) => Domain[]) => update((s) => ({ domains: fn(s.domains) }));
+  const host = newHost.trim().toLowerCase();
 
   const saveSubdomain = (e: FormEvent) => {
     e.preventDefault();
-    if (subDraft.length < 3) return setSubMessage({ ok: false, text: "Use at least 3 letters or numbers." });
-    if (RESERVED_SUBDOMAINS.includes(subDraft)) return setSubMessage({ ok: false, text: "That name is reserved. Try another." });
-    update({ subdomain: subDraft });
-    setSubMessage({ ok: true, text: `Saved. Your pages now live at https://${subDraft}.[yourplatform].com` });
+    saveSub.mutate(subDraft, {
+      onSuccess: (s) => {
+        setSubEdit(null);
+        setSubMessage({ ok: true, text: `Saved. Your pages now live at https://${s.subdomain}.[yourplatform].com` });
+      },
+      onError: (err) => setSubMessage({ ok: false, text: fieldErrors(err).subdomain || errorMessage(err) }),
+    });
   };
 
   const addDomain = (e: FormEvent) => {
     e.preventDefault();
-    if (!isValidHost(host)) return setError("Enter a domain like book.yourbusiness.com (no https:// or slashes).");
-    if (domains.some((d) => d.host === host)) return setError("That domain is already connected.");
-    const id = newId();
-    setDomains((list) => [...list, { id, host, purpose, status: "Pending DNS", primary: false }]);
-    setNewHost("");
-    setOpenId(id);
+    if (!host) return setError("Enter a domain like book.yourbusiness.com.");
+    add.mutate(
+      { host, purpose },
+      {
+        onSuccess: (d) => {
+          setNewHost("");
+          setOpenId(d.id);
+        },
+        onError: (err) => setError(fieldErrors(err).host || errorMessage(err)),
+      },
+    );
   };
 
-  const hint = !host
-    ? "Tip: a subdomain like book.yourbusiness.com only needs one CNAME record."
-    : isValidHost(host)
-      ? isSubdomain(host)
-        ? "Subdomain — you will add 1 CNAME record plus a TXT record to verify."
-        : "Root domain — you will add an A record, a www CNAME and a TXT record to verify."
-      : "That does not look like a domain yet.";
+  const hint = "After adding it, create the TXT record we show you, then press “Check DNS now”.";
 
   return (
     <div className="page-stack">
@@ -99,18 +100,18 @@ export function DomainSettings() {
               spellCheck={false}
               autoComplete="off"
               onChange={(e) => {
-                setSubDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
+                setSubEdit(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""));
                 setSubMessage(null);
               }}
             />
             <span className="input-group__addon">.[yourplatform].com</span>
           </div>
-          <Button type="submit" variant="outline" className="u-strong">
+          <Button type="submit" variant="outline" className="u-strong" disabled={saveSub.isPending || !subDraft}>
             Save subdomain
           </Button>
         </form>
         <span className={cn("text-small", subMessage && (subMessage.ok ? "u-green" : "u-pink"))}>
-          {subMessage?.text ?? `Current: https://${state.subdomain}.[yourplatform].com`}
+          {subMessage?.text ?? (subdomain ? `Current: https://${subdomain}.[yourplatform].com` : "Choose your free subdomain.")}
         </span>
       </div>
 
@@ -122,11 +123,13 @@ export function DomainSettings() {
           </span>
         </div>
 
+        <FormError error={verify.error ?? makePrimary.error ?? remove.error} />
+        <LoadState query={domainsQuery} isEmpty={domains.length === 0} empty="No custom domains yet.">
         {domains.map((d) => {
           const verified = d.status === "Verified";
           const open = openId === d.id;
           return (
-            <article key={d.id} className={cn("domain-card", d.primary && "domain-card--primary")}>
+            <article key={d.id} className={cn("domain-card", d.isPrimary && "domain-card--primary")}>
               <div className="domain-card__head">
                 <IconTile tone={verified ? "green" : "cyan"} size="md">
                   <Icon name="globe" size={17} strokeWidth={1.9} />
@@ -142,39 +145,40 @@ export function DomainSettings() {
                   {d.status}
                 </Badge>
                 <Badge tone="neutral">SSL: {verified ? "Active" : "Waiting for DNS"}</Badge>
-                {d.primary && <Badge tone="brand">PRIMARY</Badge>}
+                {d.isPrimary && <Badge tone="brand">PRIMARY</Badge>}
               </div>
               <div className="cluster cluster--8 domain-card__actions">
-                <Button size="sm" aria-expanded={open} onClick={() => setOpenId(open ? 0 : d.id)}>
+                <Button size="sm" aria-expanded={open} onClick={() => setOpenId(open ? "" : d.id)}>
                   {open ? "Hide DNS records" : "Show DNS records"}
                 </Button>
                 {!verified && (
                   <Button
                     size="sm"
                     variant="primary"
+                    disabled={verify.isPending}
                     onClick={() => {
-                      setDomains((list) => list.map((x) => (x.id === d.id ? { ...x, status: "Verified" } : x)));
                       setOpenId(d.id);
+                      verify.mutate(d.id);
                     }}
                   >
-                    Check DNS now
+                    {verify.isPending && verify.variables === d.id ? "Checking…" : "Check DNS now"}
                   </Button>
                 )}
-                {verified && !d.primary && d.purpose !== "email" && (
-                  <Button size="sm" variant="accent" onClick={() => setDomains((list) => list.map((x) => ({ ...x, primary: x.id === d.id })))}>
+                {verified && !d.isPrimary && d.purpose !== "email" && (
+                  <Button size="sm" variant="accent" disabled={makePrimary.isPending} onClick={() => makePrimary.mutate(d.id)}>
                     Make primary
                   </Button>
                 )}
                 <span className="u-spacer" />
-                <Button size="sm" variant="danger" aria-label={`Remove ${d.host}`} onClick={() => setDomains((list) => list.filter((x) => x.id !== d.id))}>
+                <Button size="sm" variant="danger" aria-label={`Remove ${d.host}`} disabled={remove.isPending} onClick={() => remove.mutate(d.id)}>
                   Remove
                 </Button>
               </div>
               {open && (
                 <div className="domain-card__dns">
                   <span className="text-body">
-                    Add these records where you bought your domain (GoDaddy, Namecheap, Cloudflare and so on). Changes can take up to 24
-                    hours to show.
+                    Add this record where you bought your domain (GoDaddy, Namecheap, Cloudflare and so on) to prove it’s yours. Changes
+                    can take up to 24 hours to show.
                   </span>
                   <div className="table-scroll dns-table-wrap">
                     <table className="data-table data-table--compact dns-table">
@@ -223,7 +227,7 @@ export function DomainSettings() {
             </article>
           );
         })}
-        {domains.length === 0 && <div className="empty-state">No custom domains yet.</div>}
+        </LoadState>
       </div>
 
       <form className="card card--glow card--tight domain-add" onSubmit={addDomain}>
@@ -253,7 +257,7 @@ export function DomainSettings() {
             {error}
           </p>
         )}
-        <Button type="submit" variant="primary" className="u-self-start">
+        <Button type="submit" variant="primary" className="u-self-start" disabled={add.isPending}>
           Add domain
         </Button>
       </form>

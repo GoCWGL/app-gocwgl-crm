@@ -7,8 +7,8 @@ export const metadata: Metadata = {
 };
 
 export default function PortalPage() {
-  // PortalApp reads ?as=&biz= (used by the admin's "View as client"),
-  // so it renders on the client inside a Suspense boundary.
+  // PortalApp is client-only (session restore, ?as= for the admin's "View as client"),
+  // so it renders inside a Suspense boundary.
   return (
     <Suspense>
       <PortalApp />

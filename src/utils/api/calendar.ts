@@ -1,0 +1,43 @@
+import { del, get, patch, post } from "./client";
+import type {
+  AdminBookingIn,
+  BookingOut,
+  BookingPatch,
+  BookingRequest,
+  CalendarCreate,
+  CalendarOut,
+  CalendarUpdate,
+  ConnectionCreate,
+  ConnectionOut,
+  ConnectionUpdate,
+  PublicCalendarOut,
+  SlotsOut,
+} from "./models";
+
+// ------------------------------------------------------------------ Booking calendars
+export const listCalendars = () => get<CalendarOut[]>("/admin/calendars");
+export const getCalendar = (id: string) => get<CalendarOut>(`/admin/calendars/${id}`);
+/** 409 `duplicate_slug` when the link is taken. */
+export const createCalendar = (body: CalendarCreate) => post<CalendarOut>("/admin/calendars", body);
+export const updateCalendar = (id: string, body: CalendarUpdate) => patch<CalendarOut>(`/admin/calendars/${id}`, body);
+export const deleteCalendar = (id: string) => del(`/admin/calendars/${id}`);
+
+// ------------------------------------------------------------------ Bookings
+export const listBookings = (range: { start?: string; end?: string } = {}) => get<BookingOut[]>("/admin/bookings", range);
+export const getBooking = (id: string) => get<BookingOut>(`/admin/bookings/${id}`);
+export const createBooking = (body: AdminBookingIn) => post<BookingOut>("/admin/bookings", body);
+export const updateBooking = (id: string, body: BookingPatch) => patch<BookingOut>(`/admin/bookings/${id}`, body);
+export const cancelBooking = (id: string) => post<void>(`/admin/bookings/${id}/cancel`);
+
+// ------------------------------------------------------------------ Calendar connections (sync is backlog F-1 / F-2)
+export const listCalendarConnections = () => get<ConnectionOut[]>("/admin/calendar-connections");
+export const createCalendarConnection = (body: ConnectionCreate) =>
+  post<ConnectionOut>("/admin/calendar-connections", body);
+export const updateCalendarConnection = (id: string, body: ConnectionUpdate) =>
+  patch<ConnectionOut>(`/admin/calendar-connections/${id}`, body);
+export const deleteCalendarConnection = (id: string) => del(`/admin/calendar-connections/${id}`);
+
+// ------------------------------------------------------------------ Public booking page
+export const getPublicCalendar = (slug: string) => get<PublicCalendarOut>(`/public/booking/${slug}`);
+export const getPublicSlots = (slug: string, day: string) => get<SlotsOut>(`/public/booking/${slug}/slots`, { day });
+export const bookPublic = (slug: string, body: BookingRequest) => post<PublicCalendarOut>(`/public/booking/${slug}`, body);

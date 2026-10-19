@@ -3,18 +3,6 @@ export function cn(...classes: Array<string | false | null | undefined>): string
   return classes.filter(Boolean).join(" ");
 }
 
-/** "$1,234" (whole dollars) or "$1,234.50" when there are cents. */
-export function formatMoney(value: number | string): string {
-  const n = Number(value) || 0;
-  return (
-    "$" +
-    n.toLocaleString("en-US", {
-      minimumFractionDigits: n % 1 ? 2 : 0,
-      maximumFractionDigits: 2,
-    })
-  );
-}
-
 /** Percentage of a / b as a rounded "42%" string (0% when b is 0). */
 export function percent(a: number, b: number): string {
   return (b ? Math.round((a / b) * 100) : 0) + "%";
@@ -99,9 +87,4 @@ export function copyToClipboard(text: string): void {
   } catch {
     // Clipboard is not available (insecure context); ignore.
   }
-}
-
-/** Unique-enough id for items created in the browser. */
-export function newId(): number {
-  return Date.now() + Math.floor(Math.random() * 1000);
 }

@@ -1,12 +1,17 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
 import { Avatar, CountChip, Icon, IconTile, type IconName } from "@/components/ui";
 import type { AdminTab, ContactView } from "@/data/admin";
 import type { Tone } from "@/lib/tones";
+import { useSubscriptions } from "@/utils/hooks/useBilling";
+import { useSignOut } from "@/utils/hooks/useAuth";
+import { useAllContacts, useTags } from "@/utils/hooks/useContacts";
+import { useMe } from "@/utils/hooks/useUsers";
 import { isActiveClient, isInactiveClient } from "../lib/contacts";
 import { useAdmin } from "../state/AdminContext";
 
@@ -40,9 +45,17 @@ function NavIcon({ icon, tone }: { icon: IconName; tone: Tone }) {
 }
 
 export function AdminSidebar() {
+  const router = useRouter();
   const { state, goTo, openContacts } = useAdmin();
-  const { tab, contacts, subscriptions, tags, settings } = state;
+  const { tab } = state;
+  const contacts = useAllContacts().data ?? [];
+  const archived = useAllContacts({ archived: true }).data ?? [];
+  const subscriptions = useSubscriptions().data;
+  const tags = useTags().data ?? [];
+  const me = useMe().data;
+  const signOut = useSignOut();
   const [contactsOpen, setContactsOpen] = useState(true);
+  const name = me?.fullName || me?.email || "";
 
   const inContacts = tab === "clients" || tab === "tags";
   const subnavOpen = contactsOpen || inContacts;
@@ -50,7 +63,7 @@ export function AdminSidebar() {
   const contactLinks: Array<{ view: ContactView | "tags"; label: string; count: number }> = [
     { view: "all", label: "Contacts", count: contacts.length },
     { view: "active", label: "Clients", count: contacts.filter((c) => isActiveClient(c, subscriptions)).length },
-    { view: "inactive", label: "Inactive", count: contacts.filter((c) => isInactiveClient(c, subscriptions)).length },
+    { view: "inactive", label: "Inactive", count: contacts.filter((c) => isInactiveClient(c, subscriptions)).length + archived.length },
     { view: "tags", label: "Tags", count: tags.length },
   ];
 
@@ -77,10 +90,15 @@ export function AdminSidebar() {
               onClick={() => goTo("bugs")}
               icon={<NavIcon icon="bug" tone="red" />}
             />
+            <NavItem
+              label={signOut.isPending ? "Signing out…" : "Sign out"}
+              onClick={() => signOut.mutate(undefined, { onSettled: () => router.replace("/login") })}
+              icon={<NavIcon icon="arrowLeft" tone="slate" />}
+            />
           </SidebarGroup>
           <ProfileButton
-            avatar={<Avatar name={settings.name} brand ring />}
-            name={settings.name}
+            avatar={<Avatar name={name} brand ring />}
+            name={name}
             subtitle="Profile & settings"
             active={tab === "settings"}
             onClick={() => goTo("settings")}

@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { Badge, Button, Checkbox, Field, Icon, IconButton, IconTile, Input, Select, Textarea, Toggle } from "@/components/ui";
 import { CHOICE_TYPES, QUESTION_TYPES, type QuestionType, type Survey, type SurveyQuestion } from "@/data/admin";
-import { cn, moveItem, newId } from "@/lib/utils";
+import { cn, moveItem } from "@/lib/utils";
+import { errorMessage, fieldErrors } from "@/utils/errors";
+import { useTags } from "@/utils/hooks/useContacts";
+import { useCreateSurvey, useUpdateSurvey } from "@/utils/hooks/useForms";
+import { draftToSurvey, surveyToDraft } from "@/utils/mappers/surveys";
+import { newFieldId } from "@/utils/mappers/forms";
 import { changeQuestionType, newQuestion, surveyErrors } from "../../lib/surveys";
 import { useAdmin } from "../../state/AdminContext";
 import { SurveyEmbedModal } from "./SurveyEmbedModal";
@@ -17,7 +22,10 @@ type SurveyBuilderProps = {
 
 /** Three columns: question types · questions & settings · live preview. */
 export function SurveyBuilder({ draft, onChange, onClose }: SurveyBuilderProps) {
-  const { state, update, notify } = useAdmin();
+  const { notify } = useAdmin();
+  const tags = useTags().data ?? [];
+  const createSurvey = useCreateSurvey();
+  const updateSurvey = useUpdateSurvey();
   const [error, setError] = useState("");
   const [embedOpen, setEmbedOpen] = useState(false);
 
@@ -35,33 +43,32 @@ export function SurveyBuilder({ draft, onChange, onClose }: SurveyBuilderProps) 
     requestAnimationFrame(() => document.querySelector(".question-editor:last-of-type input")?.scrollIntoView({ block: "center" }));
   };
 
-  /** Saves and returns the saved survey (with its id), or null when invalid. */
-  const persist = (): Survey | null => {
+  /** Saves and returns the saved survey (with its id), or null when invalid or refused. */
+  const persist = async (): Promise<Survey | null> => {
     const problem = surveyErrors(draft);
     if (problem) {
       setError(problem);
       return null;
     }
-    const saved: Survey = {
-      ...draft,
-      id: draft.id || newId(),
-      name: draft.name.trim(),
-      questions: draft.questions.map((q) => ({ ...q, title: q.title.trim(), options: q.options.map((o) => o.trim()).filter(Boolean) })),
-    };
-    update((s) => ({
-      surveys: draft.id ? s.surveys.map((x) => (x.id === draft.id ? saved : x)) : [...s.surveys, saved],
-    }));
-    return saved;
+    const body = draftToSurvey(draft);
+    try {
+      const saved = draft.id ? await updateSurvey.mutateAsync({ id: draft.id, body }) : await createSurvey.mutateAsync(body);
+      return surveyToDraft(saved);
+    } catch (err) {
+      setError(Object.values(fieldErrors(err))[0] || errorMessage(err));
+      return null;
+    }
   };
+  const saving = createSurvey.isPending || updateSurvey.isPending;
 
-  const save = () => {
-    if (!persist()) return;
+  const save = async () => {
+    if (!(await persist())) return;
     notify(`Saved “${draft.name.trim()}”.`);
     onClose();
   };
 
-  const openEmbed = () => {
-    const saved = persist();
+  const openEmbed = async () => {
+    const saved = await persist();
     if (!saved) return;
     onChange(saved);
     setEmbedOpen(true);
@@ -85,11 +92,11 @@ export function SurveyBuilder({ draft, onChange, onClose }: SurveyBuilderProps) 
           placeholder="Name your survey"
         />
         <Toggle label="Published" showLabel checked={draft.on} onChange={(on) => set({ on })} />
-        <Button variant="outline" onClick={openEmbed}>
+        <Button variant="outline" onClick={openEmbed} disabled={saving}>
           <Icon name="code" size={14} />
           Get embed code
         </Button>
-        <Button variant="primary" onClick={save}>
+        <Button variant="primary" onClick={save} disabled={saving}>
           Save survey
         </Button>
       </div>
@@ -175,7 +182,7 @@ export function SurveyBuilder({ draft, onChange, onClose }: SurveyBuilderProps) 
               onType={(type) => setQuestions(draft.questions.map((x, k) => (k === i ? changeQuestionType(x, type) : x)))}
               onMove={(to) => setQuestions(moveItem(draft.questions, i, to))}
               onDuplicate={() => {
-                const copy = { ...structuredClone(q), id: newId(), key: undefined };
+                const copy = { ...structuredClone(q), id: newFieldId(), key: undefined };
                 setQuestions([...draft.questions.slice(0, i + 1), copy, ...draft.questions.slice(i + 1)]);
               }}
               onDelete={() => setQuestions(draft.questions.filter((_, k) => k !== i))}
@@ -195,7 +202,7 @@ export function SurveyBuilder({ draft, onChange, onClose }: SurveyBuilderProps) 
                   size="sm"
                   value={draft.tag}
                   placeholder="No tag"
-                  options={state.tags.map((t) => ({ value: t.id, label: t.name }))}
+                  options={tags.map((t) => ({ value: t.id, label: t.name }))}
                   onChange={(e) => set({ tag: e.target.value })}
                 />
               </Field>

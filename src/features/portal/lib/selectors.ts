@@ -1,7 +1,7 @@
-import { BUILD_PHASES, SOCIAL_NETWORKS, type SocialKey } from "@/data/portal";
 import type { PhaseState } from "@/components/ui";
+import { SOCIAL_NETWORKS, type CustomLink, type SocialKey } from "@/data/portal";
 import { isUrl } from "@/lib/utils";
-import type { PortalState } from "../state/PortalContext";
+import type { HealthOut, ProjectOut } from "@/utils/api/models";
 
 // ----------------------------------------------------------------- Health
 export type HealthSummary = {
@@ -11,25 +11,26 @@ export type HealthSummary = {
   subtitle: string;
 };
 
-export function getHealth(state: Pick<PortalState, "calendarFixed" | "emailFixed">): HealthSummary {
-  const issues: string[] = [];
-  if (!state.calendarFixed) issues.push("Calendar sync");
-  if (!state.emailFixed) issues.push("Payment follow-up email");
-
-  if (!issues.length) {
+/** Banner text from the API's health checks (the API decides each check's state). */
+export function getHealth(health: HealthOut | undefined): HealthSummary {
+  const issues = (health?.checks ?? []).filter((c) => c.state !== "ok").map((c) => c.name);
+  if (!health || !issues.length) {
     return {
       issues,
       ok: true,
-      title: "All systems running",
-      subtitle: "Every page, form, automation and connection is working normally.",
+      title: health ? "All systems running" : "Checking your system…",
+      subtitle: health ? "Every page, form, automation and connection is working normally." : "",
     };
   }
   const plural = issues.length > 1;
+  const down = health.overall === "down";
   return {
     issues,
     ok: false,
-    title: `Your system is running · ${issues.length} item${plural ? "s" : ""} need attention`,
-    subtitle: `${issues.join(" and ")} ${plural ? "need" : "needs"} a quick look. Everything else is working normally.`,
+    title: down
+      ? `Part of your system is down · ${issues.length} item${plural ? "s" : ""} need attention`
+      : `Your system is running · ${issues.length} item${plural ? "s" : ""} need attention`,
+    subtitle: `${issues.join(" and ")} ${plural ? "need" : "needs"} a quick look.${down ? "" : " Everything else is working normally."}`,
   };
 }
 
@@ -41,33 +42,34 @@ export type BuildPhaseView = {
   tasks: Array<{ text: string; done: boolean }>;
 };
 
-export function getBuildProgress() {
-  const all = BUILD_PHASES.reduce((n, p) => n + p.tasks.length, 0);
-  const done = BUILD_PHASES.reduce((n, p) => n + p.tasks.filter((t) => t.done).length, 0);
-  const currentIndex = BUILD_PHASES.findIndex((p) => p.tasks.some((t) => !t.done));
-  const phasesDone = BUILD_PHASES.filter((p) => p.tasks.every((t) => t.done)).length;
+/** Phase states for the timeline. The percentage is the API's own `progress`. */
+export function getBuildProgress(project: ProjectOut) {
+  const all = project.phases.reduce((n, p) => n + p.tasks.length, 0);
+  const done = project.phases.reduce((n, p) => n + p.tasks.filter((t) => t.done).length, 0);
+  const currentIndex = project.phases.findIndex((p) => p.tasks.some((t) => !t.done));
+  const phasesDone = project.phases.filter((p) => p.tasks.every((t) => t.done)).length;
 
-  const phases: BuildPhaseView[] = BUILD_PHASES.map((p, i) => {
+  const phases: BuildPhaseView[] = project.phases.map((p, i) => {
     const isDone = p.tasks.every((t) => t.done);
     const isCurrent = i === currentIndex;
     return {
       name: p.name,
       state: isDone ? "done" : isCurrent ? "current" : "upcoming",
       label: isDone ? "Done" : isCurrent ? "In progress" : "Up next",
-      tasks: p.tasks,
+      tasks: p.tasks.map((t) => ({ text: t.text, done: t.done })),
     };
   });
 
   return {
-    percent: Math.round((done / all) * 100),
-    current: currentIndex >= 0 ? BUILD_PHASES[currentIndex].name : "Launched",
-    summary: `${done} of ${all} tasks done · ${phasesDone} of ${BUILD_PHASES.length} phases complete`,
+    percent: project.progress,
+    current: currentIndex >= 0 ? project.phases[currentIndex].name : "Launched",
+    summary: `${done} of ${all} tasks done · ${phasesDone} of ${project.phases.length} phases complete`,
     phases,
   };
 }
 
 // ------------------------------------------------------------ Social links
-/** Error text for a social link, or "" when it is valid (or empty). */
+/** Quick check while typing; the API validates hosts too and its 422 messages win. */
 export function socialLinkError(key: SocialKey, value: string): string {
   const network = SOCIAL_NETWORKS.find((n) => n.key === key)!;
   if (!value.trim()) return "";
@@ -84,14 +86,14 @@ export function socialLinkError(key: SocialKey, value: string): string {
 }
 
 /** All valid links (socials + custom) the client has saved. */
-export function getSavedLinks(state: Pick<PortalState, "socials" | "customLinks">) {
+export function getSavedLinks(socials: Partial<Record<SocialKey, string>>, customLinks: CustomLink[]) {
   return [
-    ...SOCIAL_NETWORKS.filter((n) => isUrl(state.socials[n.key] || "")).map((n) => ({
+    ...SOCIAL_NETWORKS.filter((n) => isUrl(socials[n.key] || "")).map((n) => ({
       key: "s-" + n.key,
       label: n.key === "google" ? "Google Business" : n.label,
-      url: state.socials[n.key],
+      url: socials[n.key] as string,
     })),
-    ...state.customLinks
+    ...customLinks
       .filter((c) => isUrl(c.url))
       .map((c) => ({ key: "c-" + c.id, label: c.label.trim() || c.url.replace(/^https?:\/\//, ""), url: c.url })),
   ];

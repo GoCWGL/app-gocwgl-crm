@@ -1,11 +1,23 @@
 "use client";
 
-import { Badge, Button, SegmentedControl } from "@/components/ui";
-import { INVOICE_TONES, PLAN_PRICE, SUBSCRIPTION_TONES, type Invoice, type Subscription } from "@/data/admin";
-import { TODAY_SHORT } from "@/lib/dates";
-import { formatMoney } from "@/lib/utils";
-import { invoiceTotal } from "../../lib/billing";
-import { useAdmin } from "../../state/AdminContext";
+import { Badge, Button, FormError, LoadState, SegmentedControl } from "@/components/ui";
+import { INVOICE_TONES, SUBSCRIPTION_TONES, type InvoiceStatus, type SubscriptionStatus } from "@/data/admin";
+import { canWriteCrm } from "@/utils/auth/session";
+import { formatShort } from "@/utils/format/dates";
+import { formatCentsExact, formatCents } from "@/utils/format/money";
+import {
+  useDeleteInvoice,
+  useDeleteSubscription,
+  useInvoices,
+  useMarkInvoicePaid,
+  useSendInvoice,
+  useSubscriptions,
+  useUpdateSubscription,
+  useVoidInvoice,
+} from "@/utils/hooks/useBilling";
+import { useAllContacts } from "@/utils/hooks/useContacts";
+import { useMe } from "@/utils/hooks/useUsers";
+import { contactName } from "../../lib/contacts";
 
 type BillingTablesProps = {
   view: "subs" | "inv";
@@ -17,18 +29,26 @@ type BillingTablesProps = {
 
 /** Subscriptions and invoices tables with their row actions. */
 export function BillingTables({ view, onView, message, onMessage, onNew }: BillingTablesProps) {
-  const { state, update } = useAdmin();
-  const { subscriptions, invoices, contacts } = state;
-  const contactOf = (id: number) => contacts.find((c) => c.id === id) ?? { name: "Removed client", email: "" };
+  const canWrite = canWriteCrm(useMe().data);
+  const subsQuery = useSubscriptions();
+  const invoicesQuery = useInvoices();
+  const subscriptions = subsQuery.data ?? [];
+  const invoices = invoicesQuery.data ?? [];
+  const contacts = useAllContacts().data ?? [];
+  const archived = useAllContacts({ archived: true }).data ?? [];
+  const contactOf = (id: string) => {
+    const c = contacts.find((x) => x.id === id) ?? archived.find((x) => x.id === id);
+    return c ? { name: contactName(c), email: c.email } : { name: "Removed client", email: "" };
+  };
 
-  const setSub = (id: number, patch: Partial<Subscription>, msg: string) => {
-    update((s) => ({ subscriptions: s.subscriptions.map((x) => (x.id === id ? { ...x, ...patch } : x)) }));
-    onMessage(msg);
-  };
-  const setInvoice = (no: string, patch: Partial<Invoice>, msg: string) => {
-    update((s) => ({ invoices: s.invoices.map((x) => (x.no === no ? { ...x, ...patch } : x)) }));
-    onMessage(msg);
-  };
+  const updateSub = useUpdateSubscription();
+  const deleteSub = useDeleteSubscription();
+  const send = useSendInvoice();
+  const markPaid = useMarkInvoicePaid();
+  const voidInv = useVoidInvoice();
+  const deleteInv = useDeleteInvoice();
+  const busy = updateSub.isPending || deleteSub.isPending || send.isPending || markPaid.isPending || voidInv.isPending || deleteInv.isPending;
+  const error = updateSub.error ?? deleteSub.error ?? send.error ?? markPaid.error ?? voidInv.error ?? deleteInv.error;
 
   return (
     <section className="card" aria-label="Billing">
@@ -44,16 +64,20 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
             { value: "inv", label: "Invoices", count: invoices.length },
           ]}
         />
-        <div className="cluster cluster--8">
-          <Button variant="accent" onClick={() => onNew("sub")}>
-            + New subscription
-          </Button>
-          <Button variant="primary" onClick={() => onNew("invoice")}>
-            + New invoice
-          </Button>
-        </div>
+        {canWrite && (
+          <div className="cluster cluster--8">
+            <Button variant="accent" onClick={() => onNew("sub")}>
+              + New subscription
+            </Button>
+            <Button variant="primary" onClick={() => onNew("invoice")}>
+              + New invoice
+            </Button>
+          </div>
+        )}
       </div>
+      <FormError error={error} />
 
+      <LoadState query={view === "subs" ? subsQuery : invoicesQuery}>
       <div className="table-scroll">
         {view === "subs" ? (
           <table className="data-table data-table--plain billing-table">
@@ -69,8 +93,10 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
             </thead>
             <tbody>
               {subscriptions.map((sub) => {
-                const c = contactOf(sub.cid);
+                const c = contactOf(sub.contactId);
                 const canPause = ["Active", "Paused", "Trial"].includes(sub.status);
+                // Polar-managed subscriptions are changed in Polar; the API keeps their fields read-only.
+                const editable = canWrite && !sub.managedByPolar;
                 return (
                   <tr key={sub.id}>
                     <td>
@@ -81,56 +107,58 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                     </td>
                     <td>
                       {sub.plan} · per {sub.interval.toLowerCase()}
+                      {sub.managedByPolar && <span className="text-small"> · via Polar</span>}
                     </td>
-                    <td className="data-table__mono">{formatMoney(sub.amount || PLAN_PRICE)}</td>
-                    <td>{sub.status === "Paused" ? "—" : sub.next}</td>
+                    <td className="data-table__mono">{formatCents(sub.amountCents, sub.currency)}</td>
+                    <td>{sub.status === "Paused" || !sub.nextBillingDate ? "—" : formatShort(sub.nextBillingDate)}</td>
                     <td>
-                      <Badge tone={SUBSCRIPTION_TONES[sub.status]} dot>
+                      <Badge tone={SUBSCRIPTION_TONES[sub.status as SubscriptionStatus] ?? "neutral"} dot>
                         {sub.status}
+                        {sub.cancelAtPeriodEnd && " · ends this period"}
                       </Badge>
                     </td>
                     <td className="data-table__actions">
-                      {sub.status === "Awaiting payment" && (
+                      {editable && sub.status === "Awaiting payment" && (
                         <button
                           type="button"
                           className="row-action row-action--green"
-                          onClick={() => {
-                            update((s) => ({
-                              subscriptions: s.subscriptions.map((x) => (x.id === sub.id ? { ...x, status: "Active" } : x)),
-                              contacts: s.contacts.map((cc) => (cc.id === sub.cid ? { ...cc, stage: "paid", paidOn: cc.paidOn || TODAY_SHORT } : cc)),
-                            }));
-                            onMessage(`${c.name} is now an active subscriber.`);
-                          }}
+                          disabled={busy}
+                          onClick={() =>
+                            updateSub.mutate(
+                              { id: sub.id, body: { status: "Active" } },
+                              { onSuccess: () => onMessage(`${c.name} is now an active subscriber.`) },
+                            )
+                          }
                         >
                           Mark paid
                         </button>
                       )}
-                      {canPause && (
+                      {editable && canPause && (
                         <button
                           type="button"
                           className="row-action"
+                          disabled={busy}
                           onClick={() =>
-                            setSub(
-                              sub.id,
-                              { status: sub.status === "Paused" ? "Active" : "Paused" },
-                              `${c.name}’s subscription ${sub.status === "Paused" ? "resumed" : "paused"}.`,
+                            updateSub.mutate(
+                              { id: sub.id, body: { status: sub.status === "Paused" ? "Active" : "Paused" } },
+                              { onSuccess: () => onMessage(`${c.name}’s subscription ${sub.status === "Paused" ? "resumed" : "paused"}.`) },
                             )
                           }
                         >
                           {sub.status === "Paused" ? "Resume" : "Pause"}
                         </button>
                       )}
-                      <button
-                        type="button"
-                        className="row-action row-action--danger"
-                        aria-label={`Cancel subscription for ${c.name}`}
-                        onClick={() => {
-                          update((s) => ({ subscriptions: s.subscriptions.filter((x) => x.id !== sub.id) }));
-                          onMessage(`${c.name}’s subscription was cancelled.`);
-                        }}
-                      >
-                        Cancel
-                      </button>
+                      {editable && (
+                        <button
+                          type="button"
+                          className="row-action row-action--danger"
+                          aria-label={`Cancel subscription for ${c.name}`}
+                          disabled={busy}
+                          onClick={() => deleteSub.mutate(sub.id, { onSuccess: () => onMessage(`${c.name}’s subscription was cancelled.`) })}
+                        >
+                          Cancel
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -151,43 +179,63 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
             </thead>
             <tbody>
               {invoices.map((iv) => {
-                const c = contactOf(iv.cid);
+                const c = contactOf(iv.contactId);
                 const isOpen = iv.status === "Sent" || iv.status === "Overdue";
                 return (
-                  <tr key={iv.no}>
+                  <tr key={iv.id}>
                     <td>
                       <div className="stack stack--2">
-                        <span className="data-table__code">{iv.no}</span>
-                        <span className="text-small">{iv.items.map((it) => it.desc).filter(Boolean).join(", ") || "No items"}</span>
+                        <span className="data-table__code">{iv.number}</span>
+                        <span className="text-small">{iv.items.map((it) => it.description).filter(Boolean).join(", ") || "No items"}</span>
                       </div>
                     </td>
                     <td className="u-strong u-ink">{c.name}</td>
-                    <td className="data-table__mono">{formatMoney(invoiceTotal(iv))}</td>
-                    <td>{iv.due}</td>
+                    <td className="data-table__mono">{formatCentsExact(iv.totalCents, iv.currency)}</td>
+                    <td>{iv.dueDate ? formatShort(iv.dueDate) : "—"}</td>
                     <td>
-                      <Badge tone={INVOICE_TONES[iv.status]} dot>
+                      <Badge tone={INVOICE_TONES[iv.status as InvoiceStatus] ?? "neutral"} dot>
                         {iv.status}
                       </Badge>
                     </td>
                     <td className="data-table__actions">
-                      {iv.status === "Draft" && (
-                        <button type="button" className="row-action row-action--brand" onClick={() => setInvoice(iv.no, { status: "Sent" }, `${iv.no} sent to ${c.email}.`)}>
+                      {canWrite && iv.status === "Draft" && (
+                        <button
+                          type="button"
+                          className="row-action row-action--brand"
+                          disabled={busy}
+                          onClick={() => send.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} sent to ${c.email}.`) })}
+                        >
                           Send
                         </button>
                       )}
-                      {isOpen && (
-                        <button type="button" className="row-action row-action--cyan" onClick={() => onMessage(`Reminder sent to ${c.name} for ${iv.no}.`)}>
-                          Send reminder
-                        </button>
-                      )}
-                      {isOpen && (
-                        <button type="button" className="row-action row-action--green" onClick={() => setInvoice(iv.no, { status: "Paid" }, `${iv.no} marked as paid.`)}>
+                      {canWrite && isOpen && (
+                        <button
+                          type="button"
+                          className="row-action row-action--green"
+                          disabled={busy}
+                          onClick={() => markPaid.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} marked as paid.`) })}
+                        >
                           Mark paid
                         </button>
                       )}
-                      {iv.status !== "Paid" && iv.status !== "Void" && (
-                        <button type="button" className="row-action row-action--danger" onClick={() => setInvoice(iv.no, { status: "Void" }, `${iv.no} was voided.`)}>
+                      {canWrite && (iv.status === "Sent" || iv.status === "Overdue") && (
+                        <button
+                          type="button"
+                          className="row-action row-action--danger"
+                          disabled={busy}
+                          onClick={() => voidInv.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} was voided.`) })}
+                        >
                           Void
+                        </button>
+                      )}
+                      {canWrite && iv.status === "Draft" && (
+                        <button
+                          type="button"
+                          className="row-action row-action--danger"
+                          disabled={busy}
+                          onClick={() => deleteInv.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} was deleted.`) })}
+                        >
+                          Delete
                         </button>
                       )}
                     </td>
@@ -200,6 +248,7 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
         {view === "subs" && subscriptions.length === 0 && <p className="table-empty">No subscriptions yet.</p>}
         {view === "inv" && invoices.length === 0 && <p className="table-empty">No invoices yet.</p>}
       </div>
+      </LoadState>
 
       {message && (
         <div className="notice notice--success u-strong" role="status">

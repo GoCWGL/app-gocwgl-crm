@@ -1,22 +1,34 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Badge, Button, Field, Icon, IconButton, IconTile, Input, Select, Textarea } from "@/components/ui";
-import { MERGE_FIELDS, TEMPLATE_KINDS, type EmailTemplate, type TemplateKind } from "@/data/admin";
-import { cn, newId } from "@/lib/utils";
+import { Badge, Button, Field, FormError, Icon, IconButton, IconTile, Input, LoadState, Select, Textarea } from "@/components/ui";
+import { MERGE_FIELDS, TEMPLATE_KINDS, type TemplateKind } from "@/data/admin";
+import { cn } from "@/lib/utils";
+import { canWriteCrm } from "@/utils/auth/session";
+import { errorMessage, fieldErrors } from "@/utils/errors";
+import { useCreateTemplate, useDeleteTemplate, useTemplates, useUpdateTemplate } from "@/utils/hooks/useMarketing";
+import { useMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../../state/AdminContext";
+
+/** A template being edited ("" id = new). */
+type TemplateDraft = { id: string; kind: TemplateKind; name: string; subject: string; body: string };
 
 /** Fill merge fields with a sample contact for the live preview. */
 const fillDemo = (text: string) =>
   text.split("{first_name}").join("James").split("{last_name}").join("Carter").split("{email}").join("james.carter@example.com");
 
 export function TemplatesView() {
-  const { state, update } = useAdmin();
-  const { templates } = state;
-  const [draft, setDraft] = useState<EmailTemplate | null>(null);
+  const { update } = useAdmin();
+  const canWrite = canWriteCrm(useMe().data);
+  const query = useTemplates();
+  const templates = query.data ?? [];
+  const create = useCreateTemplate();
+  const save_ = useUpdateTemplate();
+  const remove = useDeleteTemplate();
+  const [draft, setDraft] = useState<TemplateDraft | null>(null);
   const [error, setError] = useState("");
 
-  const edit = (patch: Partial<EmailTemplate>) => {
+  const edit = (patch: Partial<TemplateDraft>) => {
     setDraft((d) => (d ? { ...d, ...patch } : d));
     setError("");
   };
@@ -26,13 +38,13 @@ export function TemplatesView() {
     if (!draft) return;
     if (!draft.name.trim()) return setError("Give the template a name.");
     if (!draft.subject.trim() || !draft.body.trim()) return setError("Add a subject line and a message.");
-    const saved = { ...draft, name: draft.name.trim() };
-    update((s) => ({
-      templates: draft.id
-        ? s.templates.map((t) => (t.id === draft.id ? saved : t))
-        : [...s.templates, { ...saved, id: newId(), starter: false }],
-    }));
-    setDraft(null);
+    const body = { kind: draft.kind, name: draft.name.trim(), subject: draft.subject, body: draft.body };
+    const opts = {
+      onSuccess: () => setDraft(null),
+      onError: (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err)),
+    };
+    if (draft.id) save_.mutate({ id: draft.id, body }, opts);
+    else create.mutate(body, opts);
   };
 
   return (
@@ -40,19 +52,23 @@ export function TemplatesView() {
       <section className="stack stack--12 template-list" aria-label="Email templates">
         <div className="cluster cluster--between">
           <span className="kicker">TEMPLATES · {templates.length}</span>
+          {canWrite && (
           <Button
             variant="primary"
             size="sm"
             onClick={() => {
-              setDraft({ id: 0, kind: "other", name: "", subject: "", body: "Hi {first_name},\n\n\n\nBest,\n[Your Name]" });
+              setDraft({ id: "", kind: "other", name: "", subject: "", body: "Hi {first_name},\n\n\n\nBest,\n[Your Name]" });
               setError("");
             }}
           >
             + New template
           </Button>
+          )}
         </div>
+        <FormError error={remove.error ?? create.error} />
+        <LoadState query={query} isEmpty={!templates.length} empty="No templates yet.">
         {templates.map((t) => {
-          const kind = TEMPLATE_KINDS[t.kind] ?? TEMPLATE_KINDS.other;
+          const kind = TEMPLATE_KINDS[t.kind as TemplateKind] ?? TEMPLATE_KINDS.other;
           return (
             <article key={t.id} className={cn("card card--tight template-card", draft?.id === t.id && "card--active")}>
               <div className="cluster cluster--nowrap">
@@ -63,7 +79,7 @@ export function TemplatesView() {
                   <span className="text-strong">{t.name}</span>
                   <span className="text-small u-truncate">{t.subject}</span>
                 </div>
-                {t.starter && (
+                {t.isStarter && (
                   <Badge tone="cyan" mono size="xs">
                     STARTER
                   </Badge>
@@ -71,9 +87,11 @@ export function TemplatesView() {
               </div>
               <span className="text-small u-truncate">{t.body.replace(/\n+/g, " ")}</span>
               <div className="cluster cluster--6">
-                <Button size="sm" onClick={() => setDraft({ ...t })}>
-                  Edit
-                </Button>
+                {canWrite && (
+                  <Button size="sm" onClick={() => setDraft({ id: t.id, kind: (t.kind as TemplateKind) ?? "other", name: t.name, subject: t.subject, body: t.body })}>
+                    Edit
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   variant="accent"
@@ -81,21 +99,25 @@ export function TemplatesView() {
                 >
                   Use in new email
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() =>
-                    update((s) => ({ templates: [...s.templates, { ...t, id: newId(), name: `${t.name} (copy)`, starter: false }] }))
-                  }
-                >
-                  Duplicate
-                </Button>
-                {!t.starter && (
+                {canWrite && (
+                  <Button
+                    size="sm"
+                    disabled={create.isPending}
+                    onClick={() =>
+                      create.mutate({ kind: t.kind as TemplateKind, name: `${t.name} (copy)`, subject: t.subject, body: t.body })
+                    }
+                  >
+                    Duplicate
+                  </Button>
+                )}
+                {canWrite && !t.isStarter && (
                   <Button
                     size="sm"
                     variant="danger"
                     aria-label={`Delete template ${t.name}`}
+                    disabled={remove.isPending}
                     onClick={() => {
-                      update((s) => ({ templates: s.templates.filter((x) => x.id !== t.id) }));
+                      remove.mutate(t.id);
                       if (draft?.id === t.id) setDraft(null);
                     }}
                   >
@@ -106,6 +128,7 @@ export function TemplatesView() {
             </article>
           );
         })}
+        </LoadState>
       </section>
 
       {draft ? (
@@ -160,7 +183,7 @@ export function TemplatesView() {
           )}
           <div className="cluster cluster--end">
             <Button onClick={() => setDraft(null)}>Cancel</Button>
-            <Button type="submit" variant="primary">
+            <Button type="submit" variant="primary" disabled={create.isPending || save_.isPending}>
               Save template
             </Button>
           </div>

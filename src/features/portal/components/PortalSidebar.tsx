@@ -7,25 +7,32 @@ import { Avatar, Icon, IconTile } from "@/components/ui";
 import { PORTAL_NAV, type PortalTab } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
 import { initials } from "@/lib/utils";
+import { usePortalBilling } from "@/utils/hooks/useBilling";
+import { usePortalHealth, usePortalTodos } from "@/utils/hooks/usePortal";
+import { useMe } from "@/utils/hooks/useUsers";
 import { getHealth } from "../lib/selectors";
 import { usePortal } from "../state/PortalContext";
 
 type PortalSidebarProps = {
-  /** Business shown at the top (overridden by ?biz= when an admin views as client). */
+  /** Business shown at the top (from the API). */
   business: string;
   subtitle: string;
 };
 
 export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
-  const { state, goTo } = usePortal();
-  const health = getHealth(state);
-  const openTodos = state.todos.filter((t) => !t.done).length;
-  const hasOpenInvoice = state.invoices.some((i) => i.status === "Open");
+  const { state, goTo, readOnly } = usePortal();
+  const health = getHealth(usePortalHealth().data);
+  const openTodos = (usePortalTodos().data ?? []).filter((t) => !t.done).length;
+  const invoices = usePortalBilling().data?.invoices ?? [];
+  const openInvoices = invoices.filter((i) => i.status === "Sent" || i.status === "Overdue").length;
+  const me = useMe().data;
+  // In "View as client" the signed-in user is the staff member; show the business instead.
+  const name = readOnly && me?.isStaff ? business : me?.fullName || me?.email || "";
 
   const badges: Partial<Record<PortalTab, { text: string; tone: Tone }>> = {
     ...(health.issues.length && { health: { text: String(health.issues.length), tone: "amber" } }),
     ...(openTodos && { build: { text: String(openTodos), tone: "brand" } }),
-    ...(hasOpenInvoice && { billing: { text: "1", tone: "red" } }),
+    ...(openInvoices && { billing: { text: String(openInvoices), tone: "red" } }),
   };
 
   return (
@@ -45,8 +52,8 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
       footer={
         <>
           <ProfileButton
-            avatar={<Avatar name={state.profile.name} tone="purple" ring />}
-            name={state.profile.name}
+            avatar={<Avatar name={name} tone="purple" ring />}
+            name={name}
             subtitle="Account & settings"
             active={state.tab === "account"}
             onClick={() => goTo("account")}

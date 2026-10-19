@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { TODAY_LABEL } from "@/lib/dates";
 import { toneClass, type Tone } from "@/lib/tones";
+import { formatFull } from "@/utils/format/dates";
 
 type PageHeaderProps = {
   /** Text after the dot, e.g. "GOCWGL // DASHBOARD". */
@@ -24,7 +24,7 @@ export function PageHeader({ kicker, title, subtitle, dotTone = "green", actions
         <p className="page-header__subtitle">{subtitle}</p>
       </div>
       <div className="page-header__actions">
-        <span className="page-header__date">{TODAY_LABEL}</span>
+        <span className="page-header__date">{formatFull(new Date())}</span>
         {actions}
       </div>
     </header>

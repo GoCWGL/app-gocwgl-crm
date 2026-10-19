@@ -26,7 +26,7 @@ export const QUESTION_TYPES: Record<QuestionType, { label: string; icon: IconNam
 export const CHOICE_TYPES: QuestionType[] = ["single", "multi", "dropdown"];
 
 export type SurveyQuestion = {
-  id: number;
+  id: string;
   type: QuestionType;
   title: string;
   /** Small help text under the question. */
@@ -45,8 +45,9 @@ export type SurveyQuestion = {
   key?: string;
 };
 
+/** The survey builder's draft ("" id = not saved yet). utils/mappers/surveys.ts converts it to and from the API. */
 export type Survey = {
-  id: number;
+  id: string;
   name: string;
   intro: string;
   on: boolean;
@@ -61,38 +62,3 @@ export type Survey = {
   oneAtATime: boolean;
   questions: SurveyQuestion[];
 };
-
-export const INITIAL_SURVEYS: Survey[] = [
-  {
-    id: 1, name: "Client satisfaction survey", on: true, responses: 23, completion: 82,
-    intro: "Two minutes to tell us how we are doing. Your answers help us improve.",
-    button: "Send my answers", thanks: "Thank you! We read every answer.", tag: "", oneAtATime: true,
-    questions: [
-      { id: 1001, type: "rating", title: "How happy are you with your system so far?", help: "", req: true, options: [] },
-      { id: 1002, type: "scale", title: "How likely are you to recommend us to a friend?", help: "", req: true, options: [], lowLabel: "Not likely", highLabel: "Very likely" },
-      { id: 1003, type: "multi", title: "Which parts do you use most?", help: "Pick all that apply", req: false, options: ["Landing page", "Booking calendar", "Email follow-ups", "Daily reports"], other: true },
-      { id: 1004, type: "long", title: "What is one thing we could do better?", help: "", req: false, options: [] },
-    ],
-  },
-  {
-    id: 2, name: "New lead qualifier", on: true, responses: 41, completion: 67,
-    intro: "Answer a few quick questions so we can point you to the right plan.",
-    button: "See my results", thanks: "Thanks! We will email you a plan that fits within 24 hours.", tag: "hot", oneAtATime: false,
-    questions: [
-      { id: 2000, type: "name", title: "What’s your name?", help: "", req: true, options: [] },
-      { id: 2001, type: "short", title: "What is your business called?", help: "", req: true, options: [], key: "business_name" },
-      { id: 2002, type: "single", title: "How many leads do you get each month?", help: "", req: true, options: ["Under 20", "20 – 100", "100 – 500", "500+"], key: "monthly_leads" },
-      { id: 2003, type: "dropdown", title: "What is your biggest challenge?", help: "", req: false, options: ["Getting leads", "Following up", "Booking calls", "Closing sales"] },
-      { id: 2004, type: "yesno", title: "Do you already use a CRM?", help: "", req: false, options: [] },
-      { id: 2005, type: "email", title: "Where should we send your results?", help: "", req: true, options: [] },
-    ],
-  },
-  {
-    id: 3, name: "Post-call feedback", on: false, responses: 0, completion: 0,
-    intro: "", button: "Submit", thanks: "Thanks for the feedback!", tag: "", oneAtATime: false,
-    questions: [
-      { id: 3001, type: "rating", title: "How useful was the call?", help: "", req: true, options: [] },
-      { id: 3002, type: "long", title: "Anything we should know before next time?", help: "", req: false, options: [] },
-    ],
-  },
-];

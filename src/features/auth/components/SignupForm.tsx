@@ -3,6 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { Field } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { errorMessage, fieldErrors } from "@/utils/errors";
+import { useRegister } from "@/utils/hooks/useAuth";
 import { emailError, passwordStrength } from "../lib/validation";
 import type { SignupData } from "../types";
 import { PasswordInput } from "./PasswordInput";
@@ -10,7 +12,8 @@ import { PasswordInput } from "./PasswordInput";
 type SignupFormProps = {
   data: SignupData;
   onChange: (patch: Partial<SignupData>) => void;
-  onCreated: () => void;
+  /** The API accepted the sign-up (always the same answer) and sent a code to the email. */
+  onCreated: (message: string) => void;
   onLogin: () => void;
 };
 
@@ -57,13 +60,43 @@ function validate(data: SignupData): Record<TextFieldKey | "password", string> {
 
 export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormProps) {
   const [tried, setTried] = useState(false);
-  const errors = validate(data);
+  const register = useRegister();
+  const local = validate(data);
+  const api = fieldErrors(register.error);
+  // 422 field errors from the API sit next to the matching fields.
+  const errors: Record<TextFieldKey | "password", string> = {
+    name: local.name || api.fullName || "",
+    business: local.business || api.business || "",
+    email: local.email || api.email || "",
+    phone: local.phone || api.phone || "",
+    invite: local.invite || api.inviteCode || "",
+    password: local.password || api.password || "",
+  };
+  const generalError =
+    register.error && !Object.keys(api).length ? errorMessage(register.error) : "";
   const strength = passwordStrength(data.password);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (Object.values(errors).some(Boolean) || !data.agree) return setTried(true);
-    onCreated();
+    setTried(true);
+    if (Object.values(local).some(Boolean) || !data.agree) return;
+    register.mutate(
+      {
+        fullName: data.name.trim(),
+        business: data.business.trim(),
+        email: data.email.trim(),
+        phone: data.phone.trim(),
+        password: data.password,
+        inviteCode: data.invite.trim() || null,
+        agree: true,
+      },
+      { onSuccess: (r) => onCreated(r?.message ?? "") },
+    );
+  };
+
+  const change = (patch: Partial<SignupData>) => {
+    if (register.isError) register.reset();
+    onChange(patch);
   };
 
   return (
@@ -91,7 +124,7 @@ export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormPro
                   autoComplete={f.autoComplete}
                   placeholder={f.placeholder}
                   value={data[f.key]}
-                  onChange={(e) => onChange({ [f.key]: e.target.value })}
+                  onChange={(e) => change({ [f.key]: e.target.value })}
                   aria-invalid={!!error}
                 />
               </Field>
@@ -108,7 +141,7 @@ export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormPro
             autoComplete="new-password"
             placeholder="At least 8 characters"
             value={data.password}
-            onChange={(e) => onChange({ password: e.target.value })}
+            onChange={(e) => change({ password: e.target.value })}
             aria-invalid={tried && !!errors.password}
             aria-describedby="su-pw-meter"
           />
@@ -140,8 +173,14 @@ export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormPro
         </label>
         {tried && !data.agree && <span className="field__error">Please accept the terms to continue.</span>}
 
-        <button type="submit" className="btn btn--primary btn--lg btn--block auth-submit">
-          Create my account
+        {tried && generalError && (
+          <span className="field__error" role="alert">
+            {generalError}
+          </span>
+        )}
+
+        <button type="submit" className="btn btn--primary btn--lg btn--block auth-submit" disabled={register.isPending}>
+          {register.isPending ? "Creating your account…" : "Create my account"}
         </button>
       </form>
 

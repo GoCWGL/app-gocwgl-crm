@@ -1,28 +1,57 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Field, IconButton, Input } from "@/components/ui";
+import { Button, Field, FormError, IconButton, Input, Loading } from "@/components/ui";
 import { SOCIAL_NETWORKS, type CustomLink, type SocialKey } from "@/data/portal";
 import { toneClass } from "@/lib/tones";
-import { cn, isUrl, moveItem, newId, normalizeUrl } from "@/lib/utils";
+import { cn, isUrl, moveItem, normalizeUrl } from "@/lib/utils";
+import type { LinksOut } from "@/utils/api/models";
+import { fieldErrors } from "@/utils/errors";
+import { useLinks, useSaveLinks } from "@/utils/hooks/useDelivery";
+import { newFieldId } from "@/utils/mappers/forms";
 import { socialLinkError } from "../lib/selectors";
 import { usePortal } from "../state/PortalContext";
 
-/** Social networks + custom links the client wants on their pages and emails. */
+type Socials = Partial<Record<SocialKey, string>>;
+
+function fromApi(links: LinksOut): { socials: Socials; customLinks: CustomLink[] } {
+  return {
+    socials: (links.socials ?? {}) as Socials,
+    customLinks: ((links.custom ?? []) as Array<{ label: string; url: string }>).map((c) => ({ id: newFieldId(), label: c.label, url: c.url, touched: false })),
+  };
+}
+
+/** Social networks + custom links the client wants on their pages and emails (GET/PUT /portal/links). */
 export function SocialLinksCard() {
-  const { state, update } = usePortal();
-  const { socials, customLinks } = state;
+  const query = useLinks();
+  if (query.isPending) return <Loading text="Loading your links…" />;
+  // Keyed by the save time so the form resets to what the API stored after each save.
+  return <SocialLinksForm key={query.data?.updatedAt ?? "new"} initial={query.data ? fromApi(query.data) : { socials: {}, customLinks: [] }} />;
+}
+
+function SocialLinksForm({ initial }: { initial: { socials: Socials; customLinks: CustomLink[] } }) {
+  const { notify, readOnly } = usePortal();
+  const saveLinks = useSaveLinks();
+  const [socials, setSocials] = useState<Socials>(initial.socials);
+  const [customLinks, setCustomLinks] = useState<CustomLink[]>(initial.customLinks);
   const [touched, setTouched] = useState<Partial<Record<SocialKey, boolean>>>({});
+  // The API validates every link's host too; its 422 messages sit next to the fields.
+  const apiErrors = fieldErrors(saveLinks.error);
 
-  const setSocial = (key: SocialKey, value: string) => update((s) => ({ socials: { ...s.socials, [key]: value } }));
-  const setCustom = (links: CustomLink[]) => update({ customLinks: links });
-  const patchCustom = (id: number, patch: Partial<CustomLink>) =>
-    setCustom(customLinks.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  const setSocial = (key: SocialKey, value: string) => {
+    setSocials((s) => ({ ...s, [key]: value }));
+    saveLinks.reset();
+  };
+  const setCustom = (links: CustomLink[]) => {
+    setCustomLinks(links);
+    saveLinks.reset();
+  };
+  const patchCustom = (id: string, patch: Partial<CustomLink>) => setCustom(customLinks.map((c) => (c.id === id ? { ...c, ...patch } : c)));
 
-  const validNetworks = SOCIAL_NETWORKS.filter((n) => socials[n.key] && !socialLinkError(n.key, socials[n.key]));
+  const validNetworks = SOCIAL_NETWORKS.filter((n) => socials[n.key] && !socialLinkError(n.key, socials[n.key] ?? ""));
   const validCustom = customLinks.filter((c) => c.url.trim() && isUrl(c.url));
   const preview = [
-    ...validNetworks.map((n) => ({ label: n.label, short: n.short, tone: n.tone, url: socials[n.key] })),
+    ...validNetworks.map((n) => ({ label: n.label, short: n.short, tone: n.tone, url: socials[n.key] as string })),
     ...validCustom.map((c) => ({
       label: c.label.trim() || c.url.replace(/^https?:\/\//, ""),
       short: "↗",
@@ -32,22 +61,24 @@ export function SocialLinksCard() {
   ];
 
   const save = () => {
-    const nextSocials = { ...socials };
-    (Object.keys(nextSocials) as SocialKey[]).forEach((k) => (nextSocials[k] = normalizeUrl(nextSocials[k] || "")));
+    const nextSocials: Socials = {};
+    SOCIAL_NETWORKS.forEach((n) => (nextSocials[n.key] = normalizeUrl(socials[n.key] || "")));
     const nextCustom = customLinks.map((c) => ({ ...c, url: normalizeUrl(c.url), touched: true }));
-    const badNetwork = SOCIAL_NETWORKS.some((n) => socialLinkError(n.key, nextSocials[n.key]));
+    const badNetwork = SOCIAL_NETWORKS.some((n) => socialLinkError(n.key, nextSocials[n.key] ?? ""));
     const badCustom = nextCustom.some((c) => (c.url && !isUrl(c.url)) || (c.label.trim() && !c.url));
 
     setTouched(Object.fromEntries(SOCIAL_NETWORKS.map((n) => [n.key, true])));
-    if (badNetwork || badCustom) {
-      update({ socials: nextSocials, customLinks: nextCustom, toast: "" });
-      return;
-    }
-    update({
-      socials: nextSocials,
-      customLinks: nextCustom.filter((c) => c.url),
-      toast: "Your links were saved. We will add them to your pages and email footers.",
-    });
+    setSocials(nextSocials);
+    setCustomLinks(nextCustom);
+    if (badNetwork || badCustom) return;
+    const kept = nextCustom.filter((c) => c.url);
+    saveLinks.mutate(
+      {
+        socials: Object.fromEntries(Object.entries(nextSocials).filter(([, v]) => v)) as Record<string, string>,
+        custom: kept.map((c) => ({ label: c.label.trim() || c.url.replace(/^https?:\/\//, ""), url: c.url })),
+      },
+      { onSuccess: () => notify("Your links were saved. We will add them to your pages and email footers.") },
+    );
   };
 
   return (
@@ -65,8 +96,8 @@ export function SocialLinksCard() {
       <div className="social-links__grid">
         {SOCIAL_NETWORKS.map((n) => {
           const value = socials[n.key] || "";
-          const error = socialLinkError(n.key, value);
-          const showError = !!error && !!touched[n.key];
+          const error = socialLinkError(n.key, value) || apiErrors[`socials.${n.key}`] || "";
+          const showError = !!error && (!!touched[n.key] || !!apiErrors[`socials.${n.key}`]);
           return (
             <Field key={n.key} label={n.label} htmlFor={`soc-${n.key}`} error={showError && error}>
               <div className={cn("link-input", showError && "link-input--invalid")}>
@@ -82,6 +113,7 @@ export function SocialLinksCard() {
                   autoComplete="off"
                   placeholder={`https://${n.placeholder}`}
                   value={value}
+                  readOnly={readOnly}
                   onChange={(e) => setSocial(n.key, e.target.value)}
                   onBlur={() => {
                     setSocial(n.key, normalizeUrl(value));
@@ -105,7 +137,8 @@ export function SocialLinksCard() {
           <span className="text-muted">Anything else: your online store, podcast, booking app, review page, Linktree…</span>
         </div>
         {customLinks.map((c, i) => {
-          const bad = c.touched && !!c.url.trim() && !isUrl(c.url);
+          const apiError = apiErrors[`custom.${i}.url`] || apiErrors[`custom.${i}.label`] || apiErrors[`custom.${i}`];
+          const bad = (c.touched && !!c.url.trim() && !isUrl(c.url)) || !!apiError;
           return (
             <div className="custom-link inset" key={c.id}>
               <span className="custom-link__index" aria-hidden="true">
@@ -124,7 +157,7 @@ export function SocialLinksCard() {
                 label="Link"
                 htmlFor={`cl-u-${c.id}`}
                 className="custom-link__url"
-                error={bad && "Enter a full web address, like https://shop.example.com"}
+                error={bad && (apiError || "Enter a full web address, like https://shop.example.com")}
               >
                 <Input
                   id={`cl-u-${c.id}`}
@@ -140,6 +173,7 @@ export function SocialLinksCard() {
                   onBlur={() => patchCustom(c.id, { url: normalizeUrl(c.url), touched: true })}
                 />
               </Field>
+              {!readOnly && (
               <div className="custom-link__actions">
                 <IconButton label="Move link up" disabled={i === 0} onClick={() => setCustom(moveItem(customLinks, i, i - 1))}>
                   ↑
@@ -148,22 +182,22 @@ export function SocialLinksCard() {
                   ×
                 </IconButton>
               </div>
+              )}
             </div>
           );
         })}
-        <Button
-          variant="dashed"
-          onClick={() => setCustom([...customLinks, { id: newId(), label: "", url: "", touched: false }])}
-        >
-          + Add custom link
-        </Button>
+        {!readOnly && (
+          <Button variant="dashed" onClick={() => setCustom([...customLinks, { id: newFieldId(), label: "", url: "", touched: false }])}>
+            + Add custom link
+          </Button>
+        )}
       </div>
 
       <div className="inset inset--soft">
         <span className="kicker kicker--muted">PREVIEW · HOW THEY SHOW IN YOUR FOOTER</span>
         <div className="cluster cluster--8">
           {preview.map((p) => (
-            <a className="link-pill" key={p.label + p.url} href={p.url} target="_blank" rel="noopener">
+            <a className="link-pill" key={p.label + p.url} href={p.url} target="_blank" rel="noopener noreferrer">
               <span className={cn("link-pill__mark", toneClass(p.tone))} aria-hidden="true">
                 {p.short}
               </span>
@@ -174,9 +208,12 @@ export function SocialLinksCard() {
         </div>
       </div>
 
-      <Button variant="primary" className="u-self-end" onClick={save}>
-        Save links
-      </Button>
+      {Object.keys(apiErrors).length === 0 && <FormError error={saveLinks.error} />}
+      {!readOnly && (
+        <Button variant="primary" className="u-self-end" onClick={save} disabled={saveLinks.isPending}>
+          {saveLinks.isPending ? "Saving…" : "Save links"}
+        </Button>
+      )}
     </section>
   );
 }

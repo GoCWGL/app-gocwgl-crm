@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SignInPage } from "@/features/auth";
 
 export const metadata: Metadata = {
@@ -6,5 +7,10 @@ export const metadata: Metadata = {
 };
 
 export default function LoginPage() {
-  return <SignInPage />;
+  // SignInPage reads ?reset_token=, ?invite= and ?oauth= from the address.
+  return (
+    <Suspense>
+      <SignInPage />
+    </Suspense>
+  );
 }

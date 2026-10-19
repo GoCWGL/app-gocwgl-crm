@@ -1,14 +1,9 @@
-import { ADMIN_EMAILS } from "@/data/auth";
 import { isEmail } from "@/lib/utils";
 
 export function emailError(value: string): string {
   if (!value.trim()) return "Enter your email.";
   if (!isEmail(value)) return "That email doesn’t look right.";
   return "";
-}
-
-export function isAdminEmail(value: string): boolean {
-  return ADMIN_EMAILS.includes(value.trim().toLowerCase());
 }
 
 export type PasswordStrength = {

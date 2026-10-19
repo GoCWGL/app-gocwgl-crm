@@ -1,91 +1,110 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Avatar, Badge, Button, Field, IconButton, Input, Select, StatGrid, Textarea } from "@/components/ui";
+import { Avatar, Badge, Button, Field, FormError, IconButton, Input, LoadState, Select, StatGrid, Textarea } from "@/components/ui";
 import {
   BUG_STATUSES,
   BUG_STATUS_TONES,
   SEVERITIES,
   SEVERITY_TONES,
+  TICKET_TYPES,
+  type BugSeverity,
   type BugStatus,
-  type BugTicket,
-  type ThreadMessage,
 } from "@/data/admin";
-import { daysAgo, parseIsoDate, parseShortDate, TODAY, TODAY_SHORT } from "@/lib/dates";
 import type { Tone } from "@/lib/tones";
 import { cn, initials } from "@/lib/utils";
-import { useAdmin } from "../../state/AdminContext";
+import type { TicketOut } from "@/utils/api/models";
+import { canWriteCrm } from "@/utils/auth/session";
+import { addDaysIso, formatShort, getTimeZone, isoDateIn, todayIso } from "@/utils/format/dates";
+import { useAllContacts } from "@/utils/hooks/useContacts";
+import { usePostTicketMessage, useTickets, useUpdateTicket } from "@/utils/hooks/useSupport";
+import { useMe } from "@/utils/hooks/useUsers";
+import { businessName } from "../../lib/contacts";
 
 type DateFilter = "any" | "today" | "7" | "30" | "month" | "custom";
 
-const SEVERITY_RANK = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+const SEVERITY_RANK: Record<string, number> = { Critical: 0, High: 1, Medium: 2, Low: 3 };
 const CLIENT_TONES: Tone[] = ["cyan", "purple", "orange", "green", "pink"];
 
-const MESSAGE_CLASS: Record<ThreadMessage["kind"], string> = {
+const MESSAGE_CLASS: Record<string, string> = {
   client: "message",
   reply: "message message--mine",
   note: "message message--note",
 };
 
-export function BugsSection() {
-  const { state, update } = useAdmin();
-  const tickets = state.tickets;
+const isClosed = (t: TicketOut) => t.status === "Done";
 
-  const [query, setQuery] = useState("");
+export function BugsSection() {
+  const canWrite = canWriteCrm(useMe().data);
+  const [type, setType] = useState("bug");
+  const query = useTickets(type ? { type } : {});
+  const tickets = query.data ?? [];
+  const contacts = useAllContacts().data ?? [];
+  const archived = useAllContacts({ archived: true }).data ?? [];
+  const today = todayIso();
+
+  const [search, setSearch] = useState("");
   const [client, setClient] = useState("");
   const [status, setStatus] = useState<"" | "open" | BugStatus>("open");
   const [severity, setSeverity] = useState("");
   const [dateFilter, setDateFilter] = useState<DateFilter>("any");
-  const [from, setFrom] = useState("2026-10-01");
-  const [to, setTo] = useState("2026-10-14");
-  const [selectedId, setSelectedId] = useState(101);
+  const [from, setFrom] = useState(addDaysIso(today, -30));
+  const [to, setTo] = useState(today);
+  const [selectedId, setSelectedId] = useState("");
 
-  const clients = Array.from(new Set(tickets.map((t) => t.client)));
-  const q = query.trim().toLowerCase();
+  const clientName = (t: TicketOut) => {
+    const c = contacts.find((x) => x.id === t.contactId) ?? archived.find((x) => x.id === t.contactId);
+    return c ? businessName(c) : t.contactId ? "Client" : "No client";
+  };
+  const clients = Array.from(new Set(tickets.map(clientName)));
+  const q = search.trim().toLowerCase();
 
-  const inDateRange = (t: BugTicket) => {
+  const inDateRange = (t: TicketOut) => {
     if (dateFilter === "any") return true;
-    const d = parseShortDate(t.date);
-    if (dateFilter === "today") return d.getTime() === TODAY.getTime();
-    if (dateFilter === "7") return d >= daysAgo(6) && d <= TODAY;
-    if (dateFilter === "30") return d >= daysAgo(29) && d <= TODAY;
-    if (dateFilter === "month") return d >= new Date(2026, 9, 1) && d <= TODAY;
-    const f = parseIsoDate(from);
-    const t2 = parseIsoDate(to);
-    return (!f || d >= f) && (!t2 || d <= t2);
+    const d = isoDateIn(new Date(t.createdAt), getTimeZone());
+    if (dateFilter === "today") return d === today;
+    if (dateFilter === "7") return d >= addDaysIso(today, -6) && d <= today;
+    if (dateFilter === "30") return d >= addDaysIso(today, -29) && d <= today;
+    if (dateFilter === "month") return d >= today.slice(0, 8) + "01" && d <= today;
+    return (!from || d >= from) && (!to || d <= to);
   };
 
   const rows = tickets
     .filter(
       (t) =>
         inDateRange(t) &&
-        (!client || t.client === client) &&
-        (!severity || t.sev === severity) &&
-        (!status || (status === "open" ? t.status !== "Fixed" : t.status === status)) &&
-        (!q || `${t.title} ${t.client} ${t.reporter}`.toLowerCase().includes(q)),
+        (!client || clientName(t) === client) &&
+        (!severity || t.priority === severity) &&
+        (!status || (status === "open" ? !isClosed(t) : t.status === status)) &&
+        (!q || `${t.title} ${clientName(t)} ${t.reporterName} ${t.code}`.toLowerCase().includes(q)),
     )
     .sort(
       (a, b) =>
-        Number(a.status === "Fixed") - Number(b.status === "Fixed") || SEVERITY_RANK[a.sev] - SEVERITY_RANK[b.sev] || b.id - a.id,
+        Number(isClosed(a)) - Number(isClosed(b)) ||
+        (SEVERITY_RANK[a.priority] ?? 9) - (SEVERITY_RANK[b.priority] ?? 9) ||
+        b.createdAt.localeCompare(a.createdAt),
     );
 
-  const open = tickets.filter((t) => t.status !== "Fixed");
+  const open = tickets.filter((t) => !isClosed(t));
   const selected = tickets.find((t) => t.id === selectedId);
 
   return (
     <div className="page-stack">
       <StatGrid
         items={[
-          { label: "Open bugs", value: open.length, tone: "cyan" },
-          { label: "Critical / high", value: open.filter((t) => t.sev === "Critical" || t.sev === "High").length, tone: "orange" },
-          { label: "Clients affected", value: new Set(open.map((t) => t.client)).size, tone: "purple" },
-          { label: "Fixed", value: tickets.length - open.length, tone: "green" },
+          { label: "Open tickets", value: open.length, tone: "cyan" },
+          { label: "Critical / high", value: open.filter((t) => t.priority === "Critical" || t.priority === "High").length, tone: "orange" },
+          { label: "Clients affected", value: new Set(open.map((t) => t.contactId).filter(Boolean)).size, tone: "purple" },
+          { label: "Done", value: tickets.length - open.length, tone: "green" },
         ]}
       />
 
       <div className="toolbar toolbar--card toolbar--fields">
         <Field label={<span className="kicker kicker--sm">SEARCH</span>} htmlFor="bug-q" className="toolbar__grow">
-          <Input id="bug-q" type="search" placeholder="Bug title, client or reporter" value={query} onChange={(e) => setQuery(e.target.value)} />
+          <Input id="bug-q" type="search" placeholder="Title, client, reporter or ID" value={search} onChange={(e) => setSearch(e.target.value)} />
+        </Field>
+        <Field label={<span className="kicker kicker--sm">TYPE</span>} htmlFor="bug-type">
+          <Select id="bug-type" value={type} placeholder="Any type" options={TICKET_TYPES} onChange={(e) => setType(e.target.value)} />
         </Field>
         <Field label={<span className="kicker kicker--sm">CLIENT CRM</span>} htmlFor="bug-client">
           <Select id="bug-client" value={client} placeholder="All clients" options={clients} onChange={(e) => setClient(e.target.value)} />
@@ -126,67 +145,67 @@ export function BugsSection() {
           </div>
         )}
         <span className="text-small toolbar__count">
-          Showing {rows.length} of {tickets.length} bugs
+          Showing {rows.length} of {tickets.length}
         </span>
       </div>
 
       <div className="split">
         <section className="split__main card card--table">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Bug</th>
-                <th>Client CRM</th>
-                <th>Severity</th>
-                <th>Status</th>
-                <th>Reported</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((t) => (
-                <tr key={t.id} aria-selected={t.id === selectedId}>
-                  <td className="data-table__code">BUG-{t.id}</td>
-                  <td>
-                    <button type="button" className="cell-button" onClick={() => setSelectedId(t.id)}>
-                      <strong className="data-table__strong">{t.title}</strong>
-                      <span className="text-small">
-                        {t.area} · {t.reporter}
-                      </span>
-                    </button>
-                  </td>
-                  <td>
-                    <span className="cluster cluster--8 cluster--nowrap u-strong">
-                      <Avatar text={initials(t.client)} tone={CLIENT_TONES[clients.indexOf(t.client) % CLIENT_TONES.length]} size="sm" square />
-                      {t.client}
-                    </span>
-                  </td>
-                  <td>
-                    <Badge tone={SEVERITY_TONES[t.sev]}>{t.sev}</Badge>
-                  </td>
-                  <td>
-                    <Badge tone={BUG_STATUS_TONES[t.status]} dot>
-                      {t.status}
-                    </Badge>
-                  </td>
-                  <td className="u-nowrap">{t.date}</td>
+          <LoadState query={query} loadingText="Loading tickets…">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Ticket</th>
+                  <th>Client CRM</th>
+                  <th>Severity</th>
+                  <th>Status</th>
+                  <th>Reported</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-          {rows.length === 0 && <p className="table-empty">No bugs match these filters.</p>}
+              </thead>
+              <tbody>
+                {rows.map((t) => {
+                  const name = clientName(t);
+                  return (
+                    <tr key={t.id} aria-selected={t.id === selectedId}>
+                      <td className="data-table__code">{t.code}</td>
+                      <td>
+                        <button type="button" className="cell-button" onClick={() => setSelectedId(t.id)}>
+                          <strong className="data-table__strong">{t.title}</strong>
+                          <span className="text-small">
+                            {[t.area, t.reporterName].filter(Boolean).join(" · ")}
+                          </span>
+                        </button>
+                      </td>
+                      <td>
+                        <span className="cluster cluster--8 cluster--nowrap u-strong">
+                          <Avatar text={initials(name)} tone={CLIENT_TONES[clients.indexOf(name) % CLIENT_TONES.length]} size="sm" square />
+                          {name}
+                        </span>
+                      </td>
+                      <td>
+                        <Badge tone={SEVERITY_TONES[t.priority as BugSeverity] ?? "neutral"}>{t.priority}</Badge>
+                      </td>
+                      <td>
+                        <Badge tone={BUG_STATUS_TONES[t.status as BugStatus] ?? "neutral"} dot>
+                          {t.status}
+                        </Badge>
+                      </td>
+                      <td className="u-nowrap">{formatShort(t.createdAt)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            {rows.length === 0 && <p className="table-empty">{tickets.length ? "Nothing matches these filters." : "No tickets yet."}</p>}
+          </LoadState>
         </section>
 
         {selected ? (
-          <BugDetails
-            key={selected.id}
-            ticket={selected}
-            onClose={() => setSelectedId(0)}
-            onUpdate={(patch) => update((s) => ({ tickets: s.tickets.map((t) => (t.id === selected.id ? { ...t, ...patch } : t)) }))}
-          />
+          <BugDetails key={selected.id} ticket={selected} client={clientName(selected)} canWrite={canWrite} onClose={() => setSelectedId("")} />
         ) : (
           <section className="split__side empty-state bug-placeholder">
-            Click a bug to see the details, change its status and reply to the client.
+            Click a ticket to see the details, change its status and reply to the client.
           </section>
         )}
       </div>
@@ -194,23 +213,17 @@ export function BugsSection() {
   );
 }
 
-function BugDetails({
-  ticket,
-  onClose,
-  onUpdate,
-}: {
-  ticket: BugTicket;
-  onClose: () => void;
-  onUpdate: (patch: Partial<BugTicket>) => void;
-}) {
+function BugDetails({ ticket, client, canWrite, onClose }: { ticket: TicketOut; client: string; canWrite: boolean; onClose: () => void }) {
   const [reply, setReply] = useState("");
-  const thread: ThreadMessage[] = [{ from: ticket.reporter, kind: "client", when: ticket.date, text: "Reported this bug." }, ...ticket.thread];
+  const update = useUpdateTicket();
+  const post = usePostTicketMessage();
+  const firstName = (ticket.reporterName || "the client").split(" ")[0];
 
   const addMessage = (kind: "reply" | "note") => {
     const text = reply.trim();
     if (!text) return;
-    onUpdate({ thread: [...ticket.thread, { from: "You", kind, when: TODAY_SHORT, text }] });
-    setReply("");
+    // Notes are team-only: the client never sees them.
+    post.mutate({ id: ticket.id, text, kind }, { onSuccess: () => setReply("") });
   };
 
   const send = (e: FormEvent) => {
@@ -219,11 +232,11 @@ function BugDetails({
   };
 
   return (
-    <section className="split__side card card--glow bug-details" aria-label="Bug details">
+    <section className="split__side card card--glow bug-details" aria-label="Ticket details">
       <div className="cluster cluster--nowrap bug-details__head">
         <div className="stack stack--4 u-grow">
           <span className="kicker">
-            BUG-{ticket.id} · {ticket.client}
+            {ticket.code} · {client}
           </span>
           <h2 className="bug-details__title">{ticket.title}</h2>
         </div>
@@ -235,26 +248,37 @@ function BugDetails({
       <div className="bug-details__facts">
         <div className="stack stack--2">
           <span className="u-muted">Reported by</span>
-          <span className="u-strong">{ticket.reporter}</span>
-          <span className="u-muted">{ticket.email}</span>
+          <span className="u-strong">{ticket.reporterName || "—"}</span>
+          <span className="u-muted">{ticket.reporterEmail}</span>
         </div>
         <div className="stack stack--2">
           <span className="u-muted">Where</span>
-          <span className="u-strong">{ticket.area} page</span>
+          <span className="u-strong">{ticket.area ? `${ticket.area} page` : "—"}</span>
           <span className="u-muted">{ticket.device}</span>
         </div>
         <div className="stack stack--2">
           <span className="u-muted">Severity</span>
-          <span className="u-strong">{ticket.sev}</span>
+          {canWrite ? (
+            <Select
+              size="sm"
+              aria-label="Severity"
+              value={ticket.priority}
+              options={SEVERITIES}
+              disabled={update.isPending}
+              onChange={(e) => update.mutate({ id: ticket.id, body: { priority: e.target.value as BugSeverity } })}
+            />
+          ) : (
+            <span className="u-strong">{ticket.priority}</span>
+          )}
         </div>
         <div className="stack stack--2">
           <span className="u-muted">Reported</span>
-          <span className="u-strong">{ticket.date}</span>
+          <span className="u-strong">{formatShort(ticket.createdAt)}</span>
         </div>
       </div>
 
       <Field label="What happened">
-        <p className="text-body u-ink u-pre-line">{ticket.desc}</p>
+        <p className="text-body u-ink u-pre-line">{ticket.description || "No description."}</p>
       </Field>
 
       <Field label="Status" htmlFor="bug-set-status">
@@ -263,44 +287,46 @@ function BugDetails({
           className="u-strong"
           value={ticket.status}
           options={BUG_STATUSES}
-          onChange={(e) =>
-            onUpdate({
-              status: e.target.value as BugStatus,
-              thread: [...ticket.thread, { from: "You", kind: "note", when: TODAY_SHORT, text: `Status changed to ${e.target.value}.` }],
-            })
-          }
+          disabled={!canWrite || update.isPending}
+          onChange={(e) => update.mutate({ id: ticket.id, body: { status: e.target.value as BugStatus } })}
         />
       </Field>
+      <FormError error={update.error ?? post.error} />
 
       <div className="stack stack--8">
         <span className="kicker">ACTIVITY</span>
-        {thread.map((m, i) => (
-          <div key={i} className={cn(MESSAGE_CLASS[m.kind])}>
+        {ticket.messages.length === 0 && <span className="text-small">No messages yet.</span>}
+        {ticket.messages.map((m) => (
+          <div key={m.id} className={cn(MESSAGE_CLASS[m.kind] ?? "message")}>
             <span className="message__meta">
-              {m.kind === "note" ? "Internal note" : m.from} · {m.when}
+              {m.kind === "note" ? "Internal note" : m.authorName} · {formatShort(m.createdAt)}
             </span>
             {m.text}
           </div>
         ))}
       </div>
 
-      <form className="stack stack--8" onSubmit={send}>
-        <Field label={`Reply to ${ticket.reporter.split(" ")[0]}`} htmlFor="bug-reply">
-          <Textarea
-            id="bug-reply"
-            rows={3}
-            value={reply}
-            onChange={(e) => setReply(e.target.value)}
-            placeholder="Let them know what you found or when it will be fixed"
-          />
-        </Field>
-        <div className="cluster cluster--8 cluster--end">
-          <Button onClick={() => addMessage("note")}>Add internal note</Button>
-          <Button type="submit" variant="primary">
-            Send reply
-          </Button>
-        </div>
-      </form>
+      {canWrite && (
+        <form className="stack stack--8" onSubmit={send}>
+          <Field label={`Reply to ${firstName}`} htmlFor="bug-reply">
+            <Textarea
+              id="bug-reply"
+              rows={3}
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              placeholder="Let them know what you found or when it will be fixed"
+            />
+          </Field>
+          <div className="cluster cluster--8 cluster--end">
+            <Button onClick={() => addMessage("note")} disabled={post.isPending}>
+              Add internal note
+            </Button>
+            <Button type="submit" variant="primary" disabled={post.isPending}>
+              {post.isPending ? "Sending…" : "Send reply"}
+            </Button>
+          </div>
+        </form>
+      )}
     </section>
   );
 }

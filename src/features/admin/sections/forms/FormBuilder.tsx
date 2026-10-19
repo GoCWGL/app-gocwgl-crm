@@ -3,7 +3,11 @@
 import { useState, type FormEvent } from "react";
 import { Badge, Button, Checkbox, Field, Icon, IconButton, IconTile, Input, SegmentedControl, Select, Textarea } from "@/components/ui";
 import { FIELD_TYPES, type FieldType, type FormField, type LeadForm } from "@/data/admin";
-import { moveItem, newId } from "@/lib/utils";
+import { moveItem } from "@/lib/utils";
+import { errorMessage, fieldErrors } from "@/utils/errors";
+import { useTags } from "@/utils/hooks/useContacts";
+import { useCreateForm, useUpdateForm } from "@/utils/hooks/useForms";
+import { draftToForm, newFieldId } from "@/utils/mappers/forms";
 import { embedCode } from "../../lib/forms";
 import { useAdmin } from "../../state/AdminContext";
 
@@ -15,7 +19,10 @@ type FormBuilderProps = {
 
 /** Three columns: field palette · field settings · live preview. */
 export function FormBuilder({ draft, onChange, onClose }: FormBuilderProps) {
-  const { state, update } = useAdmin();
+  const { notify } = useAdmin();
+  const tags = useTags().data ?? [];
+  const create = useCreateForm();
+  const update = useUpdateForm();
   const [error, setError] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
@@ -32,7 +39,7 @@ export function FormBuilder({ draft, onChange, onClose }: FormBuilderProps) {
     setFields([
       ...draft.fields,
       {
-        id: newId(),
+        id: newFieldId(),
         type,
         label: type === "checkbox" ? "I agree" : FIELD_TYPES[type].label,
         ph: "",
@@ -43,15 +50,23 @@ export function FormBuilder({ draft, onChange, onClose }: FormBuilderProps) {
 
   const addCustomField = () => {
     const n = draft.fields.filter((f) => f.custom).length + 1;
-    setFields([...draft.fields, { id: newId(), type: "text", label: `Custom question ${n}`, ph: "", req: false, opts: "", custom: true, key: `custom_field_${n}` }]);
+    setFields([...draft.fields, { id: newFieldId(), type: "text", label: `Custom question ${n}`, ph: "", req: false, opts: "", custom: true, key: `custom_field_${n}` }]);
   };
 
   const save = () => {
     if (!draft.name.trim()) return setError("Give your form a name before saving.");
     if (!draft.fields.length) return setError("Add at least one field.");
-    const saved = { ...draft, name: draft.name.trim() };
-    update((s) => ({ forms: draft.id ? s.forms.map((f) => (f.id === draft.id ? saved : f)) : [...s.forms, { ...saved, id: newId() }] }));
-    onClose();
+    if (!draft.fields.some((f) => f.type === "email")) return setError("A form needs an Email field so each submission becomes a contact.");
+    const body = draftToForm(draft);
+    const opts = {
+      onSuccess: () => {
+        notify(`${body.name} was saved.`);
+        onClose();
+      },
+      onError: (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err)),
+    };
+    if (draft.id) update.mutate({ id: draft.id, body }, opts);
+    else create.mutate(body, opts);
   };
 
   const previewSubmit = (e: FormEvent) => {
@@ -70,8 +85,8 @@ export function FormBuilder({ draft, onChange, onClose }: FormBuilderProps) {
           Form name
         </label>
         <input id="fm-name" className="title-input" value={draft.name} onChange={(e) => set({ name: e.target.value })} placeholder="Name your form" />
-        <Button variant="primary" onClick={save}>
-          Save form
+        <Button variant="primary" onClick={save} disabled={create.isPending || update.isPending}>
+          {create.isPending || update.isPending ? "Saving…" : "Save form"}
         </Button>
       </div>
       {error && (
@@ -190,8 +205,7 @@ export function FormBuilder({ draft, onChange, onClose }: FormBuilderProps) {
                 <Input id="fm-btn" size="sm" value={draft.button} onChange={(e) => set({ button: e.target.value })} />
               </Field>
               <Field label="Add to pipeline stage" htmlFor="fm-stage">
-                <Select id="fm-stage" size="sm" value={draft.stage} onChange={(e) => set({ stage: e.target.value })}>
-                  <option value="">Don&apos;t add</option>
+                <Select id="fm-stage" size="sm" value={draft.stage} onChange={(e) => set({ stage: e.target.value as LeadForm["stage"] })}>
                   <option value="lead">New lead</option>
                   <option value="booked">Call booked</option>
                   <option value="paid">Paid subscriber</option>
@@ -203,7 +217,7 @@ export function FormBuilder({ draft, onChange, onClose }: FormBuilderProps) {
                   size="sm"
                   value={draft.tag}
                   placeholder="No tag"
-                  options={state.tags.map((t) => ({ value: t.id, label: t.name }))}
+                  options={tags.map((t) => ({ value: t.id, label: t.name }))}
                   onChange={(e) => set({ tag: e.target.value })}
                 />
               </Field>
@@ -238,7 +252,7 @@ export function FormBuilder({ draft, onChange, onClose }: FormBuilderProps) {
               </Field>
             )}
             <Field label="Embed code for your landing page">
-              <code className="code-block">{embedCode(draft.name)}</code>
+              <code className="code-block">{draft.id ? embedCode(draft.id) : "Save the form to get its embed code."}</code>
             </Field>
           </div>
         </section>

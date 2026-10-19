@@ -26,6 +26,9 @@ export function toneClass(tone?: Tone): string {
 /** Rotating avatar colors, picked by id so a person keeps the same color. */
 const AVATAR_TONES: Tone[] = ["cyan", "purple", "orange", "teal", "pink", "green"];
 
-export function avatarTone(id: number): Tone {
-  return AVATAR_TONES[Math.abs(id) % AVATAR_TONES.length];
+/** Works with UUID strings from the API (hashed) as well as numbers. */
+export function avatarTone(id: number | string | null | undefined): Tone {
+  let n = typeof id === "number" ? id : 0;
+  if (typeof id === "string") for (let i = 0; i < id.length; i++) n = (n * 31 + id.charCodeAt(i)) | 0;
+  return AVATAR_TONES[Math.abs(n) % AVATAR_TONES.length];
 }

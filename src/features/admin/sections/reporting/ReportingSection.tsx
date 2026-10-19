@@ -1,157 +1,110 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, BarChart, BarRow, Field, Input, SegmentedControl } from "@/components/ui";
+import { BarChart, BarRow, Field, LoadState, SegmentedControl } from "@/components/ui";
 import { SOURCE_LABELS, type LeadSource } from "@/data/admin";
-import { daysAgo, formatLongDate, parseIsoDate, parseShortDate, toIsoDate, TODAY } from "@/lib/dates";
 import { percent } from "@/lib/utils";
-import { useAdmin } from "../../state/AdminContext";
+import type { DashboardRange } from "@/utils/api/reporting";
+import { addDaysIso, formatLong, formatShort, todayIso } from "@/utils/format/dates";
+import { formatCents } from "@/utils/format/money";
+import { useDashboard } from "@/utils/hooks/useReporting";
 
-type Range = "7" | "30" | "month" | "90" | "all" | "custom";
-
-const PRESETS: Array<{ value: Range; label: string }> = [
+/** The API reports on the last 7, 30 or 90 days. */
+const PRESETS: Array<{ value: "7" | "30" | "90"; label: string }> = [
   { value: "7", label: "Last 7 days" },
   { value: "30", label: "Last 30 days" },
-  { value: "month", label: "This month" },
   { value: "90", label: "Last 90 days" },
-  { value: "all", label: "All time" },
-  { value: "custom", label: "Custom" },
 ];
 
-/** Weekly signups (sample history), keyed by the Monday of each week. */
-const WEEKLY: Array<[string, number]> = [
-  ["Aug 24", 4], ["Aug 31", 6], ["Sep 7", 5], ["Sep 14", 9], ["Sep 21", 7], ["Sep 28", 11], ["Oct 5", 8], ["Oct 12", 12],
-];
+/** Group the API's daily leads into weeks starting on Monday (display only). */
+function weekly(perDay: Array<{ date: string; leads: number }>) {
+  const weeks = new Map<string, number>();
+  for (const p of perDay) {
+    const [y, m, d] = p.date.split("-").map(Number);
+    const dow = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7;
+    const monday = addDaysIso(p.date, -dow);
+    weeks.set(monday, (weeks.get(monday) ?? 0) + p.leads);
+  }
+  return [...weeks.entries()].sort(([a], [b]) => a.localeCompare(b));
+}
 
 export function ReportingSection() {
-  const { state } = useAdmin();
-  const contacts = state.contacts;
-  const [range, setRange] = useState<Range>("30");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  const [range, setRange] = useState<"7" | "30" | "90">("30");
+  const report = useDashboard(Number(range) as DashboardRange);
+  const d = report.data;
+  const today = todayIso();
+  const start = addDaysIso(today, -Number(range) + 1);
 
-  const earliest = contacts.reduce((min, c) => {
-    const d = parseShortDate(c.signed);
-    return d < min ? d : min;
-  }, TODAY);
-
-  const presetStart: Record<Exclude<Range, "custom" | "all">, Date> = {
-    "7": daysAgo(6),
-    "30": daysAgo(29),
-    month: new Date(2026, 9, 1),
-    "90": daysAgo(89),
-  };
-  const start = range === "custom" ? parseIsoDate(customFrom) : range === "all" ? null : presetStart[range];
-  const end = range === "custom" ? (parseIsoDate(customTo) ?? TODAY) : TODAY;
-
-  const inRange = (d: Date) => (!start || d >= start) && d <= end;
-  const rows = contacts.filter((c) => inRange(parseShortDate(c.signed)));
-  const total = rows.length;
-  const paid = rows.filter((c) => c.stage === "paid").length;
-  const reachedCall = rows.filter((c) => c.stage === "booked" || c.stage === "paid").length;
-
-  const weeks = WEEKLY.filter(([label]) => {
-    const weekStart = parseShortDate(label);
-    const weekEnd = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + 6);
-    return (!start || weekEnd >= start) && weekStart <= end;
-  });
-
-  // Switching to custom (or typing a date) starts from the currently shown range.
-  const pickPreset = (value: Range) => {
-    if (value === "custom") {
-      setCustomFrom(toIsoDate(start ?? earliest));
-      setCustomTo(toIsoDate(end));
-    }
-    setRange(value);
-  };
-  const editDate = (which: "from" | "to", value: string) => {
-    if (range !== "custom") {
-      setCustomFrom(toIsoDate(start ?? earliest));
-      setCustomTo(toIsoDate(end));
-      setRange("custom");
-    }
-    if (which === "from") setCustomFrom(value);
-    else setCustomTo(value);
-  };
-
-  const metrics = [
-    { label: "Signups", value: total },
-    { label: "New paying clients", value: paid },
-    { label: "Signup → booked call", value: percent(reachedCall, total) },
-    { label: "Booked call → paid", value: percent(paid, reachedCall) },
-    { label: "Signup → paid", value: percent(paid, total) },
-    { label: "Lost", value: rows.filter((c) => c.stage === "lost").length },
-  ];
+  const total = d?.new_leads ?? 0;
+  const sourceTotal = (d?.sources ?? []).reduce((n, s) => n + s.count, 0);
+  const metrics = d
+    ? [
+        { label: "Signups", value: d.new_leads },
+        { label: "Revenue collected", value: formatCents(d.revenue_cents) },
+        { label: "Signup → booked call", value: `${d.conversion.lead_to_call_pct}%` },
+        {
+          label: "Booked call → paid",
+          value: d.conversion.lead_to_call_pct ? `${Math.round((d.conversion.lead_to_paid_pct / d.conversion.lead_to_call_pct) * 100)}%` : "0%",
+        },
+        { label: "Signup → paid", value: `${d.conversion.lead_to_paid_pct}%` },
+        { label: "Monthly recurring revenue", value: formatCents(d.mrr_cents) },
+      ]
+    : [];
+  const weeks = weekly(d?.leads_per_day ?? []);
 
   return (
     <div className="page-stack">
       <section className="toolbar toolbar--card report-filter" aria-label="Date filter">
         <Field label="Date range">
-          <SegmentedControl variant="soft" label="Date range presets" options={PRESETS} value={range} onChange={pickPreset} />
+          <SegmentedControl variant="soft" label="Date range presets" options={PRESETS} value={range} onChange={setRange} />
         </Field>
-        <div className="date-range">
-          <Field label="From" htmlFor="rep-from">
-            <Input id="rep-from" type="date" value={toIsoDate(start ?? earliest)} onChange={(e) => editDate("from", e.target.value)} />
-          </Field>
-          <span className="date-range__arrow" aria-hidden="true">
-            →
-          </span>
-          <Field label="To" htmlFor="rep-to">
-            <Input id="rep-to" type="date" value={toIsoDate(end)} onChange={(e) => editDate("to", e.target.value)} />
-          </Field>
-        </div>
         <p className="text-muted report-filter__summary">
           Showing{" "}
           <strong className="u-ink">
-            {formatLongDate(start ?? earliest)} – {formatLongDate(end)}
+            {formatLong(start)} – {formatLong(today)}
           </strong>{" "}
           · {total} signups in this range
         </p>
       </section>
 
-      <div className="stat-grid">
-        {metrics.map((m) => (
-          <div className="card card--tight report-metric-card" key={m.label}>
-            <span className="kpi-card__label">{m.label}</span>
-            <span className="metric metric--lg">{m.value}</span>
-          </div>
-        ))}
-      </div>
+      <LoadState query={report} loadingText="Loading report…">
+        <div className="stat-grid">
+          {metrics.map((m) => (
+            <div className="card card--tight report-metric-card" key={m.label}>
+              <span className="kpi-card__label">{m.label}</span>
+              <span className="metric metric--lg">{m.value}</span>
+            </div>
+          ))}
+        </div>
 
-      <div className="card-row card-row--stretch">
-        <section className="card report-weekly">
-          <div className="cluster cluster--between">
+        <div className="card-row card-row--stretch">
+          <section className="card report-weekly">
             <h2 className="card-title">Signups per week</h2>
-            <Badge tone="neutral" size="lg">
-              Sample data
-            </Badge>
-          </div>
-          {weeks.length === 0 ? (
-            <p className="text-muted">No weekly data in this date range.</p>
-          ) : (
-            <BarChart
-              label="Signups per week"
-              data={weeks.map(([label, n]) => ({ label, value: n, color: "#0891B2" }))}
-              minHeight={0}
-            />
-          )}
-        </section>
-        <section className="card report-sources">
-          <h2 className="card-title">Where signups came from</h2>
-          {(Object.keys(SOURCE_LABELS) as LeadSource[]).map((source) => {
-            const n = rows.filter((c) => c.source === source).length;
-            return (
-              <BarRow
-                key={source}
-                label={SOURCE_LABELS[source]!}
-                percent={total ? (n / total) * 100 : 0}
-                color="#0891B2"
-                value={`${n} · ${percent(n, total)}`}
+            {weeks.length === 0 ? (
+              <p className="text-muted">No signups in this date range.</p>
+            ) : (
+              <BarChart
+                label="Signups per week"
+                data={weeks.map(([monday, n]) => ({ label: formatShort(monday), value: n, color: "#0891B2" }))}
+                minHeight={0}
               />
-            );
-          })}
-        </section>
-      </div>
+            )}
+          </section>
+          <section className="card report-sources">
+            <h2 className="card-title">Where signups came from</h2>
+            {(d?.sources ?? []).length === 0 && <p className="text-muted">No signups in this date range.</p>}
+            {(d?.sources ?? []).map((s) => (
+              <BarRow
+                key={s.source}
+                label={SOURCE_LABELS[s.source as LeadSource] ?? s.source}
+                percent={sourceTotal ? (s.count / sourceTotal) * 100 : 0}
+                color="#0891B2"
+                value={`${s.count} · ${percent(s.count, sourceTotal)}`}
+              />
+            ))}
+          </section>
+        </div>
+      </LoadState>
     </div>
   );
 }

@@ -172,3 +172,12 @@
   font-family: $font-mono;
   font-size: 12px;
 }
+
+// Sandboxed preview of a pasted embed code (untrusted HTML never renders in the page itself).
+.embed-preview {
+  width: 100%;
+  height: 320px;
+  border: 1px dashed $line-strong;
+  border-radius: $radius-lg;
+  background: $white;
+}

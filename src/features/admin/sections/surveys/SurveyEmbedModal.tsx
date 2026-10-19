@@ -4,8 +4,8 @@ import { useState } from "react";
 import { Button, Field, Icon, IconTile, Input, Modal, SegmentedControl } from "@/components/ui";
 import type { Survey } from "@/data/admin";
 import { copyToClipboard } from "@/lib/utils";
+import { useDomains } from "@/utils/hooks/useSettings";
 import { surveyEmbed, surveyHost, type SurveyEmbedMode } from "../../lib/surveys";
-import { useAdmin } from "../../state/AdminContext";
 
 const MODES: Array<{ value: SurveyEmbedMode; label: string; hint: string }> = [
   { value: "inline", label: "On the page", hint: "The survey shows inside your page, wherever you paste the code." },
@@ -14,8 +14,7 @@ const MODES: Array<{ value: SurveyEmbedMode; label: string; hint: string }> = [
 ];
 
 export function SurveyEmbedModal({ survey, onClose }: { survey: Survey; onClose: () => void }) {
-  const { state } = useAdmin();
-  const host = surveyHost(state.domains);
+  const host = surveyHost(useDomains().data);
   const [mode, setMode] = useState<SurveyEmbedMode>("inline");
   const [height, setHeight] = useState(Math.min(1200, 260 + survey.questions.length * 110));
   const [button, setButton] = useState("Take the survey");

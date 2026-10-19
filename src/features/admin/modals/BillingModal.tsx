@@ -2,11 +2,19 @@
 
 import { useState, type FormEvent } from "react";
 import { Button, Field, Icon, IconButton, IconTile, Input, Modal, SegmentedControl, Select } from "@/components/ui";
-import { PAYMENT_PROVIDERS, PLAN_PRICE, type InvoiceItem, type Subscription } from "@/data/admin";
-import { addDays } from "@/lib/dates";
-import { formatMoney, newId } from "@/lib/utils";
-import { invoiceTotal, providerName } from "../lib/billing";
-import { useAdmin } from "../state/AdminContext";
+import { BILLING_INTERVALS, PAYMENT_PROVIDERS, type BillingInterval } from "@/data/admin";
+import { isStaffAdmin } from "@/utils/auth/session";
+import { addDaysIso, todayIso } from "@/utils/format/dates";
+import { centsToDollars, dollarsToCents, formatCents, formatCentsExact } from "@/utils/format/money";
+import { errorMessage, fieldErrors } from "@/utils/errors";
+import { useCreateInvoice, useCreateSubscription, usePaymentConnections, useSubscriptions } from "@/utils/hooks/useBilling";
+import { useAllContacts } from "@/utils/hooks/useContacts";
+import { useSettings } from "@/utils/hooks/useSettings";
+import { useMe } from "@/utils/hooks/useUsers";
+import { connectionOf, providerName } from "../lib/billing";
+import { contactName } from "../lib/contacts";
+
+type LineDraft = { desc: string; qty: string; price: string };
 
 type BillingModalProps = {
   kind: "invoice" | "sub";
@@ -16,63 +24,86 @@ type BillingModalProps = {
   onCreated: (view: "subs" | "inv", message: string) => void;
 };
 
-/** Create a one-time invoice or a recurring subscription for a client. */
+/** Create a one-time invoice or a recurring subscription for a client. Totals are computed by the API. */
 export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalProps) {
-  const { state, update } = useAdmin();
-  const connected = PAYMENT_PROVIDERS.filter((p) => state.paymentConnections[p.id]?.connected);
+  const canAdmin = isStaffAdmin(useMe().data);
+  const contacts = useAllContacts().data ?? [];
+  const subs = useSubscriptions().data ?? [];
+  const connections = usePaymentConnections(canAdmin).data;
+  const settings = useSettings().data;
+  const createInvoice = useCreateInvoice();
+  const createSub = useCreateSubscription();
+  const connected = PAYMENT_PROVIDERS.filter((p) => connectionOf(connections, p.id));
+  const defaultProvider = connected.find((p) => p.id === settings?.defaultPaymentProvider) ?? connected[0];
+  // A new subscription starts from the plan most clients already have (display default only).
+  const template = subs.find((s) => s.status === "Active") ?? subs[0];
 
   const [clientId, setClientId] = useState("");
-  const [method, setMethod] = useState(connected.some((p) => p.id === state.paymentDefault) ? state.paymentDefault : (connected[0]?.id ?? ""));
-  const [items, setItems] = useState<InvoiceItem[]>([{ desc: "", qty: 1, price: "" }]);
+  const [items, setItems] = useState<LineDraft[]>([{ desc: "", qty: "1", price: "" }]);
   const [due, setDue] = useState("7");
   const [note, setNote] = useState("");
-  const [plan, setPlan] = useState("[Your Plan]");
-  const [amount, setAmount] = useState(String(PLAN_PRICE));
-  const [interval, setInterval] = useState<Subscription["interval"]>("Month");
+  const [plan, setPlan] = useState(template?.plan ?? "Monthly retainer");
+  const [amount, setAmount] = useState(template ? centsToDollars(template.amountCents) : "97");
+  const [interval, setInterval] = useState<BillingInterval>((template?.interval as BillingInterval) ?? "Month");
   const [trial, setTrial] = useState("0");
   const [error, setError] = useState("");
 
   const isInvoice = kind === "invoice";
-  const client = state.contacts.find((c) => String(c.id) === clientId);
-  const total = invoiceTotal({ items });
-  const patchItem = (i: number, patch: Partial<InvoiceItem>) => {
+  const client = contacts.find((c) => c.id === clientId);
+  const lineCents = (it: LineDraft) => (Math.max(1, Number(it.qty) || 1)) * dollarsToCents(it.price || 0);
+  // Preview only: the saved invoice's total comes back from the API as totalCents.
+  const estimate = items.reduce((n, it) => n + lineCents(it), 0);
+  const patchItem = (i: number, patch: Partial<LineDraft>) => {
     setItems(items.map((it, k) => (k === i ? { ...it, ...patch } : it)));
     setError("");
   };
+  const pending = createInvoice.isPending || createSub.isPending;
+  const onError = (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err));
 
   const create = (draft: boolean) => {
     if (!client) return setError("Choose a client first.");
 
     if (isInvoice) {
-      const lines = items.filter((it) => String(it.desc).trim() && Number(it.price) > 0);
+      const lines = items.filter((it) => it.desc.trim() && dollarsToCents(it.price) > 0);
       if (!lines.length) return setError("Add at least one line with a description and price.");
-      const no = `INV-${1001 + state.invoices.length}`;
-      const clean = lines.map((it) => ({ desc: String(it.desc).trim(), qty: Number(it.qty) || 1, price: Number(it.price) }));
-      update((s) => ({
-        invoices: [{ no, cid: client.id, items: clean, due: due === "0" ? "On receipt" : addDays(Number(due)), status: draft ? "Draft" : "Sent", note }, ...s.invoices],
-      }));
-      onCreated("inv", draft ? `${no} saved as a draft.` : `${no} (${formatMoney(invoiceTotal({ items: clean }))}) sent to ${client.email}.`);
+      createInvoice.mutate(
+        {
+          contactId: client.id,
+          items: lines.map((it) => ({ description: it.desc.trim(), quantity: Math.max(1, Number(it.qty) || 1), unitPriceCents: dollarsToCents(it.price) })),
+          dueDate: due === "0" ? null : addDaysIso(todayIso(), Number(due)),
+          note: note.trim(),
+          send: !draft,
+        },
+        {
+          onSuccess: (iv) =>
+            onCreated(
+              "inv",
+              draft ? `${iv.number} saved as a draft.` : `${iv.number} (${formatCentsExact(iv.totalCents, iv.currency)}) sent to ${client.email}.`,
+            ),
+          onError,
+        },
+      );
       return;
     }
 
-    if (!(Number(amount) > 0)) return setError("Enter an amount above zero.");
-    if (state.subscriptions.some((x) => x.cid === client.id)) return setError(`${client.name} already has a subscription.`);
+    const cents = dollarsToCents(amount);
+    if (!(cents > 0)) return setError("Enter an amount above zero.");
     const trialDays = Number(trial);
-    update((s) => ({
-      subscriptions: [
-        ...s.subscriptions,
-        {
-          id: newId(),
-          cid: client.id,
-          plan: plan.trim() || "[Your Plan]",
-          amount: Number(amount),
-          interval,
-          next: addDays(trialDays),
-          status: trialDays ? "Trial" : "Awaiting payment",
-        },
-      ],
-    }));
-    onCreated("subs", `Payment link sent to ${client.email} for ${formatMoney(Number(amount))} per ${interval.toLowerCase()}.`);
+    createSub.mutate(
+      {
+        contactId: client.id,
+        plan: plan.trim() || "Monthly retainer",
+        amountCents: cents,
+        interval,
+        nextBillingDate: addDaysIso(todayIso(), trialDays),
+        status: trialDays ? "Trial" : "Awaiting payment",
+      },
+      {
+        onSuccess: (sub) =>
+          onCreated("subs", `Subscription for ${contactName(client)} created: ${formatCents(sub.amountCents, sub.currency)} per ${sub.interval.toLowerCase()}.`),
+        onError,
+      },
+    );
   };
 
   const submit = (e: FormEvent) => {
@@ -98,12 +129,12 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
         <>
           <Button onClick={onClose}>Cancel</Button>
           {isInvoice && (
-            <Button variant="accent" onClick={() => create(true)}>
+            <Button variant="accent" onClick={() => create(true)} disabled={pending}>
               Save as draft
             </Button>
           )}
-          <Button type="submit" variant="primary">
-            {isInvoice ? "Send invoice" : "Send payment link"}
+          <Button type="submit" variant="primary" disabled={pending}>
+            {pending ? "Saving…" : isInvoice ? "Send invoice" : "Create subscription"}
           </Button>
         </>
       }
@@ -127,23 +158,18 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
             id="bm-client"
             value={clientId}
             placeholder="Choose a client…"
-            options={state.contacts.map((c) => ({ value: String(c.id), label: `${c.name} — ${c.email}` }))}
+            options={contacts.map((c) => ({ value: c.id, label: `${contactName(c)} — ${c.email}` }))}
             onChange={(e) => {
               setClientId(e.target.value);
               setError("");
             }}
           />
         </Field>
-        <Field label="Pay with" htmlFor="bm-method">
-          <Select
+        <Field label="Clients pay with" htmlFor="bm-method" hint="Your default checkout (Payments › Payment methods).">
+          <Input
             id="bm-method"
-            value={method}
-            onChange={(e) => setMethod(e.target.value)}
-            options={
-              connected.length
-                ? connected.map((p) => ({ value: p.id, label: providerName(p, state.paymentConnections) }))
-                : [{ value: "", label: "Connect a payment method first" }]
-            }
+            readOnly
+            value={!canAdmin ? "Your default checkout" : defaultProvider ? providerName(defaultProvider, connections) : "Connect a payment method first"}
           />
         </Field>
       </div>
@@ -156,7 +182,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
               <Input
                 className="line-item__desc"
                 aria-label="Item description"
-                value={String(it.desc)}
+                value={it.desc}
                 placeholder="e.g. Landing page setup"
                 onChange={(e) => patchItem(i, { desc: e.target.value })}
               />
@@ -166,7 +192,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
                 min={1}
                 mono
                 aria-label="Quantity"
-                value={String(it.qty)}
+                value={it.qty}
                 onChange={(e) => patchItem(i, { qty: e.target.value })}
               />
               <Input
@@ -177,20 +203,20 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
                 mono
                 aria-label="Unit price"
                 placeholder="0.00"
-                value={String(it.price)}
+                value={it.price}
                 onChange={(e) => patchItem(i, { price: e.target.value })}
               />
-              <span className="line-item__total">{formatMoney((Number(it.qty) || 0) * (Number(it.price) || 0))}</span>
+              <span className="line-item__total">{formatCentsExact(lineCents(it))}</span>
               <IconButton
                 label="Remove line"
                 danger
-                onClick={() => setItems(items.length > 1 ? items.filter((_, k) => k !== i) : [{ desc: "", qty: 1, price: "" }])}
+                onClick={() => setItems(items.length > 1 ? items.filter((_, k) => k !== i) : [{ desc: "", qty: "1", price: "" }])}
               >
                 ×
               </IconButton>
             </div>
           ))}
-          <Button variant="dashed" size="sm" onClick={() => setItems([...items, { desc: "", qty: 1, price: "" }])}>
+          <Button variant="dashed" size="sm" onClick={() => setItems([...items, { desc: "", qty: "1", price: "" }])}>
             + Add line
           </Button>
           <div className="invoice-total">
@@ -203,8 +229,8 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
               </Select>
             </Field>
             <div className="invoice-total__amount">
-              <span className="text-small">Total</span>
-              <span className="billing-summary__amount">{formatMoney(total)}</span>
+              <span className="text-small">Estimated total</span>
+              <span className="billing-summary__amount">{formatCentsExact(estimate)}</span>
             </div>
           </div>
           <Field label="Note to client" htmlFor="bm-note">
@@ -221,7 +247,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
               <Input id="bm-amt" type="number" min={0} step="0.01" mono value={amount} onChange={(e) => setAmount(e.target.value)} />
             </Field>
             <Field label="Bill every" htmlFor="bm-int">
-              <Select id="bm-int" value={interval} options={["Week", "Month", "Quarter", "Year"]} onChange={(e) => setInterval(e.target.value as Subscription["interval"])} />
+              <Select id="bm-int" value={interval} options={BILLING_INTERVALS} onChange={(e) => setInterval(e.target.value as BillingInterval)} />
             </Field>
             <Field label="Free trial" htmlFor="bm-trial">
               <Select id="bm-trial" value={trial} onChange={(e) => setTrial(e.target.value)}>
@@ -233,9 +259,9 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
             </Field>
           </div>
           <div className="inset inset--soft text-body">
-            {client ? client.name : "The client"} gets a secure payment link by email.{" "}
-            {Number(trial) ? `After a ${trial}-day free trial, they` : "They"} will be charged {formatMoney(Number(amount) || 0)} every{" "}
-            {interval.toLowerCase()} until cancelled.
+            {Number(trial) ? `After a ${trial}-day free trial, ` : ""}
+            {client ? contactName(client) : "The client"} will be billed {formatCents(dollarsToCents(amount))} every {interval.toLowerCase()} until
+            cancelled. They can start the plan from Billing in their portal.
           </div>
         </>
       )}

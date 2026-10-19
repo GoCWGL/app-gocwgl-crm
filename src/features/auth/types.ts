@@ -1,6 +1,6 @@
-export type AuthMode = "login" | "signup" | "forgot" | "verify" | "done";
+export type AuthMode = "login" | "signup" | "forgot" | "verify" | "reset" | "invite" | "done";
 
-/** Why the code screen is shown: confirming a new email, or an admin's 2-step check. */
+/** Why the code screen is shown: confirming a new email, or a 2-step check after the password. */
 export type VerifyReason = "signup" | "admin2fa";
 
 export type NoticeKind = "info" | "success" | "warning";

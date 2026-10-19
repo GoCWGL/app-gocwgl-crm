@@ -1,65 +1,79 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
-import { Avatar, Badge, BarChart, BarRow, Button, Icon, IconTile, KpiCard, type IconName } from "@/components/ui";
-import { PLAN_PRICE, WEEK_DAYS, type AdminTab, type CoreStage } from "@/data/admin";
-import { dayNumber } from "@/lib/dates";
+import { useState, type CSSProperties, type ReactNode } from "react";
+import { Avatar, Badge, BarChart, BarRow, Button, ErrorState, Icon, IconTile, KpiCard, Loading, type IconName } from "@/components/ui";
+import { CORE_STAGES, SOURCE_LABELS, type AdminTab, type LeadSource } from "@/data/admin";
 import { avatarTone, toneClass, type Tone } from "@/lib/tones";
-import { cn, formatMoney, percent } from "@/lib/utils";
-import { getSalesStages } from "../../lib/contacts";
+import { cn, percent } from "@/lib/utils";
+import { addDaysIso, formatRelative, formatShort, formatTime, getTimeZone, isoDateIn, todayIso } from "@/utils/format/dates";
+import { formatCents } from "@/utils/format/money";
+import { useBookings } from "@/utils/hooks/useCalendar";
+import { usePipelines, useSalesBoard } from "@/utils/hooks/useContacts";
+import { useActivity, useDashboard } from "@/utils/hooks/useReporting";
+import { contactName, getSalesStages, stageOf } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
 
-const TODAY = 14;
-const DAY_ORDER: Record<string, number> = { Mon: 0, Tue: 1, Wed: 2, Thu: 3, Fri: 4 };
-const STAGE_ORDER: CoreStage[] = ["lead", "booked", "paid", "lost"];
-
-const ACTIVITY_TEXT: Record<CoreStage, string> = {
-  lead: "signed up on your landing page",
-  booked: "booked a discovery call",
-  paid: "paid for the subscription",
-  lost: "was marked as lost",
-};
+const deltaText = (d: number | null | undefined) => (d === null || d === undefined ? "no earlier data" : `${d >= 0 ? "+" : ""}${d}% vs previous 30 days`);
 
 export function DashboardSection() {
-  const { state, goTo, openContacts } = useAdmin();
-  const { contacts, pipelines, tickets } = state;
-  const stages = getSalesStages(pipelines);
+  const { goTo, openContacts } = useAdmin();
+  const dashboard = useDashboard(30);
+  const board = useSalesBoard();
+  const stages = getSalesStages(usePipelines().data);
+  const today = todayIso();
+  // Fixed once per visit so the query key stays stable.
+  const [window7] = useState(() => {
+    const now = new Date();
+    return { start: now.toISOString(), end: new Date(now.getTime() + 7 * 864e5).toISOString() };
+  });
+  const bookings = useBookings(window7);
+  const activity = useActivity({ limit: 7 });
 
-  const count = (stage: CoreStage) => contacts.filter((c) => c.stage === stage).length;
-  const total = contacts.length;
+  if (dashboard.isPending) return <Loading text="Loading your dashboard…" />;
+  if (dashboard.isError) return <ErrorState error={dashboard.error} onRetry={dashboard.refetch} />;
+  const d = dashboard.data;
+
+  const contacts = board.data ?? [];
+  const count = (stage: string) => d.stages[stage] ?? 0;
+  const total = CORE_STAGES.reduce((n, st) => n + count(st), 0);
   const paid = count("paid");
-  const booked = count("booked");
-  const reachedCall = booked + paid;
 
-  const scheduled = contacts.filter((c) => c.stage === "booked" && c.day);
-  const unscheduled = contacts.filter((c) => c.stage === "booked" && !c.day);
-  const callsToday = scheduled.filter((c) => c.day === "Wed").length;
-  const staleLeads = contacts.filter((c) => c.stage === "lead" && TODAY - dayNumber(c.signed) >= 2).length;
-  const openBugs = tickets.filter((t) => t.status !== "Fixed").length;
+  const upcoming = (bookings.data ?? []).filter((b) => b.status !== "Canceled" && b.status !== "Cancelled");
+  const callsToday = upcoming.filter((b) => isoDateIn(new Date(b.startsAt), getTimeZone()) === today).length;
+  const twoDaysAgo = addDaysIso(today, -2);
+  const staleLeads = contacts.filter((c) => c.stage === "lead" && isoDateIn(new Date(c.createdAt)) <= twoDaysAgo).length;
+  const unscheduled = contacts.filter((c) => c.stage === "booked" && !c.callAt).length;
+  const openTickets = Object.values(d.open_tickets ?? {}).reduce((a, b) => a + b, 0);
 
   const kpis: Array<{ label: string; value: string | number; icon: IconName; tone: Tone; footer: ReactNode }> = [
     {
-      label: "Active clients",
-      value: paid,
+      label: "Active subscriptions",
+      value: d.active_subscriptions,
       icon: "circleCheck",
       tone: "green",
       footer: (
         <>
-          <strong>+{contacts.filter((c) => c.stage === "paid" && c.paidOn.startsWith("Oct")).length}</strong> new this month
+          <strong>{paid}</strong> paid clients in the pipeline
         </>
       ),
     },
-    { label: "Monthly revenue (MRR)", value: formatMoney(paid * PLAN_PRICE), icon: "dollar", tone: "cyan", footer: `${formatMoney(paid * PLAN_PRICE * 12)} per year at this rate` },
     {
-      label: "New leads this week",
-      value: contacts.filter((c) => dayNumber(c.signed) >= 12).length,
-      icon: "userPlus",
-      tone: "purple",
-      footer: `${total} total landing page signups`,
+      label: "Monthly revenue (MRR)",
+      value: formatCents(d.mrr_cents),
+      icon: "dollar",
+      tone: "cyan",
+      footer: `${formatCents(d.mrr_cents * 12)} per year at this rate`,
     },
     {
-      label: "Calls booked",
-      value: booked,
+      label: "New leads (30 days)",
+      value: d.new_leads,
+      icon: "userPlus",
+      tone: "purple",
+      footer: deltaText(d.new_leads_delta),
+    },
+    {
+      label: "Calls next 7 days",
+      value: d.calls_next_7_days,
       icon: "calendar",
       tone: "orange",
       footer: (
@@ -68,51 +82,36 @@ export function DashboardSection() {
         </>
       ),
     },
-    { label: "Conversion rate", value: percent(paid, total), icon: "trendUp", tone: "teal", footer: "Signups who became paying clients" },
+    {
+      label: "Conversion rate",
+      value: `${d.conversion.lead_to_paid_pct}%`,
+      icon: "trendUp",
+      tone: "teal",
+      footer: "Signups in the last 30 days who became paying clients",
+    },
   ];
 
-  // MRR history: earlier months are sample numbers, October is live.
-  const trend = [1, 1, 2, 2, 2, paid];
-  const mrrTrend = ["May", "Jun", "Jul", "Aug", "Sep", "Oct"].map((label, i) => ({
-    label,
-    value: trend[i],
-    display: formatMoney(trend[i] * PLAN_PRICE),
-    color: i === 5 ? "#0891B2" : "#A5F3FC",
+  const daily = d.leads_per_day.slice(-14).map((p, i, arr) => ({
+    label: formatShort(p.date),
+    value: p.leads,
+    color: i === arr.length - 1 ? "#0891B2" : "#A5F3FC",
   }));
 
   const funnel = [
-    { label: "Signed up on landing page", n: total, color: "#0891B2" },
-    { label: "Booked a call", n: reachedCall, color: "#E08A12" },
-    { label: "Paid subscription", n: paid, color: "#1F9D57" },
+    { label: "Signed up on landing page", pct: 100, color: "#0891B2" },
+    { label: "Booked a call", pct: d.conversion.lead_to_call_pct, color: "#E08A12" },
+    { label: "Paid subscription", pct: d.conversion.lead_to_paid_pct, color: "#1F9D57" },
   ];
-
-  const upcoming = scheduled
-    .filter((c) => DAY_ORDER[c.day] >= 2)
-    .sort((a, b) => DAY_ORDER[a.day] - DAY_ORDER[b.day]);
 
   const attention: Array<{ label: string; n: number; warn: boolean; tab: AdminTab }> = [
     { label: "Leads waiting 2+ days for a call", n: staleLeads, warn: true, tab: "pipeline" },
-    { label: "Booked calls with no time set", n: unscheduled.length, warn: true, tab: "calendar" },
+    { label: "Booked calls with no time set", n: unscheduled, warn: true, tab: "calendar" },
     { label: "Calls scheduled today", n: callsToday, warn: false, tab: "calendar" },
-    { label: "Open bug reports", n: openBugs, warn: true, tab: "bugs" },
+    { label: "Overdue invoices", n: d.overdue_invoices.count, warn: true, tab: "payments" },
+    { label: "Open bug reports", n: openTickets, warn: true, tab: "bugs" },
   ];
 
-  const activity = contacts
-    .map((c) => ({
-      id: c.id,
-      name: c.name,
-      text: c.stage === "paid" ? `paid ${formatMoney(PLAN_PRICE)} subscription` : ACTIVITY_TEXT[c.stage],
-      when:
-        c.stage === "paid"
-          ? c.paidOn
-          : c.stage === "booked" && c.day
-            ? `Call on ${c.day} ${WEEK_DAYS.find(([d]) => d === c.day)?.[1]} Oct`
-            : c.signed,
-      tone: stages[c.stage].tone,
-      sortKey: dayNumber(c.stage === "paid" ? c.paidOn : c.signed),
-    }))
-    .sort((a, b) => b.sortKey - a.sortKey)
-    .slice(0, 7);
+  const recent = [...contacts].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 6);
 
   return (
     <div className="page-stack">
@@ -136,14 +135,17 @@ export function DashboardSection() {
         <section className="card dash-revenue">
           <div className="section-head">
             <div className="stack stack--2">
-              <h2 className="card-title">Revenue growth</h2>
-              <span className="text-small">Monthly recurring revenue, last 6 months</span>
+              <h2 className="card-title">New leads per day</h2>
+              <span className="text-small">
+                Last 14 days · {formatCents(d.revenue_cents)} collected in the last 30 days ({deltaText(d.revenue_delta)})
+              </span>
             </div>
-            <Badge tone="neutral" size="lg">
-              Earlier months: sample
-            </Badge>
           </div>
-          <BarChart label="Monthly recurring revenue" data={mrrTrend} maxHeight={80} minHeight={4} />
+          {daily.length ? (
+            <BarChart label="New leads per day" data={daily} maxHeight={80} minHeight={4} />
+          ) : (
+            <p className="text-muted">No leads in this period yet.</p>
+          )}
         </section>
 
         <section className="card dash-snapshot">
@@ -157,7 +159,7 @@ export function DashboardSection() {
             </Button>
           </div>
           <div className="stacked-bar" aria-hidden="true">
-            {STAGE_ORDER.map((st) => (
+            {CORE_STAGES.map((st) => (
               <div
                 key={st}
                 className={cn("stacked-bar__part", toneClass(stages[st].tone))}
@@ -166,7 +168,7 @@ export function DashboardSection() {
             ))}
           </div>
           <div>
-            {STAGE_ORDER.map((st) => (
+            {CORE_STAGES.map((st) => (
               <div className="list-row list-row--nowrap legend-row" key={st}>
                 <span className={cn("legend-row__swatch", toneClass(stages[st].tone))} aria-hidden="true" />
                 <span className="u-grow u-semibold">{stages[st].label}</span>
@@ -182,17 +184,17 @@ export function DashboardSection() {
         <section className="card">
           <div className="stack stack--2">
             <h2 className="card-title">Signup → Call → Paid</h2>
-            <span className="text-small">How far your landing page leads get</span>
+            <span className="text-small">How far the last 30 days of leads got</span>
           </div>
           {funnel.map((f) => (
             <BarRow
               key={f.label}
               label={f.label}
-              percent={total ? (f.n / total) * 100 : 0}
+              percent={d.new_leads ? f.pct : 0}
               color={f.color}
               value={
                 <>
-                  <strong>{f.n}</strong> · {percent(f.n, total)}
+                  <strong>{f.pct}%</strong>
                 </>
               }
             />
@@ -207,15 +209,20 @@ export function DashboardSection() {
             </Button>
           </div>
           <div>
-            {upcoming.map((c) => (
-              <div className="list-row list-row--nowrap" key={c.id}>
+            {upcoming.length === 0 && <p className="text-muted">No calls in the next 7 days.</p>}
+            {upcoming.slice(0, 6).map((b) => (
+              <div className="list-row list-row--nowrap" key={b.id}>
                 <div className="date-chip">
-                  <span className="date-chip__dow">{c.day}</span>
-                  <span className="date-chip__day">{WEEK_DAYS.find(([d]) => d === c.day)?.[1]}</span>
+                  <span className="date-chip__dow">
+                    {new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: getTimeZone() }).format(new Date(b.startsAt))}
+                  </span>
+                  <span className="date-chip__day">
+                    {new Intl.DateTimeFormat("en-US", { day: "numeric", timeZone: getTimeZone() }).format(new Date(b.startsAt))}
+                  </span>
                 </div>
                 <div className="stack stack--2">
-                  <span className="u-strong">{c.name}</span>
-                  <span className="text-small">{c.time} · Discovery call</span>
+                  <span className="u-strong">{b.name || b.email}</span>
+                  <span className="text-small">{formatTime(b.startsAt)} · Discovery call</span>
                 </div>
               </div>
             ))}
@@ -250,53 +257,60 @@ export function DashboardSection() {
               All clients
             </Button>
           </div>
-          <div className="table-scroll">
-            <table className="data-table data-table--plain data-table--compact">
-              <thead>
-                <tr>
-                  <th>Client</th>
-                  <th>Source</th>
-                  <th>Signed up</th>
-                  <th>Stage</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contacts.slice(0, 6).map((c) => (
-                  <tr key={c.id}>
-                    <td>
-                      <div className="cluster cluster--nowrap">
-                        <Avatar name={c.name} tone={avatarTone(c.id)} />
-                        <div className="stack stack--2">
-                          <span className="data-table__strong">{c.name}</span>
-                          <span className="text-small">{c.email}</span>
-                        </div>
-                      </div>
-                    </td>
-                    <td>{c.source}</td>
-                    <td>{c.signed}</td>
-                    <td>
-                      <Badge tone={stages[c.stage].tone} size="lg">
-                        {stages[c.stage].label}
-                      </Badge>
-                    </td>
+          {recent.length === 0 ? (
+            <p className="text-muted">No signups yet.</p>
+          ) : (
+            <div className="table-scroll">
+              <table className="data-table data-table--plain data-table--compact">
+                <thead>
+                  <tr>
+                    <th>Client</th>
+                    <th>Source</th>
+                    <th>Signed up</th>
+                    <th>Stage</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {recent.map((c) => {
+                    const st = stageOf(stages, c.stage);
+                    return (
+                      <tr key={c.id}>
+                        <td>
+                          <div className="cluster cluster--nowrap">
+                            <Avatar name={contactName(c)} tone={avatarTone(c.id)} />
+                            <div className="stack stack--2">
+                              <span className="data-table__strong">{contactName(c)}</span>
+                              <span className="text-small">{c.email}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td>{SOURCE_LABELS[c.source as LeadSource] ?? c.source}</td>
+                        <td>{formatShort(c.createdAt)}</td>
+                        <td>
+                          <Badge tone={st.tone} size="lg">
+                            {st.label}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
 
         <section className="card dash-activity">
           <h2 className="card-title">Recent activity</h2>
           <div>
-            {activity.map((a) => (
-              <div className={cn("feed-item", toneClass(a.tone))} key={a.id}>
+            {activity.isPending && <Loading inline />}
+            {activity.data?.length === 0 && <p className="text-muted">Nothing has happened yet.</p>}
+            {activity.data?.map((a) => (
+              <div className={cn("feed-item", toneClass("cyan"))} key={a.id}>
                 <span className="feed-item__dot feed-item__dot--tone" aria-hidden="true" />
                 <div className="feed-item__body">
-                  <span className="feed-item__text">
-                    <strong>{a.name}</strong> {a.text}
-                  </span>
-                  <span className="feed-item__time">{a.when}</span>
+                  <span className="feed-item__text">{a.summary}</span>
+                  <span className="feed-item__time">{formatRelative(a.createdAt)}</span>
                 </div>
               </div>
             ))}

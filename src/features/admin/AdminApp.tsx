@@ -4,6 +4,10 @@ import { useEffect, type ComponentType } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button, Toast } from "@/components/ui";
 import { ADMIN_PAGES, CONTACT_VIEWS, type AdminTab } from "@/data/admin";
+import { RequireStaff } from "@/utils/auth/guards";
+import { canWriteCrm } from "@/utils/auth/session";
+import { useSettings } from "@/utils/hooks/useSettings";
+import { useMe } from "@/utils/hooks/useUsers";
 import { AdminSidebar } from "./components/AdminSidebar";
 import { AddClientModal } from "./modals/AddClientModal";
 import { EditContactDrawer } from "./modals/EditContactDrawer";
@@ -46,15 +50,20 @@ const SECTIONS: Record<AdminTab, ComponentType> = {
 /** Admin CRM: sidebar navigation, one section at a time, plus shared modals. */
 export function AdminApp() {
   return (
-    <AdminProvider>
-      <AdminLayout />
-    </AdminProvider>
+    <RequireStaff>
+      <AdminProvider>
+        <AdminLayout />
+      </AdminProvider>
+    </RequireStaff>
   );
 }
 
 function AdminLayout() {
   const { state, update } = useAdmin();
   const { tab, contactView } = state;
+  // Loads the business currency and time zone every admin screen formats with.
+  useSettings();
+  const canWrite = canWriteCrm(useMe().data);
 
   // Start each section at the top of the page.
   useEffect(() => {
@@ -81,9 +90,11 @@ function AdminLayout() {
         title={page.title}
         subtitle={page.subtitle}
         actions={
-          <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => update({ addClientOpen: true })}>
-            + Add client
-          </Button>
+          canWrite && (
+            <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => update({ addClientOpen: true })}>
+              + Add client
+            </Button>
+          )
         }
       />
       {/* Keyed by view so filters reset when switching Contacts / Clients / Inactive. */}

@@ -210,3 +210,16 @@
   gap: 12px;
   padding: 16px;
 }
+
+// Recovery codes shown once after turning on 2-step.
+.recovery-codes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, max-content));
+  gap: 6px 24px;
+  padding: 12px 14px;
+  border: 1px dashed $line-strong;
+  border-radius: $radius-lg;
+  background: $bg-soft;
+  font-size: 14px;
+  font-weight: 700;
+}

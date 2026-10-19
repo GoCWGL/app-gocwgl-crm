@@ -1,32 +1,9 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import {
-  INITIAL_ASSETS,
-  INITIAL_BRAND_KIT,
-  INITIAL_CUSTOM_LINKS,
-  INITIAL_FUNNELS,
-  INITIAL_INVOICES,
-  INITIAL_MESSAGES,
-  INITIAL_PROFILE,
-  INITIAL_SOCIALS,
-  INITIAL_TEAM,
-  INITIAL_TICKETS,
-  INITIAL_TODOS,
-  INITIAL_UPDATES,
-  type Asset,
-  type ChatMessage,
-  type CustomLink,
-  type Funnel,
-  type Invoice,
-  type PortalTab,
-  type Profile,
-  type RequestType,
-  type SocialKey,
-  type Ticket,
-  type Todo,
-  type Update,
-} from "@/data/portal";
+import type { PortalTab, RequestType } from "@/data/portal";
+import { useSession } from "@/utils/auth/session";
 
 /** Draft of the support request form; other pages can prefill it. */
 export type SupportDraft = {
@@ -36,63 +13,36 @@ export type SupportDraft = {
   details: string;
 };
 
+/**
+ * UI-only state for the client portal: the open page, drawers and the support draft.
+ * Everything the server owns comes from TanStack Query hooks in src/utils/hooks.
+ */
 export type PortalState = {
   tab: PortalTab;
   toast: string;
-
-  todos: Todo[];
-  updates: Update[];
-  invoices: Invoice[];
-  tickets: Ticket[];
-  messages: ChatMessage[];
-  funnels: Funnel[];
-  assets: Asset[];
-  brandKit: typeof INITIAL_BRAND_KIT;
-
-  profile: Profile;
-  alerts: Record<string, boolean>;
-  team: Array<{ name: string; email: string; role: string }>;
-  socials: Record<SocialKey, string>;
-  customLinks: CustomLink[];
-
-  /** System health issues the client can resolve from the Health page. */
-  calendarFixed: boolean;
-  emailFixed: boolean;
-
   support: SupportDraft;
-  /** Todo shown in the details drawer (0 = closed). */
-  openTodoId: number;
+  /** To-do shown in the details drawer ("" = closed). */
+  openTodoId: string;
   funnelRequestOpen: boolean;
-  /** Funnel whose request is being edited in the request drawer (0 = new request). */
-  editFunnelId: number;
-  /** Funnel shown in the embed code dialog (0 = closed). */
-  embedFunnelId: number;
+  /** Funnel whose request is being edited in the request drawer ("" = new request). */
+  editFunnelId: string;
+  /** Funnel shown in the embed code dialog ("" = closed). */
+  embedFunnelId: string;
 };
 
-const INITIAL_STATE: PortalState = {
-  tab: "overview",
-  toast: "",
-  todos: INITIAL_TODOS,
-  updates: INITIAL_UPDATES,
-  invoices: INITIAL_INVOICES,
-  tickets: INITIAL_TICKETS,
-  messages: INITIAL_MESSAGES,
-  funnels: INITIAL_FUNNELS,
-  assets: INITIAL_ASSETS,
-  brandKit: INITIAL_BRAND_KIT,
-  profile: INITIAL_PROFILE,
-  alerts: { report: true, lead: true, health: true, build: true },
-  team: INITIAL_TEAM,
-  socials: INITIAL_SOCIALS,
-  customLinks: INITIAL_CUSTOM_LINKS,
-  calendarFixed: false,
-  emailFixed: false,
-  support: { view: "requests", type: "change", title: "", details: "" },
-  openTodoId: 0,
-  funnelRequestOpen: false,
-  editFunnelId: 0,
-  embedFunnelId: 0,
-};
+/** Billing return from Polar: /portal?tab=billing&paid=… or &subscribed=1 */
+function initialState(params: URLSearchParams | null): PortalState {
+  const tab = params?.get("tab") as PortalTab | null;
+  return {
+    tab: tab ?? "overview",
+    toast: "",
+    support: { view: "requests", type: "change", title: "", details: "" },
+    openTodoId: "",
+    funnelRequestOpen: false,
+    editFunnelId: "",
+    embedFunnelId: "",
+  };
+}
 
 type Patch = Partial<PortalState> | ((state: PortalState) => Partial<PortalState>);
 
@@ -104,12 +54,23 @@ type PortalStore = {
   notify: (message: string) => void;
   /** Jump to Support with the request form prefilled. */
   openSupport: (draft?: Partial<SupportDraft>) => void;
+  /**
+   * True when changes aren't allowed: staff in "View as client", or a portal viewer.
+   * The API refuses those writes (403) anyway; this just hides the controls.
+   */
+  readOnly: boolean;
+  /** Portal owner (can manage the portal team). */
+  isOwner: boolean;
 };
 
 const PortalContext = createContext<PortalStore | null>(null);
 
 export function PortalProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<PortalState>(INITIAL_STATE);
+  const params = useSearchParams();
+  const [state, setState] = useState<PortalState>(() => initialState(params));
+  const { user, viewAsClientId } = useSession();
+  const readOnly = !!viewAsClientId || !!user?.isStaff || user?.portalRole === "viewer";
+  const isOwner = !readOnly && user?.portalRole !== "viewer";
 
   const update = useCallback((patch: Patch) => {
     setState((s) => ({ ...s, ...(typeof patch === "function" ? patch(s) : patch) }));
@@ -119,12 +80,13 @@ export function PortalProvider({ children }: { children: ReactNode }) {
     () => ({
       state,
       update,
+      readOnly,
+      isOwner,
       goTo: (tab) => update({ tab }),
       notify: (toast) => update({ toast }),
-      openSupport: (draft) =>
-        update((s) => ({ tab: "support", support: { ...s.support, view: "requests", ...draft } })),
+      openSupport: (draft) => update((s) => ({ tab: "support", support: { ...s.support, view: "requests", ...draft } })),
     }),
-    [state, update],
+    [state, update, readOnly, isOwner],
   );
 
   return <PortalContext.Provider value={store}>{children}</PortalContext.Provider>;

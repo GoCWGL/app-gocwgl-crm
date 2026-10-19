@@ -1,10 +1,15 @@
 "use client";
 
-import { useState, type CSSProperties } from "react";
-import { BarChart, BarRow, Button, Icon, IconTile, KpiCard, ProgressBar, SegmentedControl, type IconName } from "@/components/ui";
-import { BUILD_DUE, DAILY_LEADS, KPI_BY_RANGE, LIVE_ACTIVITY, type RangeKey } from "@/data/portal";
+import { useState } from "react";
+import { BarChart, BarRow, Button, ErrorState, Icon, IconTile, KpiCard, Loading, ProgressBar, SegmentedControl, type IconName } from "@/components/ui";
+import type { RangeKey } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
-import { cn, formatMoney } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import type { Range } from "@/utils/api/portal";
+import { formatRelative, formatShort } from "@/utils/format/dates";
+import { formatCents } from "@/utils/format/money";
+import { usePortalBuild } from "@/utils/hooks/useDelivery";
+import { useOverview, usePortalActivity, usePortalHealth } from "@/utils/hooks/usePortal";
 import { getBuildProgress, getHealth } from "../lib/selectors";
 import { usePortal } from "../state/PortalContext";
 
@@ -14,38 +19,51 @@ const RANGES: Array<{ value: RangeKey; label: string }> = [
   { value: "90", label: "90 days" },
 ];
 
+/** The overview's `kpis` object (typed as a plain object in the OpenAPI spec; keys are snake_case). */
+type Kpis = {
+  leads: number;
+  calls: number;
+  clients: number;
+  revenue_cents: number;
+  deltas: Record<string, number | null>;
+  period_days: number;
+  daily_leads: Array<{ date: string; leads: number }>;
+};
+
+const deltaText = (d: number | null | undefined) => (d === null || d === undefined ? "—" : `${d >= 0 ? "+" : ""}${d}%`);
+const pct = (n: number, base: number) => (base ? `${Math.round((n / base) * 1000) / 10}%` : "—");
+
 export function OverviewSection() {
-  const { state, goTo } = usePortal();
+  const { goTo } = usePortal();
   const [range, setRange] = useState<RangeKey>("30");
+  const overview = useOverview(Number(range) as Range);
+  const health = getHealth(usePortalHealth().data);
+  const buildQuery = usePortalBuild();
+  const activity = usePortalActivity();
 
-  const r = KPI_BY_RANGE[range];
-  const health = getHealth(state);
-  const build = getBuildProgress();
-  const openTodos = state.todos.filter((t) => !t.done).length;
-  const latestUpdates = state.updates.filter((u) => u.who !== "You").slice(0, 2);
+  if (overview.isPending) return <Loading text="Loading your overview…" />;
+  if (overview.isError) return <ErrorState error={overview.error} onRetry={overview.refetch} />;
+  const o = overview.data;
+  const k = o.kpis as unknown as Kpis;
+  const period = `${k.period_days ?? range} days`;
+  const project = buildQuery.data;
+  const build = project ? getBuildProgress(project) : null;
+  const latestUpdates = (project?.updates ?? []).slice(0, 2);
 
-  const kpis: Array<{ label: string; value: string; delta: string; icon: IconName; tone: Tone }> = [
-    { label: "New leads", value: String(r.leads), delta: r.deltas[0], icon: "userPlus", tone: "purple" },
-    { label: "Calls booked", value: String(r.calls), delta: r.deltas[1], icon: "calendar", tone: "orange" },
-    { label: "New paying clients", value: String(r.clients), delta: r.deltas[2], icon: "check", tone: "green" },
-    { label: "Revenue", value: formatMoney(r.revenue), delta: r.deltas[3], icon: "dollar", tone: "cyan" },
+  const kpis: Array<{ label: string; value: string; delta: number | null; icon: IconName; tone: Tone }> = [
+    { label: "New leads", value: String(k.leads ?? 0), delta: k.deltas?.leads ?? null, icon: "userPlus", tone: "purple" },
+    { label: "Calls booked", value: String(k.calls ?? 0), delta: k.deltas?.calls ?? null, icon: "calendar", tone: "orange" },
+    { label: "New paying clients", value: String(k.clients ?? 0), delta: k.deltas?.clients ?? null, icon: "check", tone: "green" },
+    { label: "Revenue", value: formatCents(k.revenue_cents ?? 0), delta: k.deltas?.revenue_cents ?? null, icon: "dollar", tone: "cyan" },
   ];
 
-  // Funnel: visitors are estimated from leads at a 7.1% conversion rate.
-  const visitors = Math.round(r.leads / 0.071);
-  const funnelRow = (label: string, n: number, base: number, color: string) => ({
-    label,
-    n,
-    rate: base ? Math.round((n / base) * 1000) / 10 + "%" : "100%",
-    width: Math.max(3, Math.round((n / visitors) * 100)),
-    color,
-  });
+  const base = Math.max(1, k.leads ?? 0);
   const funnel = [
-    funnelRow("Website visitors", visitors, 0, "#A5F3FC"),
-    funnelRow("Became leads", r.leads, visitors, "#0891B2"),
-    funnelRow("Booked a call", r.calls, r.leads, "#F59E0B"),
-    funnelRow("Became clients", r.clients, r.calls, "#10B981"),
+    { label: "Became leads", n: k.leads ?? 0, rate: "100%", color: "#0891B2" },
+    { label: "Booked a call", n: k.calls ?? 0, rate: pct(k.calls ?? 0, k.leads ?? 0), color: "#F59E0B" },
+    { label: "Became clients", n: k.clients ?? 0, rate: pct(k.clients ?? 0, k.calls ?? 0), color: "#10B981" },
   ];
+  const daily = k.daily_leads ?? [];
 
   return (
     <div className="page-stack">
@@ -68,20 +86,20 @@ export function OverviewSection() {
       </div>
 
       <div className="stat-grid stat-grid--wide">
-        {kpis.map((k) => (
+        {kpis.map((kpi) => (
           <KpiCard
-            key={k.label}
-            label={k.label}
-            value={k.value}
-            trendColor={k.delta.startsWith("-") ? "#BE185D" : "#047857"}
+            key={kpi.label}
+            label={kpi.label}
+            value={kpi.value}
+            trendColor={(kpi.delta ?? 0) < 0 ? "#BE185D" : "#047857"}
             icon={
-              <IconTile tone={k.tone}>
-                <Icon name={k.icon} size={15} />
+              <IconTile tone={kpi.tone}>
+                <Icon name={kpi.icon} size={15} />
               </IconTile>
             }
             footer={
               <>
-                <strong>{k.delta}</strong> vs previous {r.period}
+                <strong>{deltaText(kpi.delta)}</strong> vs previous {period}
               </>
             }
           />
@@ -94,26 +112,26 @@ export function OverviewSection() {
             <h2 className="card-title">New leads per day</h2>
             <span className="text-small">Last 14 days from your landing page and ads</span>
           </div>
-          <BarChart
-            label="New leads per day"
-            data={DAILY_LEADS.map((n, i) => ({
-              label: `Oct ${i + 1}`,
-              value: n,
-              color: i === DAILY_LEADS.length - 1 ? "#FF9900" : "#67E8F9",
-            }))}
-          />
+          {daily.length ? (
+            <BarChart
+              label="New leads per day"
+              data={daily.map((d, i) => ({ label: formatShort(d.date), value: d.leads, color: i === daily.length - 1 ? "#FF9900" : "#67E8F9" }))}
+            />
+          ) : (
+            <p className="text-muted">No daily reports yet. They appear here once your team starts sending them.</p>
+          )}
         </section>
 
         <section className="card overview-funnel">
           <div className="stack stack--2">
             <h2 className="card-title">Your funnel</h2>
-            <span className="text-small">Last {r.period}</span>
+            <span className="text-small">Last {period}</span>
           </div>
           {funnel.map((f) => (
             <BarRow
               key={f.label}
               label={f.label}
-              percent={f.width}
+              percent={Math.max(3, Math.round((f.n / base) * 100))}
               color={f.color}
               value={
                 <>
@@ -133,20 +151,26 @@ export function OverviewSection() {
               Details
             </Button>
           </div>
-          <div className="build-mini__progress">
-            <span className="build-mini__pct">{build.percent}%</span>
-            <div className="stack stack--6 u-grow">
-              <ProgressBar value={build.percent} variant="glow" size="md" label="Build progress" />
-              <span className="text-small">
-                Now working on: <strong className="u-ink">{build.current}</strong>
-              </span>
-            </div>
-          </div>
-          <span className="text-small">Target launch {BUILD_DUE}</span>
-          {openTodos > 0 && (
+          {build ? (
+            <>
+              <div className="build-mini__progress">
+                <span className="build-mini__pct">{build.percent}%</span>
+                <div className="stack stack--6 u-grow">
+                  <ProgressBar value={build.percent} variant="glow" size="md" label="Build progress" />
+                  <span className="text-small">
+                    Now working on: <strong className="u-ink">{build.current}</strong>
+                  </span>
+                </div>
+              </div>
+              {o.buildDue && <span className="text-small">Target launch {formatShort(o.buildDue)}</span>}
+            </>
+          ) : (
+            <span className="text-small">Your GoCWGL team hasn’t started your build yet.</span>
+          )}
+          {o.openTodos > 0 && (
             <button type="button" className="waiting-pill" onClick={() => goTo("build")}>
               <span className="waiting-pill__dot" aria-hidden="true" />
-              {openTodos} item{openTodos > 1 ? "s are" : " is"} waiting on you
+              {o.openTodos} item{o.openTodos > 1 ? "s are" : " is"} waiting on you
             </button>
           )}
         </section>
@@ -154,11 +178,12 @@ export function OverviewSection() {
         <section className="card">
           <h2 className="card-title">Latest from your GoCWGL team</h2>
           <div>
+            {latestUpdates.length === 0 && <p className="text-muted">No updates yet.</p>}
             {latestUpdates.map((u) => (
-              <div className="update-row" key={u.date + u.text}>
+              <div className="update-row" key={u.id}>
                 <span className="update-row__dot" aria-hidden="true" />
                 <div className="stack stack--2">
-                  <span className="update-row__date">{u.date}</span>
+                  <span className="update-row__date">{formatShort(u.createdAt)}</span>
                   <span className="update-row__text">{u.text}</span>
                 </div>
               </div>
@@ -169,14 +194,14 @@ export function OverviewSection() {
         <section className="card">
           <h2 className="card-title">Live activity</h2>
           <div>
-            {LIVE_ACTIVITY.map((a) => (
-              <div className="feed-item" key={a.who + a.what} style={{ "--dot": a.color } as CSSProperties}>
-                <span className="feed-item__dot" aria-hidden="true" />
+            {activity.isPending && <Loading inline />}
+            {activity.data?.length === 0 && <p className="text-muted">Nothing yet. New leads, bookings and payments show up here.</p>}
+            {activity.data?.map((a) => (
+              <div className={cn("feed-item", "tone-cyan")} key={a.id}>
+                <span className="feed-item__dot feed-item__dot--tone" aria-hidden="true" />
                 <div className="feed-item__body">
-                  <span className="feed-item__text">
-                    <strong>{a.who}</strong> {a.what}
-                  </span>
-                  <span className="feed-item__time">{a.when}</span>
+                  <span className="feed-item__text">{a.summary}</span>
+                  <span className="feed-item__time">{formatRelative(a.createdAt)}</span>
                 </div>
               </div>
             ))}

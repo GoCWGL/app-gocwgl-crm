@@ -1,13 +1,20 @@
 "use client";
 
 import { Fragment } from "react";
-import { Badge, Button, Icon, IconTile, ProgressBar, StatGrid, buttonClass } from "@/components/ui";
-import { PAYMENT_CARD, PORTAL_CLIENT_ID, type Funnel, type FunnelStatus } from "@/data/portal";
-import { useClientEmbeds } from "@/lib/embedStore";
+import { Badge, Button, FormError, Icon, IconTile, LoadState, ProgressBar, StatGrid, buttonClass } from "@/components/ui";
+import type { FunnelStatus } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
-import { cn, formatMoney } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import type { FunnelOut } from "@/utils/api/models";
+import { formatCents } from "@/utils/format/money";
+import { useCheckoutInvoice } from "@/utils/hooks/useBilling";
+import { useEmbeds } from "@/utils/hooks/useDelivery";
+import { usePortalFunnels } from "@/utils/hooks/usePortal";
 import { missingRequestDetails } from "../components/FunnelRequestDrawer";
 import { usePortal } from "../state/PortalContext";
+
+type Step = [string, number];
+const stepsOf = (f: FunnelOut) => (f.steps ?? []) as Step[];
 
 const STATUS: Record<FunnelStatus, { label: string; tone: Tone }> = {
   live: { label: "LIVE", tone: "green" },
@@ -18,18 +25,13 @@ const STATUS: Record<FunnelStatus, { label: string; tone: Tone }> = {
 };
 
 export function FunnelsSection() {
-  const { state, update, goTo, openSupport } = usePortal();
-  const live = state.funnels.filter((f) => f.status === "live");
-  const embeds = useClientEmbeds(PORTAL_CLIENT_ID);
-
-  const pay = (funnel: Funnel) =>
-    update((s) => ({
-      funnels: s.funnels.map((x) =>
-        x.id === funnel.id ? { ...x, status: "queued", note: "Paid — thank you! Your team will start the build within 2 business days." } : x,
-      ),
-      invoices: s.invoices.map((iv) => (iv.no === funnel.invoice ? { ...iv, status: "Paid" } : iv)),
-      toast: `Paid ${formatMoney(funnel.price ?? 0)} with ${PAYMENT_CARD}. Your new funnel is queued for build.`,
-    }));
+  const { update, goTo, openSupport, readOnly } = usePortal();
+  const query = usePortalFunnels();
+  const funnels = query.data ?? [];
+  const live = funnels.filter((f) => f.status === "live");
+  const embeds = useEmbeds().data ?? [];
+  // Paying goes to Polar's checkout; the funnel moves to "queued" once Polar confirms the payment.
+  const checkout = useCheckoutInvoice();
 
   return (
     <div className="page-stack">
@@ -37,8 +39,8 @@ export function FunnelsSection() {
         items={[
           { label: "Live funnels", value: live.length, tone: "green" },
           { label: "Visits (30 days)", value: live.reduce((n, f) => n + (f.visits ?? 0), 0), tone: "cyan" },
-          { label: "Leads (30 days)", value: live.reduce((n, f) => n + f.steps[1][1], 0), tone: "purple" },
-          { label: "In the works", value: state.funnels.length - live.length, tone: "brand" },
+          { label: "Leads (30 days)", value: live.reduce((n, f) => n + (stepsOf(f)[1]?.[1] ?? 0), 0), tone: "purple" },
+          { label: "In the works", value: funnels.length - live.length, tone: "brand" },
         ]}
       />
 
@@ -47,31 +49,40 @@ export function FunnelsSection() {
           <h2 className="section-title">Your funnels</h2>
           <span className="text-muted">Every funnel your GoCWGL team built for you, with last 30 days results</span>
         </div>
-        <Button variant="primary" size="lg" onClick={() => update({ funnelRequestOpen: true, editFunnelId: 0 })}>
-          <Icon name="plus" strokeWidth={2.4} />
-          Request a new funnel
-        </Button>
+        {!readOnly && (
+          <Button variant="primary" size="lg" onClick={() => update({ funnelRequestOpen: true, editFunnelId: "" })}>
+            <Icon name="plus" strokeWidth={2.4} />
+            Request a new funnel
+          </Button>
+        )}
       </div>
+      <FormError error={checkout.error} />
 
-      {state.funnels.map((f) => (
-        <FunnelCard
-          key={f.id}
-          funnel={f}
-          embedCount={embeds.filter((e) => e.funnelId === f.id).length}
-          embedIssues={embeds.filter((e) => e.funnelId === f.id && e.issue).length}
-          onBuild={() => goTo("build")}
-          onPay={() => pay(f)}
-          onEdit={() => update({ funnelRequestOpen: true, editFunnelId: f.id })}
-          onEmbed={() => update({ embedFunnelId: f.id })}
-          onChange={() => openSupport({ type: "change", title: `Change to “${f.name}”`, details: "" })}
-        />
-      ))}
+      <LoadState query={query} isEmpty={!funnels.length} empty="No funnels yet. Request your first one and your GoCWGL team will build it.">
+        {funnels.map((f) => (
+          <FunnelCard
+            key={f.id}
+            funnel={f}
+            readOnly={readOnly}
+            paying={checkout.isPending && checkout.variables === f.invoiceId}
+            embedCount={embeds.filter((e) => e.funnelId === f.id).length}
+            embedIssues={embeds.filter((e) => e.funnelId === f.id && e.hasIssue).length}
+            onBuild={() => goTo("build")}
+            onPay={() => f.invoiceId && checkout.mutate(f.invoiceId)}
+            onEdit={() => update({ funnelRequestOpen: true, editFunnelId: f.id })}
+            onEmbed={() => update({ embedFunnelId: f.id })}
+            onChange={() => openSupport({ type: "change", title: `Change to “${f.name}”`, details: "" })}
+          />
+        ))}
+      </LoadState>
     </div>
   );
 }
 
 type FunnelCardProps = {
-  funnel: Funnel;
+  funnel: FunnelOut;
+  readOnly: boolean;
+  paying: boolean;
   embedCount: number;
   embedIssues: number;
   onBuild: () => void;
@@ -81,19 +92,21 @@ type FunnelCardProps = {
   onChange: () => void;
 };
 
-function FunnelCard({ funnel: f, embedCount, embedIssues, onBuild, onPay, onEdit, onEmbed, onChange }: FunnelCardProps) {
-  const status = STATUS[f.status];
+function FunnelCard({ funnel: f, readOnly, paying, embedCount, embedIssues, onBuild, onPay, onEdit, onEmbed, onChange }: FunnelCardProps) {
+  const status = STATUS[f.status as FunnelStatus] ?? STATUS.build;
   const isLive = f.status === "live";
-  const missing = missingRequestDetails(f);
-  const base = f.steps[0][1] || 1;
-  const leads = f.steps[1]?.[1] ?? 0;
+  const missing = readOnly ? [] : missingRequestDetails(f);
+  const steps = stepsOf(f);
+  const base = steps[0]?.[1] || 1;
+  const leads = steps[1]?.[1] ?? 0;
+  const links = (f.links ?? []) as Array<{ label: string; url: string }>;
 
   const kpis = isLive
     ? [
         { label: "Visits", value: String(f.visits ?? 0) },
         { label: "Leads", value: String(leads) },
         { label: "Conversion", value: Math.round((leads / base) * 1000) / 10 + "%" },
-        { label: "Revenue", value: formatMoney(f.revenue ?? 0) },
+        { label: "Revenue", value: formatCents(f.revenueCents ?? 0) },
       ]
     : [];
 
@@ -129,11 +142,11 @@ function FunnelCard({ funnel: f, embedCount, embedIssues, onBuild, onPay, onEdit
       )}
 
       <div className="funnel-steps">
-        {f.steps.map(([name, people], i) => {
-          const next = f.steps[i + 1];
+        {steps.map(([name, people], i) => {
+          const next = steps[i + 1];
           const rate = next && isLive && people ? Math.round((next[1] / people) * 100) + "%" : "";
           return (
-            <Fragment key={name}>
+            <Fragment key={`${i}-${name}`}>
               <div className={cn("funnel-steps__step", isLive && "funnel-steps__step--live")}>
                 <span className="kicker kicker--sm kicker--muted">STEP {i + 1}</span>
                 <span className="text-strong funnel-steps__name">{name}</span>
@@ -152,15 +165,15 @@ function FunnelCard({ funnel: f, embedCount, embedIssues, onBuild, onPay, onEdit
 
       {f.status === "build" && (
         <div className="stack stack--6">
-          <ProgressBar value={f.pct ?? 0} variant="glow" label={`${f.name} build progress`} />
-          <span className="text-small">{f.pct ?? 0}% built · part of your Revenue Engine System build</span>
+          <ProgressBar value={f.progressPct ?? 0} variant="glow" label={`${f.name} build progress`} />
+          <span className="text-small">{f.progressPct ?? 0}% built</span>
         </div>
       )}
 
-      {!!f.links?.length && (
+      {links.length > 0 && (
         <div className="cluster cluster--6">
           <span className="kicker kicker--sm kicker--muted">LINKS</span>
-          {f.links.map((l) => (
+          {links.map((l) => (
             <Badge key={l.label} tone="cyan">
               {l.label}
             </Badge>
@@ -197,7 +210,12 @@ function FunnelCard({ funnel: f, embedCount, embedIssues, onBuild, onPay, onEdit
 
       <div className="cluster cluster--8">
         {isLive && f.url && (
-          <a className={buttonClass({ variant: "outline", size: "sm" })} href={`https://${f.url}`} target="_blank" rel="noopener">
+          <a
+            className={buttonClass({ variant: "outline", size: "sm" })}
+            href={/^https?:\/\//.test(f.url) ? f.url : `https://${f.url}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             Open live page ↗
           </a>
         )}
@@ -206,24 +224,26 @@ function FunnelCard({ funnel: f, embedCount, embedIssues, onBuild, onPay, onEdit
             See build progress
           </Button>
         )}
-        {f.status === "pay" && (
-          <Button variant="primary" size="sm" onClick={onPay}>
-            Pay {formatMoney(f.price ?? 0)} to start
+        {f.status === "pay" && f.invoiceId && !readOnly && (
+          <Button variant="primary" size="sm" onClick={onPay} disabled={paying}>
+            {paying ? "Opening checkout…" : `Pay ${formatCents(f.priceCents)} to start`}
           </Button>
         )}
         <Button variant="outline" size="sm" onClick={onEmbed}>
           <Icon name="code" size={14} />
           Embed codes{embedCount > 0 && <span className="u-mono"> · {embedCount}</span>}
         </Button>
-        {!isLive && (
+        {!isLive && !readOnly && (
           <Button variant="outline" size="sm" onClick={onEdit}>
             <Icon name="edit" size={14} />
             Edit request
           </Button>
         )}
-        <Button variant="secondary" size="sm" onClick={onChange}>
-          Request a change
-        </Button>
+        {!readOnly && (
+          <Button variant="secondary" size="sm" onClick={onChange}>
+            Request a change
+          </Button>
+        )}
       </div>
     </article>
   );

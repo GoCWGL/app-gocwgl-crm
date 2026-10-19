@@ -4,20 +4,23 @@ import { useState } from "react";
 import { EmbedThread } from "@/components/embeds/EmbedThread";
 import { Badge, Button, Icon } from "@/components/ui";
 import { EMBED_KINDS } from "@/data/embeds";
-import { useClientEmbeds } from "@/lib/embedStore";
 import { copyToClipboard } from "@/lib/utils";
-import { useAdmin } from "../state/AdminContext";
+import { formatShort } from "@/utils/format/dates";
+import { useClientEmbeds, useCommentOnClientEmbed } from "@/utils/hooks/useDelivery";
+import { useAdminFunnels } from "@/utils/hooks/usePortal";
 
 /** Embed codes the client pasted in their portal from their own CRM, grouped by funnel. */
-export function ClientEmbedsCard({ clientId }: { clientId: number }) {
-  const { state } = useAdmin();
-  const embeds = useClientEmbeds(clientId);
-  const [openId, setOpenId] = useState(0);
-  const [copiedId, setCopiedId] = useState(0);
+export function ClientEmbedsCard({ clientId }: { clientId: string }) {
+  const embeds = useClientEmbeds(clientId).data ?? [];
+  const funnels = useAdminFunnels(clientId).data ?? [];
+  const comment = useCommentOnClientEmbed();
+  const [openId, setOpenId] = useState("");
+  const [copiedId, setCopiedId] = useState("");
   if (!embeds.length) return null;
 
-  const funnels = [...new Set(embeds.map((e) => e.funnel))];
-  const issues = embeds.filter((e) => e.issue).length;
+  const funnelName = (id: string | null) => (id ? (funnels.find((f) => f.id === id)?.name ?? "Funnel") : "Not linked to a funnel");
+  const groups = [...new Set(embeds.map((e) => e.funnelId ?? ""))];
+  const issues = embeds.filter((e) => e.hasIssue).length;
 
   return (
     <div className="inset client-embeds">
@@ -37,20 +40,20 @@ export function ClientEmbedsCard({ clientId }: { clientId: number }) {
           </Badge>
         )}
       </div>
-      {funnels.map((funnel) => (
-        <div className="stack stack--6" key={funnel}>
-          <span className="kicker kicker--sm kicker--muted">{funnel.toUpperCase()}</span>
+      {groups.map((group) => (
+        <div className="stack stack--6" key={group || "none"}>
+          <span className="kicker kicker--sm kicker--muted">{funnelName(group || null).toUpperCase()}</span>
           {embeds
-            .filter((e) => e.funnel === funnel)
+            .filter((e) => (e.funnelId ?? "") === group)
             .map((e) => {
               const open = openId === e.id;
               const count = e.comments?.length ?? 0;
               return (
-                <div className="client-embeds__item" data-issue={e.issue || undefined} key={e.id}>
+                <div className="client-embeds__item" data-issue={e.hasIssue || undefined} key={e.id}>
                   <div className="client-embeds__row">
                     <span className="client-embeds__kind">{EMBED_KINDS.find((k) => k.kind === e.kind)?.short}</span>
                     <span className="client-embeds__label">{e.label}</span>
-                    {e.issue && (
+                    {e.hasIssue && (
                       <Badge tone="red" mono size="xs">
                         NEEDS FIX
                       </Badge>
@@ -60,8 +63,8 @@ export function ClientEmbedsCard({ clientId }: { clientId: number }) {
                         <Icon name="message" size={12} /> {count}
                       </span>
                     )}
-                    <span className="text-tiny">{e.updated}</span>
-                    <Button size="sm" aria-expanded={open} onClick={() => setOpenId(open ? 0 : e.id)}>
+                    <span className="text-tiny">{formatShort(e.updatedAt)}</span>
+                    <Button size="sm" aria-expanded={open} onClick={() => setOpenId(open ? "" : e.id)}>
                       <Icon name={open ? "close" : "eye"} size={13} />
                       {open ? "Hide" : "View code"}
                     </Button>
@@ -78,9 +81,14 @@ export function ClientEmbedsCard({ clientId }: { clientId: number }) {
                   </div>
                   {open && (
                     <div className="client-embeds__body">
+                      {/* Shown as text only: embed code is untrusted HTML. */}
                       <pre className="code-block client-embeds__code">{e.code}</pre>
                       <span className="kicker kicker--sm kicker--muted">COMMENTS</span>
-                      <EmbedThread clientId={clientId} embed={e} as="team" who={state.settings.name || "GoCWGL team"} />
+                      <EmbedThread
+                        embed={e}
+                        as="team"
+                        onPost={(text, issue) => comment.mutateAsync({ contactId: clientId, embedId: e.id, text, issue })}
+                      />
                     </div>
                   )}
                 </div>

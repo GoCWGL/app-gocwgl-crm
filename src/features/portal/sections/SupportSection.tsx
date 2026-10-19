@@ -3,19 +3,31 @@
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import logoMark from "@/assets/images/logo-mark.png";
-import { Badge, Button, Field, Input, SegmentedControl, Select, Textarea } from "@/components/ui";
-import { BUG_AREAS, PRIORITIES, REQUEST_TYPES, type RequestType, type TicketStatus } from "@/data/portal";
-import { TODAY_SHORT } from "@/lib/dates";
+import { Badge, Button, Field, FormError, Input, LoadState, SegmentedControl, Select, Textarea } from "@/components/ui";
+import { BUG_AREAS, PRIORITIES, REQUEST_TYPES, type RequestType } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
+import type { TicketOut } from "@/utils/api/models";
+import { formatRelative, formatShort } from "@/utils/format/dates";
+import {
+  useClosePortalTicket,
+  useCreatePortalTicket,
+  usePortalMessages,
+  usePortalTickets,
+  useReplyPortalTicket,
+  useSendPortalMessage,
+} from "@/utils/hooks/useSupport";
 import { usePortal, type SupportDraft } from "../state/PortalContext";
 
-const TICKET_TONES: Record<TicketStatus, Tone> = {
+const TICKET_TONES: Record<string, Tone> = {
   "In progress": "purple",
   New: "cyan",
+  "Waiting on client": "amber",
   Answered: "green",
   Done: "green",
 };
+
+const TYPE_LABELS: Record<string, string> = { change: "Change request", feature: "New feature", bug: "Bug", question: "Question" };
 
 export function SupportSection() {
   const { state, update } = usePortal();
@@ -40,10 +52,14 @@ export function SupportSection() {
 }
 
 function RequestsView({ draft, setDraft }: { draft: SupportDraft; setDraft: (p: Partial<SupportDraft>) => void }) {
-  const { state, update } = usePortal();
+  const { update, readOnly } = usePortal();
+  const ticketsQuery = usePortalTickets();
+  const tickets = ticketsQuery.data ?? [];
+  const create = useCreatePortalTicket();
   const [area, setArea] = useState(BUG_AREAS[0]);
-  const [priority, setPriority] = useState("Medium");
+  const [priority, setPriority] = useState<(typeof PRIORITIES)[number]["value"]>("Medium");
   const [error, setError] = useState("");
+  const [openId, setOpenId] = useState("");
   const type = REQUEST_TYPES[draft.type];
 
   const submit = (e: FormEvent) => {
@@ -52,20 +68,28 @@ function RequestsView({ draft, setDraft }: { draft: SupportDraft; setDraft: (p: 
       setError("Please add a short summary and some details.");
       return;
     }
-    const isBug = draft.type === "bug";
-    const code = (isBug ? "BUG-" : "REQ-") + (215 + state.tickets.length);
-    update((s) => ({
-      tickets: [
-        { code, type: isBug ? "Bug" : type.label, title: draft.title.trim(), date: TODAY_SHORT, priority: priority.split(" ")[0], status: "New" },
-        ...s.tickets,
-      ],
-      support: { ...s.support, title: "", details: "" },
-      toast: `${code} sent. Your GoCWGL team will get back to you soon.`,
-    }));
+    create.mutate(
+      {
+        type: draft.type,
+        title: draft.title.trim(),
+        description: draft.details.trim(),
+        area: draft.type === "bug" ? area : "",
+        priority,
+        device: typeof navigator === "undefined" ? "" : navigator.userAgent.slice(0, 200),
+      },
+      {
+        onSuccess: (t) =>
+          update((s) => ({
+            support: { ...s.support, title: "", details: "" },
+            toast: `${t.code} sent. Your GoCWGL team will get back to you soon.`,
+          })),
+      },
+    );
   };
 
   return (
     <div className="card-row">
+      {!readOnly && (
       <form className="card card--glow support-form" onSubmit={submit}>
         <span className="kicker">NEW REQUEST</span>
         <div className="cluster cluster--6" role="group" aria-label="Request type">
@@ -113,51 +137,108 @@ function RequestsView({ draft, setDraft }: { draft: SupportDraft; setDraft: (p: 
           />
         </Field>
         <Field label="How urgent?" htmlFor="sp-pri">
-          <Select id="sp-pri" value={priority} options={PRIORITIES} onChange={(e) => setPriority(e.target.value)} />
+          <Select
+            id="sp-pri"
+            value={priority}
+            options={PRIORITIES}
+            onChange={(e) => setPriority(e.target.value as (typeof PRIORITIES)[number]["value"])}
+          />
         </Field>
         {error && (
           <p className="text-error" role="alert">
             {error}
           </p>
         )}
-        <Button type="submit" variant="primary" className="u-self-end">
-          Send to GoCWGL
+        <FormError error={create.error} />
+        <Button type="submit" variant="primary" className="u-self-end" disabled={create.isPending}>
+          {create.isPending ? "Sending…" : "Send to GoCWGL"}
         </Button>
       </form>
+      )}
 
       <section className="card support-tickets">
         <span className="kicker">YOUR REQUESTS</span>
-        <div>
-          {state.tickets.map((t) => (
-            <div className="list-row" key={t.code}>
-              <span className="ticket-code">{t.code}</span>
-              <div className="stack stack--2 u-grow">
-                <span className="text-strong">{t.title}</span>
-                <span className="text-small">
-                  {t.type} · {t.date} · {t.priority}
-                </span>
+        <LoadState query={ticketsQuery} inline isEmpty={!tickets.length} empty="No requests yet.">
+          <div>
+            {tickets.map((t) => (
+              <div key={t.id}>
+                <button type="button" className="list-row cell-button" aria-expanded={openId === t.id} onClick={() => setOpenId(openId === t.id ? "" : t.id)}>
+                  <span className="ticket-code">{t.code}</span>
+                  <span className="stack stack--2 u-grow">
+                    <span className="text-strong">{t.title}</span>
+                    <span className="text-small">
+                      {TYPE_LABELS[t.type] ?? t.type} · {formatShort(t.createdAt)} · {t.priority}
+                    </span>
+                  </span>
+                  <Badge tone={TICKET_TONES[t.status] ?? "cyan"} dot>
+                    {t.status}
+                  </Badge>
+                </button>
+                {openId === t.id && <TicketThread ticket={t} readOnly={readOnly} />}
               </div>
-              <Badge tone={TICKET_TONES[t.status] ?? "cyan"} dot>
-                {t.status}
-              </Badge>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </LoadState>
       </section>
     </div>
   );
 }
 
-function MessagesView() {
-  const { state, update } = usePortal();
+/** A request's conversation with the team (internal team notes are never sent to the portal). */
+function TicketThread({ ticket, readOnly }: { ticket: TicketOut; readOnly: boolean }) {
+  const reply = useReplyPortalTicket();
+  const close = useClosePortalTicket();
   const [text, setText] = useState("");
+
+  return (
+    <div className="inset stack stack--8">
+      {ticket.description && <p className="text-body u-pre-line">{ticket.description}</p>}
+      {ticket.messages.map((m) => (
+        <div key={m.id} className={cn("message", m.kind === "client" && "message--violet")}>
+          <span className="message__meta">
+            {m.authorName} · {formatShort(m.createdAt)}
+          </span>
+          {m.text}
+        </div>
+      ))}
+      {!readOnly && (
+        <>
+          <Textarea rows={2} aria-label="Reply to your team" value={text} onChange={(e) => setText(e.target.value)} placeholder="Reply to your team…" />
+          <FormError error={reply.error ?? close.error} />
+          <div className="cluster cluster--8 cluster--end">
+            {ticket.status !== "Done" && (
+              <Button size="sm" disabled={close.isPending} onClick={() => close.mutate(ticket.id)}>
+                Mark as resolved
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="primary"
+              disabled={!text.trim() || reply.isPending}
+              onClick={() => reply.mutate({ id: ticket.id, text: text.trim() }, { onSuccess: () => setText("") })}
+            >
+              {ticket.status === "Done" ? "Reply and reopen" : "Reply"}
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function MessagesView() {
+  const { readOnly } = usePortal();
+  const messages = usePortalMessages();
+  const sendMessage = useSendPortalMessage();
+  const [text, setText] = useState("");
+  // Oldest first, like a chat.
+  const list = [...(messages.data ?? [])].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 
   const send = (e: FormEvent) => {
     e.preventDefault();
     const message = text.trim();
     if (!message) return;
-    setText("");
-    update((s) => ({ messages: [...s.messages, { mine: true, who: "You", when: "Just now", text: message }] }));
+    sendMessage.mutate(message, { onSuccess: () => setText("") });
   };
 
   return (
@@ -173,26 +254,34 @@ function MessagesView() {
         </div>
       </div>
       <div className="chat__messages">
-        {state.messages.map((m, i) => (
-          <div key={i} className={cn("chat__row", m.mine && "chat__row--mine")}>
-            <div className={cn("chat__bubble", m.mine && "chat__bubble--mine")}>
-              <span className="chat__meta">
-                {m.who} · {m.when}
-              </span>
-              {m.text}
-            </div>
-          </div>
-        ))}
+        <LoadState query={messages} inline isEmpty={!list.length} empty="No messages yet. Say hi to your team!">
+          {list.map((m) => {
+            const mine = !m.fromTeam;
+            return (
+              <div key={m.id} className={cn("chat__row", mine && "chat__row--mine")}>
+                <div className={cn("chat__bubble", mine && "chat__bubble--mine")}>
+                  <span className="chat__meta">
+                    {m.authorName} · {formatRelative(m.createdAt)}
+                  </span>
+                  {m.text}
+                </div>
+              </div>
+            );
+          })}
+        </LoadState>
       </div>
+      <FormError error={sendMessage.error} />
+      {!readOnly && (
       <form className="chat__composer" onSubmit={send}>
         <label className="sr-only" htmlFor="sp-msg">
           Message
         </label>
         <Input id="sp-msg" value={text} onChange={(e) => setText(e.target.value)} placeholder="Write a message…" />
-        <Button type="submit" variant="primary" size="lg">
+        <Button type="submit" variant="primary" size="lg" disabled={sendMessage.isPending}>
           Send
         </Button>
       </form>
+      )}
     </section>
   );
 }

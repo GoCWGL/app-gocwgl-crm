@@ -1,32 +1,76 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui";
-import { DEMO_ADMIN_EMAIL, DEMO_CLIENT_EMAIL } from "@/data/auth";
+import { refresh } from "@/utils/api/client";
+import type { SessionResponse, User } from "@/utils/api/models";
+import { getSession, useSession } from "@/utils/auth/session";
+import { acceptSession } from "@/utils/hooks/useAuth";
+import { AcceptInviteForm } from "./components/AcceptInviteForm";
 import { AuthBrandPanel } from "./components/AuthBrandPanel";
 import { AuthNotice } from "./components/AuthNotice";
 import { ForgotForm } from "./components/ForgotForm";
 import { LoginForm } from "./components/LoginForm";
+import { ResetPasswordForm } from "./components/ResetPasswordForm";
 import { SignedInCard } from "./components/SignedInCard";
 import { SignupForm } from "./components/SignupForm";
 import { VerifyForm } from "./components/VerifyForm";
 import { EMPTY_SIGNUP, type AuthMode, type Notice, type SignupData, type VerifyReason } from "./types";
 
+const OAUTH_NOTICES: Record<string, Notice> = {
+  unverified: {
+    kind: "warning",
+    text: "That account’s email isn’t confirmed with the provider. Sign in with your email and password instead.",
+  },
+  error: { kind: "warning", text: "We couldn’t sign you in with that provider. Please try again or use your password." },
+  cancelled: { kind: "info", text: "Sign-in was cancelled." },
+};
+
+/** Where a signed-in user belongs. Staff without 2-step are sent to Settings › Security to turn it on. */
+function homeFor(user: User | null | undefined, enrollMfa = false): string {
+  if (!user) return "/login";
+  if (!user.isStaff) return "/portal";
+  return enrollMfa ? "/admin?tab=settings&section=security&enroll=mfa" : "/admin";
+}
+
 /**
- * Sign in, sign up, forgot password and the security-code step.
- * Admin emails (see data/auth.ts) go through a 2-step code and land on /admin;
- * everyone else lands on the client portal.
+ * Sign in, sign up, forgot / reset password, accept invite and the security-code step.
+ * The API decides who is staff (→ /admin) and who is a client (→ /portal).
  */
+/** Links from emails and the Google / Microsoft round trip land on /login with one of these. */
+function readLink(params: URLSearchParams) {
+  return { reset: params.get("reset_token"), invite: params.get("invite"), oauth: params.get("oauth") };
+}
+
+function initialScreen(link: ReturnType<typeof readLink>): { mode: AuthMode; notice: Notice } {
+  if (link.reset) return { mode: "reset", notice: null };
+  if (link.invite) return { mode: "invite", notice: null };
+  if (link.oauth === "mfa") return { mode: "verify", notice: null };
+  if (link.oauth && link.oauth !== "success") return { mode: "login", notice: OAUTH_NOTICES[link.oauth] ?? OAUTH_NOTICES.error };
+  return { mode: "login", notice: null };
+}
+
 export function SignInPage() {
   const router = useRouter();
-  const [mode, setMode] = useState<AuthMode>("login");
-  const [notice, setNotice] = useState<Notice>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { status } = useSession();
+  const params = useSearchParams();
+  const [link] = useState(() => readLink(params));
+  const [first] = useState(() => initialScreen(link));
+  const [mode, setMode] = useState<AuthMode>(first.mode);
+  const [notice, setNotice] = useState<Notice>(first.notice);
   const [loginEmail, setLoginEmail] = useState("");
   const [signup, setSignup] = useState<SignupData>(EMPTY_SIGNUP);
-  const [verifyReason, setVerifyReason] = useState<VerifyReason>("signup");
+  // After Google / Microsoft sign-in the 2-step challenge travels in a cookie, so there is no mfaToken.
+  const [verifyReason, setVerifyReason] = useState<VerifyReason>(link.oauth === "mfa" ? "admin2fa" : "signup");
+  const [verifyEmail, setVerifyEmail] = useState("");
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
   const [doneAfterSignup, setDoneAfterSignup] = useState(false);
+  const [session, setSessionState] = useState<{ user: User; enrollMfa: boolean } | null>(null);
+  const resetToken = link.reset ?? "";
+  const inviteToken = link.invite ?? "";
+  const handledParams = useRef(false);
+  const fromLink = !!(link.reset || link.invite || link.oauth);
 
   const go = (next: AuthMode, nextNotice: Notice = null) => {
     setMode(next);
@@ -34,11 +78,40 @@ export function SignInPage() {
   };
 
   const backToLogin = () => {
-    setIsAdmin(false);
+    setMfaToken(null);
     go("login");
   };
 
-  const head = getHeading(mode, { verifyReason, doneAfterSignup, isAdmin, signupEmail: signup.email });
+  const signedIn = (s: SessionResponse, afterSignup = false) => {
+    acceptSession(s);
+    setDoneAfterSignup(afterSignup);
+    setSessionState({ user: s.user, enrollMfa: !!s.mfaEnrollmentRequired });
+    go("done");
+  };
+
+  // Tidy the address bar, and finish a Google / Microsoft sign-in by trading the new cookie for a session.
+  useEffect(() => {
+    if (handledParams.current || !fromLink) return;
+    handledParams.current = true;
+    window.history.replaceState(null, "", "/login");
+    if (link.oauth !== "success") return;
+    void refresh().then((ok) => {
+      const { user } = getSession();
+      if (ok && user) {
+        setSessionState({ user, enrollMfa: !!user.isStaff && !user.mfaEnabled });
+        go("done");
+      } else go("login", OAUTH_NOTICES.error);
+    });
+  }, [fromLink, link.oauth]);
+
+  // Already signed in (the session was restored from the cookie): go straight to the right app.
+  useEffect(() => {
+    if (status !== "authenticated" || fromLink || mode !== "login") return;
+    const { user } = getSession();
+    if (user) router.replace(homeFor(user));
+  }, [status, mode, router, fromLink]);
+
+  const head = getHeading(mode, { verifyReason, doneAfterSignup, isStaff: !!session?.user.isStaff, email: verifyEmail });
 
   return (
     <div className="auth">
@@ -58,15 +131,16 @@ export function SignInPage() {
             <LoginForm
               email={loginEmail}
               onEmailChange={setLoginEmail}
-              onAdminSignIn={() => {
-                setIsAdmin(true);
+              onSignedIn={(s) => signedIn(s)}
+              onMfaRequired={(token) => {
+                setMfaToken(token);
                 setVerifyReason("admin2fa");
                 go("verify");
               }}
-              onClientSignIn={() => {
-                setIsAdmin(false);
-                setDoneAfterSignup(false);
-                go("done");
+              onEmailNotVerified={(email, message) => {
+                setVerifyEmail(email);
+                setVerifyReason("signup");
+                go("verify", { kind: "info", text: message });
               }}
               onForgot={() => go("forgot")}
               onSignup={() => go("signup")}
@@ -77,9 +151,10 @@ export function SignInPage() {
             <SignupForm
               data={signup}
               onChange={(patch) => setSignup((s) => ({ ...s, ...patch }))}
-              onCreated={() => {
+              onCreated={(message) => {
+                setVerifyEmail(signup.email.trim());
                 setVerifyReason("signup");
-                go("verify", { kind: "success", text: "Account created. One last step: confirm your email." });
+                go("verify", { kind: "success", text: message || "Account created. One last step: confirm your email." });
               }}
               onLogin={backToLogin}
             />
@@ -88,32 +163,40 @@ export function SignInPage() {
           {mode === "forgot" && (
             <ForgotForm
               initialEmail={loginEmail}
-              onSent={(email) =>
-                setNotice({
-                  kind: "success",
-                  text: `If ${email} has an account, a reset link is on its way. It expires in 30 minutes.`,
-                })
+              onSent={(message) => setNotice({ kind: "success", text: message })}
+              onBack={backToLogin}
+            />
+          )}
+
+          {mode === "reset" && resetToken && (
+            <ResetPasswordForm
+              token={resetToken}
+              onDone={() =>
+                go("login", { kind: "success", text: "Password changed. Sign in with your new password." })
               }
               onBack={backToLogin}
             />
           )}
 
+          {mode === "invite" && inviteToken && (
+            <AcceptInviteForm token={inviteToken} onAccepted={(s) => signedIn(s, true)} onBack={backToLogin} />
+          )}
+
           {mode === "verify" && (
             <VerifyForm
               reason={verifyReason}
-              onVerified={() => {
-                setDoneAfterSignup(verifyReason === "signup");
-                go("done");
-              }}
-              onResend={() => setNotice({ kind: "info", text: `New code sent to ${signup.email || "your email"}.` })}
+              email={verifyEmail}
+              mfaToken={mfaToken}
+              onVerified={(s) => signedIn(s, verifyReason === "signup")}
+              onResent={(text) => setNotice({ kind: "info", text })}
               onBack={backToLogin}
             />
           )}
 
-          {mode === "done" && (
+          {mode === "done" && session && (
             <SignedInCard
-              {...getSignedInSummary({ doneAfterSignup, isAdmin, signup, loginEmail })}
-              onContinue={() => router.push(!doneAfterSignup && isAdmin ? "/admin" : "/portal")}
+              {...getSignedInSummary(session.user, { doneAfterSignup, enrollMfa: session.enrollMfa })}
+              onContinue={() => router.push(homeFor(session.user, session.enrollMfa))}
             />
           )}
 
@@ -128,10 +211,7 @@ export function SignInPage() {
 }
 
 // ----------------------------------------------------------------- Copy
-function getHeading(
-  mode: AuthMode,
-  ctx: { verifyReason: VerifyReason; doneAfterSignup: boolean; isAdmin: boolean; signupEmail: string },
-) {
+function getHeading(mode: AuthMode, ctx: { verifyReason: VerifyReason; doneAfterSignup: boolean; isStaff: boolean; email: string }) {
   switch (mode) {
     case "signup":
       return {
@@ -145,58 +225,59 @@ function getHeading(
         title: "Forgot your password?",
         sub: "Enter your email and we will send you a reset link.",
       };
+    case "reset":
+      return {
+        kicker: "RESET PASSWORD",
+        title: "Choose a new password",
+        sub: "You’ll be signed out on every device, then you can sign in with the new password.",
+      };
+    case "invite":
+      return {
+        kicker: "YOU’RE INVITED",
+        title: "Accept your invitation",
+        sub: "Choose a password to finish setting up your account.",
+      };
     case "verify":
       return ctx.verifyReason === "signup"
         ? {
             kicker: "VERIFY EMAIL",
             title: "Check your inbox",
-            sub: `We sent a 6-digit code to ${ctx.signupEmail || "your email"}.`,
+            sub: `We sent a 6-digit code to ${ctx.email || "your email"}.`,
           }
         : {
-            kicker: "ADMIN ACCOUNT DETECTED",
+            kicker: "2-STEP CHECK",
             title: "Enter your security code",
-            sub: "This is a GoCWGL admin account. Open your authenticator app and enter the 6-digit code.",
+            sub: "Open your authenticator app and enter the 6-digit code.",
           };
     case "done":
       return ctx.doneAfterSignup
         ? {
             kicker: "ACCOUNT READY",
             title: "You are all set",
-            sub: "Your portal is ready. We will guide you through the next steps.",
+            sub: "Your account is ready. We will guide you through the next steps.",
           }
         : {
             kicker: "SIGNED IN",
             title: "You are in",
-            sub: ctx.isAdmin
-              ? "Admin account, redirecting you to the admin dashboard."
-              : "Redirecting you to your client portal.",
+            sub: ctx.isStaff ? "Team account, continue to the admin dashboard." : "Continue to your client portal.",
           };
     default:
       return { kicker: "SECURE ACCESS", title: "Welcome back", sub: "Sign in to your GoCWGL account." };
   }
 }
 
-function getSignedInSummary(ctx: { doneAfterSignup: boolean; isAdmin: boolean; signup: SignupData; loginEmail: string }) {
-  if (ctx.doneAfterSignup) {
-    return {
-      who: `${ctx.signup.name || "New client"} · ${ctx.signup.business || "Your business"}`,
-      email: ctx.signup.email,
-      steps: ["Email verified", "Portal created", "Welcome email sent to GoCWGL team"],
-      cta: "Go to my portal",
-    };
-  }
-  if (ctx.isAdmin) {
-    return {
-      who: "GoCWGL Admin",
-      email: ctx.loginEmail || DEMO_ADMIN_EMAIL,
-      steps: ["Password checked", "Admin account detected", "Two-step check passed", "Redirecting to admin dashboard"],
-      cta: "Go to admin dashboard",
-    };
-  }
+function getSignedInSummary(user: User, ctx: { doneAfterSignup: boolean; enrollMfa: boolean }) {
+  const role = user.isStaff ? `${capitalize(user.role)} · GoCWGL team` : user.portalRole === "viewer" ? "Portal viewer" : "Client";
+  const steps = ctx.doneAfterSignup
+    ? ["Email verified", user.isStaff ? "Team account ready" : "Portal ready"]
+    : ["Password checked", user.mfaEnabled ? "Two-step check passed" : user.isStaff ? "Team account" : "Client account"];
+  if (ctx.enrollMfa) steps.push("Next: turn on 2-step verification");
   return {
-    who: "Rahman Wellness",
-    email: ctx.loginEmail || DEMO_CLIENT_EMAIL,
-    steps: ["Password checked", "Client account", "Redirecting to client portal"],
-    cta: "Go to my portal",
+    who: `${user.fullName || user.email} · ${role}`,
+    email: user.email,
+    steps,
+    cta: user.isStaff ? (ctx.enrollMfa ? "Set up 2-step verification" : "Go to admin dashboard") : "Go to my portal",
   };
 }
+
+const capitalize = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : s);

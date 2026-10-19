@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Button, Field, Icon, IconTile, Input, SegmentedControl, Select, Textarea } from "@/components/ui";
-import type { CoreStage } from "@/data/admin";
-import { TODAY_SHORT } from "@/lib/dates";
-import { firstName, newId } from "@/lib/utils";
-import { getSalesStages } from "../../lib/contacts";
+import { Button, Field, FormError, Icon, IconTile, Input, SegmentedControl, Select, Textarea } from "@/components/ui";
+import { CORE_STAGES, type CoreStage } from "@/data/admin";
+import { canWriteCrm } from "@/utils/auth/session";
+import { useAllContacts, usePipelines, useTags } from "@/utils/hooks/useContacts";
+import { useSendEmail, useTemplates } from "@/utils/hooks/useMarketing";
+import { useSettings } from "@/utils/hooks/useSettings";
+import { useMe } from "@/utils/hooks/useUsers";
+import { contactName, getSalesStages } from "../../lib/contacts";
 import { useAdmin, type ComposerDraft } from "../../state/AdminContext";
 
 const MODES: Array<{ value: ComposerDraft["mode"]; label: string }> = [
@@ -16,18 +19,27 @@ const MODES: Array<{ value: ComposerDraft["mode"]; label: string }> = [
 
 export function EmailComposer() {
   const { state, update } = useAdmin();
-  const { composer, contacts, contactTags, tags, templates } = state;
-  const stages = getSalesStages(state.pipelines);
+  const { composer } = state;
+  const canWrite = canWriteCrm(useMe().data);
+  const contacts = useAllContacts().data ?? [];
+  const tags = useTags().data ?? [];
+  const templates = useTemplates().data ?? [];
+  const stages = getSalesStages(usePipelines().data);
+  const from = useSettings().data?.bizEmail;
+  const sendEmail = useSendEmail();
   const [sentMessage, setSentMessage] = useState("");
 
   const setDraft = (patch: Partial<ComposerDraft>) => update((s) => ({ composer: { ...s.composer, ...patch } }));
 
+  const target = composer.mode === "one" ? composer.contact : composer.mode === "tag" ? composer.tag : composer.stage;
+  // A preview of who it goes to; the API resolves the real list when it sends.
+  const byTag = useAllContacts({ tag_id: composer.tag }, composer.mode === "tag" && !!composer.tag);
   const recipients =
     composer.mode === "one"
-      ? contacts.filter((c) => String(c.id) === composer.contact)
+      ? contacts.filter((c) => c.id === composer.contact)
       : composer.mode === "tag"
         ? composer.tag
-          ? contacts.filter((c) => (contactTags[c.id] ?? []).includes(composer.tag))
+          ? (byTag.data ?? [])
           : []
         : composer.stage
           ? contacts.filter((c) => c.stage === composer.stage)
@@ -37,38 +49,21 @@ export function EmailComposer() {
     recipients.length === 0
       ? "No recipients selected yet"
       : recipients.length === 1
-        ? `Sending to ${recipients[0].name} (${recipients[0].email})`
+        ? `Sending to ${contactName(recipients[0])} (${recipients[0].email})`
         : `Sending to ${recipients.length} contacts`;
 
   const send = (e: FormEvent) => {
     e.preventDefault();
-    if (!recipients.length || !composer.subject.trim() || !composer.body.trim()) return;
-
-    const one = recipients.length === 1;
-    const fill = (text: string) => text.split("{first_name}").join(one ? firstName(recipients[0].name) : "there");
-    const label = one
-      ? recipients[0].name
-      : composer.mode === "tag"
-        ? `Tag: ${tags.find((t) => t.id === composer.tag)?.name ?? ""} (${recipients.length})`
-        : `${stages[composer.stage as CoreStage].label} (${recipients.length})`;
-
-    update((s) => ({
-      sentEmails: [
-        {
-          id: newId(),
-          to: label,
-          cid: one ? recipients[0].id : 0,
-          count: recipients.length,
-          subject: fill(composer.subject),
-          preview: fill(composer.body).replace(/\n+/g, " ").slice(0, 90),
-          date: TODAY_SHORT,
-          status: "Sent",
+    if (!target || !composer.subject.trim() || !composer.body.trim()) return;
+    sendEmail.mutate(
+      { mode: composer.mode, target, subject: composer.subject, body: composer.body },
+      {
+        onSuccess: (m) => {
+          setDraft({ subject: "", body: "" });
+          setSentMessage(`Email to ${m.toLabel} is queued and will send in a moment.`);
         },
-        ...s.sentEmails,
-      ],
-      composer: { ...s.composer, subject: "", body: "" },
-    }));
-    setSentMessage(`Email sent to ${one ? recipients[0].name : `${recipients.length} contacts`}`);
+      },
+    );
   };
 
   return (
@@ -78,7 +73,7 @@ export function EmailComposer() {
           <Icon name="edit" />
         </IconTile>
         <h2 className="card-title">New email</h2>
-        <span className="text-small u-push-right">From: [you@yourdomain.com]</span>
+        <span className="text-small u-push-right">From: {from || "your business email (Settings › Business)"}</span>
       </div>
 
       <div className="composer__body">
@@ -99,7 +94,7 @@ export function EmailComposer() {
               id="em-to"
               value={composer.contact}
               placeholder="Choose a contact…"
-              options={contacts.map((c) => ({ value: String(c.id), label: `${c.name} — ${c.email}` }))}
+              options={contacts.map((c) => ({ value: c.id, label: `${contactName(c)} — ${c.email}` }))}
               onChange={(e) => setDraft({ contact: e.target.value })}
             />
           </Field>
@@ -121,7 +116,7 @@ export function EmailComposer() {
               id="em-stage"
               value={composer.stage}
               placeholder="Choose a stage…"
-              options={(Object.keys(stages) as CoreStage[]).map((k) => ({ value: k, label: stages[k].label }))}
+              options={CORE_STAGES.map((k: CoreStage) => ({ value: k, label: stages[k].label }))}
               onChange={(e) => setDraft({ stage: e.target.value })}
             />
           </Field>
@@ -158,7 +153,9 @@ export function EmailComposer() {
             </div>
           </div>
           <Textarea id="em-body" rows={9} value={composer.body} onChange={(e) => setDraft({ body: e.target.value })} placeholder="Write your message…" />
-          <span className="field__hint">{"{first_name}"} is replaced with each contact&apos;s first name when it sends.</span>
+          <span className="field__hint">
+            {"{first_name}"}, {"{last_name}"} and {"{email}"} are filled in for each contact when it sends.
+          </span>
         </div>
       </div>
 
@@ -173,9 +170,10 @@ export function EmailComposer() {
         >
           Discard
         </Button>
-        <Button type="submit" variant="primary" size="lg">
+        <FormError error={sendEmail.error} />
+        <Button type="submit" variant="primary" size="lg" disabled={!canWrite || sendEmail.isPending || !target}>
           <Icon name="send" />
-          Send email
+          {sendEmail.isPending ? "Sending…" : "Send email"}
         </Button>
       </div>
     </form>

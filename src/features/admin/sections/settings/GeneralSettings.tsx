@@ -3,13 +3,35 @@
 import Image from "next/image";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { Avatar, Field, Input, Select, Toggle } from "@/components/ui";
-import { CURRENCIES, NOTIFICATION_OPTIONS, TIME_ZONES, type Settings } from "@/data/admin";
+import { CURRENCIES, NOTIFICATION_OPTIONS, TIME_ZONES } from "@/data/admin";
+import type { User } from "@/utils/api/models";
 
-type PanelProps = { settings: Settings; onChange: (patch: Partial<Settings>) => void };
+/** Editable profile fields (PATCH /users/me). Email changes aren't built yet (backend F-4). */
+export type ProfileDraft = { fullName: string; title: string; phone: string; timezone: string };
 
-type FieldDef = { key: keyof Settings; label: string; type?: string; placeholder?: string; autoComplete?: string };
+/** Editable business + notification fields (PATCH /admin/settings). */
+export type BusinessDraft = {
+  company: string;
+  website: string;
+  bizEmail: string;
+  bizPhone: string;
+  address: string;
+  currency: string;
+  notifyEmail: string;
+  notifications: Record<string, boolean>;
+};
 
-function TextFields({ fields, settings, onChange }: PanelProps & { fields: FieldDef[] }) {
+type FieldDef<K extends string> = { key: K; label: string; type?: string; placeholder?: string; autoComplete?: string };
+
+function TextFields<T extends Record<string, unknown>, K extends keyof T & string>({
+  fields,
+  values,
+  onChange,
+}: {
+  fields: FieldDef<K>[];
+  values: T;
+  onChange: (patch: Partial<T>) => void;
+}) {
   return (
     <>
       {fields.map((f) => (
@@ -19,8 +41,8 @@ function TextFields({ fields, settings, onChange }: PanelProps & { fields: Field
             type={f.type ?? "text"}
             placeholder={f.placeholder}
             autoComplete={f.autoComplete ?? "off"}
-            value={String(settings[f.key] ?? "")}
-            onChange={(e) => onChange({ [f.key]: e.target.value })}
+            value={String(values[f.key] ?? "")}
+            onChange={(e) => onChange({ [f.key]: e.target.value } as Partial<T>)}
           />
         </Field>
       ))}
@@ -28,38 +50,62 @@ function TextFields({ fields, settings, onChange }: PanelProps & { fields: Field
   );
 }
 
-export function ProfileSettings({ settings, onChange }: PanelProps) {
+/** A zone the API sent that isn't in the short list still shows (and stays selected). */
+function zoneOptions(current: string) {
+  return TIME_ZONES.some((z) => z.value === current) || !current ? TIME_ZONES : [{ value: current, label: current }, ...TIME_ZONES];
+}
+
+const roleLabel = (role: string) => (role ? role[0].toUpperCase() + role.slice(1) : "");
+
+export function ProfileSettings({
+  user,
+  company,
+  draft,
+  onChange,
+}: {
+  user: User;
+  company: string;
+  draft: ProfileDraft;
+  onChange: (patch: Partial<ProfileDraft>) => void;
+}) {
   return (
     <div className="stack stack--16">
       <div className="cluster settings-profile">
-        <Avatar name={settings.name} brand ring size="xl" className="settings-profile__avatar" />
+        <Avatar name={draft.fullName || user.email} brand ring size="xl" className="settings-profile__avatar" />
         <div className="stack stack--2">
-          <span className="settings-profile__name">{settings.name}</span>
+          <span className="settings-profile__name">{draft.fullName || user.email}</span>
           <span className="text-muted">
-            {settings.role} · {settings.company}
+            {roleLabel(user.role)}
+            {company && ` · ${company}`}
           </span>
         </div>
       </div>
       <div className="form-grid">
         <TextFields
-          settings={settings}
+          values={draft}
           onChange={onChange}
           fields={[
-            { key: "name", label: "Full name", autoComplete: "name" },
+            { key: "fullName", label: "Full name", autoComplete: "name" },
             { key: "title", label: "Job title" },
-            { key: "email", label: "Login email", type: "email", autoComplete: "email" },
-            { key: "phone", label: "Phone", type: "tel", placeholder: "(555) 000-0000", autoComplete: "tel" },
           ]}
         />
+        <Field label="Login email" htmlFor="set-email" hint="Changing your login email is coming soon.">
+          <Input id="set-email" type="email" value={user.email} readOnly aria-readonly="true" />
+        </Field>
+        <TextFields
+          values={draft}
+          onChange={onChange}
+          fields={[{ key: "phone", label: "Phone", type: "tel", placeholder: "(555) 000-0000", autoComplete: "tel" }]}
+        />
         <Field label="Time zone" htmlFor="set-tz">
-          <Select id="set-tz" value={settings.tz} options={TIME_ZONES} onChange={(e) => onChange({ tz: e.target.value })} />
+          <Select id="set-tz" value={draft.timezone} options={zoneOptions(draft.timezone)} onChange={(e) => onChange({ timezone: e.target.value })} />
         </Field>
       </div>
     </div>
   );
 }
 
-export function BusinessSettings({ settings, onChange }: PanelProps) {
+export function BusinessSettings({ draft, onChange }: { draft: BusinessDraft; onChange: (patch: Partial<BusinessDraft>) => void }) {
   return (
     <div className="stack stack--16">
       <div className="inset logo-row">
@@ -71,7 +117,7 @@ export function BusinessSettings({ settings, onChange }: PanelProps) {
       </div>
       <div className="form-grid">
         <TextFields
-          settings={settings}
+          values={draft}
           onChange={onChange}
           fields={[
             { key: "company", label: "Business name", autoComplete: "organization" },
@@ -82,34 +128,33 @@ export function BusinessSettings({ settings, onChange }: PanelProps) {
           ]}
         />
         <Field label="Currency" htmlFor="set-cur">
-          <Select id="set-cur" value={settings.currency} options={CURRENCIES} onChange={(e) => onChange({ currency: e.target.value })} />
+          <Select id="set-cur" value={draft.currency} options={CURRENCIES} onChange={(e) => onChange({ currency: e.target.value })} />
         </Field>
       </div>
     </div>
   );
 }
 
-export function NotificationSettings({ settings, onChange }: PanelProps) {
+export function NotificationSettings({ draft, onChange }: { draft: BusinessDraft; onChange: (patch: Partial<BusinessDraft>) => void }) {
   return (
     <div>
-      {NOTIFICATION_OPTIONS.map((n) => (
-        <div className="list-row list-row--nowrap" key={n.key}>
-          <div className="stack stack--2 u-grow">
-            <span className="u-strong">{n.label}</span>
-            <span className="text-small">{n.desc}</span>
+      {NOTIFICATION_OPTIONS.map((n) => {
+        const on = draft.notifications[n.key] ?? n.defaultOn;
+        return (
+          <div className="list-row list-row--nowrap" key={n.key}>
+            <div className="stack stack--2 u-grow">
+              <span className="u-strong">{n.label}</span>
+              <span className="text-small">{n.desc}</span>
+            </div>
+            <Toggle label={n.label} checked={on} onChange={(next) => onChange({ notifications: { ...draft.notifications, [n.key]: next } })} />
           </div>
-          <Toggle
-            label={n.label}
-            checked={!!settings.notif[n.key]}
-            onChange={(on) => onChange({ notif: { ...settings.notif, [n.key]: on } })}
-          />
-        </div>
-      ))}
+        );
+      })}
       <Field label="Send notifications to" htmlFor="set-notify-email" className="notify-email">
         <Input
           id="set-notify-email"
           type="email"
-          value={settings.notifyEmail}
+          value={draft.notifyEmail}
           placeholder="you@yourdomain.com"
           onChange={(e) => onChange({ notifyEmail: e.target.value })}
         />

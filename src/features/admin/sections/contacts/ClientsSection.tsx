@@ -1,18 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, Button, Field, Icon, Input, Select } from "@/components/ui";
-import { PLAN_PRICE, SOURCE_LABELS, type Contact, type CoreStage, type LeadSource } from "@/data/admin";
-import { daysAgo, parseShortDate, TODAY } from "@/lib/dates";
-import { cn, formatMoney } from "@/lib/utils";
+import { Badge, Button, Field, Icon, Input, LoadState, Select } from "@/components/ui";
+import { SOURCE_LABELS, type CoreStage, type LeadSource } from "@/data/admin";
+import { cn } from "@/lib/utils";
+import type { ContactOut } from "@/utils/api/models";
+import { formatShort, getTimeZone, isoDateIn, addDaysIso, todayIso } from "@/utils/format/dates";
+import { useSubscriptions } from "@/utils/hooks/useBilling";
+import { useAllContacts, usePipelines, useTags } from "@/utils/hooks/useContacts";
 import {
   CONTACT_STATUS,
   callText,
+  contactName,
   contactStatus,
   getSalesStages,
   isActiveClient,
   isInactiveClient,
+  stageOf,
   subscriptionOf,
+  subscriptionText,
 } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
 
@@ -26,8 +32,7 @@ const CALL_LABELS: Record<Exclude<CallFilter, "any">, string> = { scheduled: "Ca
 
 export function ClientsSection() {
   const { state, update } = useAdmin();
-  const { contacts, contactTags, tags, subscriptions, contactView } = state;
-  const stages = getSalesStages(state.pipelines);
+  const { contactView } = state;
 
   const [stage, setStage] = useState<StageFilter>("all");
   const [query, setQuery] = useState("");
@@ -38,30 +43,41 @@ export function ClientsSection() {
   const [sub, setSub] = useState<SubFilter>("any");
   const [call, setCall] = useState<CallFilter>("any");
 
-  const count = (s: CoreStage) => contacts.filter((c) => c.stage === s).length;
-  const q = query.trim().toLowerCase();
+  // Search, tag and source filter on the server; the rest are views over what came back.
+  const q = query.trim();
+  const active = useAllContacts({ q: q || undefined, tag_id: tag || undefined, source: source || undefined });
+  // The Inactive view also lists archived contacts.
+  const archived = useAllContacts({ q: q || undefined, tag_id: tag || undefined, source: source || undefined, archived: true });
+  const subsQuery = useSubscriptions();
+  const subscriptions = subsQuery.data;
+  const tags = useTags().data ?? [];
+  const stages = getSalesStages(usePipelines().data);
+  const contacts: ContactOut[] = [...(active.data ?? []), ...(contactView === "inactive" ? (archived.data ?? []) : [])];
 
-  const inView = (c: Contact) =>
-    contactView === "active" ? isActiveClient(c, subscriptions) : contactView === "inactive" ? isInactiveClient(c, subscriptions) : true;
+  const count = (s: CoreStage) => contacts.filter((c) => c.stage === s && inView(c)).length;
 
-  const signedInRange = (c: Contact) => {
+  function inView(c: ContactOut) {
+    if (c.archivedAt) return contactView === "inactive";
+    return contactView === "active" ? isActiveClient(c, subscriptions) : contactView === "inactive" ? isInactiveClient(c, subscriptions) : true;
+  }
+
+  const today = todayIso();
+  const signedInRange = (c: ContactOut) => {
     if (date === "any") return true;
-    const d = parseShortDate(c.signed);
-    const start = date === "7" ? daysAgo(6) : date === "30" ? daysAgo(29) : new Date(2026, 9, 1);
-    return d >= start && d <= TODAY;
+    const day = isoDateIn(new Date(c.createdAt), getTimeZone());
+    const start = date === "7" ? addDaysIso(today, -6) : date === "30" ? addDaysIso(today, -29) : today.slice(0, 8) + "01";
+    return day >= start && day <= today;
   };
 
-  const rows = contacts.filter((c) => {
+  const viewRows = contacts.filter(inView);
+  const rows = viewRows.filter((c) => {
     if (stage !== "all" && c.stage !== stage) return false;
-    if (q && !c.name.toLowerCase().includes(q) && !c.email.toLowerCase().includes(q)) return false;
-    if (!inView(c)) return false;
-    if (tag && !(contactTags[c.id] ?? []).includes(tag)) return false;
-    if (source && c.source !== source) return false;
     if (!signedInRange(c)) return false;
-    if (sub === "active" && c.stage !== "paid") return false;
-    if (sub === "none" && c.stage === "paid") return false;
-    if (call === "scheduled" && !(c.stage === "booked" && c.day)) return false;
-    if (call === "needs" && !(c.stage === "booked" && !c.day)) return false;
+    const hasSub = !!subscriptionOf(subscriptions, c.id);
+    if (sub === "active" && !hasSub) return false;
+    if (sub === "none" && hasSub) return false;
+    if (call === "scheduled" && !(c.stage === "booked" && c.callAt)) return false;
+    if (call === "needs" && !(c.stage === "booked" && !c.callAt)) return false;
     if (call === "none" && c.stage === "booked") return false;
     return true;
   });
@@ -83,7 +99,7 @@ export function ClientsSection() {
   };
 
   const pills: Array<{ value: StageFilter; label: string }> = [
-    { value: "all", label: `All (${contacts.length})` },
+    { value: "all", label: `All (${viewRows.length})` },
     { value: "lead", label: `New leads (${count("lead")})` },
     { value: "booked", label: `Booked a call (${count("booked")})` },
     { value: "paid", label: `Paid (${count("paid")})` },
@@ -135,7 +151,7 @@ export function ClientsSection() {
           </button>
         )}
         <span className="text-muted u-push-right">
-          Showing {rows.length} of {contacts.length} clients
+          Showing {rows.length} of {viewRows.length} clients
         </span>
       </div>
 
@@ -179,6 +195,7 @@ export function ClientsSection() {
         </div>
       )}
 
+      <LoadState query={active} loadingText="Loading contacts…">
       <div className="card card--table card--flat">
         <table className="data-table data-table--roomy data-table--plain">
           <thead>
@@ -198,34 +215,36 @@ export function ClientsSection() {
           </thead>
           <tbody>
             {rows.map((c) => {
-              const paused = subscriptionOf(subscriptions, c.id)?.status === "Paused";
-              const status = CONTACT_STATUS[contactStatus(c.stage, paused)];
+              const subscription = subscriptionOf(subscriptions, c.id);
+              const status = CONTACT_STATUS[contactStatus(c.stage, subscription?.status === "Paused", !!c.archivedAt)];
+              const stageInfo = stageOf(stages, c.stage);
+              const name = contactName(c);
               const edit = () => update({ editContactId: c.id });
               return (
                 <tr key={c.id}>
                   <td>
                     <button type="button" className="cell-button" onClick={edit}>
-                      <strong className="data-table__strong">{c.name}</strong>
+                      <strong className="data-table__strong">{name}</strong>
                       <span className="text-small">{c.email}</span>
                     </button>
                   </td>
                   <td>{c.phone}</td>
-                  <td>{c.source}</td>
-                  <td>{c.signed}</td>
+                  <td>{SOURCE_LABELS[c.source as LeadSource] ?? c.source}</td>
+                  <td>{formatShort(c.createdAt)}</td>
                   <td>{callText(c)}</td>
-                  <td>{c.stage === "paid" ? `Active · ${formatMoney(PLAN_PRICE)}/mo` : "None"}</td>
+                  <td>{subscriptionText(subscription)}</td>
                   <td>
                     <Badge tone={status.tone} dot>
-                      {status.label}
+                      {c.archivedAt ? "Archived" : status.label}
                     </Badge>
                   </td>
                   <td>
-                    <Badge tone={stages[c.stage].tone} size="lg">
-                      {stages[c.stage].label}
+                    <Badge tone={stageInfo.tone} size="lg">
+                      {stageInfo.label}
                     </Badge>
                   </td>
                   <td className="data-table__actions">
-                    <Button variant="outline" size="sm" onClick={edit} aria-label={`Edit ${c.name}`}>
+                    <Button variant="outline" size="sm" onClick={edit} aria-label={`Edit ${name}`}>
                       <Icon name="edit" size={13} />
                       Edit
                     </Button>
@@ -235,8 +254,9 @@ export function ClientsSection() {
             })}
           </tbody>
         </table>
-        {rows.length === 0 && <p className="table-empty">No clients match this filter.</p>}
+        {rows.length === 0 && <p className="table-empty">{contacts.length ? "No clients match this filter." : "No contacts yet."}</p>}
       </div>
+      </LoadState>
     </div>
   );
 }

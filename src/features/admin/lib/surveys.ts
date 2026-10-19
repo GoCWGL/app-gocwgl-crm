@@ -1,14 +1,17 @@
-import { CHOICE_TYPES, QUESTION_TYPES, type Domain, type QuestionType, type Survey, type SurveyQuestion } from "@/data/admin";
-import { newId, slugify } from "@/lib/utils";
+import { CHOICE_TYPES, QUESTION_TYPES, type QuestionType, type Survey, type SurveyQuestion } from "@/data/admin";
+import type { DomainOut } from "@/utils/api/models";
+import { newFieldId } from "@/utils/mappers/forms";
 
 export type SurveyEmbedMode = "inline" | "popup" | "link";
 
 /** Verified domain for forms, or the placeholder used on the Forms page. */
-export function surveyHost(domains: Domain[]): string {
+export function surveyHost(domains: DomainOut[] | undefined): string {
+  if (!domains) return "forms.[yourdomain].com";
   return domains.find((d) => d.status === "Verified" && (d.purpose === "forms" || d.purpose === "all"))?.host ?? "forms.[yourdomain].com";
 }
 
-export const surveyUrl = (s: Survey, host: string) => `https://${host}/survey/${slugify(s.name || "survey")}`;
+/** Public survey page; it loads the survey from GET /public/surveys/{id}. */
+export const surveyUrl = (s: Survey, host: string) => `https://${host}/survey/${s.id || "save-the-survey-first"}`;
 
 /** Snippet to paste into a website (or a plain link for emails and social posts). */
 export function surveyEmbed(s: Survey, host: string, mode: SurveyEmbedMode, opts: { height: number; button: string }): string {
@@ -29,7 +32,7 @@ export function surveyEmbed(s: Survey, host: string, mode: SurveyEmbedMode, opts
 }
 
 export const blankSurvey = (): Survey => ({
-  id: 0,
+  id: "",
   name: "",
   intro: "",
   on: false,
@@ -52,7 +55,7 @@ const NEW_TITLES: Partial<Record<QuestionType, string>> = {
 
 export function newQuestion(type: QuestionType): SurveyQuestion {
   return {
-    id: newId(),
+    id: newFieldId(),
     type,
     title: NEW_TITLES[type] ?? "",
     help: "",

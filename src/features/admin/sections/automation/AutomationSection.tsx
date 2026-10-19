@@ -1,27 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Icon, IconButton, IconTile, StatGrid, Toggle } from "@/components/ui";
+import { Button, FormError, Icon, IconButton, IconTile, LoadState, StatGrid, Toggle } from "@/components/ui";
 import type { Automation } from "@/data/admin";
 import { cn } from "@/lib/utils";
-import { stepMeta, triggerText, type OptionContext } from "../../lib/automation";
+import { canWriteCrm } from "@/utils/auth/session";
+import { useCalendars } from "@/utils/hooks/useCalendar";
+import { usePipelines, useTags } from "@/utils/hooks/useContacts";
+import { useAutomations, useDeleteAutomation, useTemplates, useUpdateAutomation } from "@/utils/hooks/useMarketing";
+import { useMe } from "@/utils/hooks/useUsers";
+import { automationToDraft, stepMeta, triggerText, type OptionContext } from "../../lib/automation";
 import { getSalesStages } from "../../lib/contacts";
-import { useAdmin } from "../../state/AdminContext";
 import { AutomationBuilder } from "./AutomationBuilder";
 
 export function AutomationSection() {
-  const { state, update } = useAdmin();
-  const { automations } = state;
+  const canWrite = canWriteCrm(useMe().data);
+  const query = useAutomations();
+  const update = useUpdateAutomation();
+  const remove = useDeleteAutomation();
+  const automations = (query.data ?? []).map(automationToDraft);
   const [draft, setDraft] = useState<Automation | null>(null);
 
   const ctx: OptionContext = {
-    templates: state.templates,
-    tags: state.tags,
-    stages: getSalesStages(state.pipelines),
-    calendars: state.calendars,
+    templates: useTemplates().data ?? [],
+    tags: useTags().data ?? [],
+    stages: getSalesStages(usePipelines().data),
+    calendars: useCalendars().data ?? [],
   };
-
-  const setAutomations = (fn: (list: Automation[]) => Automation[]) => update((s) => ({ automations: fn(s.automations) }));
 
   return (
     <div className="page-stack">
@@ -38,7 +43,7 @@ export function AutomationSection() {
             plain
             items={[
               { label: "Active automations", value: `${automations.filter((a) => a.on).length} of ${automations.length}` },
-              { label: "Runs this month", value: automations.reduce((n, a) => n + a.runs, 0) },
+              { label: "Total runs", value: automations.reduce((n, a) => n + a.runs, 0) },
               { label: "Steps automated", value: automations.reduce((n, a) => n + a.steps.length, 0) },
             ]}
           />
@@ -48,16 +53,20 @@ export function AutomationSection() {
               <h2 className="section-title">Your automations</h2>
               <span className="text-muted">Each one runs on its own when its trigger happens</span>
             </div>
-            <Button
-              variant="primary"
-              size="lg"
-              onClick={() => setDraft({ id: 0, name: "", on: true, runs: 0, trigger: { type: "form", value: "" }, steps: [] })}
-            >
-              <Icon name="plus" strokeWidth={2.4} />
-              Create automation
-            </Button>
+            {canWrite && (
+              <Button
+                variant="primary"
+                size="lg"
+                onClick={() => setDraft({ id: "", name: "", on: true, runs: 0, trigger: { type: "form", value: "" }, steps: [] })}
+              >
+                <Icon name="plus" strokeWidth={2.4} />
+                Create automation
+              </Button>
+            )}
           </div>
+          <FormError error={update.error ?? remove.error} />
 
+          <LoadState query={query} isEmpty={!automations.length} empty="No automations yet.">
           <div className="tile-grid tile-grid--wide">
             {automations.map((a) => (
               <article key={a.id} className={cn("card automation-card", !a.on && "automation-card--off")}>
@@ -71,11 +80,13 @@ export function AutomationSection() {
                       When: <strong className="u-ink-soft">{triggerText(a.trigger, ctx)}</strong>
                     </span>
                   </div>
-                  <Toggle
-                    label={`Turn ${a.name} on or off`}
-                    checked={a.on}
-                    onChange={() => setAutomations((list) => list.map((x) => (x.id === a.id ? { ...x, on: !x.on } : x)))}
-                  />
+                  {canWrite && (
+                    <Toggle
+                      label={`Turn ${a.name} on or off`}
+                      checked={a.on}
+                      onChange={(on) => update.mutate({ id: a.id, body: { isActive: on } })}
+                    />
+                  )}
                 </div>
                 <div className="inset inset--soft step-chain">
                   {a.steps.map((st) => {
@@ -93,18 +104,21 @@ export function AutomationSection() {
                 </div>
                 <div className="cluster cluster--8 cluster--nowrap">
                   <span className="text-small u-grow">
-                    {a.steps.length} steps · {a.runs} runs this month · {a.on ? "Active" : "Paused"}
+                    {a.steps.length} steps · {a.runs} runs · {a.on ? "Active" : "Paused"}
                   </span>
                   <Button size="sm" onClick={() => setDraft(structuredClone(a))}>
-                    Edit
+                    {canWrite ? "Edit" : "View"}
                   </Button>
-                  <IconButton label={`Delete ${a.name}`} size="lg" onClick={() => setAutomations((list) => list.filter((x) => x.id !== a.id))}>
-                    <Icon name="trash" size={14} />
-                  </IconButton>
+                  {canWrite && (
+                    <IconButton label={`Delete ${a.name}`} size="lg" disabled={remove.isPending} onClick={() => remove.mutate(a.id)}>
+                      <Icon name="trash" size={14} />
+                    </IconButton>
+                  )}
                 </div>
               </article>
             ))}
           </div>
+          </LoadState>
         </>
       )}
     </div>

@@ -1,0 +1,81 @@
+@use "../abstracts" as *;
+
+// Loading / error / empty placeholder for sections that wait on the API.
+.load-state {
+  @include row(10px);
+  justify-content: center;
+  padding: 22px;
+  border: 1px dashed $line-strong;
+  border-radius: $radius-xl;
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  color: $muted;
+  text-align: center;
+
+  &--error {
+    border-style: solid;
+    border-color: rgba(220, 38, 38, 0.3);
+    background: rgba(220, 38, 38, 0.05);
+    color: #b42318;
+  }
+
+  &--inline {
+    padding: 8px 0;
+    border: 0;
+    background: none;
+    justify-content: flex-start;
+  }
+}
+
+.spinner,
+.session-splash__spinner {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  border: 2px solid rgba(8, 145, 178, 0.2);
+  border-top-color: $cyan-700;
+  border-radius: 50%;
+  animation: spinner-turn 0.8s linear infinite;
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Full-page wait while the session is restored.
+.session-splash {
+  @include stack(12px);
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+
+  &__spinner {
+    width: 26px;
+    height: 26px;
+    border-width: 3px;
+  }
+}
+
+// "Coming soon" / "Not available yet" pill next to unbuilt features.
+.soon-note {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(124, 77, 255, 0.08);
+  color: $ink-soft;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+// Inline API error under a form.
+.form-error {
+  color: #b42318;
+  font-size: 13px;
+  font-weight: 600;
+}

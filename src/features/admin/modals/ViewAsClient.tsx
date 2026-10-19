@@ -1,20 +1,42 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Icon } from "@/components/ui";
-import { CLIENT_BUSINESSES } from "@/data/admin";
+import { refresh } from "@/utils/api/client";
+import { getSession } from "@/utils/auth/session";
+import { useContact } from "@/utils/hooks/useContacts";
+import { VIEW_AS_TOKEN, VIEW_AS_TOKEN_REQUEST, type ViewAsTokenMessage } from "@/utils/providers";
+import { contactName } from "../lib/contacts";
 import { useAdmin } from "../state/AdminContext";
 
 /**
- * Full-screen preview of a client's portal, loaded in an iframe with
- * ?as=&biz= so the portal shows their name.
- * Before launch this should become a real read-only session for that client.
+ * Full-screen, read-only preview of a client's portal in an iframe.
+ * The iframe never refreshes the session itself (two windows refreshing at once would trip the
+ * stolen-token protection): it asks this window for the access token with postMessage, and the
+ * portal sends `X-Client-Id: <contactId>` on every /portal/* call. The token never goes in the URL.
  */
 export function ViewAsClient() {
   const { state, update } = useAdmin();
-  const client = state.contacts.find((c) => c.id === state.viewAsId);
-  if (!client) return null;
+  const client = useContact(state.viewAsId).data;
+  const frame = useRef<HTMLIFrameElement>(null);
 
-  const params = new URLSearchParams({ as: client.name, biz: CLIENT_BUSINESSES[client.id] ?? client.name });
+  useEffect(() => {
+    if (!state.viewAsId) return;
+    const onMessage = async (e: MessageEvent) => {
+      if (e.origin !== window.location.origin || e.source !== frame.current?.contentWindow) return;
+      if ((e.data as { type?: string })?.type !== VIEW_AS_TOKEN_REQUEST) return;
+      // The iframe asks again when its copy expires (401): refresh here, in the one window that owns the session.
+      if (!getSession().accessToken || (e.data as { expired?: boolean }).expired) await refresh();
+      const { accessToken, user } = getSession();
+      const reply: ViewAsTokenMessage = { type: VIEW_AS_TOKEN, accessToken, user };
+      frame.current?.contentWindow?.postMessage(reply, window.location.origin);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [state.viewAsId]);
+
+  if (!state.viewAsId) return null;
+  const name = client ? contactName(client) : "Client";
 
   return (
     <div className="view-as" role="dialog" aria-modal="true" aria-label="Viewing as client">
@@ -23,20 +45,25 @@ export function ViewAsClient() {
           <Icon name="eye" strokeWidth={2.2} />
         </span>
         <span className="stack stack--2 u-grow">
-          <span className="kicker view-as__kicker">VIEWING AS CLIENT</span>
+          <span className="kicker view-as__kicker">VIEWING AS CLIENT · READ-ONLY</span>
           <span className="text-strong">
-            {client.name} <span className="u-semibold">· {client.email}</span>
+            {name} {client && <span className="u-semibold">· {client.email}</span>}
           </span>
         </span>
-        {client.stage !== "paid" && <span className="view-as__note">Not a paid client yet · preview only</span>}
-        <button type="button" className="view-as__back" onClick={() => update({ viewAsId: 0 })}>
+        {client && client.stage !== "paid" && <span className="view-as__note">Not a paid client yet · preview only</span>}
+        <button type="button" className="view-as__back" onClick={() => update({ viewAsId: "" })}>
           Back to profile
         </button>
-        <button type="button" className="view-as__exit" onClick={() => update({ viewAsId: 0, editContactId: 0 })}>
+        <button type="button" className="view-as__exit" onClick={() => update({ viewAsId: "", editContactId: "" })}>
           Exit client view
         </button>
       </div>
-      <iframe className="view-as__frame" src={`/portal?${params}`} title={`Client portal for ${client.name}`} />
+      <iframe
+        ref={frame}
+        className="view-as__frame"
+        src={`/portal?as=${encodeURIComponent(state.viewAsId)}`}
+        title={`Client portal for ${name}`}
+      />
     </div>
   );
 }

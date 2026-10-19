@@ -1,30 +1,31 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Avatar, Badge, Button, Checkbox, Field, Icon, IconButton, Input, Select } from "@/components/ui";
+import { Avatar, Badge, Button, Checkbox, Field, FormError, Icon, IconButton, Input, LoadState, Select } from "@/components/ui";
 import { PAYMENT_PROVIDERS, type PaymentProvider } from "@/data/admin";
 import { cn } from "@/lib/utils";
-import { providerName } from "../../lib/billing";
-import { useAdmin } from "../../state/AdminContext";
-
-const mask = (value: string) => (value.length <= 4 ? "••••" : "••••" + value.slice(-4));
+import type { PaymentConnectionOut } from "@/utils/api/models";
+import { errorMessage, fieldErrors } from "@/utils/errors";
+import { useDeletePaymentConnection, usePaymentConnections, useSavePaymentConnection } from "@/utils/hooks/useBilling";
+import { useSettings, useUpdateSettings } from "@/utils/hooks/useSettings";
+import { connectionOf, providerName } from "../../lib/billing";
 
 /** Payment provider cards (Stripe, PayPal…) and the connect form. */
 export function PaymentMethods() {
-  const { state, update } = useAdmin();
-  const connections = state.paymentConnections;
+  const query = usePaymentConnections();
+  const connections = query.data;
+  const settings = useSettings().data;
+  const saveSettings = useUpdateSettings();
+  const remove = useDeletePaymentConnection();
   const [editingId, setEditingId] = useState("");
 
-  const connected = PAYMENT_PROVIDERS.filter((p) => connections[p.id]?.connected);
-  const defaultId = connected.some((p) => p.id === state.paymentDefault) ? state.paymentDefault : (connected[0]?.id ?? "");
+  const connected = PAYMENT_PROVIDERS.filter((p) => connectionOf(connections, p.id));
+  const preferred = settings?.defaultPaymentProvider ?? "";
+  const defaultId = connected.some((p) => p.id === preferred) ? preferred : (connected[0]?.id ?? "");
   const editing = PAYMENT_PROVIDERS.find((p) => p.id === editingId);
 
   const disconnect = (id: string) => {
-    update((s) => {
-      const next = { ...s.paymentConnections };
-      delete next[id];
-      return { paymentConnections: next };
-    });
+    remove.mutate(id);
     if (editingId === id) setEditingId("");
   };
 
@@ -41,7 +42,8 @@ export function PaymentMethods() {
             id="pay-default"
             className="u-strong"
             value={defaultId}
-            onChange={(e) => update({ paymentDefault: e.target.value })}
+            disabled={saveSettings.isPending}
+            onChange={(e) => saveSettings.mutate({ defaultPaymentProvider: e.target.value })}
             options={
               connected.length
                 ? connected.map((p) => ({ value: p.id, label: providerName(p, connections) }))
@@ -51,10 +53,12 @@ export function PaymentMethods() {
         </Field>
       </div>
 
+      <FormError error={remove.error ?? saveSettings.error} />
+      <LoadState query={query}>
       <div className="provider-grid provider-grid--compact">
         {PAYMENT_PROVIDERS.map((p) => {
-          const conn = connections[p.id];
-          const on = !!conn?.connected;
+          const conn = connectionOf(connections, p.id);
+          const on = !!conn;
           const isDefault = on && p.id === defaultId;
           return (
             <article key={p.id} className={cn("payment-card", on && "payment-card--on", isDefault && "payment-card--default")}>
@@ -70,15 +74,15 @@ export function PaymentMethods() {
                   {on ? "CONNECTED" : "NOT CONNECTED"}
                 </Badge>
                 {isDefault && <Badge tone="brand">DEFAULT</Badge>}
-                {on && p.hasMode && <Badge tone="neutral">{conn.test ? "Test mode" : "Live"}</Badge>}
+                {conn && p.hasMode && <Badge tone="neutral">{conn.testMode ? "Test mode" : "Live"}</Badge>}
               </div>
-              {on && <span className="payment-card__summary">{conn.summary}</span>}
+              {conn && <span className="payment-card__summary">{conn.summary}</span>}
               <div className="cluster cluster--8 cluster--nowrap payment-card__actions">
                 <Button variant={on ? "secondary" : "primary"} className="u-grow" onClick={() => setEditingId(p.id)}>
                   {on ? "Manage" : "Connect"}
                 </Button>
                 {on && (
-                  <Button variant="danger" onClick={() => disconnect(p.id)}>
+                  <Button variant="danger" disabled={remove.isPending} onClick={() => disconnect(p.id)}>
                     Disconnect
                   </Button>
                 )}
@@ -87,51 +91,61 @@ export function PaymentMethods() {
           );
         })}
       </div>
+      </LoadState>
 
-      {editing && <ConnectForm key={editing.id} provider={editing} onClose={() => setEditingId("")} />}
+      {editing && (
+        <ConnectForm
+          key={editing.id}
+          provider={editing}
+          existing={connectionOf(connections, editing.id)}
+          isFirst={!connected.length}
+          onClose={() => setEditingId("")}
+        />
+      )}
     </section>
   );
 }
 
-function ConnectForm({ provider: p, onClose }: { provider: PaymentProvider; onClose: () => void }) {
-  const { state, update } = useAdmin();
-  const existing = state.paymentConnections[p.id];
-  const wasConnected = !!existing?.connected;
+function ConnectForm({
+  provider: p,
+  existing,
+  isFirst,
+  onClose,
+}: {
+  provider: PaymentProvider;
+  existing?: PaymentConnectionOut;
+  isFirst: boolean;
+  onClose: () => void;
+}) {
+  const save = useSavePaymentConnection();
+  const saveSettings = useUpdateSettings();
+  const wasConnected = !!existing;
   const [values, setValues] = useState<Record<string, string>>({});
-  const [testMode, setTestMode] = useState(wasConnected ? !!existing.test : true);
+  const [testMode, setTestMode] = useState(existing ? existing.testMode : true);
   const [error, setError] = useState("");
 
-  const save = (e: FormEvent) => {
+  const submit = (e: FormEvent) => {
     e.preventDefault();
-    const missing = p.fields.filter((f) => !(values[f.key] ?? "").trim() && !wasConnected && !f.optional);
+    // Saving replaces every key, so each required field is needed again (secrets are never shown back).
+    const missing = p.fields.filter((f) => !(values[f.key] ?? "").trim() && !f.optional);
     if (missing.length) return setError(`Please fill in: ${missing.map((f) => f.label).join(", ")}`);
-
-    const parts = p.fields
-      .filter((f) => (values[f.key] ?? "").trim())
-      .map((f) => {
-        const v = values[f.key].trim();
-        if (f.secret) return `${f.label} ${mask(v)}`;
-        return f.key === "accNo" ? `Acct ${mask(v)}` : v;
-      });
-
-    update((s) => ({
-      paymentConnections: {
-        ...s.paymentConnections,
-        [p.id]: {
-          connected: true,
-          test: p.hasMode ? testMode : false,
-          summary: parts.length ? parts.join(" · ") : (existing?.summary ?? ""),
-          label: p.id === "custom" ? (values.label ?? "").trim() || existing?.label || "" : undefined,
+    const fields = Object.fromEntries(p.fields.filter((f) => (values[f.key] ?? "").trim()).map((f) => [f.key, values[f.key].trim()]));
+    save.mutate(
+      { provider: p.id, body: { fields, testMode: p.hasMode ? testMode : false, label: p.id === "custom" ? (values.label ?? "").trim() : "" } },
+      {
+        onSuccess: () => {
+          // The first method you connect becomes the default.
+          if (isFirst) saveSettings.mutate({ defaultPaymentProvider: p.id });
+          setValues({});
+          onClose();
         },
+        onError: (err) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err)),
       },
-      // The first method you connect becomes the default.
-      paymentDefault: Object.values(s.paymentConnections).some((c) => c.connected) ? s.paymentDefault : p.id,
-    }));
-    onClose();
+    );
   };
 
   return (
-    <form className="connect-form" onSubmit={save} autoComplete="off">
+    <form className="connect-form" onSubmit={submit} autoComplete="off">
       <div className="cluster cluster--nowrap">
         <Avatar text={p.initials} tone={p.tone} square />
         <div className="stack stack--2 u-grow">
@@ -143,6 +157,7 @@ function ConnectForm({ provider: p, onClose }: { provider: PaymentProvider; onCl
         </IconButton>
       </div>
       <p className="text-muted">{p.help}</p>
+      {wasConnected && <p className="text-small">Currently saved: {existing.summary}. Enter every key again to update it.</p>}
       <div className="form-grid">
         {p.fields.map((f) => (
           <Field key={f.key} label={f.label} htmlFor={`pay-${p.id}-${f.key}`}>
@@ -152,7 +167,7 @@ function ConnectForm({ provider: p, onClose }: { provider: PaymentProvider; onCl
               mono
               autoComplete="off"
               spellCheck={false}
-              placeholder={wasConnected ? "Leave blank to keep current" : f.placeholder}
+              placeholder={f.placeholder}
               value={values[f.key] ?? ""}
               onChange={(e) => {
                 setValues({ ...values, [f.key]: e.target.value });
@@ -177,8 +192,8 @@ function ConnectForm({ provider: p, onClose }: { provider: PaymentProvider; onCl
         </span>
         <span className="u-spacer" />
         <Button onClick={onClose}>Cancel</Button>
-        <Button type="submit" variant="primary">
-          {wasConnected ? "Update connection" : `Connect ${p.name}`}
+        <Button type="submit" variant="primary" disabled={save.isPending}>
+          {save.isPending ? "Saving…" : wasConnected ? "Update connection" : `Connect ${p.name}`}
         </Button>
       </div>
     </form>

@@ -15,9 +15,9 @@ function isEmpty(q: SurveyQuestion, a: Answer | undefined): boolean {
 
 /** Clickable preview of the survey as visitors will see it. */
 export function SurveyPreview({ survey }: { survey: Survey }) {
-  const [answers, setAnswers] = useState<Record<number, Answer>>({});
+  const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [step, setStep] = useState(0);
-  const [missing, setMissing] = useState<number[]>([]);
+  const [missing, setMissing] = useState<string[]>([]);
   const [done, setDone] = useState(false);
 
   const questions = survey.questions;
@@ -26,7 +26,7 @@ export function SurveyPreview({ survey }: { survey: Survey }) {
   const visible = paged ? questions.slice(current, current + 1) : questions;
   const last = !paged || current === questions.length - 1;
 
-  const setAnswer = (id: number, a: Answer) => {
+  const setAnswer = (id: string, a: Answer) => {
     setAnswers((x) => ({ ...x, [id]: a }));
     setMissing((m) => m.filter((k) => k !== id));
   };

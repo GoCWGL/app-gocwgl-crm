@@ -1,10 +1,11 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
 import { useEffect, type ComponentType } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button, Toast } from "@/components/ui";
 import { PORTAL_PAGES, type PortalTab } from "@/data/portal";
+import { RequireClient } from "@/utils/auth/guards";
+import { useOverview, usePortalHealth } from "@/utils/hooks/usePortal";
 import { EmbedCodeDialog } from "./components/EmbedCodeDialog";
 import { FunnelRequestDrawer } from "./components/FunnelRequestDrawer";
 import { PortalSidebar } from "./components/PortalSidebar";
@@ -36,20 +37,19 @@ const SECTIONS: Record<PortalTab, ComponentType> = {
 /** Client portal: one page with a sidebar, switching sections in place. */
 export function PortalApp() {
   return (
-    <PortalProvider>
-      <PortalLayout />
-    </PortalProvider>
+    <RequireClient>
+      <PortalProvider>
+        <PortalLayout />
+      </PortalProvider>
+    </RequireClient>
   );
 }
 
 function PortalLayout() {
-  const { state, update, openSupport } = usePortal();
-  const params = useSearchParams();
-
-  // When an admin uses "View as client", the portal is loaded with ?as=Name&biz=Business.
-  const viewingAs = params.get("as");
-  const business = params.get("biz") || viewingAs || "Rahman Wellness";
-  const subtitle = viewingAs ? `Client portal · ${viewingAs}` : "Client portal";
+  const { state, update, openSupport, readOnly } = usePortal();
+  // The API decides whose portal this is (the client's own, or X-Client-Id in "View as client").
+  const business = useOverview(30).data?.business || "Your business";
+  const subtitle = readOnly ? "Client portal · view only" : "Client portal";
 
   // Start each section at the top of the page.
   useEffect(() => {
@@ -58,7 +58,7 @@ function PortalLayout() {
 
   const page = PORTAL_PAGES[state.tab];
   const Section = SECTIONS[state.tab];
-  const health = getHealth(state);
+  const health = getHealth(usePortalHealth().data);
 
   return (
     <AppShell
@@ -77,9 +77,11 @@ function PortalLayout() {
         subtitle={page.subtitle}
         dotTone={health.ok ? "green" : "amber"}
         actions={
-          <Button variant="primary" size="lg" onClick={() => openSupport()}>
-            + New request
-          </Button>
+          !readOnly && (
+            <Button variant="primary" size="lg" onClick={() => openSupport()}>
+              + New request
+            </Button>
+          )
         }
       />
       <Toast message={state.toast} onClose={() => update({ toast: "" })} />

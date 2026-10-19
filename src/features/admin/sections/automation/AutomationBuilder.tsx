@@ -15,9 +15,12 @@ import {
   type ConditionType,
   type TriggerType,
 } from "@/data/admin";
-import { moveItem, newId } from "@/lib/utils";
-import { firstOption, newStep, optionsFor, stepMeta, type OptionContext } from "../../lib/automation";
+import { moveItem } from "@/lib/utils";
+import { errorMessage, fieldErrors } from "@/utils/errors";
+import { useCreateAutomation, useUpdateAutomation } from "@/utils/hooks/useMarketing";
+import { draftToAutomation, firstOption, newStep, optionsFor, stepMeta, type OptionContext } from "../../lib/automation";
 import { useAdmin } from "../../state/AdminContext";
+import { AutomationRuns } from "./AutomationRuns";
 
 type BuilderProps = {
   draft: Automation;
@@ -34,7 +37,9 @@ type BuilderProps = {
 type MenuAt = string;
 
 export function AutomationBuilder({ draft, ctx, onChange, onClose }: BuilderProps) {
-  const { update } = useAdmin();
+  const { notify } = useAdmin();
+  const create = useCreateAutomation();
+  const update = useUpdateAutomation();
   const [menuAt, setMenuAt] = useState<MenuAt>("");
   const [error, setError] = useState("");
 
@@ -66,11 +71,16 @@ export function AutomationBuilder({ draft, ctx, onChange, onClose }: BuilderProp
   const save = () => {
     if (!draft.name.trim()) return setError("Give your automation a name before saving.");
     if (!draft.steps.length) return setError("Add at least one step with the + button.");
-    const saved = { ...draft, name: draft.name.trim() };
-    update((s) => ({
-      automations: draft.id ? s.automations.map((a) => (a.id === draft.id ? saved : a)) : [...s.automations, { ...saved, id: newId() }],
-    }));
-    onClose();
+    const body = draftToAutomation(draft);
+    const opts = {
+      onSuccess: () => {
+        notify(`${body.name} was saved.`);
+        onClose();
+      },
+      onError: (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err)),
+    };
+    if (draft.id) update.mutate({ id: draft.id, body }, opts);
+    else create.mutate(body, opts);
   };
 
   const trigger = TRIGGER_TYPES[draft.trigger.type];
@@ -101,8 +111,8 @@ export function AutomationBuilder({ draft, ctx, onChange, onClose }: BuilderProp
         </label>
         <input id="au-name" className="title-input" value={draft.name} onChange={(e) => set({ name: e.target.value })} placeholder="Name your automation" />
         <Toggle showLabel label={draft.on ? "Active" : "Paused"} checked={draft.on} onChange={(on) => set({ on })} />
-        <Button variant="primary" onClick={save}>
-          Save automation
+        <Button variant="primary" onClick={save} disabled={create.isPending || update.isPending}>
+          {create.isPending || update.isPending ? "Saving…" : "Save automation"}
         </Button>
       </div>
 
@@ -187,6 +197,7 @@ export function AutomationBuilder({ draft, ctx, onChange, onClose }: BuilderProp
           )}
         </div>
       </div>
+      {draft.id && <AutomationRuns automationId={draft.id} />}
     </div>
   );
 }

@@ -1,16 +1,8 @@
 import type { Tone } from "@/lib/tones";
 
 // -----------------------------------------------------------------------------
-// Demo sign-in data. Replace with real authentication before going live.
+// Sign-in page copy and options (pure UI constants). Accounts and roles come from the API.
 // -----------------------------------------------------------------------------
-
-/** These emails are treated as GoCWGL admins and get the 2-step code screen. */
-export const ADMIN_EMAILS = ["christian@gocwgl.com", "wendy@gocwgl.com"];
-
-/** Demo password for admin accounts. Any other email signs in as a client. */
-export const DEMO_ADMIN_PASSWORD = "GoCWGL2026!";
-export const DEMO_ADMIN_EMAIL = "christian@gocwgl.com";
-export const DEMO_CLIENT_EMAIL = "aisha@rahmanwellness.com";
 
 export type BrandRow = { icon: string; label: string; value: string; tone: Tone };
 
@@ -27,7 +19,7 @@ export const BRAND_PANEL = {
   ] satisfies BrandRow[],
 };
 
-export const SSO_PROVIDERS: Array<{ label: string; mark: string; tone: Tone }> = [
-  { label: "Google", mark: "G", tone: "green" },
-  { label: "Microsoft", mark: "M", tone: "cyan" },
+export const SSO_PROVIDERS: Array<{ id: "google" | "microsoft"; label: string; mark: string; tone: Tone }> = [
+  { id: "google", label: "Google", mark: "G", tone: "green" },
+  { id: "microsoft", label: "Microsoft", mark: "M", tone: "cyan" },
 ];

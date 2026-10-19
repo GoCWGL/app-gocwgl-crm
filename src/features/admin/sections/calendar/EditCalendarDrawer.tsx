@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, type CSSProperties, type FormEvent } from "react";
-import { Button, Field, Input, Modal, Select, Textarea, Toggle } from "@/components/ui";
-import { CALENDAR_SWATCHES, DURATIONS, LOCATIONS, type BookingCalendar, type DayAvailability } from "@/data/admin";
-import { toMinutes } from "@/lib/dates";
+import { Button, Field, FormError, Input, Modal, Select, Textarea, Toggle } from "@/components/ui";
+import { CALENDAR_SWATCHES, DURATIONS, LOCATIONS, type DayAvailability } from "@/data/admin";
 import { toneClass } from "@/lib/tones";
 import { cn, slugify } from "@/lib/utils";
+import type { CalendarOut, CalendarUpdate, DayHours } from "@/utils/api/models";
+import { errorMessage, fieldErrors } from "@/utils/errors";
+import { useDeleteCalendar, useUpdateCalendar } from "@/utils/hooks/useCalendar";
+import { useSettings } from "@/utils/hooks/useSettings";
 import { useAdmin } from "../../state/AdminContext";
-import { HoursEditor } from "./Availability";
+import { HoursEditor, hoursError, toHours } from "./Availability";
 
 type Draft = {
   name: string;
@@ -22,18 +25,21 @@ type Draft = {
 };
 
 /** Edit a booking calendar: name, booking link, bio, duration, location, color and hours. */
-export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: BookingCalendar; onClose: () => void }) {
-  const { state, update } = useAdmin();
+export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: CalendarOut; onClose: () => void }) {
+  const { notify } = useAdmin();
+  const shared = toHours(useSettings().data?.availability);
+  const updateCal = useUpdateCalendar();
+  const deleteCal = useDeleteCalendar();
   const [draft, setDraft] = useState<Draft>({
     name: cal.name,
     slug: cal.slug,
-    desc: cal.desc,
-    dur: String(cal.dur),
-    loc: cal.loc,
+    desc: cal.description,
+    dur: String(cal.durationMin),
+    loc: cal.location,
     color: cal.color,
-    on: cal.on,
+    on: cal.isActive,
     customHours: !!cal.hours,
-    hours: (cal.hours ?? state.availability).map((a) => ({ ...a })),
+    hours: cal.hours ? toHours(cal.hours) : shared,
   });
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -43,8 +49,8 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Booki
     setError("");
   };
 
-  const durations = DURATIONS.includes(draft.dur) ? DURATIONS : [...DURATIONS, draft.dur];
-  const locations = LOCATIONS.includes(draft.loc) ? LOCATIONS : [...LOCATIONS, draft.loc];
+  const durations: string[] = DURATIONS.map(String);
+  const locations: string[] = [...LOCATIONS];
 
   const save = (e: FormEvent) => {
     e.preventDefault();
@@ -52,39 +58,41 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Booki
     const slug = slugify(draft.slug);
     if (!name) return setError("Give the calendar a name.");
     if (!slug) return setError("Add a URL ending, e.g. discovery-call.");
-    const dup = state.calendars.find((c) => c.id !== cal.id && c.slug === slug);
-    if (dup) return setError(`“${dup.name}” already uses /${slug}.`);
     if (draft.customHours) {
-      const bad = draft.hours.find((h) => h.on && toMinutes(h.end) <= toMinutes(h.start));
-      if (bad) return setError(`${bad.d}: the end time must be after the start time.`);
+      const bad = hoursError(draft.hours);
+      if (bad) return setError(bad);
       if (!draft.hours.some((h) => h.on)) return setError("Turn on at least one day, or use your weekly hours.");
     }
-
-    update((s) => ({
-      calendars: s.calendars.map((c) =>
-        c.id !== cal.id
-          ? c
-          : {
-              ...c,
-              name,
-              slug,
-              desc: draft.desc.trim(),
-              dur: Number(draft.dur),
-              loc: draft.loc,
-              color: draft.color,
-              on: draft.on,
-              hours: draft.customHours ? draft.hours : undefined,
-            },
-      ),
-      toast: `${name} was updated.`,
-    }));
-    onClose();
+    const body: CalendarUpdate = {
+      name,
+      slug,
+      description: draft.desc.trim(),
+      durationMin: Number(draft.dur) as CalendarUpdate["durationMin"],
+      location: draft.loc as CalendarUpdate["location"],
+      color: draft.color,
+      isActive: draft.on,
+      hours: draft.customHours ? (draft.hours as DayHours[]) : null,
+    };
+    // A taken booking link comes back as 409 duplicate_slug with a message for the user.
+    updateCal.mutate(
+      { id: cal.id, body },
+      {
+        onSuccess: () => {
+          notify(`${name} was updated.`);
+          onClose();
+        },
+        onError: (err) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err)),
+      },
+    );
   };
 
-  const remove = () => {
-    update((s) => ({ calendars: s.calendars.filter((c) => c.id !== cal.id), toast: `${cal.name} was deleted.` }));
-    onClose();
-  };
+  const remove = () =>
+    deleteCal.mutate(cal.id, {
+      onSuccess: () => {
+        notify(`${cal.name} was deleted.`);
+        onClose();
+      },
+    });
 
   return (
     <Modal
@@ -101,7 +109,7 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Booki
       footer={
         <>
           {confirmDelete ? (
-            <Button variant="danger-solid" onClick={remove}>
+            <Button variant="danger-solid" onClick={remove} disabled={deleteCal.isPending}>
               Yes, delete calendar
             </Button>
           ) : (
@@ -111,8 +119,8 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Booki
           )}
           <span className="u-spacer" />
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary">
-            Save changes
+          <Button type="submit" variant="primary" disabled={updateCal.isPending}>
+            {updateCal.isPending ? "Saving…" : "Save changes"}
           </Button>
         </>
       }
@@ -188,7 +196,7 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Booki
               role="radio"
               aria-checked={draft.customHours === custom}
               className={cn("status-choice", toneClass("cyan"))}
-              onClick={() => set({ customHours: custom, hours: custom ? draft.hours : state.availability.map((a) => ({ ...a })) })}
+              onClick={() => set({ customHours: custom, hours: custom ? draft.hours : shared })}
             >
               {label}
             </button>
@@ -211,6 +219,7 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Booki
           {error}
         </p>
       )}
+      <FormError error={deleteCal.error} />
     </Modal>
   );
 }

@@ -5,28 +5,47 @@ import {
   TRIGGER_TYPES,
   type ActionStep,
   type ActionType,
+  type Automation,
   type AutomationStep,
-  type BookingCalendar,
-  type EmailTemplate,
   type OptionSource,
-  type Tag,
+  type TriggerType,
 } from "@/data/admin";
 import type { SelectOption } from "@/components/ui";
-import { newId } from "@/lib/utils";
+import type { AutomationIn, AutomationOut, CalendarOut, TagOut, TemplateOut } from "@/utils/api/models";
+import { newFieldId } from "@/utils/mappers/forms";
 import type { StageInfo } from "./contacts";
 
 /** Everything the builder needs to list choices for a step or trigger. */
 export type OptionContext = {
-  templates: EmailTemplate[];
-  tags: Tag[];
+  templates: TemplateOut[];
+  tags: TagOut[];
   stages: Record<string, StageInfo>;
-  calendars: BookingCalendar[];
+  calendars: CalendarOut[];
 };
+
+/** API automation → builder draft. */
+export function automationToDraft(a: AutomationOut): Automation {
+  const trigger = (a.trigger ?? {}) as { type?: TriggerType; value?: string };
+  return {
+    id: a.id,
+    name: a.name,
+    on: a.isActive,
+    runs: a.runs,
+    trigger: { type: trigger.type ?? "form", value: trigger.value ?? "" },
+    steps: (a.steps ?? []) as unknown as AutomationStep[],
+  };
+}
+
+/** Builder draft → POST/PATCH body. */
+export function draftToAutomation(d: Automation): AutomationIn {
+  return { name: d.name.trim(), isActive: d.on, trigger: { type: d.trigger.type, value: d.trigger.value }, steps: d.steps };
+}
 
 export function optionsFor(source: OptionSource | undefined, ctx: OptionContext): SelectOption[] {
   switch (source) {
     case "template":
-      return ctx.templates.map((t) => ({ value: t.name, label: t.name }));
+      // Email steps store the template id.
+      return ctx.templates.map((t) => ({ value: t.id, label: t.name }));
     case "tag":
       return ctx.tags.map((t) => ({ value: t.id, label: t.name }));
     case "stage":
@@ -55,7 +74,7 @@ export function stepMeta(type: AutomationStep["type"]) {
 }
 
 export function newStep(type: ActionType | "condition", ctx: OptionContext): AutomationStep {
-  if (type === "condition") return { id: newId(), type: "condition", cond: "tag", value: firstOption("tag", ctx), yes: [], no: [] };
+  if (type === "condition") return { id: newFieldId(), type: "condition", cond: "tag", value: firstOption("tag", ctx), yes: [], no: [] };
   const field = ACTION_TYPES[type].field;
-  return { id: newId(), type, value: field === "text" ? "" : firstOption(field, ctx) } satisfies ActionStep;
+  return { id: newFieldId(), type, value: field === "text" ? "" : firstOption(field, ctx) } satisfies ActionStep;
 }

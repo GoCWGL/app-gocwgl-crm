@@ -1,14 +1,35 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Avatar, Button, Field, FolderGlyph, Icon, Input, Modal, Select, Textarea } from "@/components/ui";
-import { CLIENT_LINKS, LEAD_SOURCES, PLAN_PRICE, SOCIAL_LABELS, type Contact, type CoreStage, type LeadSource } from "@/data/admin";
-import { TODAY_SHORT } from "@/lib/dates";
+import { Avatar, Button, Field, FolderGlyph, FormError, Icon, Input, Loading, Modal, Select, Textarea } from "@/components/ui";
+import { CORE_STAGES, LEAD_SOURCES, SOCIAL_LABELS, SOURCE_LABELS, type CoreStage, type LeadSource } from "@/data/admin";
 import { avatarTone, toneClass } from "@/lib/tones";
-import { cn, copyToClipboard, formatMoney, isEmail } from "@/lib/utils";
+import { cn, copyToClipboard, isEmail } from "@/lib/utils";
+import * as contactsApi from "@/utils/api/contacts";
+import * as billingApi from "@/utils/api/billing";
+import type { ContactOut, PipelineDetail } from "@/utils/api/models";
+import { canWriteCrm } from "@/utils/auth/session";
+import { formatShort } from "@/utils/format/dates";
+import { formatPerInterval } from "@/utils/format/money";
+import { errorMessage, fieldErrors, hasCode } from "@/utils/errors";
+import { useSubscriptions } from "@/utils/hooks/useBilling";
+import {
+  useArchiveContact,
+  useContact,
+  useCustomPipelineDetails,
+  useDeleteContact,
+  usePipelines,
+  useSendPortalInvite,
+  useTags,
+  useUnarchiveContact,
+} from "@/utils/hooks/useContacts";
+import { useClientLinks, useMediaFolders } from "@/utils/hooks/useDelivery";
+import { useApiMutation } from "@/utils/hooks/mutation";
+import { qk } from "@/utils/hooks/keys";
+import { useMe } from "@/utils/hooks/useUsers";
 import { ClientEmbedsCard } from "../components/ClientEmbedsCard";
 import { TagPicker } from "../components/TagPicker";
-import { CONTACT_STATUS, contactStatus, subscriptionOf, type ContactStatus } from "../lib/contacts";
+import { CONTACT_STATUS, contactName, contactStatus, getSalesStages, salesPipeline, subscriptionOf, type ContactStatus } from "../lib/contacts";
 import { useAdmin } from "../state/AdminContext";
 
 type Draft = {
@@ -16,52 +37,106 @@ type Draft = {
   last: string;
   email: string;
   phone: string;
-  source: LeadSource;
+  company: string;
+  source: string;
   stage: CoreStage;
   paused: boolean;
   tags: string[];
   notes: string;
-  /** Stage in each custom pipeline ("" = not in it). */
+  /** Stage id in each custom pipeline ("" = not in it). */
   other: Record<string, string>;
 };
 
 export function EditContactDrawer() {
   const { state, update } = useAdmin();
-  const contact = state.contacts.find((c) => c.id === state.editContactId);
-  if (!contact) return null;
-  return <EditContactForm key={contact.id} contact={contact} onClose={() => update({ editContactId: 0 })} />;
+  const id = state.editContactId;
+  const contact = useContact(id);
+  const pipelines = useCustomPipelineDetails();
+  if (!id) return null;
+  const onClose = () => update({ editContactId: "" });
+  if (!contact.data || pipelines.isPending) {
+    return (
+      <Modal open variant="drawer" width={520} onClose={onClose} titleId="ec-title" kicker="EDIT PROFILE" title="Contact">
+        {contact.isError ? <FormError error={contact.error} /> : <Loading text="Loading contact…" />}
+      </Modal>
+    );
+  }
+  return <EditContactForm key={contact.data.id} contact={contact.data} pipelines={pipelines.data} onClose={onClose} />;
 }
 
-function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: () => void }) {
-  const { state, update, openMediaFolder } = useAdmin();
-  const sub = subscriptionOf(state.subscriptions, c.id);
-  const [first, ...rest] = c.name.split(" ");
+function stageInPipeline(p: PipelineDetail, contactId: string): string {
+  return p.items?.find((i) => i.contactId === contactId)?.stageId ?? "";
+}
+
+function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactOut; pipelines: PipelineDetail[]; onClose: () => void }) {
+  const { update, openMediaFolder } = useAdmin();
+  const canWrite = canWriteCrm(useMe().data);
+  const subs = useSubscriptions(c.id).data;
+  const sub = subscriptionOf(subs, c.id);
+  const allPipelines = usePipelines().data;
+  const sales = salesPipeline(allPipelines);
+  const stages = getSalesStages(allPipelines);
+  const tags = useTags().data ?? [];
+  const links = useClientLinks(c.id).data;
+  const folder = useMediaFolders().data?.find((f) => f.contactId === c.id);
+  const archive = useArchiveContact();
+  const unarchive = useUnarchiveContact();
+  const remove = useDeleteContact();
+  const invite = useSendPortalInvite();
 
   const [draft, setDraft] = useState<Draft>({
-    first: first ?? "",
-    last: rest.join(" "),
+    first: c.firstName,
+    last: c.lastName,
     email: c.email,
-    phone: c.phone === "—" ? "" : c.phone,
+    phone: c.phone,
+    company: c.company,
     source: c.source,
-    stage: c.stage,
+    stage: (CORE_STAGES.includes(c.stage as CoreStage) ? c.stage : "lead") as CoreStage,
     paused: sub?.status === "Paused",
-    tags: (state.contactTags[c.id] ?? []).slice(),
-    notes: state.clientNotes[c.id] ?? "",
-    other: Object.fromEntries(state.pipelines.slice(1).map((p) => [p.id, p.items?.[c.id] ?? ""])),
+    tags: c.tags.map((t) => t.id),
+    notes: c.notes,
+    other: Object.fromEntries(pipelines.map((p) => [p.id, stageInPipeline(p, c.id)])),
   });
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [linksCopied, setLinksCopied] = useState(false);
 
+  // One save = the contact itself, then the subscription pause and custom pipeline moves that changed.
+  const save = useApiMutation(
+    async (d: Draft) => {
+      await contactsApi.updateContact(c.id, {
+        firstName: d.first.trim(),
+        lastName: d.last.trim(),
+        email: d.email.trim(),
+        phone: d.phone.trim(),
+        company: d.company.trim(),
+        source: d.source as LeadSource,
+        stage: d.stage,
+        notes: d.notes.trim(),
+        tagIds: d.tags,
+      });
+      const wasPaused = sub?.status === "Paused";
+      if (sub && !sub.managedByPolar && d.paused !== wasPaused) {
+        await billingApi.updateSubscription(sub.id, { status: d.paused ? "Paused" : "Active" });
+      }
+      for (const p of pipelines) {
+        const before = stageInPipeline(p, c.id);
+        const after = d.other[p.id] ?? "";
+        if (after && after !== before) await contactsApi.movePipelineItem(p.id, { contactId: c.id, stageId: after });
+        else if (!after && before) await contactsApi.removePipelineItem(p.id, c.id);
+      }
+    },
+    { invalidate: [qk.contacts, qk.salesBoard, qk.pipelines, qk.tags, qk.subscriptions, ["dashboard"]] },
+  );
+
   const set = (patch: Partial<Draft>) => {
     setDraft((d) => ({ ...d, ...patch }));
     setError("");
+    if (save.isError) save.reset();
   };
 
-  const name = `${draft.first} ${draft.last}`.trim() || c.name;
-  const status = contactStatus(draft.stage, draft.paused);
-  const salesPipeline = state.pipelines[0];
-  const files = state.media[c.id] ?? [];
+  const name = `${draft.first} ${draft.last}`.trim() || contactName(c);
+  const status = contactStatus(draft.stage, draft.paused, !!c.archivedAt);
 
   const pickStatus = (next: ContactStatus) => {
     if (next === "active") set({ stage: "paid", paused: false });
@@ -69,8 +144,9 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
     else set({ stage: draft.stage === "paid" || draft.stage === "lost" ? "lead" : draft.stage, paused: false });
   };
 
-  const statusHint =
-    status === "active"
+  const statusHint = c.archivedAt
+    ? "Archived: hidden from lists and the sales board. Their history is kept."
+    : status === "active"
       ? "Active clients are paying. They count toward MRR and appear under Contacts › Clients."
       : status === "inactive"
         ? draft.paused
@@ -78,68 +154,35 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
           : "Marked as lost. They appear under Contacts › Inactive."
         : "Leads are people who have not paid yet. Move them through the pipeline as they progress.";
 
-  const save = (e: FormEvent) => {
+  const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!draft.first.trim() || !isEmail(draft.email)) return setError("Add a first name and a valid email.");
-    const dup = state.contacts.find((x) => x.id !== c.id && x.email.toLowerCase() === draft.email.trim().toLowerCase());
-    if (dup) return setError(`${dup.name} already uses this email.`);
-
-    const fullName = `${draft.first.trim()} ${draft.last.trim()}`.trim();
-    update((s) => ({
-      contacts: s.contacts.map((x) =>
-        x.id !== c.id
-          ? x
-          : {
-              ...x,
-              name: fullName,
-              email: draft.email.trim(),
-              phone: draft.phone.trim() || "—",
-              source: draft.source,
-              stage: draft.stage,
-              paidOn: draft.stage === "paid" ? x.paidOn || TODAY_SHORT : x.paidOn,
-              day: draft.stage === "lead" ? "" : x.day,
-              time: draft.stage === "lead" ? "" : x.time,
-            },
-      ),
-      subscriptions: s.subscriptions.map((x) =>
-        x.cid !== c.id ? x : { ...x, status: draft.paused ? "Paused" : x.status === "Paused" ? "Active" : x.status },
-      ),
-      contactTags: { ...s.contactTags, [c.id]: draft.tags.slice() },
-      clientNotes: { ...s.clientNotes, [c.id]: draft.notes.trim() },
-      pipelines: s.pipelines.map((p, i) => {
-        if (!i) return p;
-        const stage = draft.other[p.id];
-        const items = { ...(p.items ?? {}) };
-        let order = (p.order ?? []).slice();
-        if (stage) {
-          items[c.id] = stage;
-          if (!order.includes(c.id)) order.push(c.id);
-        } else {
-          delete items[c.id];
-          order = order.filter((x) => x !== c.id);
-        }
-        return { ...p, items, order };
-      }),
-      editContactId: 0,
-      toast: `${fullName}’s profile was updated.`,
-    }));
+    save.mutate(draft, {
+      onSuccess: () => update({ editContactId: "", toast: `${name}’s profile was updated.` }),
+      onError: (err) => {
+        const f = fieldErrors(err);
+        setError(Object.values(f)[0] || errorMessage(err));
+      },
+    });
   };
 
-  const remove = () =>
-    update((s) => ({
-      contacts: s.contacts.filter((x) => x.id !== c.id),
-      subscriptions: s.subscriptions.filter((x) => x.cid !== c.id),
-      editContactId: 0,
-      toast: `${c.name} was deleted.`,
-    }));
+  // Contacts with invoices or subscriptions can't be deleted (409 contact_has_billing): archive them instead.
+  const hasBilling = hasCode(remove.error, "contact_has_billing");
+  const doDelete = () =>
+    remove.mutate(c.id, { onSuccess: () => update({ editContactId: "", toast: `${contactName(c)} was deleted.` }) });
+  const doArchive = () =>
+    archive.mutate(c.id, { onSuccess: () => update({ editContactId: "", toast: `${contactName(c)} was archived.` }) });
 
-  const links = CLIENT_LINKS[c.id];
-  const linkItems = links
-    ? [
-        ...links.socials.map(([key, url]) => ({ ...SOCIAL_LABELS[key], url })),
-        ...links.custom.map(([label, url]) => ({ label, short: "↗", tone: "brand" as const, url })),
-      ]
-    : [];
+  const socials = Object.entries(links?.socials ?? {}).filter(([, url]) => !!url);
+  const custom = (links?.custom ?? []) as Array<{ label: string; url: string }>;
+  const linkItems = [
+    ...socials.map(([key, url]) => ({ ...(SOCIAL_LABELS[key] ?? { label: key, short: key.slice(0, 2), tone: "brand" as const }), url })),
+    ...custom.map((l) => ({ label: l.label, short: "↗", tone: "brand" as const, url: l.url })),
+  ];
+
+  const sourceOptions = LEAD_SOURCES.some((s) => s.value === draft.source)
+    ? LEAD_SOURCES
+    : [{ value: draft.source, label: SOURCE_LABELS[draft.source as LeadSource] ?? draft.source }, ...LEAD_SOURCES];
 
   return (
     <Modal
@@ -147,31 +190,62 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
       variant="drawer"
       width={520}
       onClose={onClose}
-      onSubmit={save}
+      onSubmit={submit}
       titleId="ec-title"
-      kicker="EDIT PROFILE"
+      kicker={c.archivedAt ? "ARCHIVED CONTACT" : "EDIT PROFILE"}
       title={name}
-      subtitle={`Signed up ${c.signed} · ${c.source}`}
+      subtitle={`Signed up ${formatShort(c.createdAt)} · ${SOURCE_LABELS[c.source as LeadSource] ?? c.source}`}
       media={<Avatar name={name} tone={avatarTone(c.id)} size="lg" ring />}
       footer={
-        <>
-          {confirmDelete ? (
-            <Button variant="danger-solid" onClick={remove}>
-              Yes, delete contact
+        canWrite ? (
+          <>
+            {hasBilling ? (
+              <Button variant="danger-solid" onClick={doArchive} disabled={archive.isPending}>
+                Archive instead
+              </Button>
+            ) : confirmDelete ? (
+              <Button variant="danger-solid" onClick={doDelete} disabled={remove.isPending}>
+                Yes, delete contact
+              </Button>
+            ) : (
+              <Button variant="danger" onClick={() => setConfirmDelete(true)}>
+                Delete
+              </Button>
+            )}
+            {c.archivedAt ? (
+              <Button
+                onClick={() => unarchive.mutate(c.id, { onSuccess: () => update({ toast: `${contactName(c)} is back in your lists.` }) })}
+                disabled={unarchive.isPending}
+              >
+                Unarchive
+              </Button>
+            ) : (
+              <Button onClick={doArchive} disabled={archive.isPending}>
+                Archive
+              </Button>
+            )}
+            <span className="u-spacer" />
+            <Button onClick={onClose}>Cancel</Button>
+            <Button type="submit" variant="primary" disabled={save.isPending}>
+              {save.isPending ? "Saving…" : "Save changes"}
             </Button>
-          ) : (
-            <Button variant="danger" onClick={() => setConfirmDelete(true)}>
-              Delete
-            </Button>
-          )}
-          <span className="u-spacer" />
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="primary">
-            Save changes
-          </Button>
-        </>
+          </>
+        ) : (
+          <>
+            <span className="text-small">Your role can view but not change contacts.</span>
+            <span className="u-spacer" />
+            <Button onClick={onClose}>Close</Button>
+          </>
+        )
       }
     >
+      {hasBilling && (
+        <div className="notice notice--warning" role="status">
+          {errorMessage(remove.error)} Archive hides them from lists and keeps their history.
+        </div>
+      )}
+      <FormError error={archive.error ?? unarchive.error ?? (hasBilling ? null : remove.error)} />
+
       <div className="inset inset--brand status-box">
         <span className="kicker kicker--brand">STATUS &amp; STAGE</span>
         <Field label="Status">
@@ -191,19 +265,19 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
             ))}
           </div>
         </Field>
-        <Field label={`${salesPipeline.name} stage`} htmlFor="ec-stage">
+        <Field label={`${sales?.name ?? "Sales pipeline"} stage`} htmlFor="ec-stage">
           <Select
             id="ec-stage"
             className="u-strong"
             value={draft.stage}
-            options={salesPipeline.stages.map((s) => ({ value: s.id, label: s.name }))}
+            options={CORE_STAGES.map((st) => ({ value: st, label: stages[st].label }))}
             onChange={(e) => {
               const stage = e.target.value as CoreStage;
               set({ stage, paused: stage === "paid" ? draft.paused : false });
             }}
           />
         </Field>
-        {state.pipelines.slice(1).map((p) => (
+        {pipelines.map((p) => (
           <Field key={p.id} label={`${p.name} stage`} htmlFor={`ec-pl-${p.id}`}>
             <Select
               id={`ec-pl-${p.id}`}
@@ -217,7 +291,7 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
         <span className="text-small">{statusHint}</span>
       </div>
 
-      {links && linkItems.length > 0 && (
+      {linkItems.length > 0 && (
         <div className="inset inset--brand client-links">
           <div className="cluster cluster--nowrap">
             <span className="icon-tile tone-brand" aria-hidden="true">
@@ -226,7 +300,8 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
             <span className="stack stack--2 u-grow">
               <span className="kicker kicker--brand">SOCIAL MEDIA &amp; LINKS · {linkItems.length}</span>
               <span className="text-tiny">
-                Added by the client in their portal · updated {links.updated} — remember to use these on their pages and emails
+                Added by the client in their portal{links?.updatedAt ? ` · updated ${formatShort(links.updatedAt)}` : ""} — remember to
+                use these on their pages and emails
               </span>
             </span>
             <Button
@@ -247,22 +322,12 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
                   {l.short}
                 </span>
                 <span className="client-links__label">{l.label}</span>
-                <a className="client-links__url" href={l.url} target="_blank" rel="noopener">
+                <a className="client-links__url" href={l.url} target="_blank" rel="noopener noreferrer">
                   {l.url.replace(/^https?:\/\//, "")}
                 </a>
               </div>
             ))}
           </div>
-          {links.funnels.length > 0 && (
-            <div className="client-links__funnels">
-              <span className="kicker kicker--sm kicker--brand">INCLUDE ON FUNNELS</span>
-              {links.funnels.map(([funnel, labels]) => (
-                <span className="text-small" key={funnel}>
-                  <strong>{funnel}</strong> → {labels.join(", ")}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       )}
 
@@ -274,7 +339,7 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
         </span>
         <span className="stack stack--2 u-grow">
           <span className="text-strong">View as client</span>
-          <span className="text-small">See their client portal exactly as they do</span>
+          <span className="text-small">See their client portal exactly as they do (read-only)</span>
         </span>
         <span className="link-card__arrow" aria-hidden="true">
           →
@@ -285,13 +350,32 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
         <span className="stack stack--2 u-grow">
           <span className="text-strong">Media folder</span>
           <span className="text-small">
-            {files.length ? `${files.length} files · logos, photos and documents` : "Empty — files the client uploads appear here"}
+            {folder?.fileCount ? `${folder.fileCount} files · logos, photos and documents` : "Empty — files the client uploads appear here"}
           </span>
         </span>
         <span className="link-card__arrow" aria-hidden="true">
           →
         </span>
       </button>
+      {canWrite && (
+        <button
+          type="button"
+          className="link-card"
+          disabled={invite.isPending}
+          onClick={() => invite.mutate(c.id, { onSuccess: () => update({ toast: `Portal invite sent to ${c.email}.` }) })}
+        >
+          <span className="link-card__icon" aria-hidden="true">
+            <Icon name="mail" size={17} />
+          </span>
+          <span className="stack stack--2 u-grow">
+            <span className="text-strong">{invite.isPending ? "Sending portal invite…" : "Invite to client portal"}</span>
+            <span className="text-small">{invite.isError ? errorMessage(invite.error) : "Email them a link to set up their portal login"}</span>
+          </span>
+          <span className="link-card__arrow" aria-hidden="true">
+            →
+          </span>
+        </button>
+      )}
 
       <div className="stack stack--10">
         <span className="kicker">PROFILE</span>
@@ -302,6 +386,7 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
               ["last", "Last name", "text"],
               ["email", "Email", "email"],
               ["phone", "Phone", "tel"],
+              ["company", "Business name", "text"],
             ] as const
           ).map(([key, label, type]) => (
             <Field key={key} label={label} htmlFor={`ec-${key}`}>
@@ -316,14 +401,14 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
             </Field>
           ))}
           <Field label="Lead source" htmlFor="ec-source">
-            <Select id="ec-source" value={draft.source} options={LEAD_SOURCES} onChange={(e) => set({ source: e.target.value as LeadSource })} />
+            <Select id="ec-source" value={draft.source} options={sourceOptions} onChange={(e) => set({ source: e.target.value })} />
           </Field>
         </div>
       </div>
 
       <div className="stack stack--8">
         <span className="kicker">TAGS</span>
-        <TagPicker tags={state.tags} selected={draft.tags} onChange={(tags) => set({ tags })} />
+        <TagPicker tags={tags} selected={draft.tags} onChange={(ids) => set({ tags: ids })} />
       </div>
 
       <Field label={<span className="kicker">NOTES</span>} htmlFor="ec-notes">
@@ -332,8 +417,9 @@ function EditContactForm({ contact: c, onClose }: { contact: Contact; onClose: (
 
       {sub && (
         <div className="inset inset--soft text-body">
-          Subscription: {sub.plan} · {formatMoney(sub.amount || PLAN_PRICE)} per {sub.interval.toLowerCase()} ·{" "}
-          {draft.paused ? "will be paused" : sub.status === "Paused" ? "will be resumed" : sub.status}
+          Subscription: {sub.plan} · {formatPerInterval(sub.amountCents, sub.interval, sub.currency)} ·{" "}
+          {draft.paused && sub.status !== "Paused" ? "will be paused" : !draft.paused && sub.status === "Paused" ? "will be resumed" : sub.status}
+          {sub.managedByPolar && " · managed by Polar (change it from Payments)"}
         </div>
       )}
       {error && (

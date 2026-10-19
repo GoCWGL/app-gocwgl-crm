@@ -6,10 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "gen:api": "openapi-typescript http://127.0.0.1:8000/api/openapi.json --default-non-nullable false -o src/utils/api/types.ts && node scripts/gen-models.mjs"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.104.4",
     "next": "16.4.1",
+    "qrcode.react": "^4.2.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "sass": "^1.105.1"
@@ -20,6 +23,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.1",
+    "openapi-typescript": "^7.13.0",
     "typescript": "^5"
   },
   "packageManager": "pnpm@11.17.0"

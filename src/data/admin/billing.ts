@@ -1,63 +1,22 @@
 import type { Tone } from "@/lib/tones";
 
 // =============================================================================
-// Payments: subscriptions, invoices and payment providers.
+// Payment statuses, colors and provider forms (pure UI constants). Records come from the API.
 // =============================================================================
 
-export type SubscriptionStatus = "Active" | "Awaiting payment" | "Paused" | "Trial";
+export type SubscriptionStatus = "Active" | "Awaiting payment" | "Paused" | "Trial" | "Canceled";
+export type InvoiceStatus = "Paid" | "Sent" | "Overdue" | "Draft" | "Void" | "Refunded";
+export type BillingInterval = "Week" | "Month" | "Quarter" | "Year";
 
-export type Subscription = {
-  id: number;
-  /** Contact id. */
-  cid: number;
-  plan: string;
-  /** 0 means "use the default plan price". */
-  amount: number;
-  interval: "Week" | "Month" | "Quarter" | "Year";
-  next: string;
-  status: SubscriptionStatus;
-};
-
-export type InvoiceStatus = "Paid" | "Sent" | "Overdue" | "Draft" | "Void";
-
-export type InvoiceItem = { desc: string; qty: number | string; price: number | string };
-
-export type Invoice = {
-  no: string;
-  cid: number;
-  items: InvoiceItem[];
-  due: string;
-  status: InvoiceStatus;
-  note: string;
-};
-
-export const INITIAL_SUBSCRIPTIONS: Subscription[] = [
-  { id: 1, cid: 8, plan: "[Your Plan]", amount: 0, interval: "Month", next: "Nov 8", status: "Active" },
-  { id: 2, cid: 9, plan: "[Your Plan]", amount: 0, interval: "Month", next: "Nov 6", status: "Active" },
-  { id: 3, cid: 11, plan: "[Your Plan]", amount: 0, interval: "Month", next: "Oct 30", status: "Active" },
-];
-
-export const INITIAL_INVOICES: Invoice[] = [
-  { no: "INV-1003", cid: 9, items: [{ desc: "System setup fee", qty: 1, price: 497 }], due: "Oct 20", status: "Sent", note: "" },
-  {
-    no: "INV-1002",
-    cid: 8,
-    items: [
-      { desc: "Landing page design", qty: 1, price: 350 },
-      { desc: "Extra automation", qty: 2, price: 75 },
-    ],
-    due: "Oct 1",
-    status: "Paid",
-    note: "",
-  },
-  { no: "INV-1001", cid: 11, items: [{ desc: "Onboarding session", qty: 1, price: 150 }], due: "Oct 5", status: "Overdue", note: "" },
-];
+export const SUBSCRIPTION_STATUSES: SubscriptionStatus[] = ["Active", "Awaiting payment", "Paused", "Trial", "Canceled"];
+export const BILLING_INTERVALS: BillingInterval[] = ["Week", "Month", "Quarter", "Year"];
 
 export const SUBSCRIPTION_TONES: Record<SubscriptionStatus, Tone> = {
   Active: "green",
   "Awaiting payment": "amber",
   Paused: "neutral",
   Trial: "purple",
+  Canceled: "slate",
 };
 
 export const INVOICE_TONES: Record<InvoiceStatus, Tone> = {
@@ -66,6 +25,7 @@ export const INVOICE_TONES: Record<InvoiceStatus, Tone> = {
   Overdue: "red",
   Draft: "neutral",
   Void: "slate",
+  Refunded: "purple",
 };
 
 // ---------------------------------------------------------------- Providers
@@ -140,9 +100,3 @@ export const PAYMENT_PROVIDERS: PaymentProvider[] = [
     ],
   },
 ];
-
-export type PaymentConnection = { connected: boolean; test: boolean; summary: string; label?: string };
-
-export const INITIAL_PAYMENT_CONNECTIONS: Record<string, PaymentConnection> = {
-  stripe: { connected: true, test: true, summary: "pk_test_••••4Q2c · sk_••••9fA1" },
-};

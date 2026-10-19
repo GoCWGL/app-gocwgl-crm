@@ -37,6 +37,7 @@
 @use "components/timeline";
 @use "components/file-card";
 @use "components/embed-thread";
+@use "components/load-state";
 
 // Pages
 @use "pages/auth";

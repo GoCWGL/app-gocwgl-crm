@@ -1,25 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, Button, Icon, IconButton, IconTile, StatGrid } from "@/components/ui";
+import { Badge, Button, FormError, Icon, IconButton, IconTile, LoadState, StatGrid } from "@/components/ui";
 import { QUESTION_TYPES, type Survey } from "@/data/admin";
-import { cn, newId } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { canWriteCrm } from "@/utils/auth/session";
+import { useCreateSurvey, useDeleteSurvey, useSurveys, useUpdateSurvey } from "@/utils/hooks/useForms";
+import { useMe } from "@/utils/hooks/useUsers";
+import { draftToSurvey, surveyToDraft } from "@/utils/mappers/surveys";
 import { blankSurvey } from "../../lib/surveys";
-import { useAdmin } from "../../state/AdminContext";
 import { SurveyBuilder } from "./SurveyBuilder";
 import { SurveyEmbedModal } from "./SurveyEmbedModal";
 
 export function SurveysSection() {
-  const { state, update } = useAdmin();
-  const { surveys } = state;
+  const canWrite = canWriteCrm(useMe().data);
+  const query = useSurveys();
+  const create = useCreateSurvey();
+  const update = useUpdateSurvey();
+  const remove = useDeleteSurvey();
+  const surveys = (query.data ?? []).map(surveyToDraft);
   const [draft, setDraft] = useState<Survey | null>(null);
-  const [embedId, setEmbedId] = useState(0);
-  const [confirmId, setConfirmId] = useState(0);
+  const [embedId, setEmbedId] = useState("");
+  const [confirmId, setConfirmId] = useState("");
   const embedSurvey = surveys.find((s) => s.id === embedId);
 
   if (draft) return <SurveyBuilder draft={draft} onChange={setDraft} onClose={() => setDraft(null)} />;
 
-  const setSurveys = (fn: (list: Survey[]) => Survey[]) => update((s) => ({ surveys: fn(s.surveys) }));
   const live = surveys.filter((s) => s.on);
   const answered = surveys.filter((s) => s.responses);
   const avgCompletion = answered.length ? Math.round(answered.reduce((n, s) => n + s.completion, 0) / answered.length) : 0;
@@ -41,12 +47,16 @@ export function SurveysSection() {
           <h2 className="section-title">Your surveys</h2>
           <span className="text-muted">Create as many as you need, write your own questions, and embed them anywhere</span>
         </div>
-        <Button variant="primary" size="lg" onClick={() => setDraft(blankSurvey())}>
-          <Icon name="plus" strokeWidth={2.4} />
-          Create survey
-        </Button>
+        {canWrite && (
+          <Button variant="primary" size="lg" onClick={() => setDraft(blankSurvey())}>
+            <Icon name="plus" strokeWidth={2.4} />
+            Create survey
+          </Button>
+        )}
       </div>
+      <FormError error={create.error ?? update.error ?? remove.error} />
 
+      <LoadState query={query}>
       {surveys.length === 0 ? (
         <div className="empty-state">No surveys yet. Create your first one to start collecting answers.</div>
       ) : (
@@ -81,53 +91,54 @@ export function SurveysSection() {
                 ))}
               </ol>
               <div className="cluster cluster--8">
-                <Button size="sm" onClick={() => setDraft(structuredClone(s))}>
-                  <Icon name="edit" size={13} />
-                  Edit
-                </Button>
+                {canWrite && (
+                  <Button size="sm" onClick={() => setDraft(structuredClone(s))}>
+                    <Icon name="edit" size={13} />
+                    Edit
+                  </Button>
+                )}
                 <Button variant="outline" size="sm" onClick={() => setEmbedId(s.id)}>
                   <Icon name="code" size={13} />
                   Get embed code
                 </Button>
-                <Button size="sm" onClick={() => setSurveys((list) => list.map((x) => (x.id === s.id ? { ...x, on: !x.on } : x)))}>
-                  {s.on ? "Unpublish" : "Publish"}
-                </Button>
-                <span className="u-spacer" />
-                <IconButton
-                  label={`Duplicate ${s.name}`}
-                  size="lg"
-                  onClick={() =>
-                    setSurveys((list) => [
-                      ...list,
-                      { ...structuredClone(s), id: newId(), name: `${s.name} (copy)`, responses: 0, completion: 0, on: false },
-                    ])
-                  }
-                >
-                  <Icon name="copy" size={14} />
-                </IconButton>
-                {confirmId === s.id ? (
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => {
-                      setSurveys((list) => list.filter((x) => x.id !== s.id));
-                      setConfirmId(0);
-                    }}
-                  >
-                    Delete for good
-                  </Button>
-                ) : (
-                  <IconButton label={`Delete ${s.name}`} size="lg" danger onClick={() => setConfirmId(s.id)}>
-                    <Icon name="trash" size={14} />
-                  </IconButton>
+                {canWrite && (
+                  <>
+                    <Button size="sm" disabled={update.isPending} onClick={() => update.mutate({ id: s.id, body: { isActive: !s.on } })}>
+                      {s.on ? "Unpublish" : "Publish"}
+                    </Button>
+                    <span className="u-spacer" />
+                    <IconButton
+                      label={`Duplicate ${s.name}`}
+                      size="lg"
+                      disabled={create.isPending}
+                      onClick={() => create.mutate(draftToSurvey({ ...s, name: `${s.name} (copy)`, on: false }))}
+                    >
+                      <Icon name="copy" size={14} />
+                    </IconButton>
+                    {confirmId === s.id ? (
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        disabled={remove.isPending}
+                        onClick={() => remove.mutate(s.id, { onSuccess: () => setConfirmId("") })}
+                      >
+                        Delete for good
+                      </Button>
+                    ) : (
+                      <IconButton label={`Delete ${s.name}`} size="lg" danger onClick={() => setConfirmId(s.id)}>
+                        <Icon name="trash" size={14} />
+                      </IconButton>
+                    )}
+                  </>
                 )}
               </div>
             </article>
           ))}
         </div>
       )}
+      </LoadState>
 
-      {embedSurvey && <SurveyEmbedModal survey={embedSurvey} onClose={() => setEmbedId(0)} />}
+      {embedSurvey && <SurveyEmbedModal survey={embedSurvey} onClose={() => setEmbedId("")} />}
     </div>
   );
 }

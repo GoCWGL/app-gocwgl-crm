@@ -6,7 +6,9 @@ import {
   Badge,
   Button,
   Field,
+  FormError,
   Icon,
+  LoadState,
   ProgressBar,
   SegmentedControl,
   Select,
@@ -16,50 +18,50 @@ import {
   TimelineItem,
   type PhaseState,
 } from "@/components/ui";
-import {
-  PROJECT_STATUSES,
-  PROJECT_STATUS_TONES,
-  PROJECT_TEMPLATE,
-  type Contact,
-  type Project,
-  type ProjectStatus,
-} from "@/data/admin";
-import { TODAY_SHORT } from "@/lib/dates";
+import { PROJECT_STATUSES, PROJECT_STATUS_TONES, type ProjectStatus } from "@/data/admin";
 import { avatarTone } from "@/lib/tones";
 import { cn, copyToClipboard, slugify } from "@/lib/utils";
+import type { ContactOut, PhaseIn, ProjectOut } from "@/utils/api/models";
+import { canWriteCrm } from "@/utils/auth/session";
+import { formatShort } from "@/utils/format/dates";
+import { useAllContacts } from "@/utils/hooks/useContacts";
+import {
+  usePostProjectUpdate,
+  useProject,
+  useProjects,
+  useSetProjectPhases,
+  useStartProject,
+  useToggleProjectTask,
+  useUpdateProject,
+} from "@/utils/hooks/useDelivery";
+import { useMe } from "@/utils/hooks/useUsers";
+import { contactName } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
 
-function progressOf(p: Project) {
-  const all = p.phases.reduce((n, ph) => n + ph.tasks.length, 0);
-  const done = p.phases.reduce((n, ph) => n + ph.tasks.filter((t) => t.done).length, 0);
-  return { all, done, percent: all ? Math.round((done / all) * 100) : 0 };
-}
+const statusTone = (status: string) => PROJECT_STATUS_TONES[status as ProjectStatus] ?? "neutral";
 
 /** Build projects for paid clients, with an editable phase/task timeline. */
 export function ProgressSection() {
   const { state, update } = useAdmin();
-  const { projects } = state;
-  const paidClients = state.contacts.filter((c) => c.stage === "paid");
-  const selected = paidClients.find((c) => c.id === state.projectId) ?? paidClients[0];
-  const project = selected ? projects[selected.id] : undefined;
+  const canWrite = canWriteCrm(useMe().data);
+  const projects = useProjects();
+  const paid = useAllContacts({ stage: "paid" });
+  const start = useStartProject();
+  const summaries = projects.data ?? [];
+  const summaryOf = (id: string) => summaries.find((p) => p.contactId === id);
+  // Paid clients, plus anyone who already has a build (e.g. a client who later stopped paying).
+  const paidClients = paid.data ?? [];
+  const extra = summaries.filter((p) => !paidClients.some((c) => c.id === p.contactId));
+  const rows: Array<{ id: string; name: string; email: string; contact?: ContactOut }> = [
+    ...paidClients.map((c) => ({ id: c.id, name: contactName(c), email: c.email, contact: c })),
+    ...extra.map((p) => ({ id: p.contactId, name: p.clientName || p.company, email: "" })),
+  ];
+  const selected = rows.find((c) => c.id === state.projectId) ?? rows[0];
+  const selectedSummary = selected ? summaryOf(selected.id) : undefined;
+  const project = useProject(selectedSummary ? selected.id : "");
 
-  const active = paidClients.filter((c) => projects[c.id] && projects[c.id].status !== "Launched");
-  const avg = active.length ? Math.round(active.reduce((n, c) => n + progressOf(projects[c.id]).percent, 0) / active.length) : 0;
-
-  const startBuild = (c: Contact) =>
-    update((s) => ({
-      projects: {
-        ...s.projects,
-        [c.id]: {
-          package: "Revenue Engine System",
-          start: TODAY_SHORT,
-          due: "Nov 11",
-          status: "On track",
-          phases: PROJECT_TEMPLATE.map((ph) => ({ name: ph.name, tasks: ph.tasks.map((t) => ({ t, done: false })) })),
-          updates: [],
-        },
-      },
-    }));
+  const active = summaries.filter((p) => p.status !== "Launched");
+  const avg = active.length ? Math.round(active.reduce((n, p) => n + p.progress, 0) / active.length) : 0;
 
   return (
     <div className="page-stack">
@@ -67,89 +69,126 @@ export function ProgressSection() {
         items={[
           { label: "Builds in progress", value: active.length, tone: "cyan" },
           { label: "Average progress", value: `${avg}%`, tone: "purple" },
-          { label: "At risk", value: paidClients.filter((c) => projects[c.id]?.status === "At risk").length, tone: "orange" },
-          { label: "Launched", value: paidClients.filter((c) => projects[c.id]?.status === "Launched").length, tone: "green" },
+          { label: "At risk", value: summaries.filter((p) => p.status === "At risk").length, tone: "orange" },
+          { label: "Launched", value: summaries.filter((p) => p.status === "Launched").length, tone: "green" },
         ]}
       />
 
-      <div className="split">
-        <section className="split__side stack stack--10 project-list" aria-label="Client projects">
-          <span className="kicker">PAID CLIENTS · {paidClients.length}</span>
-          {paidClients.map((c) => {
-            const p = projects[c.id];
-            const status = p ? p.status : "Not started";
-            const pct = p ? progressOf(p).percent : 0;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                className="card-button"
-                aria-pressed={selected?.id === c.id}
-                onClick={() => update({ projectId: c.id })}
-              >
-                <div className="cluster cluster--nowrap">
-                  <Avatar name={c.name} tone={avatarTone(c.id)} size="md" />
-                  <div className="stack stack--2 u-grow">
-                    <span className="text-strong">{c.name}</span>
-                    <span className="text-small">{p ? `${p.package} · due ${p.due}` : "No build started"}</span>
+      <LoadState query={paid} isEmpty={!rows.length} empty="No paid clients yet. Builds start once a client pays.">
+        <div className="split">
+          <section className="split__side stack stack--10 project-list" aria-label="Client projects">
+            <span className="kicker">PAID CLIENTS · {paidClients.length}</span>
+            {rows.map((c) => {
+              const p = summaryOf(c.id);
+              const status = p ? p.status : "Not started";
+              const pct = p ? p.progress : 0;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  className="card-button"
+                  aria-pressed={selected?.id === c.id}
+                  onClick={() => update({ projectId: c.id })}
+                >
+                  <div className="cluster cluster--nowrap">
+                    <Avatar name={c.name} tone={avatarTone(c.id)} size="md" />
+                    <div className="stack stack--2 u-grow">
+                      <span className="text-strong">{c.name}</span>
+                      <span className="text-small">{p ? `${p.package}${p.dueDate ? ` · due ${formatShort(p.dueDate)}` : ""}` : "No build started"}</span>
+                    </div>
+                    <span className={cn("project-list__pct", pct === 100 && "u-green")}>{pct}%</span>
                   </div>
-                  <span className={cn("project-list__pct", pct === 100 && "u-green")}>{pct}%</span>
-                </div>
-                <ProgressBar value={pct} variant="sweep" size="md" />
-                <Badge tone={PROJECT_STATUS_TONES[status]}>{status}</Badge>
-              </button>
-            );
-          })}
-        </section>
-
-        {selected && !project && (
-          <section className="split__main empty-state project-empty">
-            <h2 className="modal__title">No build started for {selected.name} yet</h2>
-            <p className="text-muted">Start a project from the standard system template. You can rename phases and add tasks after.</p>
-            <Button variant="primary" size="lg" onClick={() => startBuild(selected)}>
-              Start system build
-            </Button>
+                  <ProgressBar value={pct} variant="sweep" size="md" />
+                  <Badge tone={statusTone(status)}>{status}</Badge>
+                </button>
+              );
+            })}
           </section>
-        )}
 
-        {selected && project && <ProjectDetails key={selected.id} client={selected} project={project} />}
-      </div>
+          {selected && !selectedSummary && (
+            <section className="split__main empty-state project-empty">
+              <h2 className="modal__title">No build started for {selected.name} yet</h2>
+              <p className="text-muted">Start a project from the standard system template. You can rename phases and add tasks after.</p>
+              <FormError error={start.error} />
+              {canWrite && (
+                <Button
+                  variant="primary"
+                  size="lg"
+                  disabled={start.isPending}
+                  onClick={() => start.mutate({ contactId: selected.id, body: { package: "Revenue Engine System" } })}
+                >
+                  {start.isPending ? "Starting…" : "Start system build"}
+                </Button>
+              )}
+            </section>
+          )}
+
+          {selected && selectedSummary && (
+            <LoadState query={project} loadingText="Loading build…">
+              {project.data && (
+                <ProjectDetails key={selected.id} clientId={selected.id} name={selected.name} email={selected.email} project={project.data} canWrite={canWrite} />
+              )}
+            </LoadState>
+          )}
+        </div>
+      </LoadState>
     </div>
   );
 }
 
-function ProjectDetails({ client, project }: { client: Contact; project: Project }) {
-  const { update, emailContact } = useAdmin();
-  const [view, setView] = useState<"admin" | "client">("admin");
+/** The phases as the API's PUT body (keeps ids so tasks keep their history). */
+const phasesIn = (phases: ProjectOut["phases"]): PhaseIn[] =>
+  phases.map((ph) => ({ id: ph.id, name: ph.name, tasks: ph.tasks.map((t) => ({ id: t.id, text: t.text, done: t.done })) }));
+
+function ProjectDetails({
+  clientId,
+  name,
+  email,
+  project,
+  canWrite,
+}: {
+  clientId: string;
+  name: string;
+  email: string;
+  project: ProjectOut;
+  canWrite: boolean;
+}) {
+  const { emailContact } = useAdmin();
+  const updateProject = useUpdateProject();
+  const setPhasesMutation = useSetProjectPhases();
+  const toggleTask = useToggleProjectTask();
+  const postUpdateMutation = usePostProjectUpdate();
+  const [view, setView] = useState<"admin" | "client">(canWrite ? "admin" : "client");
   const [open, setOpen] = useState<Record<number, boolean>>({ 1: true });
   const [drafts, setDrafts] = useState<Record<number, string>>({});
   const [updateText, setUpdateText] = useState("");
   const [copied, setCopied] = useState(false);
 
-  const isAdmin = view === "admin";
-  const progress = progressOf(project);
+  const isAdmin = view === "admin" && canWrite;
+  const all = project.phases.reduce((n, ph) => n + ph.tasks.length, 0);
+  const done = project.phases.reduce((n, ph) => n + ph.tasks.filter((t) => t.done).length, 0);
+  // The percentage is the API's own `progress`.
+  const progress = { all, done, percent: project.progress };
   const firstOpen = project.phases.findIndex((ph) => ph.tasks.some((t) => !t.done));
   const phasesDone = project.phases.filter((ph) => ph.tasks.length && ph.tasks.every((t) => t.done)).length;
-  const link = `progress.[yourdomain].com/${slugify(client.name)}`;
+  const link = `progress.[yourdomain].com/${slugify(name)}`;
+  const error = updateProject.error ?? setPhasesMutation.error ?? toggleTask.error ?? postUpdateMutation.error;
 
-  const save = (patch: Partial<Project>) =>
-    update((s) => ({ projects: { ...s.projects, [client.id]: { ...s.projects[client.id], ...patch } } }));
-  const setPhases = (phases: Project["phases"]) => save({ phases });
+  const setPhases = (phases: PhaseIn[]) => setPhasesMutation.mutate({ contactId: clientId, phases });
 
   const addTask = (e: FormEvent, i: number) => {
     e.preventDefault();
     const text = (drafts[i] ?? "").trim();
     if (!text) return;
     setDrafts({ ...drafts, [i]: "" });
-    setPhases(project.phases.map((ph, k) => (k === i ? { ...ph, tasks: [...ph.tasks, { t: text, done: false }] } : ph)));
+    setPhases(phasesIn(project.phases).map((ph, k) => (k === i ? { ...ph, tasks: [...ph.tasks, { text, done: false }] } : ph)));
   };
 
   const postUpdate = (e: FormEvent) => {
     e.preventDefault();
     const text = updateText.trim();
     if (!text) return;
-    setUpdateText("");
-    save({ updates: [{ date: TODAY_SHORT, text }, ...project.updates] });
+    postUpdateMutation.mutate({ contactId: clientId, text }, { onSuccess: () => setUpdateText("") });
   };
 
   return (
@@ -157,12 +196,13 @@ function ProjectDetails({ client, project }: { client: Contact; project: Project
       <div className="build-hero">
         <div className="cluster cluster--between">
           <div className="stack stack--4">
-            <span className="kicker">{isAdmin ? `SYSTEM BUILD · ${client.email}` : "YOUR SYSTEM BUILD"}</span>
-            <h2 className="project-title">{client.name}</h2>
+            <span className="kicker">{isAdmin ? `SYSTEM BUILD${email ? ` · ${email}` : ""}` : "YOUR SYSTEM BUILD"}</span>
+            <h2 className="project-title">{name}</h2>
             <span className="text-muted">
-              {project.package} · Started {project.start} · Target launch {project.due}
+              {project.package} · Started {formatShort(project.startDate)} · Target launch {formatShort(project.dueDate, "not set")}
             </span>
           </div>
+          {canWrite && (
           <SegmentedControl
             variant="soft"
             size="sm"
@@ -174,6 +214,7 @@ function ProjectDetails({ client, project }: { client: Contact; project: Project
               { value: "client", label: "Client view" },
             ]}
           />
+          )}
         </div>
         <div className="build-hero__progress">
           <span className="build-hero__pct">{progress.percent}%</span>
@@ -191,11 +232,12 @@ function ProjectDetails({ client, project }: { client: Contact; project: Project
                 className="u-strong"
                 value={project.status}
                 options={PROJECT_STATUSES}
-                onChange={(e) => save({ status: e.target.value as ProjectStatus })}
+                disabled={updateProject.isPending}
+                onChange={(e) => updateProject.mutate({ contactId: clientId, body: { status: e.target.value as ProjectStatus } })}
               />
             </Field>
           ) : (
-            <Badge tone={PROJECT_STATUS_TONES[project.status]} size="lg">
+            <Badge tone={statusTone(project.status)} size="lg">
               {project.status}
             </Badge>
           )}
@@ -218,7 +260,7 @@ function ProjectDetails({ client, project }: { client: Contact; project: Project
               variant="primary"
               size="sm"
               onClick={() =>
-                emailContact(client.id, {
+                emailContact(clientId, {
                   subject: `Your system build is ${progress.percent}% complete`,
                   body: `Hi {first_name},\n\nQuick update on your system build: we are ${progress.percent}% done (${progress.done} of ${progress.all} tasks).\n\nSee the full progress here: https://${link}\n\nTalk soon,\n[Your Name]`,
                 })
@@ -229,6 +271,7 @@ function ProjectDetails({ client, project }: { client: Contact; project: Project
           </div>
         )}
       </div>
+      <FormError error={error} />
 
       <div className="stack stack--10">
         <span className="kicker">BUILD PHASES</span>
@@ -241,7 +284,7 @@ function ProjectDetails({ client, project }: { client: Contact; project: Project
             const label = isDone ? "Done" : isCurrent || done > 0 ? "In progress" : "Up next";
             const expanded = !!open[i];
             return (
-              <TimelineItem key={i} state={state} mark={isDone ? "✓" : String(i + 1)} last={i === project.phases.length - 1}>
+              <TimelineItem key={ph.id} state={state} mark={isDone ? "✓" : String(i + 1)} last={i === project.phases.length - 1}>
                 <button type="button" className="phase-toggle" aria-expanded={expanded} onClick={() => setOpen({ ...open, [i]: !expanded })}>
                   <span className="stack stack--2 u-grow">
                     <span className="text-strong">{ph.name}</span>
@@ -261,33 +304,29 @@ function ProjectDetails({ client, project }: { client: Contact; project: Project
                 {expanded && (
                   <div className="stack stack--4">
                     {ph.tasks.map((task, k) => (
-                      <div key={k} className={cn("task-row", task.done && "task-row--done")}>
+                      <div key={task.id} className={cn("task-row", task.done && "task-row--done")}>
                         {isAdmin ? (
                           <input
                             type="checkbox"
-                            aria-label={task.t}
+                            aria-label={task.text}
                             checked={task.done}
-                            onChange={() =>
-                              setPhases(
-                                project.phases.map((x, xi) =>
-                                  xi === i ? { ...x, tasks: x.tasks.map((y, yk) => (yk === k ? { ...y, done: !y.done } : y)) } : x,
-                                ),
-                              )
-                            }
+                            disabled={toggleTask.isPending}
+                            onChange={() => toggleTask.mutate({ contactId: clientId, taskId: task.id, done: !task.done })}
                           />
                         ) : (
                           <span className={cn("task-row__check", task.done && "task-row__check--done")} aria-hidden="true">
                             {task.done ? "✓" : ""}
                           </span>
                         )}
-                        <span className="task-row__text">{task.t}</span>
+                        <span className="task-row__text">{task.text}</span>
                         {isAdmin && (
                           <button
                             type="button"
                             className="task-row__delete"
-                            aria-label={`Delete task ${task.t}`}
+                            aria-label={`Delete task ${task.text}`}
+                            disabled={setPhasesMutation.isPending}
                             onClick={() =>
-                              setPhases(project.phases.map((x, xi) => (xi === i ? { ...x, tasks: x.tasks.filter((_, yk) => yk !== k) } : x)))
+                              setPhases(phasesIn(project.phases).map((x, xi) => (xi === i ? { ...x, tasks: x.tasks.filter((_, yk) => yk !== k) } : x)))
                             }
                           >
                             ×
@@ -304,7 +343,7 @@ function ProjectDetails({ client, project }: { client: Contact; project: Project
                           value={drafts[i] ?? ""}
                           onChange={(e) => setDrafts({ ...drafts, [i]: e.target.value })}
                         />
-                        <Button type="submit" variant="outline" size="sm">
+                        <Button type="submit" variant="outline" size="sm" disabled={setPhasesMutation.isPending}>
                           Add
                         </Button>
                       </form>
@@ -330,17 +369,21 @@ function ProjectDetails({ client, project }: { client: Contact; project: Project
                 placeholder="e.g. Your landing page is live in preview. Next up: connecting the pipeline."
               />
             </Field>
-            <Button type="submit" variant="primary" className="u-self-end">
-              Post update
+            <Button type="submit" variant="primary" className="u-self-end" disabled={postUpdateMutation.isPending}>
+              {postUpdateMutation.isPending ? "Posting…" : "Post update"}
             </Button>
           </form>
         )}
         <div>
-          {project.updates.map((u, i) => (
-            <div className="update-row" key={i}>
+          {project.updates.length === 0 && <p className="text-muted">No updates posted yet.</p>}
+          {project.updates.map((u) => (
+            <div className="update-row" key={u.id}>
               <span className="update-row__dot" aria-hidden="true" />
               <div className="stack stack--2">
-                <span className="update-row__date">{u.date}</span>
+                <span className="update-row__date">
+                  {formatShort(u.createdAt)}
+                  {u.author && ` · ${u.author}`}
+                </span>
                 <span className="text-body u-ink">{u.text}</span>
               </div>
             </div>

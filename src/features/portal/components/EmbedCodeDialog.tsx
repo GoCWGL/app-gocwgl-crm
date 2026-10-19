@@ -2,37 +2,59 @@
 
 import { useState, type FormEvent } from "react";
 import { EmbedThread } from "@/components/embeds/EmbedThread";
-import { Badge, Button, Field, Icon, IconTile, Input, Modal, SegmentedControl, Textarea } from "@/components/ui";
-import { EMBED_KINDS, type ClientEmbed, type EmbedKind } from "@/data/embeds";
-import { PORTAL_CLIENT_ID, type Funnel } from "@/data/portal";
-import { TODAY_SHORT } from "@/lib/dates";
-import { commentOnEmbed, setClientEmbeds, useClientEmbeds } from "@/lib/embedStore";
-import { copyToClipboard, newId } from "@/lib/utils";
+import { Badge, Button, Field, FormError, Icon, IconTile, Input, Modal, SegmentedControl, Textarea } from "@/components/ui";
+import { EMBED_KINDS, type EmbedKind } from "@/data/embeds";
+import { copyToClipboard } from "@/lib/utils";
+import type { EmbedOut, FunnelOut } from "@/utils/api/models";
+import { errorMessage, fieldErrors } from "@/utils/errors";
+import { formatShort } from "@/utils/format/dates";
+import { useCommentOnEmbed, useCreateEmbed, useDeleteEmbed, useEmbeds, useUpdateEmbed } from "@/utils/hooks/useDelivery";
+import { usePortalFunnels } from "@/utils/hooks/usePortal";
 import { usePortal } from "../state/PortalContext";
 
-type Draft = { id: number; kind: EmbedKind; label: string; code: string };
+type Draft = { id: string; kind: EmbedKind; label: string; code: string };
 
-const kindOf = (k: EmbedKind) => EMBED_KINDS.find((x) => x.kind === k)!;
+const kindOf = (k: string) => EMBED_KINDS.find((x) => x.kind === k) ?? EMBED_KINDS[3];
 
 /** Embed codes look like HTML (<iframe>, <script>, <div>…) or a plain widget link. */
 const looksLikeEmbed = (code: string) => /<[a-z!][\s\S]*>/i.test(code) || /^https?:\/\/\S+$/i.test(code.trim());
 
-export function EmbedCodeDialog() {
-  const { state, update } = usePortal();
-  const funnel = state.funnels.find((f) => f.id === state.embedFunnelId);
-  if (!funnel) return null;
-  return <EmbedCodePanel key={funnel.id} funnel={funnel} onClose={() => update({ embedFunnelId: 0 })} />;
+/**
+ * Embed code is untrusted HTML: it is only ever rendered inside a sandboxed iframe
+ * (scripts and forms run, but it can't reach this page, its cookies or the access token).
+ */
+function SandboxedPreview({ code }: { code: string }) {
+  return (
+    <iframe
+      className="embed-preview"
+      title="Embed code preview"
+      sandbox="allow-scripts allow-forms"
+      srcDoc={/^https?:\/\/\S+$/i.test(code.trim()) ? `<iframe src="${code.trim().replace(/"/g, "&quot;")}" style="width:100%;height:100%;border:0"></iframe>` : code}
+    />
+  );
 }
 
-function EmbedCodePanel({ funnel, onClose }: { funnel: Funnel; onClose: () => void }) {
-  const { state, notify } = usePortal();
-  const clientName = state.profile.name.split(" ")[0] || "You";
-  const embeds = useClientEmbeds(PORTAL_CLIENT_ID).filter((e) => e.funnelId === funnel.id);
-  const blank = (): Draft => ({ id: 0, kind: "form", label: "", code: "" });
-  const [draft, setDraft] = useState<Draft | null>(() => (embeds.length ? null : blank()));
+export function EmbedCodeDialog() {
+  const { state, update } = usePortal();
+  const funnel = usePortalFunnels().data?.find((f) => f.id === state.embedFunnelId);
+  if (!funnel) return null;
+  return <EmbedCodePanel key={funnel.id} funnel={funnel} onClose={() => update({ embedFunnelId: "" })} />;
+}
+
+function EmbedCodePanel({ funnel, onClose }: { funnel: FunnelOut; onClose: () => void }) {
+  const { notify, readOnly } = usePortal();
+  const all = useEmbeds();
+  const embeds = (all.data ?? []).filter((e) => e.funnelId === funnel.id);
+  const create = useCreateEmbed();
+  const update = useUpdateEmbed();
+  const remove = useDeleteEmbed();
+  const comment = useCommentOnEmbed();
+  const blank = (): Draft => ({ id: "", kind: "form", label: "", code: "" });
+  const [draft, setDraft] = useState<Draft | null>(() => (embeds.length || readOnly ? null : blank()));
   const [error, setError] = useState("");
-  const [copiedId, setCopiedId] = useState(0);
-  const [confirmId, setConfirmId] = useState(0);
+  const [copiedId, setCopiedId] = useState("");
+  const [confirmId, setConfirmId] = useState("");
+  const [previewId, setPreviewId] = useState("");
 
   const set = (patch: Partial<Draft>) => {
     setDraft((d) => (d ? { ...d, ...patch } : d));
@@ -48,26 +70,43 @@ function EmbedCodePanel({ funnel, onClose }: { funnel: Funnel; onClose: () => vo
     if (!looksLikeEmbed(code)) {
       return setError("That doesn’t look like embed code. Copy the full snippet from your CRM (it usually starts with <iframe or <script).");
     }
-
-    const fields = { funnelId: funnel.id, funnel: funnel.name, kind: draft.kind, label, code, updated: TODAY_SHORT };
+    const onError = (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err));
     const existing = embeds.find((x) => x.id === draft.id);
-    setClientEmbeds(PORTAL_CLIENT_ID, (list) =>
-      // Edits keep the team's comments and error flag.
-      existing ? list.map((x) => (x.id === existing.id ? { ...x, ...fields } : x)) : [...list, { id: newId(), ...fields } satisfies ClientEmbed],
-    );
-    // Let the team know a flagged code was replaced so they can check it again.
-    if (existing?.issue && code !== existing.code) {
-      commentOnEmbed(PORTAL_CLIENT_ID, draft.id, { from: "client", who: clientName, text: "I updated the code — can you check it again?" });
+    if (existing) {
+      // Edits keep the team's comments; let the team know a flagged code was replaced so they can check it again.
+      update.mutate(
+        { id: existing.id, body: { label, code } },
+        {
+          onSuccess: () => {
+            if (existing.hasIssue && code !== existing.code) comment.mutate({ id: existing.id, text: "I updated the code — can you check it again?" });
+            setDraft(null);
+            notify(`Updated “${label}”.`);
+          },
+          onError,
+        },
+      );
+    } else {
+      create.mutate(
+        { funnelId: funnel.id, kind: draft.kind, label, code },
+        {
+          onSuccess: () => {
+            setDraft(null);
+            notify(`Saved “${label}”. Your GoCWGL team can now see it.`);
+          },
+          onError,
+        },
+      );
     }
-    setDraft(null);
-    notify(draft.id ? `Updated “${label}”.` : `Saved “${label}”. Your GoCWGL team can now see it.`);
   };
 
-  const remove = (x: ClientEmbed) => {
+  const removeEmbed = (x: EmbedOut) => {
     if (confirmId !== x.id) return setConfirmId(x.id);
-    setClientEmbeds(PORTAL_CLIENT_ID, (list) => list.filter((y) => y.id !== x.id));
-    setConfirmId(0);
-    notify(`Removed “${x.label}”.`);
+    remove.mutate(x.id, {
+      onSuccess: () => {
+        setConfirmId("");
+        notify(`Removed “${x.label}”.`);
+      },
+    });
   };
 
   return (
@@ -99,20 +138,21 @@ function EmbedCodePanel({ funnel, onClose }: { funnel: Funnel; onClose: () => vo
       {embeds.length > 0 && (
         <div className="stack stack--8">
           {embeds.map((x) => (
-            <div className="embed-item" data-issue={x.issue || undefined} key={x.id}>
+            <div className="embed-item" data-issue={x.hasIssue || undefined} key={x.id}>
               <div className="embed-item__head">
                 <Badge tone="cyan" mono>
                   {kindOf(x.kind).label.toUpperCase()}
                 </Badge>
                 <span className="text-strong u-grow">{x.label}</span>
-                {x.issue && (
+                {x.hasIssue && (
                   <Badge tone="red" mono dot>
                     NEEDS FIX
                   </Badge>
                 )}
-                <span className="text-tiny">Updated {x.updated}</span>
+                <span className="text-tiny">Updated {formatShort(x.updatedAt)}</span>
               </div>
               <pre className="code-block embed-code embed-code--short">{x.code}</pre>
+              {previewId === x.id && <SandboxedPreview code={x.code} />}
               <div className="cluster cluster--8">
                 <Button
                   variant="outline"
@@ -125,26 +165,34 @@ function EmbedCodePanel({ funnel, onClose }: { funnel: Funnel; onClose: () => vo
                   <Icon name={copiedId === x.id ? "check" : "copy"} size={14} />
                   {copiedId === x.id ? "Copied" : "Copy"}
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    setDraft({ id: x.id, kind: x.kind, label: x.label, code: x.code });
-                    setError("");
-                  }}
-                >
-                  <Icon name="edit" size={14} />
-                  Edit
+                <Button size="sm" aria-pressed={previewId === x.id} onClick={() => setPreviewId(previewId === x.id ? "" : x.id)}>
+                  <Icon name="eye" size={14} />
+                  {previewId === x.id ? "Hide preview" : "Preview"}
                 </Button>
-                <Button variant={confirmId === x.id ? "danger" : "link"} size="sm" onClick={() => remove(x)}>
-                  {confirmId === x.id ? "Click again to remove" : "Remove"}
-                </Button>
+                {!readOnly && (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setDraft({ id: x.id, kind: x.kind as EmbedKind, label: x.label, code: x.code });
+                        setError("");
+                      }}
+                    >
+                      <Icon name="edit" size={14} />
+                      Edit
+                    </Button>
+                    <Button variant={confirmId === x.id ? "danger" : "link"} size="sm" disabled={remove.isPending} onClick={() => removeEmbed(x)}>
+                      {confirmId === x.id ? "Click again to remove" : "Remove"}
+                    </Button>
+                  </>
+                )}
               </div>
               {(x.comments?.length ?? 0) > 0 && (
                 <div className="embed-item__thread">
                   <span className="kicker kicker--sm kicker--muted">
-                    {x.issue ? "YOUR TEAM FOUND A PROBLEM — EDIT THE CODE TO FIX IT" : "COMMENTS FROM YOUR TEAM"}
+                    {x.hasIssue ? "YOUR TEAM FOUND A PROBLEM — EDIT THE CODE TO FIX IT" : "COMMENTS FROM YOUR TEAM"}
                   </span>
-                  <EmbedThread clientId={PORTAL_CLIENT_ID} embed={x} as="client" who={clientName} />
+                  <EmbedThread embed={x} as="client" readOnly={readOnly} onPost={(text) => comment.mutateAsync({ id: x.id, text })} />
                 </div>
               )}
             </div>
@@ -155,6 +203,7 @@ function EmbedCodePanel({ funnel, onClose }: { funnel: Funnel; onClose: () => vo
       {draft ? (
         <div className="inset embed-form">
           <span className="kicker">{draft.id ? "EDIT EMBED CODE" : "ADD AN EMBED CODE"}</span>
+          {!draft.id && (
           <SegmentedControl
             label="What is it?"
             kind="radio"
@@ -164,6 +213,7 @@ function EmbedCodePanel({ funnel, onClose }: { funnel: Funnel; onClose: () => vo
             onChange={(kind) => set({ kind })}
             options={EMBED_KINDS.map((k) => ({ value: k.kind, label: k.label }))}
           />
+          )}
           <Field label="Name" htmlFor="embed-label" required>
             <Input
               id="embed-label"
@@ -194,11 +244,13 @@ function EmbedCodePanel({ funnel, onClose }: { funnel: Funnel; onClose: () => vo
               {error}
             </p>
           )}
+          {draft.code.trim() && looksLikeEmbed(draft.code) && <SandboxedPreview code={draft.code} />}
+          <FormError error={remove.error} />
           <div className="cluster cluster--8">
-            <Button type="submit" variant="primary" size="sm">
+            <Button type="submit" variant="primary" size="sm" disabled={create.isPending || update.isPending}>
               {draft.id ? "Save changes" : "Save embed code"}
             </Button>
-            {(embeds.length > 0 || draft.id > 0) && (
+            {(embeds.length > 0 || !!draft.id) && (
               <Button
                 variant="secondary"
                 size="sm"
@@ -213,9 +265,11 @@ function EmbedCodePanel({ funnel, onClose }: { funnel: Funnel; onClose: () => vo
           </div>
         </div>
       ) : (
-        <Button variant="dashed" onClick={() => setDraft(blank())}>
-          + Add an embed code
-        </Button>
+        !readOnly && (
+          <Button variant="dashed" onClick={() => setDraft(blank())}>
+            + Add an embed code
+          </Button>
+        )
       )}
     </Modal>
   );

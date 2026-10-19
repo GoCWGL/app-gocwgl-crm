@@ -2,9 +2,10 @@
 
 import { useState, type FormEvent } from "react";
 import { Button, Checkbox, Field, Icon, IconTile, Input, Modal, Select, Textarea } from "@/components/ui";
-import { LEAD_SOURCES, type CoreStage, type LeadSource } from "@/data/admin";
-import { TODAY_SHORT } from "@/lib/dates";
-import { isEmail, newId } from "@/lib/utils";
+import { CORE_STAGES, LEAD_SOURCES, type CoreStage, type LeadSource } from "@/data/admin";
+import { isEmail } from "@/lib/utils";
+import { errorMessage, fieldErrors, hasCode } from "@/utils/errors";
+import { useCreateContact, usePipelines, useTags } from "@/utils/hooks/useContacts";
 import { TagPicker } from "../components/TagPicker";
 import { getSalesStages } from "../lib/contacts";
 import { useAdmin } from "../state/AdminContext";
@@ -38,8 +39,10 @@ export function AddClientModal() {
 }
 
 function AddClientForm({ onClose }: { onClose: () => void }) {
-  const { state, update } = useAdmin();
-  const stages = getSalesStages(state.pipelines);
+  const { update } = useAdmin();
+  const stages = getSalesStages(usePipelines().data);
+  const tags = useTags().data ?? [];
+  const create = useCreateContact();
   const [draft, setDraft] = useState<Draft>(BLANK);
   const [sendWelcome, setSendWelcome] = useState(true);
   const [openAfter, setOpenAfter] = useState(true);
@@ -49,14 +52,18 @@ function AddClientForm({ onClose }: { onClose: () => void }) {
   const set = (patch: Partial<Draft>) => {
     setDraft((d) => ({ ...d, ...patch }));
     setError("");
+    if (create.isError) create.reset();
   };
 
-  const duplicate = draft.email.trim()
-    ? state.contacts.find((c) => c.email.toLowerCase() === draft.email.trim().toLowerCase())
-    : undefined;
+  // The API checks for a duplicate email (409 duplicate_email).
+  const duplicate = hasCode(create.error, "duplicate_email");
+  const api = fieldErrors(create.error);
+  const apiKey: Record<string, string> = { first: "firstName", last: "lastName", email: "email", phone: "phone", company: "company" };
 
   const invalid = (key: string) =>
-    tried && ((key === "first" && !draft.first.trim()) || (key === "email" && (!isEmail(draft.email) || !!duplicate)));
+    (tried && ((key === "first" && !draft.first.trim()) || (key === "email" && !isEmail(draft.email)))) ||
+    (key === "email" && duplicate) ||
+    !!api[apiKey[key]];
 
   const add = (another: boolean) => {
     const missing = [!draft.first.trim() && "first name", !isEmail(draft.email) && "a valid email"].filter(Boolean);
@@ -64,45 +71,37 @@ function AddClientForm({ onClose }: { onClose: () => void }) {
       setTried(true);
       return setError(`Please add ${missing.join(" and ")}.`);
     }
-    if (duplicate) {
-      setTried(true);
-      return setError("A client with this email already exists.");
-    }
 
-    const id = Math.max(0, ...state.contacts.map((c) => c.id)) + 1;
     const name = `${draft.first.trim()} ${draft.last.trim()}`.trim();
-    const welcome = state.templates.find((t) => t.kind === "welcome") ?? state.templates[0];
-
-    update((s) => ({
-      contacts: [
-        { id, name, email: draft.email.trim(), phone: draft.phone.trim() || "—", source: draft.source, signed: TODAY_SHORT, stage: draft.stage, day: "", time: "", paidOn: draft.stage === "paid" ? TODAY_SHORT : "" },
-        ...s.contacts,
-      ],
-      pipeOrder: [id, ...s.pipeOrder],
-      contactTags: { ...s.contactTags, [id]: draft.tags.slice() },
-      clientNotes: draft.notes.trim() ? { ...s.clientNotes, [id]: draft.notes.trim() } : s.clientNotes,
-      ...(sendWelcome &&
-        welcome && {
-          sentEmails: [
-            {
-              id: newId(),
-              to: name,
-              cid: id,
-              subject: welcome.subject.split("{first_name}").join(draft.first.trim()),
-              preview: welcome.body.split("{first_name}").join(draft.first.trim()).replace(/\n+/g, " ").slice(0, 90),
-              date: TODAY_SHORT,
-              status: "Sent" as const,
-            },
-            ...s.sentEmails,
-          ],
-        }),
-      toast: `${name} was added${sendWelcome ? " and sent the Welcome email." : "."}`,
-      addClientOpen: another,
-      ...(!another && openAfter && { tab: "clients" as const, contactView: "all" as const }),
-    }));
-
-    setDraft(BLANK);
-    setTried(false);
+    create.mutate(
+      {
+        firstName: draft.first.trim(),
+        lastName: draft.last.trim(),
+        email: draft.email.trim(),
+        phone: draft.phone.trim(),
+        company: draft.company.trim(),
+        source: draft.source,
+        stage: draft.stage,
+        tagIds: draft.tags,
+        notes: draft.notes.trim(),
+        sendWelcome,
+      },
+      {
+        onSuccess: () => {
+          update({
+            toast: `${name} was added${sendWelcome ? " and the Welcome email is on its way." : "."}`,
+            addClientOpen: another,
+            ...(!another && openAfter && { tab: "clients" as const, contactView: "all" as const }),
+          });
+          setDraft(BLANK);
+          setTried(false);
+        },
+        onError: (err) => {
+          const f = fieldErrors(err);
+          setError(Object.keys(f).length ? Object.values(f)[0] : errorMessage(err));
+        },
+      },
+    );
   };
 
   const submit = (e: FormEvent) => {
@@ -126,11 +125,11 @@ function AddClientForm({ onClose }: { onClose: () => void }) {
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="accent" onClick={() => add(true)}>
+          <Button variant="accent" onClick={() => add(true)} disabled={create.isPending}>
             Save &amp; add another
           </Button>
-          <Button type="submit" variant="primary">
-            Add client
+          <Button type="submit" variant="primary" disabled={create.isPending}>
+            {create.isPending ? "Adding…" : "Add client"}
           </Button>
         </>
       }
@@ -153,7 +152,7 @@ function AddClientForm({ onClose }: { onClose: () => void }) {
       </div>
       {duplicate && (
         <div className="notice notice--warning u-strong" role="status">
-          {duplicate.name} already uses this email ({stages[duplicate.stage].label}).
+          {errorMessage(create.error)}
         </div>
       )}
 
@@ -166,13 +165,13 @@ function AddClientForm({ onClose }: { onClose: () => void }) {
           <Select
             id="ac-stage"
             value={draft.stage}
-            options={state.pipelines[0].stages.map((s) => ({ value: s.id, label: s.name }))}
+            options={CORE_STAGES.map((st) => ({ value: st, label: stages[st].label }))}
             onChange={(e) => set({ stage: e.target.value as CoreStage })}
           />
         </Field>
       </div>
       <Field label="Tags">
-        <TagPicker tags={state.tags} selected={draft.tags} onChange={(tags) => set({ tags })} />
+        <TagPicker tags={tags} selected={draft.tags} onChange={(ids) => set({ tags: ids })} />
       </Field>
       <Field label="Notes" htmlFor="ac-notes">
         <Textarea id="ac-notes" rows={3} value={draft.notes} onChange={(e) => set({ notes: e.target.value })} placeholder="Anything worth remembering about this client" />
@@ -183,7 +182,7 @@ function AddClientForm({ onClose }: { onClose: () => void }) {
         <Checkbox brand label="Send the “Welcome” email now" checked={sendWelcome} onChange={() => setSendWelcome(!sendWelcome)} />
         <Checkbox brand label="Open the Clients list after saving" checked={openAfter} onChange={() => setOpenAfter(!openAfter)} />
       </div>
-      {error && (
+      {error && !duplicate && (
         <p className="text-error" role="alert">
           {error}
         </p>
