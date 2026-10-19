@@ -58,7 +58,8 @@ function initialState(params: URLSearchParams | null): AdminState {
     contactView: "all",
     settingsTab: section ?? "profile",
     mfaPrompt: params?.get("enroll") === "mfa",
-    toast: "",
+    // Staff signed in without 2-step land on the dashboard with a reminder.
+    toast: params?.get("enroll") === "mfa" ? "Turn on 2-step verification in Settings › Security to keep your account safe." : "",
     composer: { mode: "one", contact: "", tag: "", stage: "", subject: "", body: "" },
     emailView: "compose",
     addClientOpen: false,

@@ -27,11 +27,15 @@ const OAUTH_NOTICES: Record<string, Notice> = {
   cancelled: { kind: "info", text: "Sign-in was cancelled." },
 };
 
-/** Where a signed-in user belongs. Staff without 2-step are sent to Settings › Security to turn it on. */
+/**
+ * Where a signed-in user goes, straight after sign-in:
+ * team roles (owner = Super Admin, admin, sales, viewer) → the CRM dashboard; clients → their portal.
+ * The API sets `isStaff`; staff without 2-step get a reminder in the CRM (`?enroll=mfa`) instead of a detour.
+ */
 function homeFor(user: User | null | undefined, enrollMfa = false): string {
   if (!user) return "/login";
   if (!user.isStaff) return "/portal";
-  return enrollMfa ? "/admin?tab=settings&section=security&enroll=mfa" : "/admin";
+  return enrollMfa ? "/admin?enroll=mfa" : "/admin";
 }
 
 /**
@@ -87,6 +91,7 @@ export function SignInPage() {
     setDoneAfterSignup(afterSignup);
     setSessionState({ user: s.user, enrollMfa: !!s.mfaEnrollmentRequired });
     go("done");
+    router.replace(homeFor(s.user, !!s.mfaEnrollmentRequired));
   };
 
   // Tidy the address bar, and finish a Google / Microsoft sign-in by trading the new cookie for a session.
@@ -100,9 +105,10 @@ export function SignInPage() {
       if (ok && user) {
         setSessionState({ user, enrollMfa: !!user.isStaff && !user.mfaEnabled });
         go("done");
+        router.replace(homeFor(user, !!user.isStaff && !user.mfaEnabled));
       } else go("login", OAUTH_NOTICES.error);
     });
-  }, [fromLink, link.oauth]);
+  }, [fromLink, link.oauth, router]);
 
   // Already signed in (the session was restored from the cookie): go straight to the right app.
   useEffect(() => {
@@ -259,7 +265,7 @@ function getHeading(mode: AuthMode, ctx: { verifyReason: VerifyReason; doneAfter
         : {
             kicker: "SIGNED IN",
             title: "You are in",
-            sub: ctx.isStaff ? "Team account, continue to the admin dashboard." : "Continue to your client portal.",
+            sub: ctx.isStaff ? "Taking you to the CRM dashboard." : "Taking you to your client portal.",
           };
     default:
       return { kicker: "SECURE ACCESS", title: "Welcome back", sub: "Sign in to your GoCWGL account." };
@@ -271,12 +277,12 @@ function getSignedInSummary(user: User, ctx: { doneAfterSignup: boolean; enrollM
   const steps = ctx.doneAfterSignup
     ? ["Email verified", user.isStaff ? "Team account ready" : "Portal ready"]
     : ["Password checked", user.mfaEnabled ? "Two-step check passed" : user.isStaff ? "Team account" : "Client account"];
-  if (ctx.enrollMfa) steps.push("Next: turn on 2-step verification");
+  steps.push(user.isStaff ? "Opening the CRM…" : "Opening your portal…");
   return {
     who: `${user.fullName || user.email} · ${role}`,
     email: user.email,
     steps,
-    cta: user.isStaff ? (ctx.enrollMfa ? "Set up 2-step verification" : "Go to admin dashboard") : "Go to my portal",
+    cta: user.isStaff ? "Go to the CRM" : "Go to my portal",
   };
 }
 
