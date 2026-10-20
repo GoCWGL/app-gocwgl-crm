@@ -169,7 +169,16 @@ export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormPro
             aria-invalid={tried && !data.agree}
           />
           <span>
-            I agree to the <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.
+            {/* New tab, so a half-filled form is not lost. */}
+            I agree to the{" "}
+            <a href="/terms" target="_blank" rel="noopener">
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" target="_blank" rel="noopener">
+              Privacy Policy
+            </a>
+            .
           </span>
         </label>
         {tried && !data.agree && <span className="field__error">Please accept the terms to continue.</span>}

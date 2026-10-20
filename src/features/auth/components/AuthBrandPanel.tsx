@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import Image from "next/image";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { BRAND_PANEL } from "@/data/auth";
+import { LegalLinks } from "@/features/legal";
 import { toneClass } from "@/lib/tones";
 
 // Split so each word can animate in on its own; the last one gets the "live" treatment.
@@ -49,9 +50,7 @@ export function AuthBrandPanel() {
         </div>
       </div>
 
-      <p className="auth-brand__legal hide-sm">
-        © 2026 GoCWGL · <a href="#">Privacy</a> · <a href="#">Terms</a> · <a href="#">Status</a>
-      </p>
+      <LegalLinks className="auth-brand__legal hide-sm" />
     </section>
   );
 }
