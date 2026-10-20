@@ -1,7 +1,11 @@
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { BRAND_PANEL } from "@/data/auth";
 import { toneClass } from "@/lib/tones";
+
+// Split so each word can animate in on its own; the last one gets the "live" treatment.
+const titleWords = BRAND_PANEL.title.split(" ");
 
 /** Left half of the sign-in page: logo, pitch and a live status card. */
 export function AuthBrandPanel() {
@@ -11,7 +15,18 @@ export function AuthBrandPanel() {
 
       <div className="auth-brand__pitch hide-sm">
         <span className="kicker">{BRAND_PANEL.kicker}</span>
-        <h1 className="auth-brand__title">{BRAND_PANEL.title}</h1>
+        <h1 className="auth-brand__title" aria-label={BRAND_PANEL.title}>
+          {titleWords.map((word, i) => (
+            <span
+              key={i}
+              className={`auth-brand__word${i === titleWords.length - 1 ? " auth-brand__word--live" : ""}`}
+              style={{ "--i": i } as CSSProperties}
+              aria-hidden="true"
+            >
+              {word}
+            </span>
+          ))}
+        </h1>
         <p className="auth-brand__body">{BRAND_PANEL.body}</p>
       </div>
 

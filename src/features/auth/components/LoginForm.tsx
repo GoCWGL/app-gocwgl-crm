@@ -26,7 +26,7 @@ type LoginFormProps = {
 
 export function LoginForm({ email, onEmailChange, onSignedIn, onMfaRequired, onEmailNotVerified, onForgot, onSignup }: LoginFormProps) {
   const [password, setPassword] = useState("");
-  const [remember, setRemember] = useState(true);
+  const [remember, setRemember] = useState(false);
   const [tried, setTried] = useState(false);
   const [ssoError, setSsoError] = useState("");
   const login = useLogin();
