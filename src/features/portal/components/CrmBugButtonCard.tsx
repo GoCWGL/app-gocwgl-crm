@@ -4,13 +4,20 @@ import { useState, type FormEvent } from "react";
 import { IntakeKeyTable, IntakeSetup, NewIntakeKey } from "@/components/intake/IntakeKeys";
 import { Button, Field, FormError, Icon, Input, LoadState } from "@/components/ui";
 import type { IntakeKeyCreated } from "@/utils/api/models";
+import { isStaffAdmin, useSession } from "@/utils/auth/session";
 import { fieldErrors } from "@/utils/errors";
 import { useCreatePortalIntakeKey, usePortalIntakeKeys, useRevokePortalIntakeKey } from "@/utils/hooks/useSupport";
 import { usePortal } from "../state/PortalContext";
 
-/** Lets the client's own CRM send bug reports to GoCWGL. Only the portal owner creates or revokes keys. */
+/**
+ * Lets the client's own CRM send bug reports to GoCWGL. The portal owner creates or revokes keys, and so can a
+ * GoCWGL admin in "View as client" (the API allows that one write there).
+ */
 export function CrmBugButtonCard() {
   const { isOwner } = usePortal();
+  const { user, viewAsClientId } = useSession();
+  const adminViewing = !!viewAsClientId && isStaffAdmin(user);
+  const canManage = isOwner || adminViewing;
   const query = usePortalIntakeKeys();
   const create = useCreatePortalIntakeKey();
   const revoke = useRevokePortalIntakeKey();
@@ -40,7 +47,13 @@ export function CrmBugButtonCard() {
         </span>
       </div>
 
-      {isOwner && (
+      {adminViewing && (
+        <div className="notice notice--info text-small" role="status">
+          You’re viewing as this client. As an admin you can create and revoke their CRM keys here.
+        </div>
+      )}
+
+      {canManage && (
         <form className="cluster cluster--8 cluster--end" onSubmit={submit}>
           <Field label="Where it’s used" htmlFor="crm-key-name" className="u-grow" error={fieldErrors(create.error).name}>
             <Input id="crm-key-name" maxLength={80} value={name} placeholder="Our CRM (production)" onChange={(e) => setName(e.target.value)} />
@@ -59,11 +72,11 @@ export function CrmBugButtonCard() {
         <IntakeKeyTable
           keys={query.data ?? []}
           describe={(k) => ({ title: k.name, detail: "Your CRM" })}
-          canManage={isOwner}
+          canManage={canManage}
           onRevoke={(id, done) => revoke.mutate(id, { onSuccess: done })}
           revoking={revoke.isPending}
           error={revoke.error}
-          empty={isOwner ? "No CRM connected yet. Create a key to get started." : "No CRM connected yet."}
+          empty={canManage ? "No CRM connected yet. Create a key to get started." : "No CRM connected yet."}
         />
       </LoadState>
 

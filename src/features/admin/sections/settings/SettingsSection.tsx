@@ -29,6 +29,9 @@ const businessOf = (s: OrgSettingsOut): BusinessDraft => ({
   currency: s.currency,
   notifyEmail: s.notifyEmail,
   notifications: (s.notifications ?? {}) as Record<string, boolean>,
+  digestHour: s.digestHour,
+  digestTimezone: s.digestTimezone,
+  businessTimezone: s.timezone,
 });
 
 export function SettingsSection() {
@@ -74,7 +77,12 @@ export function SettingsSection() {
               address: businessDraft.address,
               currency: businessDraft.currency as OrgSettingsUpdate["currency"],
             }
-          : { notifications: businessDraft.notifications, notifyEmail: businessDraft.notifyEmail };
+          : {
+              notifications: businessDraft.notifications,
+              notifyEmail: businessDraft.notifyEmail,
+              digestHour: businessDraft.digestHour,
+              digestTimezone: businessDraft.digestTimezone,
+            };
       saveSettings.mutate(body, { onSuccess: () => (setBusinessDraft(null), setMessage("Changes saved.")) });
     } else setMessage("Nothing to save.");
   };

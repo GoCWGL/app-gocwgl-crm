@@ -40,12 +40,12 @@ export const CURRENCIES = [
 
 /** Team alert switches. `defaultOn` mirrors the backend's defaults for a key that was never saved. */
 export const NOTIFICATION_OPTIONS = [
-  { key: "lead", label: "New lead signs up", desc: "When someone submits one of your forms", defaultOn: true },
+  { key: "lead", label: "New lead signs up", desc: "An email for every new lead. Off by default: new leads are in your Daily summary", defaultOn: false },
   { key: "booked", label: "Call booked", desc: "When a lead books a call on any calendar", defaultOn: true },
   { key: "paid", label: "Payment received", desc: "When a client pays a subscription", defaultOn: true },
   { key: "bug", label: "New bug reported", desc: "When a client reports a bug from their CRM", defaultOn: true },
   { key: "form", label: "Every form submission", desc: "Includes newsletter and other non-lead forms", defaultOn: false },
-  { key: "digest", label: "Daily summary email", desc: "One email each morning with yesterday’s numbers", defaultOn: true },
+  { key: "digest", label: "Daily summary email", desc: "One email a day with yesterday’s numbers, at the time you choose below", defaultOn: true },
 ];
 
 export const TEAM_ROLES: Array<{ value: "super_admin" | "admin" | "sales" | "viewer"; label: string }> = [

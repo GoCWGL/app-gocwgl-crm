@@ -13,7 +13,7 @@ import {
 } from "@/data/admin";
 import type { Tone } from "@/lib/tones";
 import { cn, initials } from "@/lib/utils";
-import type { TicketOut } from "@/utils/api/models";
+import type { TicketOut, TicketPatch } from "@/utils/api/models";
 import { canWriteCrm, isStaffAdmin } from "@/utils/auth/session";
 import { addDaysIso, formatShort, getTimeZone, isoDateIn, todayIso } from "@/utils/format/dates";
 import { useAllContacts } from "@/utils/hooks/useContacts";
@@ -34,6 +34,7 @@ const MESSAGE_CLASS: Record<string, string> = {
 };
 
 const isClosed = (t: TicketOut) => t.status === "Done";
+const typeLabel = (t: TicketOut) => TICKET_TYPES.find((x) => x.value === t.type)?.label ?? t.type;
 
 /** Where a ticket came from: the admin CRM, the client portal, or one of the clients' own CRMs. */
 const SOURCE_TONES: Record<TicketOut["source"], Tone> = { portal: "cyan", crm: "purple", team: "slate" };
@@ -48,7 +49,8 @@ export function BugsSection() {
   const canWrite = canWriteCrm(me);
   const [keysOpen, setKeysOpen] = useState(false);
   const activeKeys = (useIntakeKeys().data ?? []).filter((k) => !k.revokedAt).length;
-  const [type, setType] = useState("bug");
+  // Every type by default: a client who sends a bug as a "change request" still shows up here.
+  const [type, setType] = useState("");
   const query = useTickets(type ? { type } : {});
   const tickets = query.data ?? [];
   const contacts = useAllContacts().data ?? [];
@@ -213,7 +215,7 @@ export function BugsSection() {
                         <button type="button" className="cell-button" onClick={() => setSelectedId(t.id)}>
                           <strong className="data-table__strong">{t.title}</strong>
                           <span className="text-small">
-                            {[t.area, t.reporterName].filter(Boolean).join(" · ")}
+                            {[typeLabel(t), t.area, t.reporterName].filter(Boolean).join(" · ")}
                           </span>
                         </button>
                       </td>
@@ -342,6 +344,16 @@ function BugDetails({ ticket, client, canWrite, onClose }: { ticket: TicketOut; 
 
       <Field label="What happened">
         <p className="text-body u-ink u-pre-line">{ticket.description || "No description."}</p>
+      </Field>
+
+      <Field label="Type" htmlFor="bug-set-type" hint="Change it if the client picked the wrong kind of request.">
+        <Select
+          id="bug-set-type"
+          value={ticket.type}
+          options={TICKET_TYPES}
+          disabled={!canWrite || update.isPending}
+          onChange={(e) => update.mutate({ id: ticket.id, body: { type: e.target.value as TicketPatch["type"] } })}
+        />
       </Field>
 
       <Field label="Status" htmlFor="bug-set-status">

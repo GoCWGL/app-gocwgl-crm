@@ -223,3 +223,11 @@
   font-size: 14px;
   font-weight: 700;
 }
+
+// Daily summary: when it's sent (hour + time zone), side by side on wide screens.
+.digest-time {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}

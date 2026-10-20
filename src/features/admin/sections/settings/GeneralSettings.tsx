@@ -19,7 +19,17 @@ export type BusinessDraft = {
   currency: string;
   notifyEmail: string;
   notifications: Record<string, boolean>;
+  /** Daily summary: hour (0-23) and time zone ("" = the business time zone). */
+  digestHour: number;
+  digestTimezone: string;
+  /** Read-only: shown as the default for the Daily summary's time zone. */
+  businessTimezone: string;
 };
+
+const HOURS = Array.from({ length: 24 }, (_, h) => ({
+  value: String(h),
+  label: `${h % 12 || 12}:00 ${h < 12 ? "AM" : "PM"}`,
+}));
 
 type FieldDef<K extends string> = { key: K; label: string; type?: string; placeholder?: string; autoComplete?: string };
 
@@ -149,6 +159,26 @@ export function NotificationSettings({ draft, onChange }: { draft: BusinessDraft
           </div>
         );
       })}
+      <div className="digest-time">
+        <Field label="Daily summary time" htmlFor="set-digest-hour" hint="One email a day with yesterday’s numbers.">
+          <Select
+            id="set-digest-hour"
+            value={String(draft.digestHour)}
+            options={HOURS}
+            disabled={draft.notifications.digest === false}
+            onChange={(e) => onChange({ digestHour: Number(e.target.value) })}
+          />
+        </Field>
+        <Field label="Time zone" htmlFor="set-digest-tz">
+          <Select
+            id="set-digest-tz"
+            value={draft.digestTimezone}
+            disabled={draft.notifications.digest === false}
+            options={[{ value: "", label: `Business time zone (${draft.businessTimezone})` }, ...zoneOptions(draft.digestTimezone)]}
+            onChange={(e) => onChange({ digestTimezone: e.target.value })}
+          />
+        </Field>
+      </div>
       <Field label="Send notifications to" htmlFor="set-notify-email" className="notify-email">
         <Input
           id="set-notify-email"
