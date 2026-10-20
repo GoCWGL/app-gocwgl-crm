@@ -8,6 +8,7 @@ import { RequireStaff } from "@/utils/auth/guards";
 import { canWriteCrm } from "@/utils/auth/session";
 import { useSettings } from "@/utils/hooks/useSettings";
 import { useMe } from "@/utils/hooks/useUsers";
+import { useSectionChangeSweep } from "@/utils/navigation";
 import { AdminSidebar } from "./components/AdminSidebar";
 import { AddClientModal } from "./modals/AddClientModal";
 import { EditContactDrawer } from "./modals/EditContactDrawer";
@@ -65,10 +66,11 @@ function AdminLayout() {
   useSettings();
   const canWrite = canWriteCrm(useMe().data);
 
-  // Start each section at the top of the page.
+  // Start each section at the top of the page, with the top progress sweep.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [tab, contactView]);
+  useSectionChangeSweep(`${tab}:${contactView}`);
 
   const page = tab === "clients" ? CONTACT_VIEWS[contactView] : ADMIN_PAGES[tab];
   const Section = SECTIONS[tab];
@@ -97,8 +99,10 @@ function AdminLayout() {
           )
         }
       />
-      {/* Keyed by view so filters reset when switching Contacts / Clients / Inactive. */}
-      <Section key={tab === "clients" ? contactView : tab} />
+      {/* Keyed by view so filters reset when switching Contacts / Clients / Inactive, and the entrance replays. */}
+      <div className="page-enter" key={tab === "clients" ? contactView : tab}>
+        <Section />
+      </div>
     </AppShell>
   );
 }

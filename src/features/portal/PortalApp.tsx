@@ -6,6 +6,7 @@ import { Button, Toast } from "@/components/ui";
 import { PORTAL_PAGES, type PortalTab } from "@/data/portal";
 import { RequireClient } from "@/utils/auth/guards";
 import { useOverview, usePortalHealth } from "@/utils/hooks/usePortal";
+import { useSectionChangeSweep } from "@/utils/navigation";
 import { EmbedCodeDialog } from "./components/EmbedCodeDialog";
 import { FunnelRequestDrawer } from "./components/FunnelRequestDrawer";
 import { PortalSidebar } from "./components/PortalSidebar";
@@ -51,10 +52,11 @@ function PortalLayout() {
   const business = useOverview(30).data?.business || "Your business";
   const subtitle = readOnly ? "Client portal · view only" : "Client portal";
 
-  // Start each section at the top of the page.
+  // Start each section at the top of the page, with the top progress sweep.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [state.tab]);
+  useSectionChangeSweep(state.tab);
 
   const page = PORTAL_PAGES[state.tab];
   const Section = SECTIONS[state.tab];
@@ -85,7 +87,9 @@ function PortalLayout() {
         }
       />
       <Toast message={state.toast} onClose={() => update({ toast: "" })} />
-      <Section />
+      <div className="page-enter" key={state.tab}>
+        <Section />
+      </div>
     </AppShell>
   );
 }

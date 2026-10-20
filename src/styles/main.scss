@@ -38,6 +38,7 @@
 @use "components/file-card";
 @use "components/embed-thread";
 @use "components/load-state";
+@use "components/route-loader";
 
 // Pages
 @use "pages/auth";

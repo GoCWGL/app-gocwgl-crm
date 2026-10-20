@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
+import { BrandLoader } from "@/components/ui/BrandLoader";
 import { useSession } from "./session";
 
 /**
@@ -39,11 +40,12 @@ export function RequireClient({ children }: { children: ReactNode }) {
   );
 }
 
+const SPLASH_STEPS = ["Restoring your session", "Checking your access"] as const;
+
 export function SessionSplash({ text }: { text: string }) {
   return (
     <div className="session-splash" role="status" aria-live="polite">
-      <span className="session-splash__spinner" aria-hidden="true" />
-      <span className="text-muted">{text}</span>
+      <BrandLoader title={text} steps={SPLASH_STEPS} />
     </div>
   );
 }

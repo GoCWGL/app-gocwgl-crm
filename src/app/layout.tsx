@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 import "@/styles/main.scss";
+import { RouteLoader } from "@/components/layout";
 import { AppProviders } from "@/utils/providers";
 
 const manrope = Manrope({
@@ -27,7 +28,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${manrope.variable} ${jetbrainsMono.variable}`}>
       <body>
-        <AppProviders>{children}</AppProviders>
+        <AppProviders>
+          {children}
+          <RouteLoader />
+        </AppProviders>
       </body>
     </html>
   );
