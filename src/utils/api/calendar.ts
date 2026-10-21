@@ -10,6 +10,7 @@ import type {
   ConnectionCreate,
   ConnectionOut,
   ConnectionUpdate,
+  GoogleStartOut,
   PublicCalendarOut,
   SlotsOut,
 } from "./models";
@@ -29,13 +30,15 @@ export const createBooking = (body: AdminBookingIn) => post<BookingOut>("/admin/
 export const updateBooking = (id: string, body: BookingPatch) => patch<BookingOut>(`/admin/bookings/${id}`, body);
 export const cancelBooking = (id: string) => post<void>(`/admin/bookings/${id}/cancel`);
 
-// ------------------------------------------------------------------ Calendar connections (sync is backlog F-1 / F-2)
+// ------------------------------------------------------------------ Calendar connections (synced every 15 minutes)
 export const listCalendarConnections = () => get<ConnectionOut[]>("/admin/calendar-connections");
 export const createCalendarConnection = (body: ConnectionCreate) =>
   post<ConnectionOut>("/admin/calendar-connections", body);
 export const updateCalendarConnection = (id: string, body: ConnectionUpdate) =>
   patch<ConnectionOut>(`/admin/calendar-connections/${id}`, body);
 export const deleteCalendarConnection = (id: string) => del(`/admin/calendar-connections/${id}`);
+/** "Connect with Google": the Google page to open in a popup (it comes back to the API's callback). */
+export const startGoogleCalendar = () => post<GoogleStartOut>("/admin/calendar-connections/google/start");
 
 // ------------------------------------------------------------------ Public booking page
 export const getPublicCalendar = (slug: string) => get<PublicCalendarOut>(`/public/booking/${slug}`);

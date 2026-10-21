@@ -359,3 +359,23 @@
     word-break: break-all;
   }
 }
+
+// Where to find the calendar link, step by step.
+.provider-card__steps {
+  @include stack(4px);
+  margin: 0;
+  padding-left: 18px;
+  color: $ink-soft;
+}
+
+// The "G" on "Connect with Google".
+.google-mark {
+  @include center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: $white;
+  color: #4285f4;
+  font-size: 12px;
+  font-weight: 800;
+}

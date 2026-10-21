@@ -26,63 +26,52 @@ export const WEEKDAY_KEYS: Weekday[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
 export type CalendarProviderField = { key: string; label: string; type: string; placeholder: string };
 
 export type CalendarProvider = {
-  id: "google" | "outlook" | "apple" | "exchange" | "caldav" | "ics";
+  /** The API's connection provider ("google" and "ics" are synced from a calendar link). */
+  id: string;
   name: string;
   desc: string;
   initials: string;
   tone: Tone;
-  /** Signs in with OAuth instead of a password. */
-  oauth: boolean;
-  readOnly?: boolean;
-  /** Syncs today. The others save their details but aren't read yet (use the calendar link instead). */
+  /** Syncs today. Connections saved earlier for other providers show as "not syncing" with Disconnect. */
   available?: boolean;
+  /** Offers "Connect with Google" (OAuth popup); the link form stays as the alternative. */
+  oauth?: boolean;
   help: string;
+  /** Where to find the link, step by step. */
+  steps?: string[];
+  /** Opens the calendar's settings in a new tab. */
+  settingsUrl?: { label: string; href: string };
   fields: CalendarProviderField[];
 };
 
+/** The calendars that sync: busy times are read from the calendar's private iCal link every 15 minutes. */
 export const CALENDAR_PROVIDERS: CalendarProvider[] = [
   {
-    id: "ics", name: "Calendar link (iCal)", desc: "Google, Outlook, iCloud or any calendar app", initials: "ICS", tone: "green", oauth: false,
-    readOnly: true, available: true,
-    help:
-      "Paste your calendar’s private iCal address. Google: Settings › your calendar › Integrate calendar › Secret address in iCal format. " +
-      "Outlook: Settings › Calendar › Shared calendars › Publish a calendar › ICS link. iCloud: share the calendar as a Public Calendar and copy the link.",
-    fields: [{ key: "server", label: "Calendar link (https:// or webcal://)", type: "url", placeholder: "https://calendar.google.com/calendar/ical/…/basic.ics" }],
-  },
-  {
-    id: "google", name: "Google Calendar", desc: "Gmail and Google Workspace", initials: "G", tone: "cyan", oauth: true,
-    help: "You will be sent to Google to sign in and allow access. We only read busy times and add bookings.",
-    fields: [{ key: "account", label: "Google account email", type: "email", placeholder: "you@gmail.com" }],
-  },
-  {
-    id: "outlook", name: "Outlook / Microsoft 365", desc: "Outlook.com, Hotmail and Office 365", initials: "O", tone: "sky", oauth: true,
-    help: "You will be sent to Microsoft to sign in and allow calendar access.",
-    fields: [{ key: "account", label: "Microsoft account email", type: "email", placeholder: "you@outlook.com" }],
-  },
-  {
-    id: "apple", name: "Apple iCloud Calendar", desc: "iPhone, iPad and Mac calendars", initials: "", tone: "slate", oauth: false,
-    help: "Apple needs an app-specific password. Create one at appleid.apple.com › Sign-In and Security › App-Specific Passwords.",
-    fields: [
-      { key: "account", label: "Apple ID email", type: "email", placeholder: "you@icloud.com" },
-      { key: "secret", label: "App-specific password", type: "password", placeholder: "xxxx-xxxx-xxxx-xxxx" },
+    id: "google", name: "Google Calendar", desc: "Gmail and Google Workspace", initials: "G", tone: "cyan", available: true, oauth: true,
+    help: "Or paste your calendar’s private iCal address instead of signing in. Either way we only see when you are busy.",
+    steps: [
+      "Open Google Calendar settings (button below).",
+      "Under “Settings for my calendars”, click your calendar.",
+      "Scroll to “Integrate calendar” and copy “Secret address in iCal format”.",
+      "Paste it here and save.",
     ],
+    settingsUrl: { label: "Open Google Calendar settings ↗", href: "https://calendar.google.com/calendar/r/settings" },
+    fields: [{ key: "server", label: "Secret address in iCal format", type: "url", placeholder: "https://calendar.google.com/calendar/ical/…/private-…/basic.ics" }],
   },
   {
-    id: "exchange", name: "Microsoft Exchange", desc: "Company Exchange servers", initials: "Ex", tone: "purple", oauth: false,
-    help: "Ask your IT team for the Exchange server address if you do not know it.",
-    fields: [
-      { key: "account", label: "Work email", type: "email", placeholder: "you@company.com" },
-      { key: "server", label: "Server (optional)", type: "text", placeholder: "outlook.office365.com" },
-      { key: "secret", label: "Password", type: "password", placeholder: "" },
+    id: "ics", name: "iCal link", desc: "Outlook, iCloud or any calendar app", initials: "ICS", tone: "green", available: true,
+    help: "Any calendar that can share an iCal (.ics) link.",
+    steps: [
+      "Outlook: Settings › Calendar › Shared calendars › Publish a calendar, then copy the ICS link.",
+      "iCloud: in the Calendar app, share the calendar as a Public Calendar and copy the link.",
+      "Other apps: look for “Export”, “Subscribe” or “iCal link” in the calendar’s settings.",
     ],
-  },
-  {
-    id: "caldav", name: "Other (CalDAV)", desc: "Zoho, Fastmail, Yahoo, Nextcloud and more", initials: "CD", tone: "brand", oauth: false,
-    help: "Works with any calendar that supports CalDAV. Find the server URL in your calendar app’s settings.",
-    fields: [
-      { key: "server", label: "CalDAV server URL", type: "url", placeholder: "https://caldav.example.com" },
-      { key: "account", label: "Username", type: "text", placeholder: "" },
-      { key: "secret", label: "Password", type: "password", placeholder: "" },
-    ],
+    fields: [{ key: "server", label: "Calendar link (https:// or webcal://)", type: "url", placeholder: "https://…/calendar.ics" }],
   },
 ];
+
+/** A connection saved earlier for a provider that doesn't sync (it can only be disconnected). */
+export const legacyProvider = (id: string): CalendarProvider => ({
+  id, name: id.charAt(0).toUpperCase() + id.slice(1), desc: "Saved before sync was available", initials: id.slice(0, 2).toUpperCase(),
+  tone: "slate", help: "", fields: [],
+});

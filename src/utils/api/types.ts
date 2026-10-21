@@ -1084,6 +1084,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/calendar-connections/google/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Google
+         * @description Where to send the "Connect with Google" popup. Google then redirects to /calendar/oauth/google/callback.
+         */
+        post: operations["start_google_api_admin_calendar_connections_google_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/calendar-connections/{connection_id}": {
         parameters: {
             query?: never;
@@ -2946,6 +2966,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/calendar/oauth/google/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Google Callback
+         * @description Google redirects the popup here. The encrypted state names the admin who started it and holds the PKCE verifier.
+         */
+        get: operations["google_callback_api_calendar_oauth_google_callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/forms/{form_id}": {
         parameters: {
             query?: never;
@@ -4329,6 +4369,11 @@ export interface components {
          * @enum {string}
          */
         FunnelStatus: "quote" | "pay" | "queued" | "build" | "live";
+        /** GoogleStartOut */
+        GoogleStartOut: {
+            /** Url */
+            url: string;
+        };
         /** HealthCheckIn */
         HealthCheckIn: {
             /** Name */
@@ -9393,6 +9438,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_google_api_admin_calendar_connections_google_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["GoogleStartOut"];
+                    };
                 };
             };
             /** @description Error */
@@ -15907,6 +15983,50 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["SlotsOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    google_callback_api_calendar_oauth_google_callback_get: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+                error?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
                     };
                 };
             };

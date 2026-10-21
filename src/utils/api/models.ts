@@ -70,6 +70,7 @@ export type FunnelLink = S["FunnelLink"];
 export type FunnelOut = S["FunnelOut"];
 export type FunnelRequestIn = S["FunnelRequestIn"];
 export type FunnelStatus = S["FunnelStatus"];
+export type GoogleStartOut = S["GoogleStartOut"];
 export type HealthCheckIn = S["HealthCheckIn"];
 export type HealthCheckOut = S["HealthCheckOut"];
 export type HealthCheckPatch = S["HealthCheckPatch"];

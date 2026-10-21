@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, type CSSProperties, type FormEvent } from "react";
-import { Avatar, Badge, Button, Checkbox, Field, FormError, Input, LoadState, SoonNote } from "@/components/ui";
-import { CALENDAR_PROVIDERS, type CalendarProvider } from "@/data/admin";
+import { Avatar, Badge, Button, Checkbox, Field, FormError, Input, LoadState, buttonClass } from "@/components/ui";
+import { CALENDAR_PROVIDERS, legacyProvider, type CalendarProvider } from "@/data/admin";
 import { cn } from "@/lib/utils";
-import type { ConnectionOut, SubCalendar } from "@/utils/api/models";
+import type { ConnectionCreate, ConnectionOut, SubCalendar } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
 import { errorMessage, fieldErrors } from "@/utils/errors";
 import { formatRelative } from "@/utils/format/dates";
@@ -15,16 +15,21 @@ import {
   useUpdateCalendarConnection,
 } from "@/utils/hooks/useCalendar";
 import { useMe } from "@/utils/hooks/useUsers";
+import { GoogleConnectButton } from "./GoogleConnectButton";
+
+/** What the API shows for a Google calendar connected by signing in (instead of a pasted link). */
+const GOOGLE_SIGNED_IN = "Connected with Google";
 
 /**
- * Calendar sync. A calendar link (iCal) is read every 15 minutes and its busy times block slots on every
- * booking link; bookings reach your calendar as emailed invites. Sign-in providers (Google, Outlook…) and
- * CalDAV save their details but aren't read yet, so they say so instead of faking it.
+ * Calendar sync. Google Calendar and any other calendar are read from their private iCal link every
+ * 15 minutes, and the busy times block slots on every booking link; bookings reach your calendar as
+ * emailed invites. Connections saved earlier for providers that don't sync can only be disconnected.
  */
 export function CalendarSync() {
   const connections = useCalendarConnections();
   const canWrite = canWriteCrm(useMe().data);
   const byProvider = (id: string) => connections.data?.find((c) => c.provider === id);
+  const legacy = (connections.data ?? []).filter((c) => !CALENDAR_PROVIDERS.some((p) => p.id === c.provider));
 
   return (
     <div className="page-stack">
@@ -32,8 +37,8 @@ export function CalendarSync() {
         <div className="card card--tight sync-intro">
           <span className="kicker">HOW IT WORKS</span>
           <span className="text-body">
-            Paste your calendar’s private link (Google, Outlook, iCloud or any app). Every 15 minutes we read your busy times and hide those slots
-            on every booking link, so nobody can book you while you are in another meeting.
+            Connect Google Calendar or any calendar with an iCal link. Every 15 minutes we read when you are busy (never what the events are)
+            and hide those times on every booking link, so nobody can book you while you are in another meeting.
           </span>
         </div>
         <div className="card card--tight sync-target">
@@ -50,17 +55,11 @@ export function CalendarSync() {
           {CALENDAR_PROVIDERS.map((p) => (
             <ProviderCard key={p.id} provider={p} connection={byProvider(p.id)} canWrite={canWrite} />
           ))}
+          {legacy.map((c) => (
+            <ProviderCard key={c.id} provider={legacyProvider(c.provider)} connection={c} canWrite={canWrite} />
+          ))}
         </div>
       </LoadState>
-
-      <div className="card card--tight feed-card">
-        <div className="stack stack--4 u-grow">
-          <span className="kicker">SUBSCRIBE FROM ANY APP</span>
-          <span className="text-body">
-            A read-only calendar link with your CRM bookings, for any calendar app. <SoonNote />
-          </span>
-        </div>
-      </div>
     </div>
   );
 }
@@ -81,7 +80,7 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
     if (missing.length) return setError(`Please fill in: ${missing.map((f) => f.label).join(", ")}`);
     create.mutate(
       {
-        provider: p.id,
+        provider: p.id as ConnectionCreate["provider"],
         account: (draft.account ?? "").trim(),
         // Calendar apps label feed links webcal://; it is plain https underneath.
         server: (draft.server ?? "").trim().replace(/^webcal:\/\//i, "https://"),
@@ -108,12 +107,14 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
         </div>
       </div>
       <Badge tone={on ? "green" : "neutral"} mono dot>
-        {on ? (p.available ? "CONNECTED · READ ONLY" : "SAVED · NOT SYNCING") : p.available ? "NOT CONNECTED" : "COMING SOON"}
+        {on ? (p.available ? "CONNECTED · READ ONLY" : "NOT SYNCING") : "NOT CONNECTED"}
       </Badge>
 
       {on && connection && (
         <div className="stack stack--8">
-          <span className="provider-card__account">{connection.account || connection.server}</span>
+          <span className="provider-card__account">
+            {connection.server === GOOGLE_SIGNED_IN ? `${connection.account} · signed in with Google` : connection.account || connection.server}
+          </span>
           <Checkbox
             brand
             label="Block times when I am busy here"
@@ -150,7 +151,7 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
                 ? `Synced ${formatRelative(connection.syncedAt)} · checks every 15 minutes`
                 : p.available
                   ? "Syncing for the first time…"
-                  : "Saved — not synced yet. Use the calendar link instead."}
+                  : "This calendar doesn’t sync. Disconnect it and use Google Calendar or an iCal link."}
             </span>
           )}
         </div>
@@ -159,6 +160,18 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
       {editing && (
         <form className="provider-card__form" onSubmit={submit} autoComplete="off">
           <span className="text-small">{p.help}</span>
+          {p.steps && (
+            <ol className="provider-card__steps text-small">
+              {p.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          )}
+          {p.settingsUrl && (
+            <a className={buttonClass({ variant: "outline", size: "sm" })} href={p.settingsUrl.href} target="_blank" rel="noopener noreferrer">
+              {p.settingsUrl.label}
+            </a>
+          )}
           {p.fields.map((f) => (
             <Field key={f.key} label={f.label} htmlFor={`cc-${p.id}-${f.key}`}>
               <Input
@@ -177,7 +190,6 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
               />
             </Field>
           ))}
-          {p.oauth && <span className="text-small">Signing in with {p.name.split(" ")[0]} is coming soon; this saves the account for now.</span>}
           {error && (
             <p className="field__error" role="alert">
               {error}
@@ -195,10 +207,27 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
       )}
 
       <FormError error={update.error ?? remove.error} />
+      {canWrite && !on && !editing && p.oauth && (
+        <div className="stack stack--6 provider-card__actions">
+          <GoogleConnectButton />
+          <Button
+            variant="link"
+            size="sm"
+            onClick={() => {
+              setEditing(true);
+              setError("");
+            }}
+          >
+            Or paste the secret iCal address
+          </Button>
+        </div>
+      )}
+      {canWrite && on && connection?.server === GOOGLE_SIGNED_IN && connection.syncError && (
+        <GoogleConnectButton label="Reconnect with Google" variant="outline" />
+      )}
       {canWrite && (
         <div className="cluster cluster--8 cluster--nowrap provider-card__actions">
-          {!on && !editing && !p.available && <span className="text-small">Coming soon. Use the calendar link for now.</span>}
-          {!on && !editing && p.available && (
+          {!on && !editing && p.available && !p.oauth && (
             <Button
               variant="primary"
               block
