@@ -32,6 +32,8 @@ export const listPortalFunnels = () => get<FunnelOut[]>("/portal/funnels");
 export const getFunnelCatalog = () => get<FunnelCatalogOut>("/portal/funnels/catalog");
 export const requestFunnel = (body: FunnelRequestIn) => post<FunnelOut>("/portal/funnels/requests", body);
 export const updateFunnelRequest = (id: string, body: FunnelRequestIn) => put<FunnelOut>(`/portal/funnels/${id}/request`, body);
+/** Only before it's paid for; voids the request's invoice. */
+export const cancelFunnelRequest = (id: string) => del(`/portal/funnels/${id}/request`);
 
 export const listPortalTodos = () => get<TodoOut[]>("/portal/todos");
 export const completeTodo = (id: string) => post<TodoOut>(`/portal/todos/${id}/complete`);

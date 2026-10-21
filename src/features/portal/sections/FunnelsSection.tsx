@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState } from "react";
 import { Badge, Button, FormError, Icon, IconTile, LoadState, ProgressBar, StatGrid, buttonClass } from "@/components/ui";
 import type { FunnelStatus } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
@@ -9,7 +9,7 @@ import type { FunnelOut } from "@/utils/api/models";
 import { formatCents } from "@/utils/format/money";
 import { useCheckoutInvoice } from "@/utils/hooks/useBilling";
 import { useEmbeds } from "@/utils/hooks/useDelivery";
-import { usePortalFunnels } from "@/utils/hooks/usePortal";
+import { useCancelFunnelRequest, usePortalFunnels } from "@/utils/hooks/usePortal";
 import { missingRequestDetails } from "../components/FunnelRequestDrawer";
 import { usePortal } from "../state/PortalContext";
 
@@ -32,6 +32,13 @@ export function FunnelsSection() {
   const embeds = useEmbeds().data ?? [];
   // Paying goes to Polar's checkout; the funnel moves to "queued" once Polar confirms the payment.
   const checkout = useCheckoutInvoice();
+  // Cancelling asks for a second click, like removing an embed code.
+  const cancel = useCancelFunnelRequest();
+  const [confirmCancelId, setConfirmCancelId] = useState("");
+  const cancelRequest = (id: string) => {
+    if (confirmCancelId !== id) return setConfirmCancelId(id);
+    cancel.mutate(id, { onSettled: () => setConfirmCancelId("") });
+  };
 
   return (
     <div className="page-stack">
@@ -57,6 +64,7 @@ export function FunnelsSection() {
         )}
       </div>
       <FormError error={checkout.error} />
+      <FormError error={cancel.error} />
 
       <LoadState query={query} isEmpty={!funnels.length} empty="No funnels yet. Request your first one and your GoCWGL team will build it.">
         {funnels.map((f) => (
@@ -65,11 +73,14 @@ export function FunnelsSection() {
             funnel={f}
             readOnly={readOnly}
             paying={checkout.isPending && checkout.variables === f.invoiceId}
+            cancelling={cancel.isPending && cancel.variables === f.id}
+            confirmingCancel={confirmCancelId === f.id}
             embedCount={embeds.filter((e) => e.funnelId === f.id).length}
             embedIssues={embeds.filter((e) => e.funnelId === f.id && e.hasIssue).length}
             onBuild={() => goTo("build")}
             onPay={() => f.invoiceId && checkout.mutate(f.invoiceId)}
             onEdit={() => update({ funnelRequestOpen: true, editFunnelId: f.id })}
+            onCancel={() => cancelRequest(f.id)}
             onEmbed={() => update({ embedFunnelId: f.id })}
             onChange={() => openSupport({ type: "change", title: `Change to “${f.name}”`, details: "" })}
           />
@@ -83,18 +94,37 @@ type FunnelCardProps = {
   funnel: FunnelOut;
   readOnly: boolean;
   paying: boolean;
+  cancelling: boolean;
+  confirmingCancel: boolean;
   embedCount: number;
   embedIssues: number;
   onBuild: () => void;
   onPay: () => void;
   onEdit: () => void;
+  onCancel: () => void;
   onEmbed: () => void;
   onChange: () => void;
 };
 
-function FunnelCard({ funnel: f, readOnly, paying, embedCount, embedIssues, onBuild, onPay, onEdit, onEmbed, onChange }: FunnelCardProps) {
+function FunnelCard({
+  funnel: f,
+  readOnly,
+  paying,
+  cancelling,
+  confirmingCancel,
+  embedCount,
+  embedIssues,
+  onBuild,
+  onPay,
+  onEdit,
+  onCancel,
+  onEmbed,
+  onChange,
+}: FunnelCardProps) {
   const status = STATUS[f.status as FunnelStatus] ?? STATUS.build;
   const isLive = f.status === "live";
+  // Requests can be withdrawn until they're paid for.
+  const cancellable = !readOnly && (f.status === "quote" || f.status === "pay");
   const missing = readOnly ? [] : missingRequestDetails(f);
   const steps = stepsOf(f);
   const base = steps[0]?.[1] || 1;
@@ -237,6 +267,11 @@ function FunnelCard({ funnel: f, readOnly, paying, embedCount, embedIssues, onBu
           <Button variant="outline" size="sm" onClick={onEdit}>
             <Icon name="edit" size={14} />
             Edit request
+          </Button>
+        )}
+        {cancellable && (
+          <Button variant={confirmingCancel ? "danger" : "link"} size="sm" onClick={onCancel} disabled={cancelling}>
+            {cancelling ? "Cancelling…" : confirmingCancel ? "Click again to cancel request" : "Cancel request"}
           </Button>
         )}
         {!readOnly && (

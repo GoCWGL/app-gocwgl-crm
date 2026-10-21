@@ -29,6 +29,9 @@ export const useUpdateFunnelRequest = () =>
   useApiMutation((v: { id: string; body: FunnelRequestIn }) => api.updateFunnelRequest(v.id, v.body), {
     invalidate: [qk.portalFunnels, qk.portalBilling],
   });
+/** Voids the request's invoice, so billing refreshes too. */
+export const useCancelFunnelRequest = () =>
+  useApiMutation(api.cancelFunnelRequest, { invalidate: [qk.portalFunnels, qk.portalBilling, ["portal", "overview"]] });
 
 const TODO_KEYS = [qk.portalTodos, ["portal", "overview"], qk.portalActivity];
 export const usePortalTodos = () => useQuery({ queryKey: qk.portalTodos, queryFn: api.listPortalTodos });
