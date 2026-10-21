@@ -2419,7 +2419,11 @@ export interface paths {
         /** Edit Funnel Request */
         put: operations["edit_funnel_request_api_portal_funnels__funnel_id__request_put"];
         post?: never;
-        delete?: never;
+        /**
+         * Cancel Funnel Request
+         * @description Withdraws a request that is still waiting for a quote or payment; its invoice is voided.
+         */
+        delete: operations["cancel_funnel_request_api_portal_funnels__funnel_id__request_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -4176,12 +4180,14 @@ export interface components {
             types: {
                 [key: string]: unknown;
             };
-            /** Addons */
-            addons: {
+            /** Packages */
+            packages: {
                 [key: string]: unknown;
             };
-            /** Rushpricecents */
-            rushPriceCents: number;
+            /** Monitoringpricecents */
+            monitoringPriceCents: number;
+            /** Vip */
+            vip: boolean;
         };
         /** FunnelLink */
         FunnelLink: {
@@ -4259,14 +4265,8 @@ export interface components {
              * @default
              */
             notes?: string;
-            /** Addons */
-            addons?: ("emails" | "upsell" | "ab")[];
-            /**
-             * Speed
-             * @default standard
-             * @enum {string}
-             */
-            speed?: "standard" | "rush";
+            /** Package */
+            package?: ("foundation" | "bundle" | "vip") | null;
         };
         /**
          * FunnelStatus
@@ -14299,6 +14299,44 @@ export interface operations {
                         data: components["schemas"]["FunnelOut"];
                     };
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_funnel_request_api_portal_funnels__funnel_id__request_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                funnel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

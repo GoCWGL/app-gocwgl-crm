@@ -1,15 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Button, Checkbox, ErrorState, Field, FormError, Icon, IconTile, Input, Loading, Modal, Select, Textarea } from "@/components/ui";
-import {
-  FUNNEL_ADDON_COPY,
-  FUNNEL_TYPE_COPY,
-  type FunnelAddonKey,
-  type FunnelRequestDetails,
-  type FunnelTypeKey,
-} from "@/data/portal";
-import { cn } from "@/lib/utils";
+import { Badge, Button, Checkbox, ErrorState, Field, FormError, Icon, IconTile, Input, Loading, Modal, Textarea } from "@/components/ui";
+import { FUNNEL_PACKAGE_COPY, FUNNEL_TYPE_COPY, type FunnelPackageKey, type FunnelRequestDetails, type FunnelTypeKey } from "@/data/portal";
 import type { FunnelCatalogOut, FunnelOut } from "@/utils/api/models";
 import { errorMessage, fieldErrors } from "@/utils/errors";
 import { formatCents } from "@/utils/format/money";
@@ -17,8 +10,8 @@ import { useCheckoutInvoice } from "@/utils/hooks/useBilling";
 import { useFunnelCatalog, usePortalFunnels, useRequestFunnel, useUpdateFunnelRequest } from "@/utils/hooks/usePortal";
 import { usePortal } from "../state/PortalContext";
 
-type CatalogType = { label: string; price: number; steps: string[] };
-type CatalogAddon = { label: string; price: number };
+type CatalogType = { label: string; steps: string[] };
+type CatalogPackage = { label: string; price: number; list_price: number | null };
 
 type Draft = {
   type: FunnelTypeKey;
@@ -26,8 +19,8 @@ type Draft = {
   offer: string;
   audience: string;
   notes: string;
-  addons: Record<string, boolean>;
-  speed: "standard" | "rush";
+  /** Empty until chosen; older requests from before packages have none. */
+  package: FunnelPackageKey | "";
   pay: "now" | "invoice";
   agree: boolean;
 };
@@ -53,7 +46,7 @@ export function FunnelRequestDrawer() {
 export function requestOf(f: FunnelOut): FunnelRequestDetails | null {
   const r = f.request as Partial<FunnelRequestDetails> | null;
   if (!r?.typeKey) return null;
-  return { typeKey: r.typeKey, offer: r.offer ?? "", audience: r.audience ?? "", notes: r.notes ?? "", addons: r.addons ?? [], speed: r.speed ?? "standard" };
+  return { typeKey: r.typeKey, offer: r.offer ?? "", audience: r.audience ?? "", notes: r.notes ?? "", package: r.package };
 }
 
 /** Request fields the client left empty, so the funnel card can nudge them to fill them in. */
@@ -67,9 +60,9 @@ export function missingRequestDetails(f: FunnelOut): string[] {
 function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut; catalog: FunnelCatalogOut; onClose: () => void }) {
   const { update } = usePortal();
   const types = catalog.types as Record<FunnelTypeKey, CatalogType>;
-  const addons = catalog.addons as Record<FunnelAddonKey, CatalogAddon>;
+  const packages = catalog.packages as Record<FunnelPackageKey, CatalogPackage>;
   const typeKeys = Object.keys(types) as FunnelTypeKey[];
-  const addonKeys = Object.keys(addons) as FunnelAddonKey[];
+  const packageKeys = Object.keys(packages) as FunnelPackageKey[];
   const create = useRequestFunnel();
   const save = useUpdateFunnelRequest();
   const checkout = useCheckoutInvoice();
@@ -83,14 +76,13 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
       offer: r?.offer ?? editing?.goal ?? "",
       audience: r?.audience ?? "",
       notes: r?.notes ?? "",
-      addons: Object.fromEntries((r?.addons ?? []).map((k) => [k, true])),
-      speed: r?.speed ?? "standard",
+      package: r?.package ?? "",
       pay: "now",
       agree: false,
     };
   });
 
-  // Once paid (or in build), the scope is fixed: changes to type or extras go through a change request.
+  // Once paid (or in build), the scope is fixed: changes to the package or type go through a change request.
   const scopeLocked = !!editing && editing.status !== "quote" && editing.status !== "pay";
   const original = editing ? requestOf(editing) : null;
 
@@ -100,40 +92,30 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
   };
 
   const type = types[draft.type] ?? types.custom;
-  const isQuote = draft.type === "custom";
-  const chosenAddons = addonKeys.filter((k) => draft.addons[k]);
+  const pkg = draft.package ? packages[draft.package] : null;
   // A preview from the catalog's prices; the API computes the real total and the invoice when you submit.
-  const lines: Array<[string, number]> = [
-    [`${type.label} build`, type.price],
-    ...chosenAddons.map((k): [string, number] => [addons[k].label, addons[k].price]),
-    ...(draft.speed === "rush" ? [["Rush delivery", catalog.rushPriceCents] as [string, number]] : []),
-  ];
-  const estimate = lines.reduce((n, [, amount]) => n + amount, 0);
-  const totalText = isQuote ? "Quote" : formatCents(estimate);
-  const scopeChanged =
-    !!editing &&
-    !scopeLocked &&
-    (original?.typeKey !== draft.type ||
-      [...(original?.addons ?? [])].sort().join() !== [...chosenAddons].sort().join() ||
-      original?.speed !== draft.speed);
-  const needsAgree = !isQuote && (!editing || scopeChanged);
+  // Without a package, an edit keeps the funnel's current price (older requests may still be waiting for a quote).
+  const price = pkg ? pkg.price : (editing?.priceCents ?? 0);
+  const totalText = pkg || price ? formatCents(price) : editing ? "Quote" : "Choose a package";
+  const scopeChanged = !!editing && !scopeLocked && !!draft.package && draft.package !== original?.package;
+  const needsAgree = !!pkg && (!editing || scopeChanged);
   const pending = create.isPending || save.isPending || checkout.isPending;
   const apiFields = fieldErrors(create.error ?? save.error);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    if (!editing && !draft.package) return setError("Please choose a package.");
     if (!draft.name.trim() || !draft.offer.trim()) return setError("Please add a funnel name and its offer or main goal.");
     if (needsAgree && !draft.agree) return setError("Please confirm the additional charge to continue.");
 
-    const scope = scopeLocked && original ? { typeKey: original.typeKey, addons: original.addons, speed: original.speed } : null;
+    // No package keeps the current price, which is what a locked (paid) funnel needs.
     const body = {
-      typeKey: scope?.typeKey ?? draft.type,
+      typeKey: scopeLocked && original ? original.typeKey : draft.type,
       name: draft.name.trim(),
       offer: draft.offer.trim(),
       audience: draft.audience.trim(),
       notes: draft.notes.trim(),
-      addons: scope?.addons ?? chosenAddons,
-      speed: scope?.speed ?? draft.speed,
+      package: scopeLocked ? null : draft.package || null,
     };
     const onError = (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err));
 
@@ -164,9 +146,7 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
         }
         update({
           funnelRequestOpen: false,
-          toast: f.invoiceId
-            ? `Request sent. An invoice for ${formatCents(f.priceCents)} is in Billing.`
-            : "Request sent. Your GoCWGL team will send a quote soon.",
+          toast: `Request sent. An invoice for ${formatCents(f.priceCents)} is in Billing.`,
         });
       },
       onError,
@@ -206,9 +186,7 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
               ? "Sending…"
               : editing
                 ? "Save changes"
-                : isQuote
-                  ? "Request a quote"
-                  : draft.pay === "now"
+                : draft.pay === "now" && pkg
                     ? `Submit & pay ${totalText}`
                     : "Submit & send invoice"}
           </Button>
@@ -218,26 +196,56 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
       {scopeLocked && (
         <div className="inset text-small">
           <span>
-            This funnel is already paid, so its type and extras are locked. You can still update the details below. To add extras or change the
-            scope, use <strong>Request a change</strong> on the funnel.
+            This funnel is already paid, so its package and type are locked. You can still update the details below. To change the scope, use{" "}
+            <strong>Request a change</strong> on the funnel.
           </span>
         </div>
       )}
 
-      {/* 01 — type */}
+      {/* 01 — package */}
       {!scopeLocked && (
         <div className="stack stack--8">
-          <span className="kicker">01 · WHAT KIND OF FUNNEL?</span>
+          <span className="kicker">01 · CHOOSE A PACKAGE</span>
+          {editing && !original?.package && (
+            <span className="text-small">This request was sent before packages. Pick one to get a new invoice, or leave it as it is.</span>
+          )}
           <div className="option-grid">
-            {typeKeys.map((key) => {
-              const t = types[key];
+            {packageKeys.map((key) => {
+              const p = packages[key];
+              const copy = FUNNEL_PACKAGE_COPY[key];
+              // VIP unlocks once the team tags the client VIP; a request already on VIP keeps it.
+              const locked = key === "vip" && !catalog.vip && original?.package !== "vip";
               return (
-                <button key={key} type="button" className="option-card" aria-pressed={draft.type === key} onClick={() => set({ type: key })}>
+                <button
+                  key={key}
+                  type="button"
+                  className="option-card package-card"
+                  aria-pressed={draft.package === key}
+                  disabled={locked}
+                  onClick={() => set({ package: key })}
+                >
+                  {copy?.tag && (
+                    <Badge tone="brand" mono>
+                      {copy.tag}
+                    </Badge>
+                  )}
                   <span className="option-card__head">
-                    <span>{t.label}</span>
-                    <span className="option-card__price">{t.price ? `from ${formatCents(t.price)}` : "Quote"}</span>
+                    <span>{p.label}</span>
+                    <span className="option-card__price">
+                      {p.list_price && <s className="package-card__was">{formatCents(p.list_price)}</s>} {formatCents(p.price)}
+                    </span>
                   </span>
-                  <span className="option-card__desc">{FUNNEL_TYPE_COPY[key] ?? ""}</span>
+                  <span className="option-card__desc">{copy?.tagline}</span>
+                  <ul className="package-card__includes">
+                    {copy?.includes.map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                  {locked && (
+                    <span className="package-card__locked">
+                      <Icon name="lock" size={12} /> Available once your team marks you as a VIP client
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -245,9 +253,24 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
         </div>
       )}
 
-      {/* 02 — details */}
+      {/* 02 — type */}
+      {!scopeLocked && (
+        <div className="stack stack--8">
+          <span className="kicker">02 · WHAT KIND OF FUNNEL?</span>
+          <div className="option-grid">
+            {typeKeys.map((key) => (
+              <button key={key} type="button" className="option-card" aria-pressed={draft.type === key} onClick={() => set({ type: key })}>
+                <span className="option-card__head">{types[key].label}</span>
+                <span className="option-card__desc">{FUNNEL_TYPE_COPY[key] ?? ""}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 03 — details */}
       <div className="stack stack--10">
-        <span className="kicker">02 · TELL US ABOUT IT</span>
+        <span className="kicker">{scopeLocked ? "TELL US ABOUT IT" : "03 · TELL US ABOUT IT"}</span>
         <Field label="Funnel name" htmlFor="fq-name" required error={apiFields.name}>
           <Input
             id="fq-name"
@@ -274,57 +297,30 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
         </Field>
       </div>
 
-      {/* 03 — extras */}
-      {!scopeLocked && (
-        <div className="stack stack--8">
-          <span className="kicker">03 · EXTRAS</span>
-          {addonKeys.map((key) => {
-            const a = addons[key];
-            const on = !!draft.addons[key];
-            return (
-              <label key={key} className={cn("option-card option-card--row", on && "option-card--on")}>
-                <input type="checkbox" className="option-card__check" checked={on} onChange={() => set({ addons: { ...draft.addons, [key]: !on } })} />
-                <span className="stack stack--2 u-grow">
-                  <span className="text-strong">{a.label}</span>
-                  <span className="text-small">{FUNNEL_ADDON_COPY[key] ?? ""}</span>
-                </span>
-                <span className="option-card__price">+{formatCents(a.price)}</span>
-              </label>
-            );
-          })}
-          <Field label="Delivery" htmlFor="fq-speed">
-            <Select id="fq-speed" value={draft.speed} onChange={(e) => set({ speed: e.target.value as Draft["speed"] })}>
-              <option value="standard">Standard · about 2 weeks</option>
-              <option value="rush">Rush · about 1 week (+{formatCents(catalog.rushPriceCents)})</option>
-            </Select>
-          </Field>
-        </div>
-      )}
-
       {/* 04 — billing */}
       {!scopeLocked && (
         <div className="billing-summary">
-          <span className="kicker kicker--brand">04 · ADDITIONAL BILLING</span>
-          {(isQuote ? [["Custom funnel", "Quote"]] : lines.map(([l, n]) => [l, formatCents(n)])).map(([label, amount]) => (
-            <div className="billing-summary__line" key={label}>
-              <span>{label}</span>
-              <span className="u-mono u-strong">{amount}</span>
-            </div>
-          ))}
+          <span className="kicker kicker--brand">04 · BILLING</span>
+          <div className="billing-summary__line">
+            <span>{pkg ? `${pkg.label}: ${type.label}` : "Current price"}</span>
+            <span className="u-mono u-strong">{totalText}</span>
+          </div>
           <div className="billing-summary__total">
             <span className="text-strong">One-time total</span>
             <span className="billing-summary__amount">{totalText}</span>
           </div>
           <span className="text-small">
-            {isQuote
-              ? "Your team will review your request and send a fixed quote within 1 business day. Nothing is charged until you accept it."
-              : editing
-                ? scopeChanged
-                  ? `Your open invoice will be replaced with a new one for the updated total (currently ${formatCents(editing.priceCents)}).`
+            {editing
+              ? scopeChanged
+                ? editing.invoiceId
+                  ? `Your open invoice (${formatCents(editing.priceCents)}) will be replaced with a new one for ${totalText}.`
+                  : `You will get an invoice for ${totalText}.`
+                : editing.status === "quote" && !editing.priceCents
+                  ? "Your team will send a quote, or choose a package above to get an invoice now."
                   : "The price has not changed. Your open invoice stays the same."
-                : "This is a one-time fee for the build, added to your Billing as a separate invoice. Your monthly plan stays the same."}
+              : `A one-time payment for the build, added to Billing as its own invoice. No monthly fees: the only recurring cost is ${formatCents(catalog.monitoringPriceCents)}/year monitoring, billed separately.`}
           </span>
-          {!isQuote && !editing && (
+          {!editing && (
             <div className="cluster cluster--6" role="radiogroup" aria-label="How to pay">
               {(
                 [
@@ -344,8 +340,8 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
               brand
               label={
                 editing
-                  ? `I understand the one-time charge for this funnel changes to about ${totalText}.`
-                  : `I understand this is an additional one-time charge of ${totalText}, separate from my monthly plan.`
+                  ? `I understand the one-time charge for this funnel changes to ${totalText}.`
+                  : `I understand this is a one-time charge of ${totalText}.`
               }
               checked={draft.agree}
               onChange={() => set({ agree: !draft.agree })}

@@ -20,7 +20,7 @@ export type PortalTab =
 
 export type FunnelStatus = "live" | "build" | "pay" | "queued" | "quote";
 export type FunnelTypeKey = "lead" | "booking" | "webinar" | "sales" | "membership" | "custom";
-export type FunnelAddonKey = "emails" | "upsell" | "ab";
+export type FunnelPackageKey = "foundation" | "bundle" | "vip";
 
 /** What the client fills in when requesting a funnel (the API's FunnelRequestIn, minus the name). */
 export type FunnelRequestDetails = {
@@ -28,8 +28,8 @@ export type FunnelRequestDetails = {
   offer: string;
   audience: string;
   notes: string;
-  addons: FunnelAddonKey[];
-  speed: "standard" | "rush";
+  /** Missing on requests from before packages. */
+  package?: FunnelPackageKey;
 };
 
 export type SocialKey = "facebook" | "instagram" | "tiktok" | "linkedin" | "youtube" | "x" | "google";
@@ -141,12 +141,26 @@ export const FUNNEL_TYPE_COPY: Record<FunnelTypeKey, string> = {
   webinar: "Registration, reminders and replay pages.",
   sales: "Sell a product or package with online payment.",
   membership: "Recurring membership with onboarding.",
-  custom: "Tell us what you need and we will send a quote.",
+  custom: "Something else. Describe it in the details below.",
 };
 
-/** Descriptions for each add-on; labels and prices come from the catalog. */
-export const FUNNEL_ADDON_COPY: Record<FunnelAddonKey, string> = {
-  emails: "5 emails that nurture people who do not buy right away",
-  upsell: "Offer an extra right after checkout",
-  ab: "A second version of the page to see which converts better",
+/** What each package includes (gocwgl.com/#pricing); labels and prices come from the catalog. */
+export const FUNNEL_PACKAGE_COPY: Record<FunnelPackageKey, { tagline: string; tag?: string; includes: string[] }> = {
+  foundation: {
+    tagline: "The plumbing on its own.",
+    includes: ["Pipeline / CRM setup", "Custom-coded funnel, hosted by us", "Email automation tied to the funnel", "Calendar booking built in"],
+  },
+  bundle: {
+    tagline: "Everything connected, reporting included.",
+    includes: [
+      "Everything in Foundation Build",
+      "Campaign email, social post and Canva graphic prompt templates",
+      "AI-powered daily reporting emails",
+      "Loyalty rate on future funnels",
+    ],
+  },
+  vip: {
+    tagline: "For existing Full Bundle clients.",
+    includes: ["An additional custom-coded funnel", "Hosted on the same infrastructure", "Loyalty rate, accounts already in place"],
+  },
 };

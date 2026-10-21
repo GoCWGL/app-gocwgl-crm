@@ -223,6 +223,50 @@
   gap: 8px;
 }
 
+// Package card: the tag sits above the name, the regular price is struck through.
+.package-card {
+  gap: 6px;
+
+  // Badges never wrap by default; a narrow card would let the tag spill into the next one.
+  .badge {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  &__was {
+    margin-right: 4px;
+    color: $muted;
+    font-weight: 600;
+  }
+
+  // VIP before the client is tagged VIP.
+  &:disabled {
+    cursor: not-allowed;
+    border-color: $line-faint;
+    background: $bg-soft;
+    box-shadow: none;
+    opacity: 0.6;
+  }
+
+  &__locked {
+    @include row(4px);
+    margin-top: auto;
+    padding-top: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    color: $muted;
+  }
+
+  &__includes {
+    @include stack(4px);
+    margin: 4px 0 0;
+    padding-left: 16px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: $ink-soft;
+  }
+}
+
 .option-card__check {
   width: 17px;
   height: 17px;
