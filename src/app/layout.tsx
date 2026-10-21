@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 import "@/styles/main.scss";
 import { RouteLoader } from "@/components/layout";
@@ -30,7 +31,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <AppProviders>
           {children}
-          <RouteLoader />
+          {/* Reads the pathname; dynamic routes (/book/[slug]) need it inside Suspense. */}
+          <Suspense>
+            <RouteLoader />
+          </Suspense>
         </AppProviders>
       </body>
     </html>

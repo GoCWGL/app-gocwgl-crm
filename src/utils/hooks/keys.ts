@@ -63,12 +63,9 @@ export const qk = {
   // Portal (keyed by the viewed client so "View as client" never mixes caches)
   portal: ["portal"] as const,
   overview: (range: number) => ["portal", "overview", range] as const,
-  portalActivity: ["portal", "activity"] as const,
   portalFunnels: ["portal", "funnels"] as const,
   funnelCatalog: ["portal", "funnel-catalog"] as const,
   portalTodos: ["portal", "todos"] as const,
-  portalReports: (days: number) => ["portal", "reports", days] as const,
-  portalHealth: ["portal", "health"] as const,
   portalBuild: ["portal", "build"] as const,
   assets: ["portal", "assets"] as const,
   brandKit: ["portal", "brand-kit"] as const,

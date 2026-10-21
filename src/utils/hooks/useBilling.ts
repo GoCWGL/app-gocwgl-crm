@@ -38,5 +38,3 @@ export const usePortalBilling = () => useQuery({ queryKey: qk.portalBilling, que
 /** Polar checkout: the browser leaves for the returned URL. */
 const redirect = (r: { url: string }) => window.location.assign(r.url);
 export const useCheckoutInvoice = () => useApiMutation(api.checkoutInvoice, { onSuccess: redirect });
-export const useCheckoutSubscription = () => useApiMutation(api.checkoutSubscription, { onSuccess: redirect });
-export const useCustomerPortal = () => useApiMutation(api.openCustomerPortal, { onSuccess: redirect });

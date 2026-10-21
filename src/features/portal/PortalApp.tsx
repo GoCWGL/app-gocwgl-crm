@@ -5,29 +5,24 @@ import { AppShell, PageHeader } from "@/components/layout";
 import { Button, Toast } from "@/components/ui";
 import { PORTAL_PAGES, type PortalTab } from "@/data/portal";
 import { RequireClient } from "@/utils/auth/guards";
-import { useOverview, usePortalHealth } from "@/utils/hooks/usePortal";
+import { useOverview } from "@/utils/hooks/usePortal";
 import { useSectionChangeSweep } from "@/utils/navigation";
 import { EmbedCodeDialog } from "./components/EmbedCodeDialog";
 import { FunnelRequestDrawer } from "./components/FunnelRequestDrawer";
 import { PortalSidebar } from "./components/PortalSidebar";
 import { TodoDrawer } from "./components/TodoDrawer";
-import { getHealth } from "./lib/selectors";
 import { AccountSection } from "./sections/AccountSection";
 import { AssetsSection } from "./sections/AssetsSection";
 import { BillingSection } from "./sections/BillingSection";
 import { BuildSection } from "./sections/BuildSection";
+import { CrmSection } from "./sections/CrmSection";
 import { FunnelsSection } from "./sections/FunnelsSection";
-import { HealthSection } from "./sections/HealthSection";
-import { OverviewSection } from "./sections/OverviewSection";
-import { ReportsSection } from "./sections/ReportsSection";
 import { SupportSection } from "./sections/SupportSection";
 import { PortalProvider, usePortal } from "./state/PortalContext";
 
 const SECTIONS: Record<PortalTab, ComponentType> = {
-  overview: OverviewSection,
   funnels: FunnelsSection,
-  reports: ReportsSection,
-  health: HealthSection,
+  crm: CrmSection,
   build: BuildSection,
   assets: AssetsSection,
   support: SupportSection,
@@ -60,7 +55,6 @@ function PortalLayout() {
 
   const page = PORTAL_PAGES[state.tab];
   const Section = SECTIONS[state.tab];
-  const health = getHealth(usePortalHealth().data);
 
   return (
     <AppShell
@@ -77,7 +71,6 @@ function PortalLayout() {
         kicker={`MY SYSTEM // ${page.title.toUpperCase()}`}
         title={page.title}
         subtitle={page.subtitle}
-        dotTone={health.ok ? "green" : "amber"}
         actions={
           !readOnly && (
             <Button variant="primary" size="lg" onClick={() => openSupport()}>

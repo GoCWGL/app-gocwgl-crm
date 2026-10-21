@@ -10,7 +10,9 @@ import { useMe } from "@/utils/hooks/useUsers";
 import { BookingPreview } from "./BookingPreview";
 import { EditCalendarDrawer } from "./EditCalendarDrawer";
 
-export const bookingLink = (cal: Pick<CalendarOut, "slug">) => `book.[yourdomain].com/${cal.slug}`;
+/** The public booking page in this app (/book/{slug}). */
+export const bookingLink = (cal: Pick<CalendarOut, "slug">) =>
+  `${typeof window === "undefined" ? "" : window.location.origin}/book/${encodeURIComponent(cal.slug)}`;
 
 const isLive = (b: BookingOut) => !/cancel/i.test(b.status);
 
@@ -78,7 +80,7 @@ export function CalendarList() {
                     type="button"
                     className="calendar-card__action calendar-card__action--cyan"
                     onClick={() => {
-                      copyToClipboard(`https://${bookingLink(cal)}`);
+                      copyToClipboard(bookingLink(cal));
                       setCopiedId(cal.id);
                     }}
                   >

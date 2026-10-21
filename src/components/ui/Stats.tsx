@@ -54,7 +54,7 @@ type KpiCardProps = {
   trendColor?: string;
 };
 
-/** Big number card used on the dashboard and portal overview. */
+/** Big number card used on the dashboard. */
 export function KpiCard({ label, value, icon, footer, trendColor }: KpiCardProps) {
   const style = trendColor ? ({ "--trend": trendColor } as CSSProperties) : undefined;
   return (

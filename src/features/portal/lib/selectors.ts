@@ -1,38 +1,7 @@
 import type { PhaseState } from "@/components/ui";
 import { SOCIAL_NETWORKS, type CustomLink, type SocialKey } from "@/data/portal";
 import { isUrl } from "@/lib/utils";
-import type { HealthOut, ProjectOut } from "@/utils/api/models";
-
-// ----------------------------------------------------------------- Health
-export type HealthSummary = {
-  issues: string[];
-  ok: boolean;
-  title: string;
-  subtitle: string;
-};
-
-/** Banner text from the API's health checks (the API decides each check's state). */
-export function getHealth(health: HealthOut | undefined): HealthSummary {
-  const issues = (health?.checks ?? []).filter((c) => c.state !== "ok").map((c) => c.name);
-  if (!health || !issues.length) {
-    return {
-      issues,
-      ok: true,
-      title: health ? "All systems running" : "Checking your system…",
-      subtitle: health ? "Every page, form, automation and connection is working normally." : "",
-    };
-  }
-  const plural = issues.length > 1;
-  const down = health.overall === "down";
-  return {
-    issues,
-    ok: false,
-    title: down
-      ? `Part of your system is down · ${issues.length} item${plural ? "s" : ""} need attention`
-      : `Your system is running · ${issues.length} item${plural ? "s" : ""} need attention`,
-    subtitle: `${issues.join(" and ")} ${plural ? "need" : "needs"} a quick look.${down ? "" : " Everything else is working normally."}`,
-  };
-}
+import type { ProjectOut } from "@/utils/api/models";
 
 // ------------------------------------------------------------------ Build
 export type BuildPhaseView = {

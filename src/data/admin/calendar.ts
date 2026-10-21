@@ -34,11 +34,21 @@ export type CalendarProvider = {
   /** Signs in with OAuth instead of a password. */
   oauth: boolean;
   readOnly?: boolean;
+  /** Syncs today. The others save their details but aren't read yet (use the calendar link instead). */
+  available?: boolean;
   help: string;
   fields: CalendarProviderField[];
 };
 
 export const CALENDAR_PROVIDERS: CalendarProvider[] = [
+  {
+    id: "ics", name: "Calendar link (iCal)", desc: "Google, Outlook, iCloud or any calendar app", initials: "ICS", tone: "green", oauth: false,
+    readOnly: true, available: true,
+    help:
+      "Paste your calendar’s private iCal address. Google: Settings › your calendar › Integrate calendar › Secret address in iCal format. " +
+      "Outlook: Settings › Calendar › Shared calendars › Publish a calendar › ICS link. iCloud: share the calendar as a Public Calendar and copy the link.",
+    fields: [{ key: "server", label: "Calendar link (https:// or webcal://)", type: "url", placeholder: "https://calendar.google.com/calendar/ical/…/basic.ics" }],
+  },
   {
     id: "google", name: "Google Calendar", desc: "Gmail and Google Workspace", initials: "G", tone: "cyan", oauth: true,
     help: "You will be sent to Google to sign in and allow access. We only read busy times and add bookings.",
@@ -74,10 +84,5 @@ export const CALENDAR_PROVIDERS: CalendarProvider[] = [
       { key: "account", label: "Username", type: "text", placeholder: "" },
       { key: "secret", label: "Password", type: "password", placeholder: "" },
     ],
-  },
-  {
-    id: "ics", name: "ICS calendar link", desc: "Read-only feed from any app", initials: "ICS", tone: "green", oauth: false, readOnly: true,
-    help: "Paste a public or secret .ics link. We check it for busy times every 15 minutes. Bookings cannot be written to it.",
-    fields: [{ key: "server", label: "Calendar link (.ics)", type: "url", placeholder: "https://…/calendar.ics" }],
   },
 ];

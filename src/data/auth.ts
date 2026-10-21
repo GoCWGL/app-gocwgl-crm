@@ -10,7 +10,7 @@ export type BrandRow = { icon: string; label: string; value: string; tone: Tone 
 export const BRAND_PANEL = {
   kicker: "// CLIENT PORTAL",
   title: "Watch your system work, live.",
-  body: "See your funnels, leads, daily reports and build progress, all in one portal.",
+  body: "See your funnels, build progress and transactions, all in one portal.",
   panelTitle: "YOUR SYSTEM · ALL GREEN",
   rows: [
     { icon: "▲", label: "Funnels online", value: "4 / 4", tone: "green" },

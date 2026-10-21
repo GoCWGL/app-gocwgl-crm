@@ -1,0 +1,111 @@
+@use "../../abstracts" as *;
+
+// Intro banner at the top of the CRM page.
+.crm-hero {
+  @include cluster(16px);
+  padding: 20px 22px;
+  border: 1px solid rgba(124, 77, 255, 0.3);
+  border-radius: 18px;
+  background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(8, 145, 178, 0.06));
+
+  &__title {
+    font-size: 20px;
+    font-weight: 800;
+  }
+}
+
+.crm-request {
+  @include cluster(12px);
+}
+
+.crm-packages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.crm-package {
+  @include stack(14px);
+  align-items: flex-start;
+
+  > .btn {
+    align-self: stretch;
+    margin-top: auto;
+  }
+
+  &--featured {
+    border-color: rgba(255, 153, 0, 0.5);
+    box-shadow: 0 0 22px rgba(255, 153, 0, 0.15);
+  }
+
+  &__name {
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  &__price {
+    font-family: $font-mono;
+    font-size: 30px;
+    font-weight: 800;
+    color: $orange-ink;
+  }
+
+  &__includes {
+    @include stack(8px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    line-height: 1.4;
+
+    li {
+      display: flex;
+      gap: 8px;
+    }
+
+    svg {
+      flex: none;
+      margin-top: 2px;
+      color: $green-500;
+    }
+  }
+
+  &__timeline {
+    @include row(6px);
+  }
+}
+
+.crm-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__step {
+    @include stack(4px);
+    padding: 12px 14px;
+    border: 1px solid rgba(8, 145, 178, 0.15);
+    border-radius: $radius-lg;
+    background: $bg;
+  }
+}
+
+.crm-faq {
+  padding: 10px 0;
+  border-bottom: 1px solid $line-faint;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  summary {
+    cursor: pointer;
+  }
+
+  p {
+    margin: 6px 0 0;
+  }
+}

@@ -43,5 +43,3 @@ export const deletePaymentConnection = (provider: string) => del(`/admin/payment
 export const getPortalBilling = () => get<ClientBillingOut>("/portal/billing");
 /** Redirect the browser to the returned `url` (Polar checkout). */
 export const checkoutInvoice = (id: string) => post<CheckoutOut>(`/portal/billing/invoices/${id}/checkout`);
-export const checkoutSubscription = () => post<CheckoutOut>("/portal/billing/subscription/checkout");
-export const openCustomerPortal = () => post<CheckoutOut>("/portal/billing/customer-portal");

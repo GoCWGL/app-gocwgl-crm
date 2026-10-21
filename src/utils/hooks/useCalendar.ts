@@ -1,8 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as api from "@/utils/api/calendar";
-import type { AdminBookingIn, BookingPatch, CalendarUpdate, ConnectionCreate, ConnectionUpdate } from "@/utils/api/models";
+import type { AdminBookingIn, BookingPatch, BookingRequest, CalendarUpdate, ConnectionCreate, ConnectionUpdate } from "@/utils/api/models";
 import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
 
@@ -21,7 +21,13 @@ export const useUpdateBooking = () =>
   useApiMutation((v: { id: string; body: BookingPatch }) => api.updateBooking(v.id, v.body), { invalidate: BOOKING_KEYS });
 export const useCancelBooking = () => useApiMutation(api.cancelBooking, { invalidate: BOOKING_KEYS });
 
-export const useCalendarConnections = () => useQuery({ queryKey: qk.calendarConnections, queryFn: api.listCalendarConnections });
+/** Polls while a just-saved calendar link waits for its first sync (the worker runs it within seconds). */
+export const useCalendarConnections = () =>
+  useQuery({
+    queryKey: qk.calendarConnections,
+    queryFn: api.listCalendarConnections,
+    refetchInterval: (q) => (q.state.data?.some((c) => c.provider === "ics" && !c.syncedAt && !c.syncError) ? 3000 : false),
+  });
 export const useCreateCalendarConnection = () =>
   useApiMutation((v: ConnectionCreate) => api.createCalendarConnection(v), { invalidate: [qk.calendarConnections] });
 export const useUpdateCalendarConnection = () =>
@@ -34,3 +40,11 @@ export const usePublicCalendar = (slug: string) =>
   useQuery({ queryKey: qk.publicCalendar(slug), queryFn: () => api.getPublicCalendar(slug), enabled: !!slug, retry: false });
 export const usePublicSlots = (slug: string, day: string) =>
   useQuery({ queryKey: qk.publicSlots(slug, day), queryFn: () => api.getPublicSlots(slug, day), enabled: !!slug && !!day });
+/** Refreshes the slots after booking, and after a 409 (taken slot) so it drops off the list. */
+export function useBookPublic(slug: string) {
+  const qc = useQueryClient();
+  return useApiMutation((body: BookingRequest) => api.bookPublic(slug, body), {
+    invalidate: [qk.publicCalendar(slug)],
+    onError: () => void qc.invalidateQueries({ queryKey: qk.publicCalendar(slug) }),
+  });
+}

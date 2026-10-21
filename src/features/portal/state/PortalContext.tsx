@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import type { PortalTab, RequestType } from "@/data/portal";
+import { PORTAL_PAGES, type PortalTab, type RequestType } from "@/data/portal";
 import { useSession } from "@/utils/auth/session";
 
 /** Draft of the support request form; other pages can prefill it. */
@@ -30,11 +30,12 @@ export type PortalState = {
   embedFunnelId: string;
 };
 
-/** Billing return from Polar: /portal?tab=billing&paid=… or &subscribed=1 */
+/** Payment return from Polar: /portal?tab=billing&paid=… */
 function initialState(params: URLSearchParams | null): PortalState {
-  const tab = params?.get("tab") as PortalTab | null;
+  const tab = params?.get("tab") ?? "";
   return {
-    tab: tab ?? "overview",
+    // Old links may name a page that no longer exists (e.g. ?tab=overview).
+    tab: tab in PORTAL_PAGES ? (tab as PortalTab) : "funnels",
     toast: "",
     support: { view: "requests", type: "change", title: "", details: "" },
     openTodoId: "",

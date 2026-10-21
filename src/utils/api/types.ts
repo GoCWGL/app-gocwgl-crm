@@ -3678,6 +3678,8 @@ export interface components {
             checkConflicts: boolean;
             /** Syncedat */
             syncedAt: string | null;
+            /** Syncerror */
+            syncError: string | null;
             /** Subcalendars */
             subCalendars: {
                 [key: string]: unknown;

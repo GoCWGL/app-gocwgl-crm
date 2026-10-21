@@ -8,10 +8,8 @@ import type { Tone } from "@/lib/tones";
 
 // ------------------------------------------------------------------ Types
 export type PortalTab =
-  | "overview"
   | "funnels"
-  | "reports"
-  | "health"
+  | "crm"
   | "build"
   | "assets"
   | "support"
@@ -21,6 +19,7 @@ export type PortalTab =
 export type FunnelStatus = "live" | "build" | "pay" | "queued" | "quote";
 export type FunnelTypeKey = "lead" | "booking" | "webinar" | "sales" | "membership" | "custom";
 export type FunnelPackageKey = "foundation" | "bundle" | "vip";
+export type CrmPackageKey = "simple" | "custom";
 
 /** What the client fills in when requesting a funnel (the API's FunnelRequestIn, minus the name). */
 export type FunnelRequestDetails = {
@@ -37,18 +36,14 @@ export type CustomLink = { id: string; label: string; url: string; touched: bool
 
 export type AssetCategory = "logos" | "photos" | "videos" | "docs" | "other";
 
-export type RangeKey = "7" | "30" | "90";
-
 // ------------------------------------------------------------- Navigation
 export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }> = {
-  overview: { title: "Overview", subtitle: "How your system and your business are doing." },
   funnels: { title: "Funnels", subtitle: "The funnels built for you, how they perform, and requests for new ones." },
-  reports: { title: "Daily reports", subtitle: "Your numbers each day, with what they mean." },
-  health: { title: "System health", subtitle: "Every part of your system, checked around the clock." },
+  crm: { title: "CRM", subtitle: "Have GoCWGL build a CRM around how your business sells." },
   build: { title: "Build progress", subtitle: "Follow along as we build your system." },
   assets: { title: "Assets", subtitle: "Upload your logos, photos and brand files for your GoCWGL team." },
   support: { title: "Support", subtitle: "Ask for changes, report a problem, or message your team." },
-  billing: { title: "Billing", subtitle: "Your plan, payments and invoices." },
+  billing: { title: "Transaction history", subtitle: "Your invoices and payments to GoCWGL." },
   account: { title: "Account", subtitle: "Your profile, alerts and who can see this portal." },
 };
 
@@ -56,10 +51,8 @@ export const PORTAL_NAV: Array<{ group: string; items: Array<{ tab: PortalTab; l
   {
     group: "My system",
     items: [
-      { tab: "overview", label: "Overview", icon: "grid", tone: "cyan" },
       { tab: "funnels", label: "Funnels", icon: "funnel", tone: "brand" },
-      { tab: "reports", label: "Daily reports", icon: "chart", tone: "teal" },
-      { tab: "health", label: "System health", icon: "pulse", tone: "green" },
+      { tab: "crm", label: "CRM", icon: "users", tone: "purple" },
     ],
   },
   {
@@ -68,7 +61,7 @@ export const PORTAL_NAV: Array<{ group: string; items: Array<{ tab: PortalTab; l
       { tab: "build", label: "Build progress", icon: "rocket", tone: "brand" },
       { tab: "assets", label: "Assets", icon: "folderUpload", tone: "indigo" },
       { tab: "support", label: "Support", icon: "message", tone: "sky" },
-      { tab: "billing", label: "Billing", icon: "card", tone: "pink" },
+      { tab: "billing", label: "Transactions", icon: "invoice", tone: "pink" },
     ],
   },
 ];
@@ -76,7 +69,6 @@ export const PORTAL_NAV: Array<{ group: string; items: Array<{ tab: PortalTab; l
 export const ALERT_OPTIONS = [
   { key: "report", label: "Daily report email", desc: "Your numbers every morning at 7:00 AM" },
   { key: "lead", label: "New lead alerts", desc: "An email the moment someone signs up" },
-  { key: "health", label: "System health alerts", desc: "If anything in your system needs attention" },
   { key: "build", label: "Build updates", desc: "When your GoCWGL team posts progress" },
 ] as const;
 
@@ -105,14 +97,6 @@ export const ASSET_CATEGORIES: Array<{ value: AssetCategory; label: string }> = 
   { value: "docs", label: "Documents" },
   { value: "other", label: "Other" },
 ];
-
-// ----------------------------------------------------------------- Reports
-export const SOURCE_COLORS: Record<string, string> = {
-  "Instagram ad": "#7C3AED",
-  "Landing page": "#0891B2",
-  Referral: "#10B981",
-  "Google search": "#F59E0B",
-};
 
 // ----------------------------------------------------------------- Support
 export const REQUEST_TYPES = {
@@ -164,3 +148,77 @@ export const FUNNEL_PACKAGE_COPY: Record<FunnelPackageKey, { tagline: string; ta
     includes: ["An additional custom-coded funnel", "Hosted on the same infrastructure", "Loyalty rate, accounts already in place"],
   },
 };
+
+// ------------------------------------------------------------- CRM builds
+/** CRM requests go to the team as support requests whose title starts with this. */
+export const CRM_REQUEST_PREFIX = "CRM build request";
+
+export const CRM_PACKAGES: Record<
+  CrmPackageKey,
+  { label: string; priceCents: number; tagline: string; tag?: string; timeline: string; includes: string[] }
+> = {
+  simple: {
+    label: "Simple CRM",
+    priceCents: 1_000_000,
+    tagline: "Everything a growing business needs to track leads and close deals.",
+    timeline: "About 6–8 weeks",
+    includes: [
+      "Contacts and companies, with tags and notes",
+      "Sales pipelines with drag-and-drop stages",
+      "Automations: follow-ups, reminders and task assignment",
+      "Email: templates, one-off emails and campaigns",
+      "Calendar with online booking",
+      "Forms that drop leads straight into your CRM",
+      "Surveys and feedback forms",
+      "Dashboard with your key numbers",
+      "Import your contacts from a spreadsheet",
+      "Up to 5 team logins",
+      "Training session and 30 days of support after launch",
+    ],
+  },
+  custom: {
+    label: "Custom CRM",
+    priceCents: 1_500_000,
+    tag: "MOST COMPLETE",
+    tagline: "Built around exactly how your business runs, with room to grow.",
+    timeline: "About 10–14 weeks",
+    includes: [
+      "Everything in Simple CRM",
+      "Custom records for your business (jobs, properties, cases, orders…)",
+      "Invoicing and online payments",
+      "A client portal for your own customers",
+      "Roles and permissions, with unlimited team logins",
+      "Integrations with the tools you already use (accounting, Zapier, webhooks, API)",
+      "SMS reminders and call logging",
+      "AI helpers: lead scoring, email drafts and call summaries",
+      "Custom reports and dashboards",
+      "Data moved over from your current CRM",
+      "Your branding, on your own domain",
+      "Team training and 90 days of priority support",
+    ],
+  },
+};
+
+/** Optional extras, quoted per project. */
+export const CRM_ADDONS = [
+  { key: "migration", label: "Data migration", desc: "We move contacts, deals and history from your current CRM or spreadsheets." },
+  { key: "sms", label: "SMS and WhatsApp", desc: "Two-way texting with leads and clients, right from a contact." },
+  { key: "care", label: "Care plan", desc: "Hosting, backups, monitoring and small changes every month." },
+  { key: "training", label: "Extra team training", desc: "More sessions and written guides for new hires." },
+] as const;
+
+export const CRM_STEPS = [
+  { title: "Discovery call", desc: "We learn how you find, sell to and serve your clients." },
+  { title: "Blueprint", desc: "You get a plan of every screen and automation, and the final quote, to approve." },
+  { title: "Build", desc: "We build it and post weekly updates in Build progress." },
+  { title: "Training and launch", desc: "We move your data in, train your team and go live together." },
+];
+
+export const CRM_FAQ = [
+  { q: "Do I own my CRM and my data?", a: "Yes. Everything we build and every record in it is yours, and you can export your data at any time." },
+  { q: "Are there monthly fees?", a: "The build is a one-time price. Hosting and ongoing changes can be covered by an optional care plan." },
+  { q: "Can you move my data from my current CRM?", a: "Yes. Spreadsheet imports are included in both packages, and the Custom CRM also moves data over from your current CRM." },
+  { q: "Not sure which package fits?", a: "Request either one. We confirm the right package on the discovery call before you pay anything." },
+];
+
+export const CRM_TEAM_SIZES = ["Just me", "2–5 people", "6–20 people", "More than 20"];

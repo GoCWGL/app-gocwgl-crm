@@ -140,13 +140,13 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
         // Priced funnels come back with an invoice; "Pay now" goes straight to checkout.
         if (f.invoiceId && draft.pay === "now") {
           checkout.mutate(f.invoiceId, {
-            onError: (err) => update({ funnelRequestOpen: false, toast: `Request sent. ${errorMessage(err)} You can pay it from Billing.` }),
+            onError: (err) => update({ funnelRequestOpen: false, toast: `Request sent. ${errorMessage(err)} You can pay it from Transactions.` }),
           });
           return;
         }
         update({
           funnelRequestOpen: false,
-          toast: `Request sent. An invoice for ${formatCents(f.priceCents)} is in Billing.`,
+          toast: `Request sent. An invoice for ${formatCents(f.priceCents)} is in Transactions.`,
         });
       },
       onError,
@@ -318,14 +318,14 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
                 : editing.status === "quote" && !editing.priceCents
                   ? "Your team will send a quote, or choose a package above to get an invoice now."
                   : "The price has not changed. Your open invoice stays the same."
-              : `A one-time payment for the build, added to Billing as its own invoice. No monthly fees: the only recurring cost is ${formatCents(catalog.monitoringPriceCents)}/year monitoring, billed separately.`}
+              : `A one-time payment for the build, added to Transactions as its own invoice. No monthly fees: the only recurring cost is ${formatCents(catalog.monitoringPriceCents)}/year monitoring, billed separately.`}
           </span>
           {!editing && (
             <div className="cluster cluster--6" role="radiogroup" aria-label="How to pay">
               {(
                 [
                   ["now", "Pay now", "Go to secure checkout and start the build right away"],
-                  ["invoice", "Send me an invoice", "Pay within 7 days from Billing. The build starts once it is paid."],
+                  ["invoice", "Send me an invoice", "Pay within 7 days from Transactions. The build starts once it is paid."],
                 ] as const
               ).map(([key, label, desc]) => (
                 <button key={key} type="button" role="radio" aria-checked={draft.pay === key} className="option-card pay-option" onClick={() => set({ pay: key })}>

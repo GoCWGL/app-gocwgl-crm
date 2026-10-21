@@ -1,10 +1,8 @@
 // Client portal (/portal) — one partial per section.
 @use "shell";
-@use "overview";
 @use "build";
 @use "funnels";
-@use "reports";
-@use "health";
+@use "crm";
 @use "assets";
 @use "billing";
 @use "support";

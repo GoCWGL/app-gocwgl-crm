@@ -19,7 +19,6 @@ import { useApiMutation } from "./mutation";
 
 // ------------------------------------------------------------------ Portal (signed-in client, or staff "view as")
 export const useOverview = (range: api.Range) => useQuery({ queryKey: qk.overview(range), queryFn: () => api.getOverview(range) });
-export const usePortalActivity = () => useQuery({ queryKey: qk.portalActivity, queryFn: () => api.getPortalActivity({ limit: 20 }) });
 
 export const usePortalFunnels = () => useQuery({ queryKey: qk.portalFunnels, queryFn: api.listPortalFunnels });
 export const useFunnelCatalog = () => useQuery({ queryKey: qk.funnelCatalog, queryFn: api.getFunnelCatalog, staleTime: 5 * 60_000 });
@@ -33,17 +32,12 @@ export const useUpdateFunnelRequest = () =>
 export const useCancelFunnelRequest = () =>
   useApiMutation(api.cancelFunnelRequest, { invalidate: [qk.portalFunnels, qk.portalBilling, ["portal", "overview"]] });
 
-const TODO_KEYS = [qk.portalTodos, ["portal", "overview"], qk.portalActivity];
+const TODO_KEYS = [qk.portalTodos, ["portal", "overview"]];
 export const usePortalTodos = () => useQuery({ queryKey: qk.portalTodos, queryFn: api.listPortalTodos });
 export const useCompleteTodo = () => useApiMutation(api.completeTodo, { invalidate: TODO_KEYS });
 export const useRequestTodoChanges = () =>
   useApiMutation((v: { id: string; text: string }) => api.requestTodoChanges(v.id, v.text), { invalidate: TODO_KEYS });
 export const useCommentOnTodo = () => useApiMutation((v: { id: string; text: string }) => api.commentOnTodo(v.id, v.text), { invalidate: TODO_KEYS });
-
-export const usePortalReports = (days: api.Range) => useQuery({ queryKey: qk.portalReports(days), queryFn: () => api.listPortalReports(days) });
-
-export const usePortalHealth = () => useQuery({ queryKey: qk.portalHealth, queryFn: api.getPortalHealth });
-export const useReportHealthCheck = () => useApiMutation(api.reportHealthCheck, { invalidate: [qk.portalHealth, qk.portalTickets] });
 
 // ------------------------------------------------------------------ Admin: a client's portal content
 export const useClientTodos = (contactId: string) =>

@@ -2,7 +2,6 @@ import { del, get, patch, post, put } from "./client";
 import type {
   AdminFunnelCreate,
   AdminFunnelUpdate,
-  ClientActivityOut,
   FunnelCatalogOut,
   FunnelOut,
   FunnelRequestIn,
@@ -25,8 +24,6 @@ export type Range = 7 | 30 | 90;
 
 // ------------------------------------------------------------------ Portal (the API decides whose data this is)
 export const getOverview = (range: Range = 30) => get<OverviewOut>("/portal/overview", { range });
-export const getPortalActivity = (opts: { before?: string; limit?: number } = {}) =>
-  get<ClientActivityOut[]>("/portal/activity", opts);
 
 export const listPortalFunnels = () => get<FunnelOut[]>("/portal/funnels");
 export const getFunnelCatalog = () => get<FunnelCatalogOut>("/portal/funnels/catalog");
@@ -39,12 +36,6 @@ export const listPortalTodos = () => get<TodoOut[]>("/portal/todos");
 export const completeTodo = (id: string) => post<TodoOut>(`/portal/todos/${id}/complete`);
 export const requestTodoChanges = (id: string, text: string) => post<TodoOut>(`/portal/todos/${id}/request-changes`, { text });
 export const commentOnTodo = (id: string, text: string) => post<TodoOut>(`/portal/todos/${id}/comments`, { text });
-
-export const listPortalReports = (days: Range = 30) => get<ReportOut[]>("/portal/reports", { days });
-
-export const getPortalHealth = () => get<HealthOut>("/portal/health");
-/** Sends the problem to the team as a bug ticket. */
-export const reportHealthCheck = (checkId: string) => post<unknown>(`/portal/health/${checkId}/report`);
 
 // ------------------------------------------------------------------ Admin: client portal content
 const client = (contactId: string) => `/admin/clients/${contactId}`;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties, type FormEvent } from "react";
-import { Avatar, Badge, Button, Checkbox, Field, FormError, Input, LoadState, Select, SoonNote } from "@/components/ui";
+import { Avatar, Badge, Button, Checkbox, Field, FormError, Input, LoadState, SoonNote } from "@/components/ui";
 import { CALENDAR_PROVIDERS, type CalendarProvider } from "@/data/admin";
 import { cn } from "@/lib/utils";
 import type { ConnectionOut, SubCalendar } from "@/utils/api/models";
@@ -17,14 +17,14 @@ import {
 import { useMe } from "@/utils/hooks/useUsers";
 
 /**
- * Calendar connections. They save today, but syncing isn't built yet (backend F-1 / F-2), so busy
- * times don't block slots and bookings aren't written back. The page says so instead of faking it.
+ * Calendar sync. A calendar link (iCal) is read every 15 minutes and its busy times block slots on every
+ * booking link; bookings reach your calendar as emailed invites. Sign-in providers (Google, Outlook…) and
+ * CalDAV save their details but aren't read yet, so they say so instead of faking it.
  */
 export function CalendarSync() {
   const connections = useCalendarConnections();
   const canWrite = canWriteCrm(useMe().data);
   const byProvider = (id: string) => connections.data?.find((c) => c.provider === id);
-  const writable = CALENDAR_PROVIDERS.filter((p) => byProvider(p.id) && !p.readOnly);
 
   return (
     <div className="page-stack">
@@ -32,27 +32,15 @@ export function CalendarSync() {
         <div className="card card--tight sync-intro">
           <span className="kicker">HOW IT WORKS</span>
           <span className="text-body">
-            Connect your own calendar (Google, Outlook, Apple or any other). Once syncing is switched on, busy times there will block booking
-            slots here and every new booking will be added to your calendar. <SoonNote>Syncing coming soon</SoonNote>
+            Paste your calendar’s private link (Google, Outlook, iCloud or any app). Every 15 minutes we read your busy times and hide those slots
+            on every booking link, so nobody can book you while you are in another meeting.
           </span>
         </div>
         <div className="card card--tight sync-target">
-          <label className="kicker kicker--brand" htmlFor="cc-write">
-            ADD NEW BOOKINGS TO
-          </label>
-          <Select
-            id="cc-write"
-            className="u-strong"
-            disabled
-            value={writable[0]?.id ?? ""}
-            options={
-              writable.length
-                ? writable.map((p) => ({ value: p.id, label: `${p.name} · ${byProvider(p.id)?.account}` }))
-                : [{ value: "", label: "Only the CRM calendar" }]
-            }
-          />
+          <span className="kicker kicker--brand">BOOKINGS IN YOUR CALENDAR</span>
           <span className="text-small">
-            Writing bookings into your own calendar is coming soon. Until then, bookings live in the CRM calendar.
+            Every booking, reschedule and cancellation emails your team a calendar invite (.ics). Open it to add, move or remove the call in
+            your calendar. It goes to whoever gets the “Call booked” alert in Settings. Guests get an invite with their confirmation too.
           </span>
         </div>
       </div>
@@ -95,7 +83,8 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
       {
         provider: p.id,
         account: (draft.account ?? "").trim(),
-        server: (draft.server ?? "").trim(),
+        // Calendar apps label feed links webcal://; it is plain https underneath.
+        server: (draft.server ?? "").trim().replace(/^webcal:\/\//i, "https://"),
         secret: draft.secret ? draft.secret : null,
         checkConflicts: true,
       },
@@ -119,7 +108,7 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
         </div>
       </div>
       <Badge tone={on ? "green" : "neutral"} mono dot>
-        {on ? (p.readOnly ? "SAVED · READ ONLY" : "SAVED") : "NOT CONNECTED"}
+        {on ? (p.available ? "CONNECTED · READ ONLY" : "SAVED · NOT SYNCING") : p.available ? "NOT CONNECTED" : "COMING SOON"}
       </Badge>
 
       {on && connection && (
@@ -151,9 +140,19 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
               ))}
             </div>
           )}
-          <span className="text-small">
-            {connection.syncedAt ? `Synced ${formatRelative(connection.syncedAt)}` : "Saved — syncing coming soon"}
-          </span>
+          {connection.syncError ? (
+            <span className="field__error" role="alert">
+              Last sync failed: {connection.syncError}
+            </span>
+          ) : (
+            <span className="text-small">
+              {connection.syncedAt
+                ? `Synced ${formatRelative(connection.syncedAt)} · checks every 15 minutes`
+                : p.available
+                  ? "Syncing for the first time…"
+                  : "Saved — not synced yet. Use the calendar link instead."}
+            </span>
+          )}
         </div>
       )}
 
@@ -198,7 +197,8 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
       <FormError error={update.error ?? remove.error} />
       {canWrite && (
         <div className="cluster cluster--8 cluster--nowrap provider-card__actions">
-          {!on && !editing && (
+          {!on && !editing && !p.available && <span className="text-small">Coming soon. Use the calendar link for now.</span>}
+          {!on && !editing && p.available && (
             <Button
               variant="primary"
               block
