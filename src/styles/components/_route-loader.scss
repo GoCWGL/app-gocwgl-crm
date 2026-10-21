@@ -268,7 +268,9 @@ $z-route-loader: $z-overlay + 10;
 .page-enter {
   @include stack(24px);
   min-width: 0;
-  animation: page-enter 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  // "backwards", not "both": a transform kept after the animation would make this the containing block
+  // for position: fixed, trapping drawers and modals opened inside a section in the section's box.
+  animation: page-enter 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

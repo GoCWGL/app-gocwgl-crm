@@ -13,6 +13,7 @@ import { draftToForm, formToDraft, newFieldId } from "@/utils/mappers/forms";
 import { getSalesStages, stageOf } from "../../lib/contacts";
 import { embedCode } from "../../lib/forms";
 import { FormBuilder } from "./FormBuilder";
+import { FormSubmissionsDrawer } from "./FormSubmissionsDrawer";
 
 const blankForm = (): LeadForm => ({
   id: "",
@@ -39,7 +40,9 @@ export function FormsSection() {
   const remove = useDeleteForm();
   const [draft, setDraft] = useState<LeadForm | null>(null);
   const [copiedId, setCopiedId] = useState("");
+  const [submissionsId, setSubmissionsId] = useState("");
   const forms = (query.data ?? []).map(formToDraft);
+  const submissionsFor = forms.find((f) => f.id === submissionsId);
 
   if (draft) return <FormBuilder draft={draft} onChange={setDraft} onClose={() => setDraft(null)} />;
 
@@ -110,6 +113,9 @@ export function FormsSection() {
                   Edit
                 </Button>
               )}
+              <Button size="sm" onClick={() => setSubmissionsId(f.id)}>
+                Submissions · {f.subs}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -154,6 +160,7 @@ export function FormsSection() {
         ))}
       </div>
       </LoadState>
+      {submissionsFor && <FormSubmissionsDrawer form={submissionsFor} onClose={() => setSubmissionsId("")} />}
     </div>
   );
 }

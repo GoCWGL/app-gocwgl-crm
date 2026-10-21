@@ -49,6 +49,7 @@ export const qk = {
   automationRuns: (id: string) => ["automations", id, "runs"] as const,
   forms: ["forms"] as const,
   formSubmissions: (id: string) => ["forms", id, "submissions"] as const,
+  contactSubmissions: (contactId: string) => ["forms", "by-contact", contactId] as const,
   surveys: ["surveys"] as const,
   surveyResponses: (id: string) => ["surveys", id, "responses"] as const,
 

@@ -1,5 +1,5 @@
 import { del, get, patch, post } from "./client";
-import type { FormIn, FormOut, FormPatch, PublicFormOut, PublicSubmission, SubmissionOut, SubmissionResult } from "./models";
+import type { ContactSubmissionOut, FormIn, FormOut, FormPatch, PublicFormOut, PublicSubmission, SubmissionOut, SubmissionResult } from "./models";
 
 export const listForms = () => get<FormOut[]>("/admin/forms");
 export const getForm = (id: string) => get<FormOut>(`/admin/forms/${id}`);
@@ -9,6 +9,9 @@ export const updateForm = (id: string, body: FormPatch) => patch<FormOut>(`/admi
 export const deleteForm = (id: string) => del(`/admin/forms/${id}`);
 export const listFormSubmissions = (id: string, opts: { limit?: number; offset?: number } = {}) =>
   get<SubmissionOut[]>(`/admin/forms/${id}/submissions`, opts);
+/** Everything one contact submitted, across forms, with field labels resolved (for the contact's profile). */
+export const listContactSubmissions = (contactId: string) =>
+  get<ContactSubmissionOut[]>("/admin/forms/submissions", { contact_id: contactId });
 
 // ------------------------------------------------------------------ Public embed (no sign-in)
 export const getPublicForm = (id: string) => get<PublicFormOut>(`/public/forms/${id}`);

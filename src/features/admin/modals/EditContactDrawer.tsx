@@ -27,6 +27,7 @@ import { useApiMutation } from "@/utils/hooks/mutation";
 import { qk } from "@/utils/hooks/keys";
 import { useMe } from "@/utils/hooks/useUsers";
 import { ClientEmbedsCard } from "../components/ClientEmbedsCard";
+import { ContactAnswersCard } from "../components/ContactAnswersCard";
 import { PortalLoginCard } from "../components/PortalLoginCard";
 import { TagPicker } from "../components/TagPicker";
 import { CONTACT_STATUS, contactName, contactStatus, getSalesStages, salesPipeline, subscriptionOf, type ContactStatus } from "../lib/contacts";
@@ -392,6 +393,8 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
         <span className="kicker">TAGS</span>
         <TagPicker tags={tags} selected={draft.tags} onChange={(ids) => set({ tags: ids })} />
       </div>
+
+      <ContactAnswersCard contact={c} />
 
       <Field label={<span className="kicker">NOTES</span>} htmlFor="ec-notes">
         <Textarea id="ec-notes" rows={4} value={draft.notes} onChange={(e) => set({ notes: e.target.value })} placeholder="Anything worth remembering about this contact" />

@@ -1840,6 +1840,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/forms/submissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Contact Submissions
+         * @description Everything one contact submitted, across all forms (for the contact's profile).
+         */
+        get: operations["contact_submissions_api_admin_forms_submissions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/forms/{form_id}": {
         parameters: {
             query?: never;
@@ -3196,6 +3216,15 @@ export interface components {
             /** Quotecents */
             quoteCents?: number | null;
         };
+        /** AnswerOut */
+        AnswerOut: {
+            /** Fieldid */
+            fieldId: string;
+            /** Label */
+            label: string;
+            /** Value */
+            value: string | boolean | number | null;
+        };
         /** AuditOut */
         AuditOut: {
             /**
@@ -3788,6 +3817,31 @@ export interface components {
             archivedAt: string | null;
             /** Tags */
             tags: components["schemas"]["TagOut"][];
+        };
+        /**
+         * ContactSubmissionOut
+         * @description A submission on a contact's profile, with field labels resolved.
+         */
+        ContactSubmissionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Formid
+             * Format: uuid
+             */
+            formId: string;
+            /** Formname */
+            formName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Answers */
+            answers: components["schemas"]["AnswerOut"][];
         };
         /** ContactUpdate */
         ContactUpdate: {
@@ -12380,6 +12434,50 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["FormOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    contact_submissions_api_admin_forms_submissions_get: {
+        parameters: {
+            query: {
+                contact_id: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Contact Submissions Api Admin Forms Submissions Get */
+                        data: components["schemas"]["ContactSubmissionOut"][];
                     };
                 };
             };

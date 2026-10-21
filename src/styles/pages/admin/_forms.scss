@@ -121,3 +121,33 @@
     0 0 0 1px rgba(8, 145, 178, 0.04),
     0 14px 40px rgba(8, 145, 178, 0.14);
 }
+
+// ------------------------------------------------------- Submissions
+// A submission's answers (form submissions drawer and the contact's profile).
+.submission {
+  gap: 10px;
+
+  &__answers {
+    @include stack(6px);
+    margin: 0;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(110px, 38%) 1fr;
+    gap: 10px;
+    font-size: 13px;
+
+    dt {
+      color: $muted;
+      font-weight: 600;
+    }
+
+    dd {
+      margin: 0;
+      color: $ink;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+  }
+}

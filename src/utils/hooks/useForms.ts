@@ -13,6 +13,8 @@ export const useUpdateForm = () => useApiMutation((v: { id: string; body: FormPa
 export const useDeleteForm = () => useApiMutation(forms.deleteForm, { invalidate: [qk.forms] });
 export const useFormSubmissions = (id: string) =>
   useQuery({ queryKey: qk.formSubmissions(id), queryFn: () => forms.listFormSubmissions(id, { limit: 100 }), enabled: !!id });
+export const useContactSubmissions = (contactId: string) =>
+  useQuery({ queryKey: qk.contactSubmissions(contactId), queryFn: () => forms.listContactSubmissions(contactId), enabled: !!contactId });
 
 export const useSurveys = () => useQuery({ queryKey: qk.surveys, queryFn: surveys.listSurveys });
 export const useCreateSurvey = () => useApiMutation(surveys.createSurvey, { invalidate: [qk.surveys] });
