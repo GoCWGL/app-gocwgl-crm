@@ -7,7 +7,7 @@ Branch `version1` · backend `gocwgl_server` @ `7c2130e` · Oct 18, 2026
 ## How it's wired
 
 - **`src/utils/`** holds every bit of backend code: `api/` (client + one file per module + generated types), `auth/` (in-memory session, `restoreSession()`, `signOut()`, `<RequireStaff>` / `<RequireClient>`), `hooks/` (TanStack Query, one file per module; every mutation invalidates what it changes), `mappers/` (form, survey builder drafts), `format/` (cents, ISO dates in the business time zone), `errors.ts`, `providers.tsx` (one `QueryClientProvider` in `app/layout.tsx`).
-- **Proxy:** `next.config.ts` rewrites `/api/*` → `BACKEND_URL` (default `https://api.gocwgl.com`; set `BACKEND_URL=http://127.0.0.1:8000` for a local backend), so cookies are same-site.
+- **Proxy:** `next.config.ts` rewrites `/api/*` → `BACKEND_URL` (default `http://127.0.0.1:8000`; production sets `BACKEND_URL=https://api.gocwgl.com` in Vercel), so cookies are same-site.
 - **Tokens:** access token in memory only; one refresh at a time; 401 → refresh → retry once → `/login`. CSRF header on refresh/logout.
 - **View as client:** the admin opens `/portal?as=<contactId>` in an iframe; the iframe asks the parent window for the token with `postMessage` (same origin, never in the URL) and never calls `/auth/refresh` itself. `/portal/*` calls carry `X-Client-Id`; write controls are hidden.
 - **Embed codes** are shown as text, and previewed only in `<iframe sandbox="allow-scripts allow-forms" srcDoc>`.
