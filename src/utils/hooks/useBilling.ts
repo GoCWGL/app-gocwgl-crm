@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import * as api from "@/utils/api/billing";
-import type { InvoiceUpdate, PaymentConnectionIn, SubscriptionUpdate } from "@/utils/api/models";
+import type { InvoiceUpdate, SubscriptionUpdate } from "@/utils/api/models";
 import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
 
@@ -25,13 +25,6 @@ export const useSendInvoice = () => useApiMutation(api.sendInvoice, { invalidate
 export const useMarkInvoicePaid = () => useApiMutation(api.markInvoicePaid, { invalidate: BILLING_KEYS });
 export const useVoidInvoice = () => useApiMutation(api.voidInvoice, { invalidate: BILLING_KEYS });
 
-export const usePaymentConnections = (enabled = true) =>
-  useQuery({ queryKey: qk.paymentConnections, queryFn: api.listPaymentConnections, enabled });
-export const useSavePaymentConnection = () =>
-  useApiMutation((v: { provider: string; body: PaymentConnectionIn }) => api.savePaymentConnection(v.provider, v.body), {
-    invalidate: [qk.paymentConnections],
-  });
-export const useDeletePaymentConnection = () => useApiMutation(api.deletePaymentConnection, { invalidate: [qk.paymentConnections] });
 
 // ------------------------------------------------------------------ Portal billing
 export const usePortalBilling = () => useQuery({ queryKey: qk.portalBilling, queryFn: api.getPortalBilling });

@@ -150,18 +150,27 @@ export const FUNNEL_PACKAGE_COPY: Record<FunnelPackageKey, { tagline: string; ta
 };
 
 // ------------------------------------------------------------- CRM builds
-/** CRM requests go to the team as support requests whose title starts with this. */
-export const CRM_REQUEST_PREFIX = "CRM build request";
+/** Where "Book a call" sends clients for a CRM build (gets ?package=simple|custom). Invoiced by the team, not through Polar. */
+export const CRM_BOOKING_URL = "https://gocwgl.com/crm-build";
 
 export const CRM_PACKAGES: Record<
   CrmPackageKey,
-  { label: string; priceCents: number; tagline: string; tag?: string; timeline: string; includes: string[] }
+  {
+    label: string;
+    priceCents: number;
+    tagline: string;
+    tag?: string;
+    timeline: string;
+    includes: string[];
+    /** Shown under the list, e.g. what changes cost after launch. */
+    note?: string;
+  }
 > = {
   simple: {
     label: "Simple CRM",
     priceCents: 1_000_000,
     tagline: "Everything a growing business needs to track leads and close deals.",
-    timeline: "About 6–8 weeks",
+    timeline: "About 8–10 weeks",
     includes: [
       "Contacts and companies, with tags and notes",
       "Sales pipelines with drag-and-drop stages",
@@ -181,7 +190,7 @@ export const CRM_PACKAGES: Record<
     priceCents: 1_500_000,
     tag: "MOST COMPLETE",
     tagline: "Built around exactly how your business runs, with room to grow.",
-    timeline: "About 10–14 weeks",
+    timeline: "About 12–15 weeks",
     includes: [
       "Everything in Simple CRM",
       "Custom records for your business (jobs, properties, cases, orders…)",
@@ -196,6 +205,7 @@ export const CRM_PACKAGES: Record<
       "Your branding, on your own domain",
       "Team training and 90 days of priority support",
     ],
+    note: "After launch, new features or menus start at $500 each, depending on how complex they are.",
   },
 };
 
@@ -218,7 +228,11 @@ export const CRM_FAQ = [
   { q: "Do I own my CRM and my data?", a: "Yes. Everything we build and every record in it is yours, and you can export your data at any time." },
   { q: "Are there monthly fees?", a: "The build is a one-time price. Hosting and ongoing changes can be covered by an optional care plan." },
   { q: "Can you move my data from my current CRM?", a: "Yes. Spreadsheet imports are included in both packages, and the Custom CRM also moves data over from your current CRM." },
-  { q: "Not sure which package fits?", a: "Request either one. We confirm the right package on the discovery call before you pay anything." },
+  { q: "Not sure which package fits?", a: "Book a call for either one. We confirm the right package on the call, before you pay anything." },
+  {
+    q: "Can I add features after my CRM is built?",
+    a: "Yes. Once your Custom CRM is live, each new feature or menu starts at $500, depending on how complex it is. We quote it before any work starts.",
+  },
+  { q: "How do I pay?", a: "After the call we send you an invoice for the agreed package. It shows up in Transactions." },
 ];
 
-export const CRM_TEAM_SIZES = ["Just me", "2–5 people", "6–20 people", "More than 20"];

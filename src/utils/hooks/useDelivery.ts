@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import * as api from "@/utils/api/delivery";
-import type { BrandKitIn, EmbedIn, EmbedPatch, FileCategory, FilePatch, LinksIn, PhaseIn, ProjectPatch, ProjectStart } from "@/utils/api/models";
+import type { BrandKitIn, EmbedIn, EmbedPatch, FileCategory, FilePatch, LinksIn, PhaseIn, ProjectPatch, ProjectStart, ChecklistAdd } from "@/utils/api/models";
 import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
 
@@ -13,6 +13,11 @@ export const useProject = (contactId: string) =>
   useQuery({ queryKey: qk.project(contactId), queryFn: () => api.getProject(contactId), enabled: !!contactId, retry: false });
 
 const projectKeys = (contactId: string) => [qk.project(contactId), qk.projects, ["dashboard"]];
+export const useProjectTemplates = () => useQuery({ queryKey: qk.projectTemplates, queryFn: api.listProjectTemplates, staleTime: Infinity });
+export const useAddProjectChecklist = () =>
+  useApiMutation((v: { contactId: string; template: ChecklistAdd["template"] }) => api.addProjectChecklist(v.contactId, v.template), {
+    invalidate: (_, v) => projectKeys(v.contactId),
+  });
 export const useStartProject = () =>
   useApiMutation((v: { contactId: string; body: ProjectStart }) => api.startProject(v.contactId, v.body), {
     invalidate: (_, v) => projectKeys(v.contactId),

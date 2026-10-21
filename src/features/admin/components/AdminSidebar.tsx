@@ -22,7 +22,7 @@ const link = (tab: AdminTab, label: string, icon: IconName, tone: Tone): NavLink
 const SALES: NavLink[] = [
   link("pipeline", "Pipeline", "pipeline", "pink"),
   link("calendar", "Calendar", "calendar", "orange"),
-  link("payments", "Payments", "card", "green"),
+  link("payments", "Transactions", "invoice", "green"),
 ];
 
 const GROUPS: Array<{ title: string; links: NavLink[] }> = [

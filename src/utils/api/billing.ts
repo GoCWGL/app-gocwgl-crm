@@ -1,12 +1,10 @@
-import { del, get, patch, post, put } from "./client";
+import { del, get, patch, post } from "./client";
 import type {
   CheckoutOut,
   ClientBillingOut,
   InvoiceCreate,
   InvoiceOut,
   InvoiceUpdate,
-  PaymentConnectionIn,
-  PaymentConnectionOut,
   SubscriptionCreate,
   SubscriptionOut,
   SubscriptionUpdate,
@@ -34,10 +32,6 @@ export const markInvoicePaid = (id: string) => post<InvoiceOut>(`/admin/invoices
 export const voidInvoice = (id: string) => post<InvoiceOut>(`/admin/invoices/${id}/void`);
 
 // ------------------------------------------------------------------ Payment connections (secrets come back masked)
-export const listPaymentConnections = () => get<PaymentConnectionOut[]>("/admin/payment-connections");
-export const savePaymentConnection = (provider: string, body: PaymentConnectionIn) =>
-  put<PaymentConnectionOut>(`/admin/payment-connections/${provider}`, body);
-export const deletePaymentConnection = (provider: string) => del(`/admin/payment-connections/${provider}`);
 
 // ------------------------------------------------------------------ Client billing (portal)
 export const getPortalBilling = () => get<ClientBillingOut>("/portal/billing");

@@ -23,11 +23,11 @@ export const qk = {
 
   subscriptions: ["subscriptions"] as const,
   invoices: ["invoices"] as const,
-  paymentConnections: ["payment-connections"] as const,
   portalBilling: ["portal", "billing"] as const,
 
   projects: ["projects"] as const,
   project: (contactId: string) => ["projects", contactId] as const,
+  projectTemplates: ["project-templates"] as const,
   mediaFolders: ["media"] as const,
   media: (contactId: string) => ["media", contactId] as const,
   clientBrandKit: (id: string) => ["client", id, "brand-kit"] as const,

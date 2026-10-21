@@ -14,10 +14,6 @@
   }
 }
 
-.crm-request {
-  @include cluster(12px);
-}
-
 .crm-packages {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -108,4 +104,9 @@
   p {
     margin: 6px 0 0;
   }
+}
+
+// "After launch, new features start at $500…" under the Custom CRM list.
+.crm-package__note {
+  align-self: stretch;
 }

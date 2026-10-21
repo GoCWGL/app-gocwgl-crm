@@ -2,6 +2,7 @@ import { del, download, get, patch, post, put } from "./client";
 import type {
   BrandKitIn,
   BrandKitOut,
+  ChecklistAdd,
   EmbedIn,
   EmbedOut,
   EmbedPatch,
@@ -16,6 +17,7 @@ import type {
   ProjectPatch,
   ProjectStart,
   ProjectSummary,
+  ProjectTemplateOut,
 } from "./models";
 
 const upload = (file: File, category?: string) => {
@@ -29,6 +31,11 @@ const upload = (file: File, category?: string) => {
 export const listProjects = () => get<ProjectSummary[]>("/admin/projects");
 export const getProject = (contactId: string) => get<ProjectOut>(`/admin/projects/${contactId}`);
 export const startProject = (contactId: string, body: ProjectStart) => post<ProjectOut>(`/admin/projects/${contactId}`, body);
+/** Checklists a build starts from: funnel & system, Simple CRM, Custom CRM. */
+export const listProjectTemplates = () => get<ProjectTemplateOut[]>("/admin/projects/templates");
+/** Adds a template's phases to an existing build (e.g. a CRM for a funnel client). */
+export const addProjectChecklist = (contactId: string, template: ChecklistAdd["template"]) =>
+  post<ProjectOut>(`/admin/projects/${contactId}/checklists`, { template });
 export const updateProject = (contactId: string, body: ProjectPatch) => patch<ProjectOut>(`/admin/projects/${contactId}`, body);
 export const setProjectPhases = (contactId: string, phases: PhaseIn[]) =>
   put<ProjectOut>(`/admin/projects/${contactId}/phases`, { phases });

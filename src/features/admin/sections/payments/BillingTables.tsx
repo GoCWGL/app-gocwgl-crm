@@ -18,13 +18,14 @@ import {
 import { useAllContacts } from "@/utils/hooks/useContacts";
 import { useMe } from "@/utils/hooks/useUsers";
 import { contactName } from "../../lib/contacts";
+import type { BillingKind } from "../../modals/BillingModal";
 
 type BillingTablesProps = {
   view: "subs" | "inv";
   onView: (view: "subs" | "inv") => void;
   message: string;
   onMessage: (message: string) => void;
-  onNew: (kind: "invoice" | "sub") => void;
+  onNew: (kind: BillingKind) => void;
 };
 
 /** Subscriptions and invoices tables with their row actions. */
@@ -68,6 +69,9 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
           <div className="cluster cluster--8">
             <Button variant="accent" onClick={() => onNew("sub")}>
               + New subscription
+            </Button>
+            <Button variant="outline" onClick={() => onNew("paid")}>
+              + Record paid invoice
             </Button>
             <Button variant="primary" onClick={() => onNew("invoice")}>
               + New invoice

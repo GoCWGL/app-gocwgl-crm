@@ -37,6 +37,7 @@ import {
 import { useMe } from "@/utils/hooks/useUsers";
 import { contactName } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
+import { AddChecklist, ChecklistOptions, type TemplateKey } from "./ChecklistPicker";
 
 const statusTone = (status: string) => PROJECT_STATUS_TONES[status as ProjectStatus] ?? "neutral";
 
@@ -47,6 +48,7 @@ export function ProgressSection() {
   const projects = useProjects();
   const paid = useAllContacts({ stage: "paid" });
   const start = useStartProject();
+  const [template, setTemplate] = useState<TemplateKey>("system");
   const summaries = projects.data ?? [];
   const summaryOf = (id: string) => summaries.find((p) => p.contactId === id);
   // Paid clients, plus anyone who already has a build (e.g. a client who later stopped paying).
@@ -108,16 +110,17 @@ export function ProgressSection() {
           {selected && !selectedSummary && (
             <section className="split__main empty-state project-empty">
               <h2 className="modal__title">No build started for {selected.name} yet</h2>
-              <p className="text-muted">Start a project from the standard system template. You can rename phases and add tasks after.</p>
+              <p className="text-muted">Pick what you are building. Each checklist lists everything to check; you can rename phases and add tasks after.</p>
+              {canWrite && <ChecklistOptions value={template} onChange={setTemplate} />}
               <FormError error={start.error} />
               {canWrite && (
                 <Button
                   variant="primary"
                   size="lg"
                   disabled={start.isPending}
-                  onClick={() => start.mutate({ contactId: selected.id, body: { package: "Revenue Engine System" } })}
+                  onClick={() => start.mutate({ contactId: selected.id, body: { template } })}
                 >
-                  {start.isPending ? "Starting…" : "Start system build"}
+                  {start.isPending ? "Starting…" : "Start build"}
                 </Button>
               )}
             </section>
@@ -354,6 +357,7 @@ function ProjectDetails({
             );
           })}
         </Timeline>
+        {isAdmin && <AddChecklist clientId={clientId} />}
       </div>
 
       <div className="card">

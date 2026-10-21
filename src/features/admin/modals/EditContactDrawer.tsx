@@ -404,7 +404,7 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
         <div className="inset inset--soft text-body">
           Subscription: {sub.plan} · {formatPerInterval(sub.amountCents, sub.interval, sub.currency)} ·{" "}
           {draft.paused && sub.status !== "Paused" ? "will be paused" : !draft.paused && sub.status === "Paused" ? "will be resumed" : sub.status}
-          {sub.managedByPolar && " · managed by Polar (change it from Payments)"}
+          {sub.managedByPolar && " · managed by Polar (change it from Transactions)"}
         </div>
       )}
       {error && (

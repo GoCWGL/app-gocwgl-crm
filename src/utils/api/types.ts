@@ -1303,6 +1303,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/projects/templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Project Templates
+         * @description The checklists a build can start from (funnel & system, Simple CRM, Custom CRM).
+         */
+        get: operations["project_templates_api_admin_projects_templates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/projects/{contact_id}": {
         parameters: {
             query?: never;
@@ -1315,7 +1335,7 @@ export interface paths {
         put?: never;
         /**
          * Start Project
-         * @description Start a build from the standard 6-phase template.
+         * @description Start a build from a checklist template (`template`, default the funnel & system build).
          */
         post: operations["start_project_api_admin_projects__contact_id__post"];
         delete?: never;
@@ -1323,6 +1343,26 @@ export interface paths {
         head?: never;
         /** Update Project */
         patch: operations["update_project_api_admin_projects__contact_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/projects/{contact_id}/checklists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Checklist
+         * @description Add a template's phases to a build that already exists (e.g. a CRM for a funnel client).
+         */
+        post: operations["add_checklist_api_admin_projects__contact_id__checklists_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/admin/projects/{contact_id}/phases": {
@@ -3618,6 +3658,17 @@ export interface components {
              */
             createdAt: string;
         };
+        /**
+         * ChecklistAdd
+         * @description Adds a template's phases to an existing build (e.g. a funnel client who later buys a CRM).
+         */
+        ChecklistAdd: {
+            /**
+             * Template
+             * @enum {string}
+             */
+            template: "system" | "crm_simple" | "crm_custom";
+        };
         /** CheckoutOut */
         CheckoutOut: {
             /** Url */
@@ -4621,6 +4672,13 @@ export interface components {
              * @default false
              */
             send?: boolean;
+            /** Paidon */
+            paidOn?: string | null;
+            /**
+             * Markclientpaid
+             * @default true
+             */
+            markClientPaid?: boolean;
         };
         /** InvoiceItem */
         InvoiceItem: {
@@ -5214,10 +5272,13 @@ export interface components {
         /** ProjectStart */
         ProjectStart: {
             /**
-             * Package
-             * @default Full system build
+             * Template
+             * @default system
+             * @enum {string}
              */
-            package?: string;
+            template?: "system" | "crm_simple" | "crm_custom";
+            /** Package */
+            package?: string | null;
             /** Startdate */
             startDate?: string | null;
             /** Duedate */
@@ -5247,6 +5308,22 @@ export interface components {
             status: string;
             /** Progress */
             progress: number;
+        };
+        /** ProjectTemplateOut */
+        ProjectTemplateOut: {
+            /** Key */
+            key: string;
+            /** Name */
+            name: string;
+            /** Phases */
+            phases: components["schemas"]["ProjectTemplatePhaseOut"][];
+        };
+        /** ProjectTemplatePhaseOut */
+        ProjectTemplatePhaseOut: {
+            /** Name */
+            name: string;
+            /** Tasks */
+            tasks: string[];
         };
         /** PublicAnswers */
         PublicAnswers: {
@@ -10309,6 +10386,38 @@ export interface operations {
             };
         };
     };
+    project_templates_api_admin_projects_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Project Templates Api Admin Projects Templates Get */
+                        data: components["schemas"]["ProjectTemplateOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_project_api_admin_projects__contact_id__get: {
         parameters: {
             query?: never;
@@ -10409,6 +10518,52 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["ProjectPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProjectOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_checklist_api_admin_projects__contact_id__checklists_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChecklistAdd"];
             };
         };
         responses: {

@@ -1,40 +1,47 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Button, Field, Icon, IconButton, IconTile, Input, Modal, SegmentedControl, Select } from "@/components/ui";
-import { BILLING_INTERVALS, PAYMENT_PROVIDERS, type BillingInterval } from "@/data/admin";
-import { isStaffAdmin } from "@/utils/auth/session";
+import { Button, Checkbox, Field, Icon, IconButton, IconTile, Input, Modal, SegmentedControl, Select } from "@/components/ui";
+import { BILLING_INTERVALS, type BillingInterval } from "@/data/admin";
+import { CRM_PACKAGES } from "@/data/portal";
 import { addDaysIso, todayIso } from "@/utils/format/dates";
 import { centsToDollars, dollarsToCents, formatCents, formatCentsExact } from "@/utils/format/money";
 import { errorMessage, fieldErrors } from "@/utils/errors";
-import { useCreateInvoice, useCreateSubscription, usePaymentConnections, useSubscriptions } from "@/utils/hooks/useBilling";
+import { useCreateInvoice, useCreateSubscription, useSubscriptions } from "@/utils/hooks/useBilling";
 import { useAllContacts } from "@/utils/hooks/useContacts";
-import { useSettings } from "@/utils/hooks/useSettings";
-import { useMe } from "@/utils/hooks/useUsers";
-import { connectionOf, providerName } from "../lib/billing";
 import { contactName } from "../lib/contacts";
 
 type LineDraft = { desc: string; qty: string; price: string };
 
+export type BillingKind = "invoice" | "paid" | "sub";
+
+/** How a recorded payment came in; saved at the start of the invoice's note. */
+const PAID_BY = ["Bank transfer", "Cash", "Check", "Card (in person)", "Other"];
+
+/** One-click lines for CRM work, which is invoiced personally rather than through Polar. */
+const QUICK_LINES: LineDraft[] = [
+  { desc: CRM_PACKAGES.simple.label + " build", qty: "1", price: centsToDollars(CRM_PACKAGES.simple.priceCents) },
+  { desc: CRM_PACKAGES.custom.label + " build", qty: "1", price: centsToDollars(CRM_PACKAGES.custom.priceCents) },
+  { desc: "CRM feature after launch", qty: "1", price: "500" },
+];
+
 type BillingModalProps = {
-  kind: "invoice" | "sub";
-  onKind: (kind: "invoice" | "sub") => void;
+  kind: BillingKind;
+  onKind: (kind: BillingKind) => void;
   onClose: () => void;
   /** Called with the table to show and a confirmation message. */
   onCreated: (view: "subs" | "inv", message: string) => void;
 };
 
-/** Create a one-time invoice or a recurring subscription for a client. Totals are computed by the API. */
+/**
+ * Create a one-time invoice, record a payment taken outside the app (saved as a Paid invoice the client sees in
+ * Transactions; nothing is emailed), or set up a recurring subscription. Totals are computed by the API.
+ */
 export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalProps) {
-  const canAdmin = isStaffAdmin(useMe().data);
   const contacts = useAllContacts().data ?? [];
   const subs = useSubscriptions().data ?? [];
-  const connections = usePaymentConnections(canAdmin).data;
-  const settings = useSettings().data;
   const createInvoice = useCreateInvoice();
   const createSub = useCreateSubscription();
-  const connected = PAYMENT_PROVIDERS.filter((p) => connectionOf(connections, p.id));
-  const defaultProvider = connected.find((p) => p.id === settings?.defaultPaymentProvider) ?? connected[0];
   // A new subscription starts from the plan most clients already have (display default only).
   const template = subs.find((s) => s.status === "Active") ?? subs[0];
 
@@ -46,9 +53,13 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
   const [amount, setAmount] = useState(template ? centsToDollars(template.amountCents) : "97");
   const [interval, setInterval] = useState<BillingInterval>((template?.interval as BillingInterval) ?? "Month");
   const [trial, setTrial] = useState("0");
+  const [paidOn, setPaidOn] = useState(todayIso());
+  const [paidBy, setPaidBy] = useState(PAID_BY[0]);
+  const [markClientPaid, setMarkClientPaid] = useState(true);
   const [error, setError] = useState("");
 
-  const isInvoice = kind === "invoice";
+  const isPaid = kind === "paid";
+  const isInvoice = kind === "invoice" || isPaid;
   const client = contacts.find((c) => c.id === clientId);
   const lineCents = (it: LineDraft) => (Math.max(1, Number(it.qty) || 1)) * dollarsToCents(it.price || 0);
   // Preview only: the saved invoice's total comes back from the API as totalCents.
@@ -66,19 +77,25 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
     if (isInvoice) {
       const lines = items.filter((it) => it.desc.trim() && dollarsToCents(it.price) > 0);
       if (!lines.length) return setError("Add at least one line with a description and price.");
+      if (isPaid && !paidOn) return setError("Choose the date it was paid.");
       createInvoice.mutate(
         {
           contactId: client.id,
           items: lines.map((it) => ({ description: it.desc.trim(), quantity: Math.max(1, Number(it.qty) || 1), unitPriceCents: dollarsToCents(it.price) })),
-          dueDate: due === "0" ? null : addDaysIso(todayIso(), Number(due)),
-          note: note.trim(),
-          send: !draft,
+          dueDate: isPaid || due === "0" ? null : addDaysIso(todayIso(), Number(due)),
+          note: isPaid ? [`Paid by ${paidBy.toLowerCase()}`, note.trim()].filter(Boolean).join(". ") : note.trim(),
+          send: !draft && !isPaid,
+          ...(isPaid && { paidOn, markClientPaid }),
         },
         {
           onSuccess: (iv) =>
             onCreated(
               "inv",
-              draft ? `${iv.number} saved as a draft.` : `${iv.number} (${formatCentsExact(iv.totalCents, iv.currency)}) sent to ${client.email}.`,
+              isPaid
+                ? `${iv.number} (${formatCentsExact(iv.totalCents, iv.currency)}) recorded as paid. It shows in ${contactName(client)}’s Transactions.`
+                : draft
+                  ? `${iv.number} saved as a draft.`
+                  : `${iv.number} (${formatCentsExact(iv.totalCents, iv.currency)}) sent to ${client.email}.`,
             ),
           onError,
         },
@@ -118,8 +135,9 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       onClose={onClose}
       onSubmit={submit}
       titleId="bm-title"
-      kicker="BILL A CLIENT"
-      title={isInvoice ? "New invoice" : "New subscription"}
+      kicker={isPaid ? "RECORD A PAYMENT" : "BILL A CLIENT"}
+      title={isPaid ? "Record a paid invoice" : isInvoice ? "New invoice" : "New subscription"}
+      subtitle={isPaid ? "For payments you took yourself, like a CRM build paid by bank transfer. Nothing is emailed to the client." : undefined}
       media={
         <IconTile brand size="lg">
           <Icon name="invoice" size={18} />
@@ -128,13 +146,13 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          {isInvoice && (
+          {isInvoice && !isPaid && (
             <Button variant="accent" onClick={() => create(true)} disabled={pending}>
               Save as draft
             </Button>
           )}
           <Button type="submit" variant="primary" disabled={pending}>
-            {pending ? "Saving…" : isInvoice ? "Send invoice" : "Create subscription"}
+            {pending ? "Saving…" : isPaid ? "Record paid invoice" : isInvoice ? "Send invoice" : "Create subscription"}
           </Button>
         </>
       }
@@ -149,6 +167,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
         }}
         options={[
           { value: "invoice", label: "One-time invoice" },
+          { value: "paid", label: "Paid invoice" },
           { value: "sub", label: "Subscription" },
         ]}
       />
@@ -165,18 +184,37 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
             }}
           />
         </Field>
-        <Field label="Clients pay with" htmlFor="bm-method" hint="Your default checkout (Payments › Payment methods).">
-          <Input
-            id="bm-method"
-            readOnly
-            value={!canAdmin ? "Your default checkout" : defaultProvider ? providerName(defaultProvider, connections) : "Connect a payment method first"}
-          />
-        </Field>
+        {isPaid ? (
+          <Field label="Paid by" htmlFor="bm-paid-by">
+            <Select id="bm-paid-by" value={paidBy} options={PAID_BY} onChange={(e) => setPaidBy(e.target.value)} />
+          </Field>
+        ) : (
+          <Field label="Clients pay with" htmlFor="bm-method" hint="Or they pay you directly; then mark it paid.">
+            <Input id="bm-method" readOnly value="Polar checkout, from their Transactions" />
+          </Field>
+        )}
       </div>
 
       {isInvoice ? (
         <div className="stack stack--8">
           <span className="kicker">LINE ITEMS</span>
+          <div className="cluster cluster--6">
+            {QUICK_LINES.map((q) => (
+              <Button
+                key={q.desc}
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  // Fill the first empty line, or add one.
+                  const empty = items.findIndex((it) => !it.desc.trim() && !it.price);
+                  setItems(empty >= 0 ? items.map((it, k) => (k === empty ? q : it)) : [...items, q]);
+                  setError("");
+                }}
+              >
+                + {q.desc} · {formatCents(dollarsToCents(q.price))}
+              </Button>
+            ))}
+          </div>
           {items.map((it, i) => (
             <div className="line-item" key={i}>
               <Input
@@ -220,22 +258,36 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
             + Add line
           </Button>
           <div className="invoice-total">
-            <Field label="Due" htmlFor="bm-due">
-              <Select id="bm-due" value={due} onChange={(e) => setDue(e.target.value)}>
-                <option value="0">On receipt</option>
-                <option value="7">In 7 days</option>
-                <option value="14">In 14 days</option>
-                <option value="30">In 30 days</option>
-              </Select>
-            </Field>
+            {isPaid ? (
+              <Field label="Paid on" htmlFor="bm-paid-on" required>
+                <Input id="bm-paid-on" type="date" max={todayIso()} value={paidOn} onChange={(e) => setPaidOn(e.target.value)} />
+              </Field>
+            ) : (
+              <Field label="Due" htmlFor="bm-due">
+                <Select id="bm-due" value={due} onChange={(e) => setDue(e.target.value)}>
+                  <option value="0">On receipt</option>
+                  <option value="7">In 7 days</option>
+                  <option value="14">In 14 days</option>
+                  <option value="30">In 30 days</option>
+                </Select>
+              </Field>
+            )}
             <div className="invoice-total__amount">
-              <span className="text-small">Estimated total</span>
+              <span className="text-small">{isPaid ? "Amount paid" : "Estimated total"}</span>
               <span className="billing-summary__amount">{formatCentsExact(estimate)}</span>
             </div>
           </div>
-          <Field label="Note to client" htmlFor="bm-note">
+          <Field label="Note to client" htmlFor="bm-note" hint={isPaid ? `Shown as “Paid by ${paidBy.toLowerCase()}. …” in their Transactions.` : undefined}>
             <Input id="bm-note" value={note} placeholder="Thank you for your business!" onChange={(e) => setNote(e.target.value)} />
           </Field>
+          {isPaid && (
+            <Checkbox
+              brand
+              label="Move the client to Paid (an active client, so you can start their build)"
+              checked={markClientPaid}
+              onChange={() => setMarkClientPaid(!markClientPaid)}
+            />
+          )}
         </div>
       ) : (
         <>
