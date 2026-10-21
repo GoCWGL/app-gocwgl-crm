@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Badge, Button, FormError, Icon, IconButton, IconTile, LoadState, StatGrid } from "@/components/ui";
 import type { LeadForm } from "@/data/admin";
+import { formUrl } from "@/features/public/links";
 import { cn, copyToClipboard } from "@/lib/utils";
 import { canWriteCrm } from "@/utils/auth/session";
 import { useCreateForm, useDeleteForm, useForms, useUpdateForm } from "@/utils/hooks/useForms";
@@ -113,11 +114,21 @@ export function FormsSection() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  copyToClipboard(embedCode(f.id));
+                  copyToClipboard(embedCode(f.id, f.name));
                   setCopiedId(f.id);
                 }}
               >
                 {copiedId === f.id ? "Embed code copied" : "Copy embed code"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  copyToClipboard(formUrl(f.id));
+                  setCopiedId(`link:${f.id}`);
+                }}
+              >
+                {copiedId === `link:${f.id}` ? "Link copied" : "Copy link"}
               </Button>
               {canWrite && (
                 <>

@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Badge, Button, Checkbox, Field, Icon, IconButton, IconTile, Input, SegmentedControl, Select, Textarea } from "@/components/ui";
 import { FIELD_TYPES, type FieldType, type FormField, type LeadForm } from "@/data/admin";
+import { formUrl } from "@/features/public/links";
 import { moveItem } from "@/lib/utils";
 import { errorMessage, fieldErrors } from "@/utils/errors";
 import { useTags } from "@/utils/hooks/useContacts";
@@ -251,9 +252,14 @@ export function FormBuilder({ draft, onChange, onClose }: FormBuilderProps) {
                 />
               </Field>
             )}
-            <Field label="Embed code for your landing page">
-              <code className="code-block">{draft.id ? embedCode(draft.id) : "Save the form to get its embed code."}</code>
+            <Field label="Embed code for your landing page" hint="Works on any website. The form grows to fit, and a thank-you redirect opens the whole page.">
+              <code className="code-block">{draft.id ? embedCode(draft.id, draft.name) : "Save the form to get its embed code."}</code>
             </Field>
+            {draft.id && (
+              <Field label="Direct link" hint="For emails, texts and social posts.">
+                <code className="code-block">{formUrl(draft.id)}</code>
+              </Field>
+            )}
           </div>
         </section>
 

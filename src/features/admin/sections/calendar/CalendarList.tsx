@@ -2,6 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import { FormError, LoadState, Toggle } from "@/components/ui";
+import { bookingUrl } from "@/features/public/links";
 import { cn, copyToClipboard } from "@/lib/utils";
 import type { BookingOut, CalendarOut } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
@@ -11,8 +12,7 @@ import { BookingPreview } from "./BookingPreview";
 import { EditCalendarDrawer } from "./EditCalendarDrawer";
 
 /** The public booking page in this app (/book/{slug}). */
-export const bookingLink = (cal: Pick<CalendarOut, "slug">) =>
-  `${typeof window === "undefined" ? "" : window.location.origin}/book/${encodeURIComponent(cal.slug)}`;
+export const bookingLink = (cal: Pick<CalendarOut, "slug">) => bookingUrl(cal.slug);
 
 const isLive = (b: BookingOut) => !/cancel/i.test(b.status);
 

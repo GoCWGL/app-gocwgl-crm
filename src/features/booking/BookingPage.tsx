@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { Button, ErrorState, Field, Icon, Input, Loading, Textarea } from "@/components/ui";
 import { errorMessage, fieldErrors, hasCode } from "@/utils/errors";
 import { useBookPublic, usePublicCalendar } from "@/utils/hooks/useCalendar";
+import { useIsEmbedded } from "../public/embed";
+import { PublicMessage, PublicShell } from "../public/PublicShell";
 import { BookingWidget, slotDateTime } from "./BookingWidget";
 
 type Picked = { slot: string; zone: string };
@@ -14,6 +14,7 @@ type Picked = { slot: string; zone: string };
 /** Public booking page at /book/{slug}: pick a time, leave your details, get a confirmation email. */
 export function BookingPage() {
   const { slug } = useParams<{ slug: string }>();
+  const embedded = useIsEmbedded();
   const page = usePublicCalendar(slug);
   const [picked, setPicked] = useState<Picked | null>(null);
   const [booked, setBooked] = useState<(Picked & { email: string }) | null>(null);
@@ -23,25 +24,27 @@ export function BookingPage() {
   if (page.isPending) body = <Loading text="Loading calendar…" />;
   else if (page.isError)
     body = hasCode(page.error, "not_found") ? (
-      <div className="booking-page__message">
-        <h1 className="booking-preview__title">This booking link isn’t available</h1>
+      <PublicMessage title="This booking link isn’t available">
         <p className="text-muted">The calendar may have been turned off or renamed. Ask for a new link.</p>
-      </div>
+      </PublicMessage>
     ) : (
       <ErrorState error={page.error} onRetry={page.refetch} />
     );
   else if (booked)
     body = (
-      <div className="booking-page__message" role="status">
-        <span className="booking-page__check" aria-hidden="true">
-          <Icon name="check" size={26} strokeWidth={2.6} />
-        </span>
-        <h1 className="booking-preview__title">You’re booked</h1>
+      <PublicMessage
+        title="You’re booked"
+        icon={
+          <span className="public-page__check" aria-hidden="true">
+            <Icon name="check" size={26} strokeWidth={2.6} />
+          </span>
+        }
+      >
         <p className="text-strong">
           {page.data.name} · {slotDateTime(booked.slot, booked.zone)} ({booked.zone})
         </p>
         <p className="text-muted">A confirmation is on its way to {booked.email}.</p>
-      </div>
+      </PublicMessage>
     );
   else if (picked)
     body = (
@@ -79,14 +82,9 @@ export function BookingPage() {
     );
 
   return (
-    <div className="booking-page">
-      <header className="booking-page__bar">
-        <Image className="booking-page__logo" src={logoWordmark} alt="GoCWGL" priority />
-      </header>
-      <main className="booking-page__main">
-        <section className="booking-preview booking-page__card">{body}</section>
-      </main>
-    </div>
+    <PublicShell embedded={embedded}>
+      <section className="booking-preview">{body}</section>
+    </PublicShell>
   );
 }
 
@@ -117,7 +115,7 @@ function DetailsForm({ slug, name, picked, onBack, onBooked, onTaken }: DetailsF
   };
 
   return (
-    <form className="booking-page__form" onSubmit={submit}>
+    <form className="public-page__form" onSubmit={submit}>
       <Button size="sm" className="u-self-start" onClick={onBack}>
         ‹ Back
       </Button>

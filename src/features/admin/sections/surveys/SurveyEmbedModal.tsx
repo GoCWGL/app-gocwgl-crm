@@ -4,8 +4,7 @@ import { useState } from "react";
 import { Button, Field, Icon, IconTile, Input, Modal, SegmentedControl } from "@/components/ui";
 import type { Survey } from "@/data/admin";
 import { copyToClipboard } from "@/lib/utils";
-import { useDomains } from "@/utils/hooks/useSettings";
-import { surveyEmbed, surveyHost, type SurveyEmbedMode } from "../../lib/surveys";
+import { surveyEmbed, type SurveyEmbedMode } from "../../lib/surveys";
 
 const MODES: Array<{ value: SurveyEmbedMode; label: string; hint: string }> = [
   { value: "inline", label: "On the page", hint: "The survey shows inside your page, wherever you paste the code." },
@@ -14,12 +13,11 @@ const MODES: Array<{ value: SurveyEmbedMode; label: string; hint: string }> = [
 ];
 
 export function SurveyEmbedModal({ survey, onClose }: { survey: Survey; onClose: () => void }) {
-  const host = surveyHost(useDomains().data);
   const [mode, setMode] = useState<SurveyEmbedMode>("inline");
   const [height, setHeight] = useState(Math.min(1200, 260 + survey.questions.length * 110));
   const [button, setButton] = useState("Take the survey");
   const [copied, setCopied] = useState(false);
-  const code = surveyEmbed(survey, host, mode, { height, button });
+  const code = surveyEmbed(survey, mode, { height, button });
 
   const change =
     <T,>(fn: (v: T) => void) =>
@@ -59,7 +57,7 @@ export function SurveyEmbedModal({ survey, onClose }: { survey: Survey; onClose:
       <SegmentedControl label="How to show it" kind="radio" variant="soft" value={mode} onChange={change(setMode)} options={MODES} />
       <span className="text-small">{MODES.find((m) => m.value === mode)!.hint}</span>
       {mode === "inline" && (
-        <Field label="Height (pixels)" htmlFor="se-height">
+        <Field label="Starting height (pixels)" htmlFor="se-height" hint="It grows to fit the survey once the page loads.">
           <Input
             id="se-height"
             type="number"

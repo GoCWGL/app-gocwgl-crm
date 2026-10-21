@@ -1,34 +1,18 @@
 import { CHOICE_TYPES, QUESTION_TYPES, type QuestionType, type Survey, type SurveyQuestion } from "@/data/admin";
-import type { DomainOut } from "@/utils/api/models";
+import { embedScript, iframeEmbed, surveyUrl } from "@/features/public/links";
 import { newFieldId } from "@/utils/mappers/forms";
 
 export type SurveyEmbedMode = "inline" | "popup" | "link";
 
-/** Verified domain for forms, or the placeholder used on the Forms page. */
-export function surveyHost(domains: DomainOut[] | undefined): string {
-  if (!domains) return "forms.[yourdomain].com";
-  return domains.find((d) => d.status === "Verified" && (d.purpose === "forms" || d.purpose === "all"))?.host ?? "forms.[yourdomain].com";
-}
-
-/** Public survey page; it loads the survey from GET /public/surveys/{id}. */
-export const surveyUrl = (s: Survey, host: string) => `https://${host}/survey/${s.id || "save-the-survey-first"}`;
-
-/** Snippet to paste into a website (or a plain link for emails and social posts). */
-export function surveyEmbed(s: Survey, host: string, mode: SurveyEmbedMode, opts: { height: number; button: string }): string {
-  const url = surveyUrl(s, host);
+/** Snippet to paste into a website (or a plain link for emails and social posts). The page is /survey/{id}. */
+export function surveyEmbed(s: Survey, mode: SurveyEmbedMode, opts: { height: number; button: string }): string {
+  const url = surveyUrl(s.id || "save-the-survey-first");
   if (mode === "link") return url;
   if (mode === "popup") {
-    return [
-      `<!-- ${s.name} (popup) -->`,
-      `<button type="button" data-survey-popup="${url}">${opts.button || "Take the survey"}</button>`,
-      `<script src="https://${host}/embed/survey.js" async></script>`,
-    ].join("\n");
+    const label = (opts.button || "Take the survey").replace(/</g, "&lt;");
+    return [`<!-- ${s.name} (popup) -->`, `<button type="button" data-gocwgl-popup="${url}">${label}</button>`, embedScript()].join("\n");
   }
-  return [
-    `<!-- ${s.name} -->`,
-    `<iframe src="${url}?embed=1" title="${s.name}" width="100%" height="${opts.height}" style="border:0;max-width:100%" loading="lazy"></iframe>`,
-    `<script src="https://${host}/embed/survey.js" async></script>`,
-  ].join("\n");
+  return [`<!-- ${s.name} -->`, iframeEmbed(url, s.name, opts.height)].join("\n");
 }
 
 export const blankSurvey = (): Survey => ({

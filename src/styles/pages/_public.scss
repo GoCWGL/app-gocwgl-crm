@@ -1,0 +1,106 @@
+@use "../abstracts" as *;
+
+// =============================================================================
+// Public pages people outside the CRM open: booking links (/book/{slug}), forms
+// (/form/{id}) and surveys (/survey/{id}). With ?embed=1 they sit inside an iframe on
+// another website, so the logo bar and page padding go. The booking calendar
+// reuses the admin preview's .booking-preview, .month-grid and .slot styles.
+// =============================================================================
+
+// Inside an iframe the host website's background shows through, and the page is only as tall as its content.
+body:has(.public-page--embedded) {
+  min-height: 0;
+  background: transparent;
+}
+
+.public-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: $bg;
+
+  &--embedded {
+    min-height: 0;
+    background: transparent;
+  }
+
+  &__bar {
+    padding: 18px 44px;
+    border-bottom: 1px solid $line;
+    background: $white;
+
+    @include down(md) {
+      padding: 14px 16px;
+    }
+  }
+
+  &__logo {
+    display: block;
+    width: 148px;
+    height: auto;
+  }
+
+  &__main {
+    flex: 1;
+    width: 100%;
+    max-width: 1040px;
+    margin: 0 auto;
+    padding: 40px 16px;
+
+    &--narrow {
+      max-width: 640px;
+    }
+  }
+
+  // The website decides the width (the iframe's), so the column fills it.
+  &--embedded &__main {
+    max-width: none;
+    padding: 2px;
+  }
+
+  &__title {
+    font-family: $font-mono;
+    font-size: 22px;
+    font-weight: 800;
+  }
+
+  &__message,
+  &__form {
+    @include stack(14px);
+    max-width: 520px;
+    margin: 0 auto;
+    padding: 36px 24px;
+  }
+
+  &__message {
+    align-items: center;
+    text-align: center;
+  }
+
+  &__check {
+    @include center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(16, 185, 129, 0.12);
+    color: $green-500;
+  }
+
+  // Form and survey card.
+  &__card {
+    @include stack(16px);
+    padding: 28px;
+    border: 1px solid $line;
+    border-radius: $radius-2xl;
+    background: $white;
+    box-shadow: 0 8px 24px rgba(8, 145, 178, 0.1);
+
+    @include down(md) {
+      padding: 20px 16px;
+    }
+  }
+
+  &--embedded &__card {
+    box-shadow: none;
+  }
+}
