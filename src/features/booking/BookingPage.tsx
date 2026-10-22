@@ -1,13 +1,17 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
-import { Button, ErrorState, Field, Icon, Input, Loading, Textarea } from "@/components/ui";
-import { errorMessage, fieldErrors, hasCode } from "@/utils/errors";
-import { useBookPublic, usePublicCalendar } from "@/utils/hooks/useCalendar";
+import { useState } from "react";
+import { ErrorState, Loading } from "@/components/ui";
+import type { PublicBookingOut } from "@/utils/api/models";
+import { hasCode } from "@/utils/errors";
+import { usePublicCalendar } from "@/utils/hooks/useCalendar";
 import { useIsEmbedded } from "../public/embed";
 import { PublicMessage, PublicShell } from "../public/PublicShell";
-import { BookingWidget, slotDateTime } from "./BookingWidget";
+import { BookingConfirmed } from "./BookingConfirmed";
+import { BookingDetailsForm } from "./BookingDetailsForm";
+import { BookingWidget } from "./BookingWidget";
+import { browserZone } from "./zones";
 
 type Picked = { slot: string; zone: string };
 
@@ -17,8 +21,10 @@ export function BookingPage() {
   const embedded = useIsEmbedded();
   const page = usePublicCalendar(slug);
   const [picked, setPicked] = useState<Picked | null>(null);
-  const [booked, setBooked] = useState<(Picked & { email: string }) | null>(null);
+  const [booked, setBooked] = useState<(Picked & { email: string; booking: PublicBookingOut }) | null>(null);
   const [slotTaken, setSlotTaken] = useState(false);
+  // The zone the visitor views times in; kept here so it survives going back from the details form.
+  const [viewZone, setViewZone] = useState(() => browserZone());
 
   let body;
   if (page.isPending) body = <Loading text="Loading calendar…" />;
@@ -30,30 +36,15 @@ export function BookingPage() {
     ) : (
       <ErrorState error={page.error} onRetry={page.refetch} />
     );
-  else if (booked)
-    body = (
-      <PublicMessage
-        title="You’re booked"
-        icon={
-          <span className="public-page__check" aria-hidden="true">
-            <Icon name="check" size={26} strokeWidth={2.6} />
-          </span>
-        }
-      >
-        <p className="text-strong">
-          {page.data.name} · {slotDateTime(booked.slot, booked.zone)} ({booked.zone})
-        </p>
-        <p className="text-muted">A confirmation is on its way to {booked.email}.</p>
-      </PublicMessage>
-    );
+  else if (booked) body = <BookingConfirmed booking={booked.booking} email={booked.email} timeZone={booked.zone} />;
   else if (picked)
     body = (
-      <DetailsForm
+      <BookingDetailsForm
         slug={slug}
-        name={page.data.name}
+        info={page.data}
         picked={picked}
         onBack={() => setPicked(null)}
-        onBooked={(email) => setBooked({ ...picked, email })}
+        onBooked={(email, booking) => setBooked({ ...picked, email, booking })}
         onTaken={() => {
           setSlotTaken(true);
           setPicked(null);
@@ -66,6 +57,8 @@ export function BookingPage() {
         slug={slug}
         info={page.data}
         active
+        viewZone={viewZone}
+        onViewZoneChange={setViewZone}
         notice={
           slotTaken && (
             <p className="text-error" role="alert">
@@ -82,80 +75,8 @@ export function BookingPage() {
     );
 
   return (
-    <PublicShell embedded={embedded}>
-      <section className="booking-preview">{body}</section>
+    <PublicShell embedded={embedded} wide>
+      {booked || picked ? body : <section className="booking-preview">{body}</section>}
     </PublicShell>
-  );
-}
-
-type DetailsFormProps = {
-  slug: string;
-  name: string;
-  picked: Picked;
-  onBack: () => void;
-  onBooked: (email: string) => void;
-  onTaken: () => void;
-};
-
-function DetailsForm({ slug, name, picked, onBack, onBooked, onTaken }: DetailsFormProps) {
-  const book = useBookPublic(slug);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", notes: "", website: "" });
-  const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
-  const errors = fieldErrors(book.error);
-
-  const submit = (e: FormEvent) => {
-    e.preventDefault();
-    book.mutate(
-      { startsAt: picked.slot, ...form, name: form.name.trim(), email: form.email.trim() },
-      {
-        onSuccess: () => onBooked(form.email.trim()),
-        onError: (err) => hasCode(err, "slot_unavailable") && onTaken(),
-      },
-    );
-  };
-
-  return (
-    <form className="public-page__form" onSubmit={submit}>
-      <Button size="sm" className="u-self-start" onClick={onBack}>
-        ‹ Back
-      </Button>
-      <div className="stack stack--4">
-        <h1 className="booking-preview__title">{name}</h1>
-        <span className="booking-preview__meta">
-          <Icon name="calendar" />
-          {slotDateTime(picked.slot, picked.zone)} ({picked.zone})
-        </span>
-      </div>
-      <Field label="Your name" htmlFor="bk-name" required error={errors.name}>
-        <Input id="bk-name" autoComplete="name" required value={form.name} onChange={(e) => set({ name: e.target.value })} />
-      </Field>
-      <Field label="Email" htmlFor="bk-email" required error={errors.email}>
-        <Input id="bk-email" type="email" autoComplete="email" required value={form.email} onChange={(e) => set({ email: e.target.value })} />
-      </Field>
-      <Field label="Phone" htmlFor="bk-phone" error={errors.phone}>
-        <Input id="bk-phone" type="tel" autoComplete="tel" value={form.phone} onChange={(e) => set({ phone: e.target.value })} />
-      </Field>
-      <Field label="Anything we should know before the call?" htmlFor="bk-notes" error={errors.notes}>
-        <Textarea id="bk-notes" rows={3} value={form.notes} onChange={(e) => set({ notes: e.target.value })} />
-      </Field>
-      {/* Honeypot: hidden from people, bots fill it in and the API drops the booking. */}
-      <input
-        className="sr-only"
-        tabIndex={-1}
-        autoComplete="off"
-        aria-hidden="true"
-        name="website"
-        value={form.website}
-        onChange={(e) => set({ website: e.target.value })}
-      />
-      {book.isError && !Object.keys(errors).length && !hasCode(book.error, "slot_unavailable") && (
-        <p className="text-error" role="alert">
-          {errorMessage(book.error)}
-        </p>
-      )}
-      <Button type="submit" variant="primary" size="lg" disabled={book.isPending}>
-        {book.isPending ? "Booking…" : "Book this time"}
-      </Button>
-    </form>
   );
 }

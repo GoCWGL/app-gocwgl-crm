@@ -50,6 +50,11 @@ body:has(.public-page--embedded) {
     &--narrow {
       max-width: 640px;
     }
+
+    // Booking pages: the calendar is 1.2× the admin preview's size.
+    &--wide {
+      max-width: 1248px;
+    }
   }
 
   // The website decides the width (the iframe's), so the column fills it.
@@ -103,4 +108,569 @@ body:has(.public-page--embedded) {
   &--embedded &__card {
     box-shadow: none;
   }
+}
+
+// --------------------------------------------------------- Booking confirmed
+// The screen after booking: matches the confirmation email (dark header, date tile, calendar buttons, next steps).
+.booked {
+  max-width: 620px;
+  margin: 0 auto;
+  border: 1px solid $line;
+  border-radius: $radius-2xl;
+  background: $white;
+  box-shadow: 0 18px 48px rgba(11, 20, 36, 0.12);
+  overflow: hidden;
+  animation: slide-up 0.35s ease-out;
+
+  &__hero {
+    @include stack(10px);
+    align-items: center;
+    padding: 36px 28px 32px;
+    border-top: 4px solid $orange;
+    background: $ink;
+    color: $white;
+    text-align: center;
+  }
+
+  &__check {
+    @include center;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: $orange;
+    color: $ink;
+    box-shadow: 0 0 0 8px rgba(255, 153, 0, 0.18);
+    animation: booked-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  &__badge {
+    margin-top: 8px;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    color: $orange;
+  }
+
+  &__title {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: $white;
+  }
+
+  &__lead {
+    max-width: 420px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: #b7c1d1;
+
+    strong {
+      color: $white;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__body {
+    @include stack(22px);
+    padding: 26px 28px 30px;
+
+    @include down(md) {
+      padding: 22px 16px 24px;
+    }
+  }
+
+  &__summary {
+    @include row(16px);
+    align-items: center;
+    padding: 16px;
+    border: 1px solid $line;
+    border-radius: $radius-xl;
+    background: $bg-soft;
+  }
+
+  &__tile {
+    @include stack(0);
+    flex: none;
+    align-items: center;
+    width: 76px;
+    padding: 10px 0 12px;
+    border-radius: $radius-lg;
+    background: $white;
+    box-shadow: $shadow-card;
+  }
+
+  &__tile-month {
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: $orange-ink;
+  }
+
+  &__tile-day {
+    font-size: 32px;
+    line-height: 1.05;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: $ink;
+  }
+
+  &__tile-dow {
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: $muted;
+  }
+
+  &__when {
+    @include stack(3px);
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: 18px;
+    font-weight: 800;
+    color: $ink;
+  }
+
+  &__date {
+    font-size: 15px;
+    font-weight: 700;
+    color: $ink-soft;
+  }
+
+  &__meta {
+    @include row(6px);
+    font-size: 13px;
+    color: $muted;
+  }
+
+  &__join {
+    @include row(12px);
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px solid rgba(255, 153, 0, 0.45);
+    border-radius: $radius-xl;
+    background: rgba(255, 153, 0, 0.07);
+
+    @include down(md) {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  &__join-text {
+    @include stack(4px);
+    min-width: 0;
+  }
+
+  &__link {
+    font-family: $font-mono;
+    font-size: 12px;
+    color: $ink;
+    word-break: break-all;
+  }
+
+  &__copy {
+    @include button-reset;
+    @include row(6px);
+    flex: none;
+    justify-content: center;
+    padding: 9px 14px;
+    border-radius: $radius-md;
+    background: $ink;
+    color: $white;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  &__section {
+    @include stack(10px);
+  }
+
+  &__label {
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: $muted;
+  }
+
+  &__calendars {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+
+    @include down(md) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__calendar {
+    @include row(10px);
+    justify-content: center;
+    padding: 12px 10px;
+    border: 1px solid $line-strong;
+    border-radius: $radius-lg;
+    background: $white;
+    color: $ink;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+
+    &:hover {
+      border-color: $orange;
+      box-shadow: $glow-orange-soft;
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  &__mark {
+    @include center;
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    color: $white;
+    font-size: 12px;
+    font-weight: 800;
+
+    &--google {
+      background: #4285f4;
+    }
+
+    &--outlook {
+      background: #0078d4;
+    }
+
+    &--apple {
+      background: $ink;
+    }
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: $muted;
+  }
+
+  &__next {
+    padding: 18px 20px 8px;
+    border: 1px solid $line;
+    border-radius: $radius-xl;
+    background: $bg-soft;
+  }
+
+  &__steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__step {
+    @include row(12px);
+    align-items: flex-start;
+    padding: 8px 0 12px;
+  }
+
+  &__step-num {
+    @include center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff4e0;
+    color: $orange-ink;
+    font-family: $font-mono;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  &__step-text {
+    @include stack(2px);
+    font-size: 14px;
+    line-height: 1.5;
+    color: $muted;
+
+    strong {
+      font-size: 15px;
+      color: $ink;
+    }
+  }
+
+  &__footer {
+    font-size: 14px;
+    line-height: 1.6;
+    color: $ink-soft;
+    text-align: center;
+  }
+}
+
+.public-page--embedded .booked {
+  box-shadow: none;
+}
+
+@keyframes booked-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .booked,
+  .booked__check {
+    animation: none;
+  }
+}
+
+// --------------------------------------------------------- Booking calendar box
+// On the booking page the box is 1.2× the admin preview's width (see __main--wide). The extra room goes to the
+// calendar, whose days fill their cells, so the box stays full without blank areas; the short details column stays narrow.
+.public-page .booking-preview {
+  &__info,
+  &__calendar,
+  &__slots {
+    padding: 28px;
+
+    @include down(md) {
+      padding: 20px 16px;
+    }
+  }
+
+  &__info {
+    flex: 0 1 260px;
+
+    // Stacked on phones: the column divider becomes a line under the details.
+    @include down(md) {
+      flex-basis: 100%;
+      border-right: 0;
+      border-bottom: 1px solid $line-faint;
+    }
+  }
+
+  &__calendar {
+    flex: 2 1 400px;
+  }
+
+  &__slots {
+    flex: 1 1 220px;
+
+    .slot-list {
+      max-height: 420px;
+    }
+
+    // Side by side (wide screens): the times scroll within the calendar's height instead of making the box taller.
+    @media (min-width: 920px) {
+      .slot-list {
+        flex: 1;
+        min-height: 0;
+        max-height: none;
+        contain: size; // the times don't count toward the box's height: they fill it and scroll
+      }
+    }
+  }
+
+  .month-grid {
+    row-gap: 10px;
+
+    &__day {
+      width: min(52px, 100%);
+      height: auto;
+      aspect-ratio: 1;
+      font-size: 15px;
+    }
+  }
+}
+
+// --------------------------------------------------------- Booking details form
+// "Your details": the picked call on a dark panel at the left, the form at the right (stacked on phones).
+.book-details {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) 1fr;
+  max-width: 980px;
+  margin: 0 auto;
+  border: 1px solid $line;
+  border-radius: $radius-2xl;
+  background: $white;
+  box-shadow: 0 18px 48px rgba(11, 20, 36, 0.1);
+  overflow: hidden;
+  animation: slide-up 0.3s ease-out;
+
+  @include down(md) {
+    grid-template-columns: 1fr;
+  }
+
+  &__summary {
+    @include stack(14px);
+    padding: 28px;
+    border-top: 4px solid $orange;
+    background: $ink;
+    color: $white;
+  }
+
+  &__back {
+    @include button-reset;
+    @include row(4px);
+    align-self: flex-start;
+    margin: -6px 0 6px -8px;
+    padding: 6px 10px 6px 6px;
+    border-radius: $radius-pill;
+    color: #b7c1d1;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: $white;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  &__kicker {
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    color: $orange;
+  }
+
+  &__title {
+    font-size: 26px;
+    line-height: 1.2;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $white;
+  }
+
+  &__when {
+    @include row(14px);
+    padding: 14px;
+    border-radius: $radius-xl;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &__tile {
+    @include stack(0);
+    flex: none;
+    align-items: center;
+    width: 58px;
+    padding: 8px 0 9px;
+    border-radius: $radius-lg;
+    background: $white;
+  }
+
+  &__tile-month {
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: $orange-ink;
+  }
+
+  &__tile-day {
+    font-size: 24px;
+    line-height: 1.05;
+    font-weight: 800;
+    color: $ink;
+  }
+
+  &__when-text {
+    @include stack(2px);
+    font-size: 14px;
+    color: #b7c1d1;
+
+    strong {
+      font-size: 15px;
+      color: $white;
+    }
+  }
+
+  &__facts {
+    @include stack(8px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      @include row(8px);
+      font-size: 14px;
+      color: #d5dbe5;
+    }
+
+    svg {
+      color: $orange;
+    }
+  }
+
+  &__form {
+    @include stack(16px);
+    padding: 30px 32px;
+
+    @include down(md) {
+      padding: 24px 16px;
+    }
+  }
+
+  &__heading {
+    font-size: 20px;
+    font-weight: 800;
+    color: $ink;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+
+    @include down(sm) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  // Calmer inputs with an orange focus, to match the booking calendar.
+  .input,
+  .textarea {
+    border-radius: $radius-md;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:focus {
+      border-color: $orange;
+      box-shadow: 0 0 0 4px rgba(255, 153, 0, 0.14);
+      outline: none;
+    }
+  }
+
+  &__privacy {
+    @include row(6px);
+    justify-content: center;
+    margin-top: -4px;
+    font-size: 12px;
+    color: $muted;
+  }
+}
+
+.public-page--embedded .book-details {
+  box-shadow: none;
 }

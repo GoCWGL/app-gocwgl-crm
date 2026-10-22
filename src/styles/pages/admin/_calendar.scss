@@ -177,15 +177,22 @@
     height: 42px;
     border: 0;
     border-radius: 50%;
-    background: $cyan-50;
-    color: $cyan-700;
+    background: $peach;
+    color: $orange-ink;
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
+    transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+
+    &:hover {
+      background: $peach-strong;
+      transform: scale(1.06);
+    }
 
     &[aria-pressed="true"] {
-      background: $cyan-600;
-      color: $white;
+      background: $orange;
+      color: $on-orange;
+      box-shadow: $glow-orange-soft;
     }
 
     &--off {
@@ -194,6 +201,237 @@
       font-weight: 400;
       cursor: default;
     }
+  }
+}
+
+// Time zone picker under the month grid (times show in the zone picked here). The list opens upward so it stays
+// inside the booking box, with a soft scale-and-fade; the globe turns while it's open.
+.zone-picker {
+  @include stack(8px);
+  position: relative;
+  padding-top: 16px;
+  border-top: 1px solid $line-faint;
+
+  &__label {
+    @include row(6px);
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $muted;
+  }
+
+  &__globe {
+    color: $orange;
+    transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  &--open &__globe {
+    transform: rotate(180deg);
+  }
+
+  &__trigger {
+    @include button-reset;
+    @include row(12px);
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid $line-strong;
+    border-radius: $radius-lg;
+    background: $white;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.2s, transform 0.15s;
+
+    &:hover {
+      border-color: rgba(255, 153, 0, 0.6);
+      box-shadow: 0 6px 18px rgba(255, 153, 0, 0.14);
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  &--open &__trigger {
+    border-color: $orange;
+    box-shadow: 0 0 0 4px rgba(255, 153, 0, 0.16);
+  }
+
+  &__main {
+    @include stack(1px);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__city {
+    @include row(8px);
+    @include truncate;
+    font-size: 15px;
+    font-weight: 800;
+    color: $ink;
+  }
+
+  &__sub {
+    @include row(8px);
+    @include truncate;
+    font-size: 12px;
+    color: $muted;
+  }
+
+  &__tag {
+    flex: none;
+    padding: 2px 8px;
+    border-radius: $radius-pill;
+    background: $peach;
+    color: $orange-ink;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  &__chevron {
+    flex: none;
+    color: $muted;
+    transition: transform 0.25s ease;
+  }
+
+  &--open &__chevron {
+    transform: rotate(180deg);
+  }
+
+  &__panel {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% - 6px);
+    left: 0;
+    z-index: 5;
+    border: 1px solid $line;
+    border-radius: $radius-xl;
+    background: $white;
+    box-shadow: 0 18px 48px rgba(11, 20, 36, 0.18);
+    overflow: hidden;
+    transform-origin: bottom center;
+    animation: zone-picker-in 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+
+  &__search {
+    @include row(8px);
+    padding: 10px 14px;
+    border-bottom: 1px solid $line-faint;
+    color: $muted;
+
+    input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      font: inherit;
+      font-size: 14px;
+      color: $ink;
+    }
+  }
+
+  &__list {
+    max-height: 280px;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  &__option {
+    @include row(10px);
+    padding: 9px 10px;
+    border-radius: $radius-md;
+    cursor: pointer;
+    transition: background 0.12s;
+
+    &--active {
+      background: $bg-soft;
+    }
+
+    &[aria-selected="true"] {
+      background: $peach;
+    }
+  }
+
+  &__time {
+    @include stack(0);
+    flex: none;
+    align-items: flex-end;
+    font-size: 13px;
+    font-weight: 700;
+    color: $ink-soft;
+  }
+
+  &__offset {
+    font-family: $font-mono;
+    font-size: 10px;
+    font-weight: 600;
+    color: $muted;
+  }
+
+  &__check {
+    flex: none;
+    color: $orange-ink;
+  }
+
+  &__empty {
+    padding: 16px 10px;
+    font-size: 13px;
+    color: $muted;
+    text-align: center;
+  }
+}
+
+@keyframes zone-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// Times fade and rise in, one after another, when the day or the zone changes.
+@keyframes slot-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.slot-list > * {
+  animation: slot-in 0.28s ease-out both;
+
+  @for $i from 1 through 12 {
+    &:nth-child(#{$i}) {
+      animation-delay: #{($i - 1) * 25}ms;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zone-picker__panel,
+  .slot-list > * {
+    animation: none;
+  }
+
+  .zone-picker__globe,
+  .zone-picker__chevron {
+    transition: none;
   }
 }
 
@@ -206,13 +444,19 @@
 .slot {
   flex: 1 1 auto;
   min-height: 44px;
-  border: 1px solid $cyan-glow;
+  border: 1px solid rgba(255, 153, 0, 0.45);
   border-radius: $radius-sm;
   background: $white;
-  color: $cyan-700;
+  color: $orange-ink;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover {
+    border-color: $orange;
+    background: $peach;
+  }
 
   &--selected {
     border-color: $ink-soft;

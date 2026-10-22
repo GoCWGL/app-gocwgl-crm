@@ -11,11 +11,13 @@ type PublicShellProps = {
   embedded?: boolean;
   /** Narrow column for forms and surveys; booking uses the wide one. */
   narrow?: boolean;
+  /** Wider column for the booking calendar. */
+  wide?: boolean;
   children: ReactNode;
 };
 
 /** Frame for the pages people outside the CRM open: booking links, forms and surveys. */
-export function PublicShell({ embedded = false, narrow = false, children }: PublicShellProps) {
+export function PublicShell({ embedded = false, narrow = false, wide = false, children }: PublicShellProps) {
   const root = useRef<HTMLDivElement>(null);
   useReportHeight(embedded, root);
   return (
@@ -25,7 +27,7 @@ export function PublicShell({ embedded = false, narrow = false, children }: Publ
           <Image className="public-page__logo" src={logoWordmark} alt="GoCWGL" priority />
         </header>
       )}
-      <main className={cn("public-page__main", narrow && "public-page__main--narrow")}>{children}</main>
+      <main className={cn("public-page__main", narrow && "public-page__main--narrow", wide && "public-page__main--wide")}>{children}</main>
     </div>
   );
 }

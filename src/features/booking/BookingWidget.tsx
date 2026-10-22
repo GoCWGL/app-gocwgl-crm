@@ -5,29 +5,31 @@ import { Button, ErrorState, Icon, Loading } from "@/components/ui";
 import { MONTHS } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import type { PublicCalendarOut } from "@/utils/api/models";
-import { todayIso } from "@/utils/format/dates";
+import { isoDateIn, todayIso } from "@/utils/format/dates";
 import { usePublicSlots } from "@/utils/hooks/useCalendar";
+import { ZonePicker } from "./ZonePicker";
+import { browserZone, businessDays, dayIsOpen } from "./zones";
 
-const DOW_HEADERS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+/** Weeks start on Sunday. */
+const DOW_HEADERS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 const pad = (n: number) => String(n).padStart(2, "0");
 
 /** "2:00 PM" in the calendar's time zone, so slots match the days and the zone label shown. */
 export const slotTime = (slot: string, timeZone: string) =>
   new Intl.DateTimeFormat("en-US", { timeZone, hour: "numeric", minute: "2-digit" }).format(new Date(slot));
 
-/** "Wednesday, October 21 at 2:00 PM" in the calendar's time zone. */
-export const slotDateTime = (slot: string, timeZone: string) =>
-  new Intl.DateTimeFormat("en-US", { timeZone, weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" }).format(
-    new Date(slot),
-  );
-
 type BookingWidgetProps = {
   slug: string;
-  info: Pick<PublicCalendarOut, "name" | "durationMin" | "location" | "description">;
+  /** The open weekdays, booking window and business zone come from the public calendar (not the admin's copy). */
+  info: Pick<PublicCalendarOut, "name" | "durationMin" | "location" | "description"> &
+    Partial<Pick<PublicCalendarOut, "openHours" | "bookableUntil" | "timezone">>;
   /** Off: no days can be picked. */
   active: boolean;
-  /** Zone to show before the first slots load (the API sends the business zone with the slots). */
+  /** The business zone until the calendar's own arrives (the API sends it with the calendar and the slots). */
   timeZone?: string;
+  /** The zone the visitor views times in (default: their device's). Pass both to keep it when the widget remounts. */
+  viewZone?: string;
+  onViewZoneChange?: (zone: string) => void;
   /** Extra content under the calendar details (errors, notes). */
   aside?: ReactNode;
   /** Shown above the slots, e.g. the preview's "this is only a preview" note. */
@@ -37,23 +39,56 @@ type BookingWidgetProps = {
   onChange?: () => void;
 };
 
-/** Date and time picker for a booking calendar (live slots from /public/booking/{slug}). */
-export function BookingWidget({ slug, info, active, timeZone = "", aside, notice, onConfirm, onChange }: BookingWidgetProps) {
-  const today = todayIso();
+/**
+ * Date and time picker for a booking calendar (live slots from /public/booking/{slug}). Days without hours, past
+ * days and days past the booking window are grayed out. Times show in the zone the visitor picks under the dates;
+ * a visitor's day can span two business days, so both are asked for.
+ */
+export function BookingWidget({
+  slug,
+  info,
+  active,
+  timeZone = "",
+  viewZone: viewZoneProp,
+  onViewZoneChange,
+  aside,
+  notice,
+  onConfirm,
+  onChange,
+}: BookingWidgetProps) {
+  const businessZone = info.timezone || timeZone || browserZone();
+  const [ownZone, setOwnZone] = useState(() => browserZone(businessZone));
+  const viewZone = viewZoneProp ?? ownZone;
+  const today = todayIso(viewZone);
   const [month, setMonth] = useState(() => today.slice(0, 7)); // "YYYY-MM"
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const slotsQuery = usePublicSlots(active ? slug : "", date);
+  const [firstDay, secondDay = ""] = date ? businessDays(date, viewZone, businessZone) : [""];
+  const firstQuery = usePublicSlots(active ? slug : "", firstDay);
+  const secondQuery = usePublicSlots(active ? slug : "", secondDay);
+  const limits = { viewZone, businessZone, openHours: info.openHours, bookableUntil: info.bookableUntil };
 
   const [y, m] = month.split("-").map(Number);
   const daysInMonth = new Date(y, m, 0).getDate();
-  const firstOffset = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+  const firstOffset = new Date(y, m - 1, 1).getDay(); // Sunday = 0
   const shift = (n: number) => {
     const d = new Date(y, m - 1 + n, 1);
     setMonth(`${d.getFullYear()}-${pad(d.getMonth() + 1)}`);
   };
-  const slots = slotsQuery.data?.slots ?? [];
-  const zone = slotsQuery.data?.timezone ?? timeZone;
+  const slots = [...new Set([...(firstQuery.data?.slots ?? []), ...(secondDay ? (secondQuery.data?.slots ?? []) : [])])]
+    .filter((slot) => isoDateIn(new Date(slot), viewZone) === date)
+    .sort();
+  const fetching = firstQuery.isFetching || (!!secondDay && secondQuery.isFetching);
+  const failed = firstQuery.isError ? firstQuery : secondDay && secondQuery.isError ? secondQuery : null;
+  const loaded = firstQuery.isSuccess && (!secondDay || secondQuery.isSuccess);
+
+  const pickZone = (zone: string) => {
+    setOwnZone(zone);
+    onViewZoneChange?.(zone);
+    setDate("");
+    setTime("");
+    onChange?.();
+  };
 
   const dateText = date
     ? new Intl.DateTimeFormat("en-US", { weekday: "long", month: "long", day: "numeric" }).format(new Date(`${date}T12:00:00`))
@@ -93,7 +128,6 @@ export function BookingWidget({ slug, info, active, timeZone = "", aside, notice
               ›
             </Button>
           </span>
-          <span className="text-small">{zone}</span>
         </div>
         <div className="month-grid">
           {DOW_HEADERS.map((d) => (
@@ -106,7 +140,7 @@ export function BookingWidget({ slug, info, active, timeZone = "", aside, notice
           ))}
           {Array.from({ length: daysInMonth }, (_, i) => {
             const day = `${month}-${pad(i + 1)}`;
-            const open = active && day >= today;
+            const open = active && dayIsOpen(day, limits);
             return (
               <div className="month-grid__cell" key={day}>
                 {open ? (
@@ -130,14 +164,16 @@ export function BookingWidget({ slug, info, active, timeZone = "", aside, notice
             );
           })}
         </div>
+        <ZonePicker value={viewZone} businessZone={businessZone} onChange={pickZone} />
       </div>
 
       <div className="booking-preview__slots">
         <span className="card-title">{dateText}</span>
         {notice}
-        <div className="slot-list">
-          {slotsQuery.isFetching && <Loading inline text="Finding open times…" />}
-          {slotsQuery.isError && <ErrorState error={slotsQuery.error} inline />}
+        {/* Keyed so the times fade in again when the day or the zone changes. */}
+        <div className="slot-list" key={`${date}|${viewZone}`}>
+          {fetching && <Loading inline text="Finding open times…" />}
+          {failed && <ErrorState error={failed.error} inline />}
           {slots.map((slot) => (
             <div className="cluster cluster--6 cluster--nowrap" key={slot}>
               <button
@@ -148,16 +184,16 @@ export function BookingWidget({ slug, info, active, timeZone = "", aside, notice
                   onChange?.();
                 }}
               >
-                {slotTime(slot, zone)}
+                {slotTime(slot, viewZone)}
               </button>
               {time === slot && (
-                <Button variant="primary" size="lg" className="u-grow" onClick={() => onConfirm(slot, zone)}>
+                <Button variant="primary" size="lg" className="u-grow" onClick={() => onConfirm(slot, viewZone)}>
                   Confirm
                 </Button>
               )}
             </div>
           ))}
-          {!!date && slotsQuery.isSuccess && slots.length === 0 && <span className="text-muted">No open times on this day.</span>}
+          {!!date && loaded && !fetching && slots.length === 0 && <span className="text-muted">No open times on this day.</span>}
         </div>
       </div>
     </div>

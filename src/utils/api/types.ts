@@ -3071,6 +3071,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/booking/invite/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Guest Invite
+         * @description The booked call as an .ics file (the "Apple Calendar" button in the guest's confirmation).
+         */
+        get: operations["guest_invite_api_public_booking_invite__token__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/booking/{slug}": {
         parameters: {
             query?: never;
@@ -3574,8 +3594,26 @@ export interface components {
              * Format: date-time
              */
             startsAt: string;
-            /** Name */
-            name: string;
+            /**
+             * Firstname
+             * @default
+             */
+            firstName?: string;
+            /**
+             * Lastname
+             * @default
+             */
+            lastName?: string;
+            /**
+             * Name
+             * @default
+             */
+            name?: string;
+            /**
+             * Company
+             * @default
+             */
+            company?: string;
             /**
              * Email
              * Format: email
@@ -3596,6 +3634,8 @@ export interface components {
              * @default
              */
             website?: string;
+            /** Timezone */
+            timezone?: string | null;
         };
         /** BrandKitIn */
         BrandKitIn: {
@@ -3722,6 +3762,15 @@ export interface components {
             description?: string;
             /** Hours */
             hours?: components["schemas"]["DayHours"][] | null;
+        };
+        /** CalendarLinksOut */
+        CalendarLinksOut: {
+            /** Google */
+            google: string;
+            /** Outlook */
+            outlook: string;
+            /** Apple */
+            apple: string;
         };
         /** CalendarOut */
         CalendarOut: {
@@ -5102,6 +5151,15 @@ export interface components {
                 [key: string]: boolean;
             };
         };
+        /** OpenHoursOut */
+        OpenHoursOut: {
+            /** D */
+            d: string;
+            /** Start */
+            start: string;
+            /** End */
+            end: string;
+        };
         /** OrgSettingsOut */
         OrgSettingsOut: {
             /** Company */
@@ -5513,6 +5571,46 @@ export interface components {
              */
             website?: string;
         };
+        /**
+         * PublicBookingOut
+         * @description What the booking page shows once someone books: the call and "Add to calendar" links.
+         */
+        PublicBookingOut: {
+            /** Name */
+            name: string;
+            /** Durationmin */
+            durationMin: number;
+            /** Location */
+            location: string;
+            /** Color */
+            color: string;
+            /** Description */
+            description: string;
+            /** Openweekdays */
+            openWeekdays: string[];
+            /** Openhours */
+            openHours: components["schemas"]["OpenHoursOut"][];
+            /**
+             * Bookableuntil
+             * Format: date
+             */
+            bookableUntil: string;
+            /** Timezone */
+            timezone: string;
+            /**
+             * Startsat
+             * Format: date-time
+             */
+            startsAt: string;
+            /**
+             * Endsat
+             * Format: date-time
+             */
+            endsAt: string;
+            /** Meetingurl */
+            meetingUrl: string | null;
+            calendarLinks: components["schemas"]["CalendarLinksOut"];
+        };
         /** PublicCalendarOut */
         PublicCalendarOut: {
             /** Name */
@@ -5525,6 +5623,17 @@ export interface components {
             color: string;
             /** Description */
             description: string;
+            /** Openweekdays */
+            openWeekdays: string[];
+            /** Openhours */
+            openHours: components["schemas"]["OpenHoursOut"][];
+            /**
+             * Bookableuntil
+             * Format: date
+             */
+            bookableUntil: string;
+            /** Timezone */
+            timezone: string;
         };
         /**
          * PublicFormOut
@@ -16403,6 +16512,44 @@ export interface operations {
             };
         };
     };
+    guest_invite_api_public_booking_invite__token__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     public_calendar_api_public_booking__slug__get: {
         parameters: {
             query?: never;
@@ -16467,7 +16614,7 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        data: components["schemas"]["PublicCalendarOut"];
+                        data: components["schemas"]["PublicBookingOut"];
                     };
                 };
             };

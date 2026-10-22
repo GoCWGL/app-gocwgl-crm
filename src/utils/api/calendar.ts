@@ -13,6 +13,7 @@ import type {
   ConnectionOut,
   ConnectionUpdate,
   GoogleStartOut,
+  PublicBookingOut,
   PublicCalendarOut,
   SlotsOut,
   ZoomStartOut,
@@ -51,4 +52,5 @@ export const startZoom = () => post<ZoomStartOut>("/admin/calendar-connections/z
 // ------------------------------------------------------------------ Public booking page
 export const getPublicCalendar = (slug: string) => get<PublicCalendarOut>(`/public/booking/${slug}`);
 export const getPublicSlots = (slug: string, day: string) => get<SlotsOut>(`/public/booking/${slug}/slots`, { day });
-export const bookPublic = (slug: string, body: BookingRequest) => post<PublicCalendarOut>(`/public/booking/${slug}`, body);
+/** The booking and its "Add to calendar" links, for the confirmation screen. */
+export const bookPublic = (slug: string, body: BookingRequest) => post<PublicBookingOut>(`/public/booking/${slug}`, body);
