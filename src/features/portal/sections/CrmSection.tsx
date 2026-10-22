@@ -8,7 +8,7 @@ import { usePortal } from "../state/PortalContext";
 const PACKAGE_KEYS = Object.keys(CRM_PACKAGES) as CrmPackageKey[];
 
 /**
- * CRM builds: the two packages and how it works. Requests start with a call booked on gocwgl.com; the team
+ * CRM builds: the two packages and how it works. Requests start with a CRM discovery call booked on app.gocwgl.com; the team
  * invoices CRM builds personally (not through Polar), so nothing here creates a request or an invoice.
  */
 export function CrmSection() {
