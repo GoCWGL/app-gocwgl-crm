@@ -57,13 +57,16 @@ export function subscriptionText(sub: SubscriptionOut | undefined): string {
   return sub ? `${sub.status} · ${formatPerInterval(sub.amountCents, sub.interval, sub.currency)}` : "None";
 }
 
-/** Paying client with an active (or trial) subscription. */
+/** Subscription states that still count as a current client. "Awaiting payment" is a yearly invoice that went out and isn't paid yet. */
+const CURRENT_SUBSCRIPTION = ["Active", "Trial", "Awaiting payment"];
+
+/** Paying client whose subscription (if any) hasn't been paused or cancelled. */
 export function isActiveClient(contact: ContactOut, subs: SubscriptionOut[] | undefined): boolean {
   const sub = subscriptionOf(subs, contact.id);
-  return contact.stage === "paid" && (!sub || sub.status === "Active" || sub.status === "Trial");
+  return contact.stage === "paid" && (!sub || CURRENT_SUBSCRIPTION.includes(sub.status));
 }
 
-/** Lost lead, paused subscription, or paid client who stopped paying. */
+/** Lost lead, paused subscription, or paid client whose subscription was cancelled. */
 export function isInactiveClient(contact: ContactOut, subs: SubscriptionOut[] | undefined): boolean {
   const sub = subscriptionOf(subs, contact.id);
   return contact.stage === "lost" || sub?.status === "Paused" || (contact.stage === "paid" && !isActiveClient(contact, subs));

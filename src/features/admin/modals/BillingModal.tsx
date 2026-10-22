@@ -2,12 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { Button, Checkbox, Field, Icon, IconButton, IconTile, Input, Modal, SegmentedControl, Select } from "@/components/ui";
-import { BILLING_INTERVALS, type BillingInterval } from "@/data/admin";
+import { BILLING_INTERVALS, HOSTING_PLAN, type BillingInterval } from "@/data/admin";
 import { CRM_PACKAGES } from "@/data/portal";
 import { addDaysIso, todayIso } from "@/utils/format/dates";
 import { centsToDollars, dollarsToCents, formatCents, formatCentsExact } from "@/utils/format/money";
 import { errorMessage, fieldErrors } from "@/utils/errors";
-import { useCreateInvoice, useCreateSubscription, useSubscriptions } from "@/utils/hooks/useBilling";
+import { useCreateInvoice, useCreateSubscription } from "@/utils/hooks/useBilling";
 import { useAllContacts } from "@/utils/hooks/useContacts";
 import { contactName } from "../lib/contacts";
 
@@ -22,8 +22,11 @@ const PAID_BY = ["Bank transfer", "Cash", "Check", "Card (in person)", "Other"];
 const QUICK_LINES: LineDraft[] = [
   { desc: CRM_PACKAGES.simple.label + " build", qty: "1", price: centsToDollars(CRM_PACKAGES.simple.priceCents) },
   { desc: CRM_PACKAGES.custom.label + " build", qty: "1", price: centsToDollars(CRM_PACKAGES.custom.priceCents) },
-  { desc: "CRM feature after launch", qty: "1", price: "500" },
 ];
+
+/** A single CRM build line at its list price is paid with that build's Wise link (set by the API). */
+const isWiseBuild = (lines: LineDraft[]) =>
+  lines.length === 1 && QUICK_LINES.some((q) => q.desc === lines[0].desc.trim() && dollarsToCents(q.price) === dollarsToCents(lines[0].price) && Number(lines[0].qty) === 1);
 
 type BillingModalProps = {
   kind: BillingKind;
@@ -39,19 +42,16 @@ type BillingModalProps = {
  */
 export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalProps) {
   const contacts = useAllContacts().data ?? [];
-  const subs = useSubscriptions().data ?? [];
   const createInvoice = useCreateInvoice();
   const createSub = useCreateSubscription();
-  // A new subscription starts from the plan most clients already have (display default only).
-  const template = subs.find((s) => s.status === "Active") ?? subs[0];
 
   const [clientId, setClientId] = useState("");
   const [items, setItems] = useState<LineDraft[]>([{ desc: "", qty: "1", price: "" }]);
   const [due, setDue] = useState("7");
   const [note, setNote] = useState("");
-  const [plan, setPlan] = useState(template?.plan ?? "Monthly retainer");
-  const [amount, setAmount] = useState(template ? centsToDollars(template.amountCents) : "97");
-  const [interval, setInterval] = useState<BillingInterval>((template?.interval as BillingInterval) ?? "Month");
+  const [plan, setPlan] = useState(HOSTING_PLAN.plan);
+  const [amount, setAmount] = useState(centsToDollars(HOSTING_PLAN.amountCents));
+  const [interval, setInterval] = useState<BillingInterval>(HOSTING_PLAN.interval);
   const [trial, setTrial] = useState("0");
   const [paidOn, setPaidOn] = useState(todayIso());
   const [paidBy, setPaidBy] = useState(PAID_BY[0]);
@@ -68,6 +68,9 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
     setItems(items.map((it, k) => (k === i ? { ...it, ...patch } : it)));
     setError("");
   };
+  const isWiseHosting =
+    plan.trim() === HOSTING_PLAN.plan && dollarsToCents(amount) === HOSTING_PLAN.amountCents && interval === HOSTING_PLAN.interval;
+  const filled = items.filter((it) => it.desc.trim() && dollarsToCents(it.price) > 0);
   const pending = createInvoice.isPending || createSub.isPending;
   const onError = (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err));
 
@@ -75,7 +78,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
     if (!client) return setError("Choose a client first.");
 
     if (isInvoice) {
-      const lines = items.filter((it) => it.desc.trim() && dollarsToCents(it.price) > 0);
+      const lines = filled;
       if (!lines.length) return setError("Add at least one line with a description and price.");
       if (isPaid && !paidOn) return setError("Choose the date it was paid.");
       createInvoice.mutate(
@@ -109,7 +112,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
     createSub.mutate(
       {
         contactId: client.id,
-        plan: plan.trim() || "Monthly retainer",
+        plan: plan.trim() || HOSTING_PLAN.plan,
         amountCents: cents,
         interval,
         nextBillingDate: addDaysIso(todayIso(), trialDays),
@@ -152,7 +155,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
             </Button>
           )}
           <Button type="submit" variant="primary" disabled={pending}>
-            {pending ? "Saving…" : isPaid ? "Record paid invoice" : isInvoice ? "Send invoice" : "Create subscription"}
+            {pending ? "Saving…" : isPaid ? "Record paid invoice" : isInvoice ? "Send invoice" : Number(trial) ? "Create subscription" : "Create and send invoice"}
           </Button>
         </>
       }
@@ -190,7 +193,19 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
           </Field>
         ) : (
           <Field label="Clients pay with" htmlFor="bm-method" hint="Or they pay you directly; then mark it paid.">
-            <Input id="bm-method" readOnly value="Polar checkout, from their Transactions" />
+            <Input
+              id="bm-method"
+              readOnly
+              value={
+                isInvoice
+                  ? isWiseBuild(filled)
+                    ? `Wise payment link for the ${filled[0].desc.trim()}`
+                    : "Polar checkout, from their Transactions"
+                  : isWiseHosting
+                    ? "Wise payment link, on every invoice"
+                    : "Polar checkout, on every invoice"
+              }
+            />
           </Field>
         )}
       </div>
@@ -263,7 +278,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
                 <Input id="bm-paid-on" type="date" max={todayIso()} value={paidOn} onChange={(e) => setPaidOn(e.target.value)} />
               </Field>
             ) : (
-              <Field label="Due" htmlFor="bm-due">
+              <Field label="Due" htmlFor="bm-due" hint="A follow-up email goes out every 2 days until it’s paid.">
                 <Select id="bm-due" value={due} onChange={(e) => setDue(e.target.value)}>
                   <option value="0">On receipt</option>
                   <option value="7">In 7 days</option>
@@ -312,8 +327,10 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
           </div>
           <div className="inset inset--soft text-body">
             {Number(trial) ? `After a ${trial}-day free trial, ` : ""}
-            {client ? contactName(client) : "The client"} will be billed {formatCents(dollarsToCents(amount))} every {interval.toLowerCase()} until
-            cancelled. They can start the plan from Billing in their portal.
+            {client ? contactName(client) : "The client"} gets a {formatCents(dollarsToCents(amount))} invoice
+            {Number(trial) ? "" : " now"} and then every {interval.toLowerCase()} until it’s cancelled
+            {isWiseHosting ? ", with the Wise payment link" : ""}. Nothing is charged automatically; the client pays each invoice. Unpaid
+            invoices get a follow-up every 2 days. You or the client can cancel anytime from Transactions.
           </div>
         </>
       )}

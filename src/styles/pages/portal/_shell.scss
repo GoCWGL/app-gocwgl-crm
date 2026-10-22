@@ -36,3 +36,32 @@
     height: auto;
   }
 }
+
+// Under a Pending/Overdue badge in Transactions: payments outside the app are verified by hand.
+.tx-status-note {
+  display: block;
+  max-width: 240px;
+  margin-top: 6px;
+  line-height: 1.45;
+}
+
+// Transactions: the client's plan (yearly hosting) with its renewal date and Cancel.
+.subscription-card__main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.subscription-card__plan {
+  font-size: 17px;
+  font-weight: 800;
+  color: $ink;
+}
+
+.subscription-card__side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}

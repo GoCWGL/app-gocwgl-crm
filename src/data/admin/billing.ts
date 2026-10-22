@@ -11,6 +11,9 @@ export type BillingInterval = "Week" | "Month" | "Quarter" | "Year";
 export const SUBSCRIPTION_STATUSES: SubscriptionStatus[] = ["Active", "Awaiting payment", "Paused", "Trial", "Canceled"];
 export const BILLING_INTERVALS: BillingInterval[] = ["Week", "Month", "Quarter", "Year"];
 
+/** The yearly plan for backend services and hosting. The API invoices it (with its Wise link) every year until cancelled. */
+export const HOSTING_PLAN = { plan: "Hosting & backend services", amountCents: 9_700, interval: "Year" as BillingInterval };
+
 export const SUBSCRIPTION_TONES: Record<SubscriptionStatus, Tone> = {
   Active: "green",
   "Awaiting payment": "amber",

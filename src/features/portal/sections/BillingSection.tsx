@@ -7,7 +7,8 @@ import { toCsvDataUrl } from "@/lib/utils";
 import type { InvoiceOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
-import { useCheckoutInvoice, usePortalBilling } from "@/utils/hooks/useBilling";
+import { useCheckoutInvoice, useDownloadInvoicePdf, usePortalBilling } from "@/utils/hooks/useBilling";
+import { SubscriptionCard } from "../components/SubscriptionCard";
 import { usePortal } from "../state/PortalContext";
 
 const INVOICE_TONES: Record<string, Tone> = { Paid: "green", Sent: "amber", Overdue: "red", Void: "slate", Refunded: "purple", Draft: "neutral" };
@@ -28,6 +29,7 @@ export function BillingSection() {
   const { notify, readOnly } = usePortal();
   const billing = usePortalBilling();
   const payInvoice = useCheckoutInvoice();
+  const pdf = useDownloadInvoicePdf();
   const { refetch } = billing;
   // Back from Polar: /portal?tab=billing&paid=<invoice number>. Polar's webhook marks the invoice
   // paid, often a few seconds after the redirect, so keep checking until it shows Paid.
@@ -83,6 +85,7 @@ export function BillingSection() {
 
   return (
     <div className="page-stack">
+      {billing.data.subscription && <SubscriptionCard sub={billing.data.subscription} readOnly={readOnly} onCancelled={notify} />}
       <StatGrid
         items={[
           { label: "Total paid", value: formatCentsExact(sum(paid), currency), tone: "green" },
@@ -99,7 +102,7 @@ export function BillingSection() {
         </div>
       )}
       {/* 502 payments_not_configured comes back with a message for the user. */}
-      <FormError error={payInvoice.error} />
+      <FormError error={payInvoice.error ?? pdf.error} />
 
       <section className="card card--table">
         {transactions.length === 0 ? (
@@ -133,27 +136,33 @@ export function BillingSection() {
                     ) : (
                       <Badge tone={INVOICE_TONES[iv.status] ?? "neutral"}>{STATUS_LABELS[iv.status] ?? iv.status}</Badge>
                     )}
+                    {isOpen(iv.status) && (
+                      <span className="text-small tx-status-note">
+                        Already paid? It can take up to 24 hours to verify your payment. Once it’s verified, this changes to Paid.
+                      </span>
+                    )}
                   </td>
                   <td className="data-table__actions">
                     {isOpen(iv.status) && !readOnly && (
-                      <Button variant="primary" size="sm" disabled={payInvoice.isPending} onClick={() => payInvoice.mutate(iv.id)}>
-                        {payInvoice.isPending && payInvoice.variables === iv.id ? "Opening checkout…" : "Pay now"}
-                      </Button>
+                      iv.paymentUrl ? (
+                        // CRM builds are paid with their Wise link.
+                        <a className={buttonClass({ variant: "primary", size: "sm" })} href={iv.paymentUrl} target="_blank" rel="noopener noreferrer">
+                          Pay now
+                        </a>
+                      ) : (
+                        <Button variant="primary" size="sm" disabled={payInvoice.isPending} onClick={() => payInvoice.mutate(iv.id)}>
+                          {payInvoice.isPending && payInvoice.variables === iv.id ? "Opening checkout…" : "Pay now"}
+                        </Button>
+                      )
                     )}
-                    <a
-                      className={buttonClass({ variant: "outline", size: "sm" })}
-                      download={`${iv.number}.csv`}
-                      href={toCsvDataUrl([
-                        ["Invoice", iv.number],
-                        ...iv.items.map((it) => [it.description, `${it.quantity} × ${formatCentsExact(it.unitPriceCents, iv.currency)}`]),
-                        ["Total", formatCentsExact(iv.totalCents, iv.currency)],
-                        ["Due", iv.dueDate ?? "On receipt"],
-                        ["Paid", iv.paidAt?.slice(0, 10) ?? "—"],
-                        ["Status", STATUS_LABELS[iv.status] ?? iv.status],
-                      ])}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={pdf.isPending && pdf.variables?.id === iv.id}
+                      onClick={() => pdf.mutate({ id: iv.id, number: iv.number })}
                     >
-                      Download
-                    </a>
+                      {pdf.isPending && pdf.variables?.id === iv.id ? "Preparing…" : "Download PDF"}
+                    </Button>
                   </td>
                 </tr>
               ))}

@@ -1163,6 +1163,26 @@ export interface paths {
         patch: operations["update_subscription_api_admin_subscriptions__sub_id__patch"];
         trace?: never;
     };
+    "/api/admin/subscriptions/{sub_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel Subscription
+         * @description Stop renewals; unpaid renewal invoices are voided. The record stays for history.
+         */
+        post: operations["cancel_subscription_api_admin_subscriptions__sub_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/invoices": {
         parameters: {
             query?: never;
@@ -2807,6 +2827,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/billing/invoices/{invoice_id}/pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Invoice Pdf
+         * @description Download one of the client's invoices as a PDF.
+         */
+        get: operations["invoice_pdf_api_portal_billing_invoices__invoice_id__pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/billing/invoices/{invoice_id}/checkout": {
         parameters: {
             query?: never;
@@ -2838,6 +2878,26 @@ export interface paths {
         put?: never;
         /** Start Subscription */
         post: operations["start_subscription_api_portal_billing_subscription_checkout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/billing/subscription/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel My Subscription
+         * @description The client cancels their invoice-billed plan (e.g. yearly hosting). No more renewal invoices are sent.
+         */
+        post: operations["cancel_my_subscription_api_portal_billing_subscription_cancel_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4736,6 +4796,17 @@ export interface components {
              * Format: date-time
              */
             createdAt: string;
+            /** Paymenturl */
+            paymentUrl?: string | null;
+            /**
+             * Reminderssent
+             * @default 0
+             */
+            remindersSent?: number;
+            /** Lastemailedat */
+            lastEmailedAt?: string | null;
+            /** Subscriptionid */
+            subscriptionId?: string | null;
         };
         /**
          * InvoiceStatus
@@ -5861,7 +5932,10 @@ export interface components {
             /** Redirecturl */
             redirectUrl: string;
         };
-        /** SubscriptionCreate */
+        /**
+         * SubscriptionCreate
+         * @description Billed by invoice: the first one goes out on `next_billing_date` (today when omitted), then every interval.
+         */
         SubscriptionCreate: {
             /**
              * Contactid
@@ -5870,7 +5944,7 @@ export interface components {
             contactId: string;
             /**
              * Plan
-             * @default Monthly retainer
+             * @default Hosting & backend services
              */
             plan?: string;
             /**
@@ -5878,7 +5952,7 @@ export interface components {
              * @default 9700
              */
             amountCents?: number;
-            /** @default Month */
+            /** @default Year */
             interval?: components["schemas"]["Interval"];
             /** Nextbillingdate */
             nextBillingDate?: string | null;
@@ -9866,6 +9940,48 @@ export interface operations {
                 "application/json": components["schemas"]["SubscriptionUpdate"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SubscriptionOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_subscription_api_admin_subscriptions__sub_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sub_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {
@@ -15599,6 +15715,46 @@ export interface operations {
             };
         };
     };
+    invoice_pdf_api_portal_billing_invoices__invoice_id__pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     pay_invoice_api_portal_billing_invoices__invoice_id__checkout_post: {
         parameters: {
             query?: never;
@@ -15658,6 +15814,37 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["CheckoutOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_my_subscription_api_portal_billing_subscription_cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SubscriptionOut"];
                     };
                 };
             };

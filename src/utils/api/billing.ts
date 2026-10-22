@@ -1,4 +1,4 @@
-import { del, get, patch, post } from "./client";
+import { del, download, get, patch, post } from "./client";
 import type {
   CheckoutOut,
   ClientBillingOut,
@@ -17,6 +17,8 @@ export const createSubscription = (body: SubscriptionCreate) => post<Subscriptio
 export const updateSubscription = (id: string, body: SubscriptionUpdate) =>
   patch<SubscriptionOut>(`/admin/subscriptions/${id}`, body);
 export const deleteSubscription = (id: string) => del(`/admin/subscriptions/${id}`);
+/** Stops renewals and voids its unpaid renewal invoices; the record stays. */
+export const cancelSubscription = (id: string) => post<SubscriptionOut>(`/admin/subscriptions/${id}/cancel`);
 
 // ------------------------------------------------------------------ Invoices (the API computes totalCents)
 export const listInvoices = (filters: { status?: string; contact_id?: string } = {}) =>
@@ -37,3 +39,7 @@ export const voidInvoice = (id: string) => post<InvoiceOut>(`/admin/invoices/${i
 export const getPortalBilling = () => get<ClientBillingOut>("/portal/billing");
 /** Redirect the browser to the returned `url` (Polar checkout). */
 export const checkoutInvoice = (id: string) => post<CheckoutOut>(`/portal/billing/invoices/${id}/checkout`);
+/** The client cancels their own invoice-billed plan (e.g. yearly hosting). */
+export const cancelMySubscription = () => post<SubscriptionOut>("/portal/billing/subscription/cancel");
+/** Saves the invoice as `<number>.pdf`. */
+export const downloadInvoicePdf = (v: { id: string; number: string }) => download(`/portal/billing/invoices/${v.id}/pdf`, `${v.number}.pdf`);

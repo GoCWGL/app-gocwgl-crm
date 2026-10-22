@@ -14,6 +14,7 @@ export const useCreateSubscription = () => useApiMutation(api.createSubscription
 export const useUpdateSubscription = () =>
   useApiMutation((v: { id: string; body: SubscriptionUpdate }) => api.updateSubscription(v.id, v.body), { invalidate: BILLING_KEYS });
 export const useDeleteSubscription = () => useApiMutation(api.deleteSubscription, { invalidate: BILLING_KEYS });
+export const useCancelSubscription = () => useApiMutation(api.cancelSubscription, { invalidate: BILLING_KEYS });
 
 export const useInvoices = (filters: { status?: string; contact_id?: string } = {}) =>
   useQuery({ queryKey: [...qk.invoices, filters], queryFn: () => api.listInvoices(filters) });
@@ -28,6 +29,8 @@ export const useVoidInvoice = () => useApiMutation(api.voidInvoice, { invalidate
 
 // ------------------------------------------------------------------ Portal billing
 export const usePortalBilling = () => useQuery({ queryKey: qk.portalBilling, queryFn: api.getPortalBilling });
+export const useCancelMySubscription = () => useApiMutation(api.cancelMySubscription, { invalidate: [qk.portalBilling] });
 /** Polar checkout: the browser leaves for the returned URL. */
 const redirect = (r: { url: string }) => window.location.assign(r.url);
+export const useDownloadInvoicePdf = () => useApiMutation(api.downloadInvoicePdf);
 export const useCheckoutInvoice = () => useApiMutation(api.checkoutInvoice, { onSuccess: redirect });

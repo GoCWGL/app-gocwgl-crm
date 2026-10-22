@@ -3,9 +3,10 @@
 import { Badge, Button, FormError, LoadState, SegmentedControl } from "@/components/ui";
 import { INVOICE_TONES, SUBSCRIPTION_TONES, type InvoiceStatus, type SubscriptionStatus } from "@/data/admin";
 import { canWriteCrm } from "@/utils/auth/session";
-import { formatShort } from "@/utils/format/dates";
+import { formatLong, formatShort } from "@/utils/format/dates";
 import { formatCentsExact, formatCents } from "@/utils/format/money";
 import {
+  useCancelSubscription,
   useDeleteInvoice,
   useDeleteSubscription,
   useInvoices,
@@ -44,12 +45,18 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
 
   const updateSub = useUpdateSubscription();
   const deleteSub = useDeleteSubscription();
+  const cancelSub = useCancelSubscription();
   const send = useSendInvoice();
   const markPaid = useMarkInvoicePaid();
   const voidInv = useVoidInvoice();
   const deleteInv = useDeleteInvoice();
-  const busy = updateSub.isPending || deleteSub.isPending || send.isPending || markPaid.isPending || voidInv.isPending || deleteInv.isPending;
-  const error = updateSub.error ?? deleteSub.error ?? send.error ?? markPaid.error ?? voidInv.error ?? deleteInv.error;
+  const busy = updateSub.isPending || deleteSub.isPending || cancelSub.isPending;
+  // Invoice actions lock only their own row, so one slow email never freezes the whole table.
+  const invoiceActions = [send, markPaid, voidInv, deleteInv];
+  const rowBusy = (id: string) => invoiceActions.some((m) => m.isPending && m.variables === id);
+  const pendingLabel = (m: { isPending: boolean; variables?: string }, id: string, idle: string, working: string) =>
+    m.isPending && m.variables === id ? working : idle;
+  const error = updateSub.error ?? deleteSub.error ?? cancelSub.error ?? send.error ?? markPaid.error ?? voidInv.error ?? deleteInv.error;
 
   return (
     <section className="card" aria-label="Billing">
@@ -114,7 +121,7 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                       {sub.managedByPolar && <span className="text-small"> · via Polar</span>}
                     </td>
                     <td className="data-table__mono">{formatCents(sub.amountCents, sub.currency)}</td>
-                    <td>{sub.status === "Paused" || !sub.nextBillingDate ? "—" : formatShort(sub.nextBillingDate)}</td>
+                    <td>{sub.status === "Paused" || sub.status === "Canceled" || !sub.nextBillingDate ? "—" : formatLong(sub.nextBillingDate)}</td>
                     <td>
                       <Badge tone={SUBSCRIPTION_TONES[sub.status as SubscriptionStatus] ?? "neutral"} dot>
                         {sub.status}
@@ -152,15 +159,30 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                           {sub.status === "Paused" ? "Resume" : "Pause"}
                         </button>
                       )}
-                      {editable && (
+                      {editable && sub.status !== "Canceled" && (
                         <button
                           type="button"
                           className="row-action row-action--danger"
                           aria-label={`Cancel subscription for ${c.name}`}
                           disabled={busy}
-                          onClick={() => deleteSub.mutate(sub.id, { onSuccess: () => onMessage(`${c.name}’s subscription was cancelled.`) })}
+                          onClick={() =>
+                            cancelSub.mutate(sub.id, {
+                              onSuccess: () => onMessage(`${c.name}’s subscription was cancelled. No more invoices will be sent for it.`),
+                            })
+                          }
                         >
-                          Cancel
+                          {cancelSub.isPending && cancelSub.variables === sub.id ? "Cancelling…" : "Cancel"}
+                        </button>
+                      )}
+                      {editable && sub.status === "Canceled" && (
+                        <button
+                          type="button"
+                          className="row-action row-action--danger"
+                          aria-label={`Delete cancelled subscription for ${c.name}`}
+                          disabled={busy}
+                          onClick={() => deleteSub.mutate(sub.id, { onSuccess: () => onMessage(`${c.name}’s cancelled subscription was removed.`) })}
+                        >
+                          Delete
                         </button>
                       )}
                     </td>
@@ -197,46 +219,65 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                     <td className="data-table__mono">{formatCentsExact(iv.totalCents, iv.currency)}</td>
                     <td>{iv.dueDate ? formatShort(iv.dueDate) : "—"}</td>
                     <td>
-                      <Badge tone={INVOICE_TONES[iv.status as InvoiceStatus] ?? "neutral"} dot>
-                        {iv.status}
-                      </Badge>
+                      <div className="stack stack--2">
+                        <Badge tone={INVOICE_TONES[iv.status as InvoiceStatus] ?? "neutral"} dot>
+                          {iv.status}
+                        </Badge>
+                        {isOpen && iv.lastEmailedAt && (
+                          <span className="text-small">
+                            {iv.remindersSent ? `${iv.remindersSent} follow-up${iv.remindersSent === 1 ? "" : "s"} · ` : ""}
+                            emailed {formatShort(iv.lastEmailedAt)}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="data-table__actions">
                       {canWrite && iv.status === "Draft" && (
                         <button
                           type="button"
                           className="row-action row-action--brand"
-                          disabled={busy}
+                          disabled={rowBusy(iv.id)}
                           onClick={() => send.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} sent to ${c.email}.`) })}
                         >
-                          Send
+                          {pendingLabel(send, iv.id, "Send", "Sending…")}
+                        </button>
+                      )}
+                      {canWrite && isOpen && (
+                        <button
+                          type="button"
+                          className="row-action row-action--brand"
+                          aria-label={`Email ${iv.number} to ${c.name} again`}
+                          disabled={rowBusy(iv.id)}
+                          onClick={() => send.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} emailed to ${c.email} again. The next follow-up is in 2 days.`) })}
+                        >
+                          {pendingLabel(send, iv.id, "Resend", "Sending…")}
                         </button>
                       )}
                       {canWrite && isOpen && (
                         <button
                           type="button"
                           className="row-action row-action--green"
-                          disabled={busy}
+                          disabled={rowBusy(iv.id)}
                           onClick={() => markPaid.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} marked as paid.`) })}
                         >
-                          Mark paid
+                          {pendingLabel(markPaid, iv.id, "Mark paid", "Saving…")}
                         </button>
                       )}
                       {canWrite && (iv.status === "Sent" || iv.status === "Overdue") && (
                         <button
                           type="button"
                           className="row-action row-action--danger"
-                          disabled={busy}
+                          disabled={rowBusy(iv.id)}
                           onClick={() => voidInv.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} was voided.`) })}
                         >
-                          Void
+                          {pendingLabel(voidInv, iv.id, "Void", "Voiding…")}
                         </button>
                       )}
                       {canWrite && iv.status === "Draft" && (
                         <button
                           type="button"
                           className="row-action row-action--danger"
-                          disabled={busy}
+                          disabled={rowBusy(iv.id)}
                           onClick={() => deleteInv.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} was deleted.`) })}
                         >
                           Delete
