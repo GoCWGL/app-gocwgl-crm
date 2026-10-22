@@ -41,3 +41,139 @@
     align-items: flex-end;
   }
 }
+
+// Preset line items: a trigger that opens CRM and Funnel columns of one-click items.
+.preset-picker {
+  @include stack(8px);
+
+  &__trigger {
+    @include row(12px);
+    width: 100%;
+    padding: 10px 14px 10px 10px;
+    border: 1px solid $line-strong;
+    border-radius: $radius-lg;
+    background: linear-gradient(135deg, $white, $bg-tint);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
+
+    &:hover,
+    &[aria-expanded="true"] {
+      border-color: $cyan-600;
+      box-shadow: $shadow-soft;
+    }
+  }
+
+  &__trigger-text {
+    @include stack(0);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__chevron {
+    flex: none;
+    color: $cyan-700;
+  }
+
+  &__panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid $line;
+    border-radius: $radius-xl;
+    background: $bg-soft;
+  }
+
+  &__group {
+    @include stack(6px);
+  }
+
+  &__group-label {
+    @include row(6px);
+    padding: 0 2px 2px;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $cyan-700;
+  }
+
+  &__item {
+    @include row(10px);
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid $line-faint;
+    border-radius: $radius-md;
+    background: $white;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      transform 0.12s,
+      border-color 0.12s,
+      box-shadow 0.12s;
+
+    &:hover,
+    &:focus-visible {
+      border-color: $orange;
+      box-shadow: $glow-orange-soft;
+      transform: translateY(-1px);
+    }
+
+    &[data-added] {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: $green-50;
+    }
+  }
+
+  &__item-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: $ink;
+  }
+
+  &__item-tag {
+    margin-left: 6px;
+    padding: 1px 6px;
+    border-radius: $radius-pill;
+    background: rgba(255, 153, 0, 0.14);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $orange-ink;
+    vertical-align: 1px;
+  }
+
+  &__item-price {
+    font-family: $font-mono;
+    font-size: 13px;
+    font-weight: 800;
+    color: $cyan-glow;
+  }
+
+  &__item-icon {
+    flex: none;
+    color: $muted-light;
+
+    [data-added] > & {
+      color: $green-700;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preset-picker__item {
+    transition: none;
+
+    &:hover,
+    &:focus-visible {
+      transform: none;
+    }
+  }
+}

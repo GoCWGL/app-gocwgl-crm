@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Button, Checkbox, Field, Icon, IconButton, IconTile, Input, Modal, SegmentedControl, Select } from "@/components/ui";
+import { Button, Checkbox, Field, Icon, IconButton, IconTile, Input, Modal, SegmentedControl, Select, type IconName } from "@/components/ui";
 import { BILLING_INTERVALS, HOSTING_PLAN, type BillingInterval } from "@/data/admin";
 import { CRM_PACKAGES } from "@/data/portal";
 import { addDaysIso, todayIso } from "@/utils/format/dates";
@@ -18,13 +18,38 @@ export type BillingKind = "invoice" | "paid" | "sub";
 /** How a recorded payment came in; saved at the start of the invoice's note. */
 const PAID_BY = ["Bank transfer", "Cash", "Check", "Card (in person)", "Other"];
 
-/** One-click lines for CRM work, which is invoiced personally rather than through Polar. */
-const QUICK_LINES: LineDraft[] = [
-  { desc: CRM_PACKAGES.simple.label + " build", qty: "1", price: centsToDollars(CRM_PACKAGES.simple.priceCents) },
-  { desc: CRM_PACKAGES.custom.label + " build", qty: "1", price: centsToDollars(CRM_PACKAGES.custom.priceCents) },
+/** One-click lines for CRM and funnel work, which is invoiced personally rather than through Polar. */
+const QUICK_GROUPS: { label: string; icon: IconName; lines: LineDraft[] }[] = [
+  {
+    label: "CRM",
+    icon: "pipeline",
+    lines: [
+      { desc: CRM_PACKAGES.simple.label + " build", qty: "1", price: centsToDollars(CRM_PACKAGES.simple.priceCents) },
+      { desc: CRM_PACKAGES.custom.label + " build", qty: "1", price: centsToDollars(CRM_PACKAGES.custom.priceCents) },
+      { desc: "Custom CRM - Discounted Price", qty: "1", price: centsToDollars(1_200_000) },
+    ],
+  },
+  {
+    label: "Funnel",
+    icon: "funnel",
+    lines: [
+      { desc: "Funnel - Foundation Build", qty: "1", price: centsToDollars(150_000) },
+      { desc: "Funnel - Full Bundle", qty: "1", price: centsToDollars(195_000) },
+      { desc: "Funnel - VIP Repeat Funnel", qty: "1", price: centsToDollars(145_000) },
+    ],
+  },
 ];
+const QUICK_LINES = QUICK_GROUPS.flatMap((g) => g.lines);
 
-/** A single CRM build line at its list price is paid with that build's Wise link (set by the API). */
+/** Shorter names shown in the preset picker; the invoice line keeps the full description. */
+const PRESET_NAMES: Record<string, string> = {
+  "Custom CRM - Discounted Price": "Custom CRM",
+  "Funnel - Foundation Build": "Foundation Build Funnel",
+  "Funnel - Full Bundle": "Full Bundle Funnel",
+  "Funnel - VIP Repeat Funnel": "VIP Repeat Funnel",
+};
+
+/** A single quick line at its list price is paid with that item's Wise link (set by the API). */
 const isWiseBuild = (lines: LineDraft[]) =>
   lines.length === 1 && QUICK_LINES.some((q) => q.desc === lines[0].desc.trim() && dollarsToCents(q.price) === dollarsToCents(lines[0].price) && Number(lines[0].qty) === 1);
 
@@ -56,6 +81,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
   const [paidOn, setPaidOn] = useState(todayIso());
   const [paidBy, setPaidBy] = useState(PAID_BY[0]);
   const [markClientPaid, setMarkClientPaid] = useState(true);
+  const [presetsOpen, setPresetsOpen] = useState(false);
   const [error, setError] = useState("");
 
   const isPaid = kind === "paid";
@@ -213,22 +239,60 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       {isInvoice ? (
         <div className="stack stack--8">
           <span className="kicker">LINE ITEMS</span>
-          <div className="cluster cluster--6">
-            {QUICK_LINES.map((q) => (
-              <Button
-                key={q.desc}
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  // Fill the first empty line, or add one.
-                  const empty = items.findIndex((it) => !it.desc.trim() && !it.price);
-                  setItems(empty >= 0 ? items.map((it, k) => (k === empty ? q : it)) : [...items, q]);
-                  setError("");
-                }}
-              >
-                + {q.desc} · {formatCents(dollarsToCents(q.price))}
-              </Button>
-            ))}
+          <div className="preset-picker">
+            <button
+              type="button"
+              className="preset-picker__trigger"
+              aria-expanded={presetsOpen}
+              aria-controls="bm-presets"
+              onClick={() => setPresetsOpen(!presetsOpen)}
+            >
+              <IconTile size="sm" brand>
+                <Icon name="sparkle" size={14} />
+              </IconTile>
+              <span className="preset-picker__trigger-text">
+                <span className="text-strong">Add a preset item</span>
+                <span className="text-small text-muted">CRM and funnel builds, paid with their Wise link</span>
+              </span>
+              <Icon name={presetsOpen ? "chevronUp" : "chevronDown"} size={16} className="preset-picker__chevron" />
+            </button>
+            {presetsOpen && (
+              <div id="bm-presets" className="preset-picker__panel u-slide-up">
+                {QUICK_GROUPS.map((g) => (
+                  <div className="preset-picker__group" key={g.label} role="group" aria-label={g.label}>
+                    <span className="preset-picker__group-label">
+                      <Icon name={g.icon} size={13} />
+                      {g.label}
+                    </span>
+                    {g.lines.map((q) => {
+                      const added = items.some((it) => it.desc.trim() === q.desc);
+                      return (
+                        <button
+                          type="button"
+                          key={q.desc}
+                          className="preset-picker__item"
+                          data-added={added || undefined}
+                          onClick={() => {
+                            // Fill the first empty line, or add one.
+                            const empty = items.findIndex((it) => !it.desc.trim() && !it.price);
+                            setItems(empty >= 0 ? items.map((it, k) => (k === empty ? q : it)) : [...items, q]);
+                            setPresetsOpen(false);
+                            setError("");
+                          }}
+                        >
+                          <span className="preset-picker__item-name">
+                            {PRESET_NAMES[q.desc] ?? q.desc}
+                            {q.desc.endsWith("Discounted Price") && <span className="preset-picker__item-tag">Discounted</span>}
+                          </span>
+                          <span className="preset-picker__item-price">{formatCents(dollarsToCents(q.price))}</span>
+                          <Icon name={added ? "check" : "plus"} size={14} className="preset-picker__item-icon" />
+                        </button>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           {items.map((it, i) => (
             <div className="line-item" key={i}>
