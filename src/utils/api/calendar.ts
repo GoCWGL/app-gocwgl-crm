@@ -7,6 +7,8 @@ import type {
   CalendarCreate,
   CalendarOut,
   CalendarUpdate,
+  ConfirmationPreviewIn,
+  ConfirmationPreviewOut,
   ConnectionCreate,
   ConnectionOut,
   ConnectionUpdate,
@@ -23,6 +25,9 @@ export const getCalendar = (id: string) => get<CalendarOut>(`/admin/calendars/${
 export const createCalendar = (body: CalendarCreate) => post<CalendarOut>("/admin/calendars", body);
 export const updateCalendar = (id: string, body: CalendarUpdate) => patch<CalendarOut>(`/admin/calendars/${id}`, body);
 export const deleteCalendar = (id: string) => del(`/admin/calendars/${id}`);
+/** The guest's confirmation email for a sample booking, with unsaved subject/message edits. */
+export const previewConfirmation = (id: string, body: ConfirmationPreviewIn) =>
+  post<ConfirmationPreviewOut>(`/admin/calendars/${id}/confirmation-preview`, body);
 
 // ------------------------------------------------------------------ Bookings
 export const listBookings = (range: { start?: string; end?: string } = {}) => get<BookingOut[]>("/admin/bookings", range);

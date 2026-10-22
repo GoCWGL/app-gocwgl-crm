@@ -11,6 +11,7 @@ import { useDeleteCalendar, useUpdateCalendar } from "@/utils/hooks/useCalendar"
 import { useSettings } from "@/utils/hooks/useSettings";
 import { useAdmin } from "../../state/AdminContext";
 import { HoursEditor, hoursError, toHours } from "./Availability";
+import { ConfirmationEmailFields } from "./ConfirmationEmailFields";
 
 type Draft = {
   name: string;
@@ -19,13 +20,15 @@ type Draft = {
   dur: string;
   loc: string;
   link: string;
+  subject: string;
+  message: string;
   color: string;
   on: boolean;
   customHours: boolean;
   hours: DayAvailability[];
 };
 
-/** Edit a booking calendar: name, booking link, bio, duration, location, color and hours. */
+/** Edit a booking calendar: name, booking link, bio, duration, location, meeting link, color, confirmation email and hours. */
 export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: CalendarOut; onClose: () => void }) {
   const { notify } = useAdmin();
   const shared = toHours(useSettings().data?.availability);
@@ -38,6 +41,8 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
     dur: String(cal.durationMin),
     loc: cal.location,
     link: cal.meetingLink,
+    subject: cal.confirmationSubject,
+    message: cal.confirmationMessage,
     color: cal.color,
     on: cal.isActive,
     customHours: !!cal.hours,
@@ -60,6 +65,7 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
     const slug = slugify(draft.slug);
     if (!name) return setError("Give the calendar a name.");
     if (!slug) return setError("Add a URL ending, e.g. discovery-call.");
+    if (!draft.subject.trim() || !draft.message.trim()) return setError("Give the confirmation email a subject and a message.");
     if (draft.customHours) {
       const bad = hoursError(draft.hours);
       if (bad) return setError(bad);
@@ -72,6 +78,8 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
       durationMin: Number(draft.dur) as CalendarUpdate["durationMin"],
       location: draft.loc as CalendarUpdate["location"],
       meetingLink: draft.link.trim(),
+      confirmationSubject: draft.subject.trim(),
+      confirmationMessage: draft.message.trim(),
       color: draft.color,
       isActive: draft.on,
       hours: draft.customHours ? (draft.hours as DayHours[]) : null,
@@ -201,6 +209,13 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
           </div>
         </Field>
       </div>
+
+      <ConfirmationEmailFields
+        calendarId={cal.id}
+        subject={draft.subject}
+        message={draft.message}
+        onChange={(patch) => set(patch)}
+      />
 
       <div className="stack stack--10">
         <span className="kicker">AVAILABILITY</span>

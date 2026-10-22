@@ -1010,6 +1010,26 @@ export interface paths {
         patch: operations["update_calendar_api_admin_calendars__calendar_id__patch"];
         trace?: never;
     };
+    "/api/admin/calendars/{calendar_id}/confirmation-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Confirmation
+         * @description The guest's confirmation email for a sample booking, as it would look with these (unsaved) edits.
+         */
+        post: operations["preview_confirmation_api_admin_calendars__calendar_id__confirmation_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/bookings": {
         parameters: {
             query?: never;
@@ -3672,6 +3692,18 @@ export interface components {
             /** Meetinglink */
             meetingLink?: string;
             /**
+             * Confirmationsubject
+             * @default Confirmed: {calendar} on {date}
+             */
+            confirmationSubject?: string;
+            /**
+             * Confirmationmessage
+             * @default Thank you for booking a call with {company}. Your {calendar} is confirmed for {date} at {time} ({timezone}).
+             *
+             *     Everything you need to join is below, and the calendar invite is attached so you can add it to your calendar in one click. We look forward to speaking with you.
+             */
+            confirmationMessage?: string;
+            /**
              * Color
              * @default #0891B2
              */
@@ -3706,6 +3738,10 @@ export interface components {
             location: string;
             /** Meetinglink */
             meetingLink: string;
+            /** Confirmationsubject */
+            confirmationSubject: string;
+            /** Confirmationmessage */
+            confirmationMessage: string;
             /** Color */
             color: string;
             /** Slug */
@@ -3729,6 +3765,10 @@ export interface components {
             location?: ("Zoom" | "Phone call" | "In person") | null;
             /** Meetinglink */
             meetingLink?: string | null;
+            /** Confirmationsubject */
+            confirmationSubject?: string | null;
+            /** Confirmationmessage */
+            confirmationMessage?: string | null;
             /** Color */
             color?: string | null;
             /** Slug */
@@ -3863,6 +3903,23 @@ export interface components {
             yes?: components["schemas"]["ActionStep"][];
             /** No */
             no?: components["schemas"]["ActionStep"][];
+        };
+        /**
+         * ConfirmationPreviewIn
+         * @description Unsaved edits to preview; left out, the calendar's saved ones are used.
+         */
+        ConfirmationPreviewIn: {
+            /** Subject */
+            subject?: string | null;
+            /** Message */
+            message?: string | null;
+        };
+        /** ConfirmationPreviewOut */
+        ConfirmationPreviewOut: {
+            /** Subject */
+            subject: string;
+            /** Html */
+            html: string;
         };
         /** ConnectionCreate */
         ConnectionCreate: {
@@ -9342,6 +9399,52 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["CalendarOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    preview_confirmation_api_admin_calendars__calendar_id__confirmation_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                calendar_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfirmationPreviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ConfirmationPreviewOut"];
                     };
                 };
             };

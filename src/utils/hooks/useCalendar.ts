@@ -2,7 +2,15 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as api from "@/utils/api/calendar";
-import type { AdminBookingIn, BookingPatch, BookingRequest, CalendarUpdate, ConnectionCreate, ConnectionUpdate } from "@/utils/api/models";
+import type {
+  AdminBookingIn,
+  BookingPatch,
+  BookingRequest,
+  CalendarUpdate,
+  ConfirmationPreviewIn,
+  ConnectionCreate,
+  ConnectionUpdate,
+} from "@/utils/api/models";
 import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
 
@@ -11,6 +19,8 @@ export const useCreateCalendar = () => useApiMutation(api.createCalendar, { inva
 export const useUpdateCalendar = () =>
   useApiMutation((v: { id: string; body: CalendarUpdate }) => api.updateCalendar(v.id, v.body), { invalidate: [qk.calendars] });
 export const useDeleteCalendar = () => useApiMutation(api.deleteCalendar, { invalidate: [qk.calendars] });
+export const usePreviewConfirmation = () =>
+  useApiMutation((v: { id: string; body: ConfirmationPreviewIn }) => api.previewConfirmation(v.id, v.body));
 
 /** Bookings change contacts (stage, call time) and the dashboard too. */
 const BOOKING_KEYS = [qk.bookings, qk.contacts, qk.salesBoard, ["dashboard"], qk.activity];
