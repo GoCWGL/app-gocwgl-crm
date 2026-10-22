@@ -1104,6 +1104,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/calendar-connections/zoom/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Zoom
+         * @description Where to send the "Connect Zoom" popup. Zoom then redirects to /calendar/oauth/zoom/callback.
+         */
+        post: operations["start_zoom_api_admin_calendar_connections_zoom_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/calendar-connections/{connection_id}": {
         parameters: {
             query?: never;
@@ -3086,6 +3106,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/calendar/oauth/zoom/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Zoom Callback
+         * @description Zoom redirects the popup here. The encrypted state names the admin who started it and holds the PKCE verifier.
+         */
+        get: operations["zoom_callback_api_calendar_oauth_zoom_callback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/forms/{form_id}": {
         parameters: {
             query?: never;
@@ -3487,6 +3527,8 @@ export interface components {
             phone: string;
             /** Notes */
             notes: string;
+            /** Meetingurl */
+            meetingUrl: string | null;
         };
         /** BookingPatch */
         BookingPatch: {
@@ -6489,6 +6531,11 @@ export interface components {
             email: string;
             /** Code */
             code: string;
+        };
+        /** ZoomStartOut */
+        ZoomStartOut: {
+            /** Url */
+            url: string;
         };
         ErrorResponse: {
             error: {
@@ -9619,6 +9666,37 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["GoogleStartOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_zoom_api_admin_calendar_connections_zoom_start_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ZoomStartOut"];
                     };
                 };
             };
@@ -16349,6 +16427,50 @@ export interface operations {
         };
     };
     google_callback_api_calendar_oauth_google_callback_get: {
+        parameters: {
+            query?: {
+                code?: string;
+                state?: string;
+                error?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    zoom_callback_api_calendar_oauth_zoom_callback_get: {
         parameters: {
             query?: {
                 code?: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { Avatar, Badge, Button, Checkbox, Field, FormError, Input, LoadState, buttonClass } from "@/components/ui";
 import { CALENDAR_PROVIDERS, legacyProvider, type CalendarProvider } from "@/data/admin";
 import { cn } from "@/lib/utils";
@@ -10,57 +10,75 @@ import { errorMessage, fieldErrors } from "@/utils/errors";
 import { formatRelative } from "@/utils/format/dates";
 import {
   useCalendarConnections,
+  useCalendars,
   useCreateCalendarConnection,
   useDeleteCalendarConnection,
   useUpdateCalendarConnection,
 } from "@/utils/hooks/useCalendar";
 import { useMe } from "@/utils/hooks/useUsers";
-import { GoogleConnectButton } from "./GoogleConnectButton";
+import { ConnectButton } from "./ConnectButton";
 
 /** What the API shows for a Google calendar connected by signing in (instead of a pasted link). */
 const GOOGLE_SIGNED_IN = "Connected with Google";
+/** Zoom is saved as a connection too, but makes meetings instead of reading busy times. */
+const ZOOM = "zoom";
 
 /**
- * Calendar sync. Google Calendar and any other calendar are read from their private iCal link every
+ * Integrations, grouped by what they do. Calendars: Google Calendar and any other calendar are read from their private iCal link every
  * 15 minutes, and the busy times block slots on every booking link; bookings reach your calendar as
  * emailed invites. Connections saved earlier for providers that don't sync can only be disconnected.
+ * Video meetings: Zoom makes a meeting for each call booked on a Zoom calendar.
  */
-export function CalendarSync() {
+export function Integrations() {
   const connections = useCalendarConnections();
   const canWrite = canWriteCrm(useMe().data);
   const byProvider = (id: string) => connections.data?.find((c) => c.provider === id);
-  const legacy = (connections.data ?? []).filter((c) => !CALENDAR_PROVIDERS.some((p) => p.id === c.provider));
+  const legacy = (connections.data ?? []).filter((c) => c.provider !== ZOOM && !CALENDAR_PROVIDERS.some((p) => p.id === c.provider));
 
   return (
-    <div className="page-stack">
-      <div className="card-row card-row--stretch">
-        <div className="card card--tight sync-intro">
-          <span className="kicker">HOW IT WORKS</span>
-          <span className="text-body">
-            Connect Google Calendar or any calendar with an iCal link. Every 15 minutes we read when you are busy (never what the events are)
-            and hide those times on every booking link, so nobody can book you while you are in another meeting.
-          </span>
-        </div>
-        <div className="card card--tight sync-target">
-          <span className="kicker kicker--brand">BOOKINGS IN YOUR CALENDAR</span>
-          <span className="text-small">
-            Every booking, reschedule and cancellation emails your team a calendar invite (.ics). Open it to add, move or remove the call in
-            your calendar. It goes to whoever gets the “Call booked” alert in Settings. Guests get an invite with their confirmation too.
-          </span>
-        </div>
-      </div>
+    <LoadState query={connections}>
+      <div className="page-stack">
+        <IntegrationGroup
+          title="Calendars"
+          desc="Connect Google Calendar or any calendar with an iCal link. Every 15 minutes we read when you are busy (never what the events are) and hide those times on every booking link, so nobody can book you while you are in another meeting."
+        >
+          <div className="provider-grid">
+            {CALENDAR_PROVIDERS.map((p) => (
+              <ProviderCard key={p.id} provider={p} connection={byProvider(p.id)} canWrite={canWrite} />
+            ))}
+            {legacy.map((c) => (
+              <ProviderCard key={c.id} provider={legacyProvider(c.provider)} connection={c} canWrite={canWrite} />
+            ))}
+          </div>
+          <div className="card card--tight sync-target">
+            <span className="kicker kicker--brand">BOOKINGS IN YOUR CALENDAR</span>
+            <span className="text-small">
+              Every booking, reschedule and cancellation emails your team a calendar invite (.ics). Open it to add, move or remove the call in
+              your calendar. It goes to whoever gets the “Call booked” alert in Settings. Guests get an invite with their confirmation too.
+            </span>
+          </div>
+        </IntegrationGroup>
 
-      <LoadState query={connections}>
-        <div className="provider-grid">
-          {CALENDAR_PROVIDERS.map((p) => (
-            <ProviderCard key={p.id} provider={p} connection={byProvider(p.id)} canWrite={canWrite} />
-          ))}
-          {legacy.map((c) => (
-            <ProviderCard key={c.id} provider={legacyProvider(c.provider)} connection={c} canWrite={canWrite} />
-          ))}
-        </div>
-      </LoadState>
-    </div>
+        <IntegrationGroup title="Video meetings" desc="Give every booked call its own meeting link, created for you when someone books.">
+          <div className="provider-grid">
+            <ZoomCard connection={byProvider(ZOOM)} canWrite={canWrite} />
+          </div>
+        </IntegrationGroup>
+      </div>
+    </LoadState>
+  );
+}
+
+/** One category of integrations: a heading, what they do, then their cards. */
+function IntegrationGroup({ title, desc, children }: { title: string; desc: string; children: ReactNode }) {
+  return (
+    <section className="integration-group">
+      <div className="stack stack--4">
+        <h3 className="card-title">{title}</h3>
+        <span className="text-small">{desc}</span>
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -209,7 +227,7 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
       <FormError error={update.error ?? remove.error} />
       {canWrite && !on && !editing && p.oauth && (
         <div className="stack stack--6 provider-card__actions">
-          <GoogleConnectButton />
+          <ConnectButton app="google" />
           <Button
             variant="link"
             size="sm"
@@ -223,7 +241,7 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
         </div>
       )}
       {canWrite && on && connection?.server === GOOGLE_SIGNED_IN && connection.syncError && (
-        <GoogleConnectButton label="Reconnect with Google" variant="outline" />
+        <ConnectButton app="google" label="Reconnect with Google" variant="outline" />
       )}
       {canWrite && (
         <div className="cluster cluster--8 cluster--nowrap provider-card__actions">
@@ -243,6 +261,65 @@ function ProviderCard({ provider: p, connection, canWrite }: { provider: Calenda
             <Button variant="danger" size="sm" disabled={remove.isPending} onClick={() => remove.mutate(connection.id)}>
               Disconnect
             </Button>
+          )}
+        </div>
+      )}
+    </article>
+  );
+}
+
+/** "Connect Zoom": every call booked on a calendar whose location is Zoom gets its own Zoom meeting. */
+function ZoomCard({ connection, canWrite }: { connection?: ConnectionOut; canWrite: boolean }) {
+  const remove = useDeleteCalendarConnection();
+  const onZoom = (useCalendars().data ?? []).filter((c) => c.location === "Zoom");
+  const expired = !!connection?.syncError?.includes("Connect Zoom again");
+
+  return (
+    <article className={cn("card card--tight provider-card", connection && "provider-card--on")}>
+      <div className="cluster cluster--nowrap">
+        <Avatar text="Z" tone="indigo" size="lg" square />
+        <div className="stack stack--2 u-grow">
+          <span className="text-strong">Zoom</span>
+          <span className="text-small">A Zoom meeting for every call booked on a Zoom calendar</span>
+        </div>
+      </div>
+      <Badge tone={connection ? "green" : "neutral"} mono dot>
+        {connection ? "CONNECTED · CREATES MEETINGS" : "NOT CONNECTED"}
+      </Badge>
+
+      {connection ? (
+        <div className="stack stack--8">
+          <span className="provider-card__account">{connection.account || "Your Zoom account"}</span>
+          <span className="text-small">
+            {onZoom.length
+              ? `Used by ${onZoom.map((c) => c.name).join(", ")}.`
+              : "No calendar uses Zoom yet. Set a calendar’s location to Zoom to start."}{" "}
+            Meetings last as long as the calendar’s calls, move when you reschedule and are deleted when you cancel.
+          </span>
+          {connection.syncError && (
+            <span className="field__error" role="alert">
+              {connection.syncError}
+            </span>
+          )}
+        </div>
+      ) : (
+        <span className="text-small">
+          Sign in to Zoom once. The join link then goes in the guest’s confirmation, both calendar invites and Scheduled calls.
+        </span>
+      )}
+
+      <FormError error={remove.error} />
+      {canWrite && (
+        <div className="stack stack--6 provider-card__actions">
+          {(!connection || expired) && (
+            <ConnectButton app="zoom" label={connection ? "Reconnect Zoom" : undefined} variant={connection ? "outline" : "primary"} />
+          )}
+          {connection && (
+            <div className="cluster cluster--8 cluster--nowrap">
+              <Button variant="danger" size="sm" disabled={remove.isPending} onClick={() => remove.mutate(connection.id)}>
+                Disconnect
+              </Button>
+            </div>
           )}
         </div>
       )}

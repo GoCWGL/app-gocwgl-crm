@@ -52,7 +52,7 @@ export function NewCalendarForm({ onClose }: { onClose: () => void }) {
             onChange={(e) => setDuration(Number(e.target.value) as CalendarCreate["durationMin"])}
           />
         </Field>
-        <Field label="Location" htmlFor="cal-loc">
+        <Field label="Location" htmlFor="cal-loc" hint={location === "Zoom" ? "Each booking gets its own Zoom meeting once Zoom is connected in Integrations." : undefined}>
           <Select id="cal-loc" value={location} options={[...LOCATIONS]} onChange={(e) => setLocation(e.target.value as CalendarCreate["location"])} />
         </Field>
       </div>

@@ -160,7 +160,7 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
           <Field label="Duration" htmlFor="ecal-dur">
             <Select id="ecal-dur" value={draft.dur} options={durations.map((d) => ({ value: d, label: `${d} min` }))} onChange={(e) => set({ dur: e.target.value })} />
           </Field>
-          <Field label="Location" htmlFor="ecal-loc">
+          <Field label="Location" htmlFor="ecal-loc" hint={draft.loc === "Zoom" ? "Each booking gets its own Zoom meeting once Zoom is connected in Integrations." : undefined}>
             <Select id="ecal-loc" value={draft.loc} options={locations} onChange={(e) => set({ loc: e.target.value })} />
           </Field>
         </div>

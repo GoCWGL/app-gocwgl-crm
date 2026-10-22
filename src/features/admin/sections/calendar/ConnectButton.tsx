@@ -10,11 +10,25 @@ import { qk } from "@/utils/hooks/keys";
 const MESSAGE = "gocwgl:calendar-connected";
 const POPUP = "width=520,height=680,menubar=no,toolbar=no";
 
+const APPS = {
+  google: { name: "Google", what: "Google Calendar", mark: "G", start: api.startGoogleCalendar },
+  zoom: { name: "Zoom", what: "Zoom", mark: "Z", start: api.startZoom },
+};
+
 /**
- * "Connect with Google": opens Google's consent screen in a popup. The API's callback page posts the result
- * back and closes itself; Google's pages can cut the link to this tab, so closing the popup also refreshes.
+ * "Connect with Google" / "Connect Zoom": opens the app's consent screen in a popup. The API's callback page posts
+ * the result back and closes itself; the app's pages can cut the link to this tab, so closing the popup also refreshes.
  */
-export function GoogleConnectButton({ label = "Connect with Google", variant = "primary" }: { label?: string; variant?: "primary" | "outline" }) {
+export function ConnectButton({
+  app,
+  label,
+  variant = "primary",
+}: {
+  app: keyof typeof APPS;
+  label?: string;
+  variant?: "primary" | "outline";
+}) {
+  const { name, what, mark, start } = APPS[app];
   const qc = useQueryClient();
   const popup = useRef<Window | null>(null);
   const [waiting, setWaiting] = useState(false);
@@ -28,7 +42,7 @@ export function GoogleConnectButton({ label = "Connect with Google", variant = "
     };
     const onMessage = (e: MessageEvent) => {
       if (e.source !== popup.current || e.data?.type !== MESSAGE) return;
-      if (!e.data.ok) setError(String(e.data.message || "Google Calendar wasn’t connected."));
+      if (!e.data.ok) setError(String(e.data.message || `${what} wasn’t connected.`));
       done();
     };
     const timer = window.setInterval(() => popup.current?.closed && done(), 800);
@@ -37,14 +51,14 @@ export function GoogleConnectButton({ label = "Connect with Google", variant = "
       window.clearInterval(timer);
       window.removeEventListener("message", onMessage);
     };
-  }, [waiting, qc]);
+  }, [waiting, qc, what]);
 
   const connect = async () => {
     setError("");
     // Opened before the request so the browser treats it as a click, not a blocked popup.
-    popup.current = window.open("", "gocwgl-google-calendar", POPUP);
+    popup.current = window.open("", `gocwgl-connect-${app}`, POPUP);
     try {
-      const { url } = await api.startGoogleCalendar();
+      const { url } = await start();
       if (popup.current) {
         popup.current.location.href = url;
         setWaiting(true);
@@ -60,10 +74,10 @@ export function GoogleConnectButton({ label = "Connect with Google", variant = "
   return (
     <div className="stack stack--6">
       <Button variant={variant} block disabled={waiting} onClick={connect}>
-        <span className="google-mark" aria-hidden="true">
-          G
+        <span className={`connect-mark connect-mark--${app}`} aria-hidden="true">
+          {mark}
         </span>
-        {waiting ? "Waiting for Google…" : label}
+        {waiting ? `Waiting for ${name}…` : (label ?? `Connect with ${name}`)}
       </Button>
       {error && (
         <p className="field__error" role="alert">

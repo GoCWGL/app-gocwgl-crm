@@ -6,17 +6,17 @@ import { canWriteCrm } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
 import { Availability } from "./Availability";
 import { CalendarList } from "./CalendarList";
-import { CalendarSync } from "./CalendarSync";
+import { Integrations } from "./Integrations";
 import { NewCalendarForm } from "./NewCalendarForm";
 import { ScheduledCalls } from "./ScheduledCalls";
 
-type CalendarView = "types" | "scheduled" | "availability" | "sync";
+type CalendarView = "types" | "scheduled" | "availability" | "integrations";
 
 const VIEWS: Array<{ value: CalendarView; label: string }> = [
   { value: "types", label: "Calendars" },
   { value: "scheduled", label: "Scheduled calls" },
   { value: "availability", label: "Availability" },
-  { value: "sync", label: "Calendar sync" },
+  { value: "integrations", label: "Integrations" },
 ];
 
 export function CalendarSection() {
@@ -47,7 +47,7 @@ export function CalendarSection() {
       {view === "types" && <CalendarList />}
       {view === "scheduled" && <ScheduledCalls />}
       {view === "availability" && <Availability />}
-      {view === "sync" && <CalendarSync />}
+      {view === "integrations" && <Integrations />}
     </div>
   );
 }

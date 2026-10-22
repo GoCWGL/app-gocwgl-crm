@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Badge, Button, Checkbox, Field, FormError, Input, LoadState, Select } from "@/components/ui";
+import { Badge, Button, Checkbox, Field, FormError, Input, LoadState, Select, buttonClass } from "@/components/ui";
 import type { Tone } from "@/lib/tones";
 import type { BookingOut } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
@@ -66,6 +66,11 @@ export function ScheduledCalls() {
                       {calName(b.calendarId)} · {b.email}
                     </span>
                   </div>
+                  {b.meetingUrl && day.day >= today && (
+                    <a className={buttonClass({ variant: "outline", size: "sm" })} href={b.meetingUrl} target="_blank" rel="noopener noreferrer">
+                      Join Zoom ↗
+                    </a>
+                  )}
                   <Badge tone={day.status.tone} size="lg">
                     {day.status.label}
                   </Badge>

@@ -203,6 +203,7 @@ export type UpdateIn = S["UpdateIn"];
 export type UpdateOut = S["UpdateOut"];
 export type UserOut = S["UserOut"];
 export type VerifyEmailRequest = S["VerifyEmailRequest"];
+export type ZoomStartOut = S["ZoomStartOut"];
 
 export type User = UserOut;
 export type Contact = ContactOut;

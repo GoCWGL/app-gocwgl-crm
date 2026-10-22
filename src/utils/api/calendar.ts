@@ -13,6 +13,7 @@ import type {
   GoogleStartOut,
   PublicCalendarOut,
   SlotsOut,
+  ZoomStartOut,
 } from "./models";
 
 // ------------------------------------------------------------------ Booking calendars
@@ -39,6 +40,8 @@ export const updateCalendarConnection = (id: string, body: ConnectionUpdate) =>
 export const deleteCalendarConnection = (id: string) => del(`/admin/calendar-connections/${id}`);
 /** "Connect with Google": the Google page to open in a popup (it comes back to the API's callback). */
 export const startGoogleCalendar = () => post<GoogleStartOut>("/admin/calendar-connections/google/start");
+/** "Connect Zoom": the Zoom page to open in a popup. Calendars whose location is Zoom then get a meeting per booking. */
+export const startZoom = () => post<ZoomStartOut>("/admin/calendar-connections/zoom/start");
 
 // ------------------------------------------------------------------ Public booking page
 export const getPublicCalendar = (slug: string) => get<PublicCalendarOut>(`/public/booking/${slug}`);

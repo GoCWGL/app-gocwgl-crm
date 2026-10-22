@@ -275,14 +275,17 @@
   }
 }
 
-// --------------------------------------------------------- Calendar sync
-.sync-intro {
-  flex: 2 1 340px;
-  gap: 6px;
+// --------------------------------------------------------- Integrations
+.integration-group {
+  @include stack(14px);
+
+  & + & {
+    padding-top: 22px;
+    border-top: 1px solid rgba(8, 145, 178, 0.15);
+  }
 }
 
 .sync-target {
-  flex: 1 1 260px;
   gap: 6px;
   border-color: rgba(255, 153, 0, 0.45);
   box-shadow: 0 0 16px rgba(255, 153, 0, 0.12);
@@ -368,8 +371,8 @@
   color: $ink-soft;
 }
 
-// The "G" on "Connect with Google".
-.google-mark {
+// The "G" on "Connect with Google" and the "Z" on "Connect with Zoom".
+.connect-mark {
   @include center;
   width: 20px;
   height: 20px;
@@ -378,4 +381,8 @@
   color: #4285f4;
   font-size: 12px;
   font-weight: 800;
+
+  &--zoom {
+    color: #0b5cff;
+  }
 }
