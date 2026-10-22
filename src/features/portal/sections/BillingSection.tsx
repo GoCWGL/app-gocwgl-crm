@@ -145,7 +145,7 @@ export function BillingSection() {
                   <td className="data-table__actions">
                     {isOpen(iv.status) && !readOnly && (
                       iv.paymentUrl ? (
-                        // CRM builds are paid with their Wise link.
+                        // CRM and funnel builds are paid with their Wise link.
                         <a className={buttonClass({ variant: "primary", size: "sm" })} href={iv.paymentUrl} target="_blank" rel="noopener noreferrer">
                           Pay now
                         </a>
