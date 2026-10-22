@@ -9,6 +9,7 @@ import { canWriteCrm } from "@/utils/auth/session";
 import { useBookings, useCalendars, useUpdateCalendar } from "@/utils/hooks/useCalendar";
 import { useMe } from "@/utils/hooks/useUsers";
 import { BookingPreview } from "./BookingPreview";
+import { CalendarEmbedModal } from "./CalendarEmbedModal";
 import { EditCalendarDrawer } from "./EditCalendarDrawer";
 
 /** The public booking page in this app (/book/{slug}). */
@@ -30,15 +31,18 @@ export function CalendarList() {
   const [previewId, setPreviewId] = useState("");
   const [copiedId, setCopiedId] = useState("");
   const [editId, setEditId] = useState("");
+  const [embedId, setEmbedId] = useState("");
 
   const list = calendars.data ?? [];
   const preview = list.find((c) => c.id === previewId);
   const editing = list.find((c) => c.id === editId);
+  const embedding = list.find((c) => c.id === embedId);
 
   return (
     <div className="page-stack">
       {preview && <BookingPreview key={preview.id} calendar={preview} onClose={() => setPreviewId("")} />}
       {editing && <EditCalendarDrawer key={`edit-${editing.id}`} calendar={editing} onClose={() => setEditId("")} />}
+      {embedding && <CalendarEmbedModal key={`embed-${embedding.id}`} calendar={embedding} onClose={() => setEmbedId("")} />}
       <FormError error={update.error} />
 
       <LoadState query={calendars} isEmpty={!list.length} empty="No calendars yet. Create one with “+ New calendar”.">
@@ -85,6 +89,9 @@ export function CalendarList() {
                     }}
                   >
                     {copiedId === cal.id ? "Link copied" : "Copy link"}
+                  </button>
+                  <button type="button" className="calendar-card__action" onClick={() => setEmbedId(cal.id)}>
+                    Embed
                   </button>
                   <button type="button" className="calendar-card__action" onClick={() => setPreviewId(cal.id)}>
                     Preview
