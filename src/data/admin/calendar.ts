@@ -15,7 +15,7 @@ export const CALENDAR_SWATCHES = [
 ];
 
 export const DURATIONS = [15, 30, 45, 60, 90] as const;
-export const LOCATIONS = ["Google Meet", "Zoom", "Phone call", "In person"] as const;
+export const LOCATIONS = ["Zoom", "Phone call", "In person"] as const;
 
 export type Weekday = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
 export type DayAvailability = { d: Weekday; on: boolean; start: string; end: string };

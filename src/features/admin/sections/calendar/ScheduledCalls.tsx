@@ -68,7 +68,7 @@ export function ScheduledCalls() {
                   </div>
                   {b.meetingUrl && day.day >= today && (
                     <a className={buttonClass({ variant: "outline", size: "sm" })} href={b.meetingUrl} target="_blank" rel="noopener noreferrer">
-                      Join Zoom ↗
+                      Join call ↗
                     </a>
                   )}
                   <Badge tone={day.status.tone} size="lg">

@@ -3665,10 +3665,12 @@ export interface components {
             durationMin?: 15 | 30 | 45 | 60 | 90;
             /**
              * Location
-             * @default Google Meet
+             * @default Zoom
              * @enum {string}
              */
-            location?: "Google Meet" | "Zoom" | "Phone call" | "In person";
+            location?: "Zoom" | "Phone call" | "In person";
+            /** Meetinglink */
+            meetingLink?: string;
             /**
              * Color
              * @default #0891B2
@@ -3702,6 +3704,8 @@ export interface components {
             durationMin: number;
             /** Location */
             location: string;
+            /** Meetinglink */
+            meetingLink: string;
             /** Color */
             color: string;
             /** Slug */
@@ -3722,7 +3726,9 @@ export interface components {
             /** Durationmin */
             durationMin?: (15 | 30 | 45 | 60 | 90) | null;
             /** Location */
-            location?: ("Google Meet" | "Zoom" | "Phone call" | "In person") | null;
+            location?: ("Zoom" | "Phone call" | "In person") | null;
+            /** Meetinglink */
+            meetingLink?: string | null;
             /** Color */
             color?: string | null;
             /** Slug */

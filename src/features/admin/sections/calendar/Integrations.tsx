@@ -304,7 +304,8 @@ function ZoomCard({ connection, canWrite }: { connection?: ConnectionOut; canWri
         </div>
       ) : (
         <span className="text-small">
-          Sign in to Zoom once. The join link then goes in the guest’s confirmation, both calendar invites and Scheduled calls.
+          Sign in to Zoom once (needs a Pro account). Each call gets its own meeting link in the guest’s confirmation, both invites and
+          Scheduled calls. On a free account, paste your Personal Room link as the calendar’s meeting link instead.
         </span>
       )}
 

@@ -13,7 +13,7 @@ export function NewCalendarForm({ onClose }: { onClose: () => void }) {
   const create = useCreateCalendar();
   const [name, setName] = useState("");
   const [duration, setDuration] = useState<CalendarCreate["durationMin"]>(30);
-  const [location, setLocation] = useState<CalendarCreate["location"]>("Google Meet");
+  const [location, setLocation] = useState<CalendarCreate["location"]>("Zoom");
   const [color, setColor] = useState("#0891B2");
 
   const submit = (e: FormEvent) => {
@@ -52,7 +52,7 @@ export function NewCalendarForm({ onClose }: { onClose: () => void }) {
             onChange={(e) => setDuration(Number(e.target.value) as CalendarCreate["durationMin"])}
           />
         </Field>
-        <Field label="Location" htmlFor="cal-loc" hint={location === "Zoom" ? "Each booking gets its own Zoom meeting once Zoom is connected in Integrations." : undefined}>
+        <Field label="Location" htmlFor="cal-loc" hint="Bookings get your default meeting link. Change it in the calendar’s settings.">
           <Select id="cal-loc" value={location} options={[...LOCATIONS]} onChange={(e) => setLocation(e.target.value as CalendarCreate["location"])} />
         </Field>
       </div>

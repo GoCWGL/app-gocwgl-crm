@@ -18,6 +18,7 @@ type Draft = {
   desc: string;
   dur: string;
   loc: string;
+  link: string;
   color: string;
   on: boolean;
   customHours: boolean;
@@ -36,6 +37,7 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
     desc: cal.description,
     dur: String(cal.durationMin),
     loc: cal.location,
+    link: cal.meetingLink,
     color: cal.color,
     on: cal.isActive,
     customHours: !!cal.hours,
@@ -69,6 +71,7 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
       description: draft.desc.trim(),
       durationMin: Number(draft.dur) as CalendarUpdate["durationMin"],
       location: draft.loc as CalendarUpdate["location"],
+      meetingLink: draft.link.trim(),
       color: draft.color,
       isActive: draft.on,
       hours: draft.customHours ? (draft.hours as DayHours[]) : null,
@@ -160,10 +163,28 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
           <Field label="Duration" htmlFor="ecal-dur">
             <Select id="ecal-dur" value={draft.dur} options={durations.map((d) => ({ value: d, label: `${d} min` }))} onChange={(e) => set({ dur: e.target.value })} />
           </Field>
-          <Field label="Location" htmlFor="ecal-loc" hint={draft.loc === "Zoom" ? "Each booking gets its own Zoom meeting once Zoom is connected in Integrations." : undefined}>
+          <Field label="Location" htmlFor="ecal-loc">
             <Select id="ecal-loc" value={draft.loc} options={locations} onChange={(e) => set({ loc: e.target.value })} />
           </Field>
         </div>
+        <Field
+          label="Meeting link (optional)"
+          htmlFor="ecal-link"
+          hint={
+            draft.loc === "Zoom"
+              ? "Your Zoom Personal Room link, sent with every booking. Connecting Zoom in Integrations gives each call its own meeting instead."
+              : "Sent to the guest with every booking, e.g. a Zoom room link."
+          }
+        >
+          <Input
+            id="ecal-link"
+            type="url"
+            mono
+            placeholder="https://us05web.zoom.us/j/…"
+            value={draft.link}
+            onChange={(e) => set({ link: e.target.value })}
+          />
+        </Field>
         <Field label="Color">
           <div className="cluster" role="group" aria-label="Calendar color">
             {CALENDAR_SWATCHES.map((sw) => (
