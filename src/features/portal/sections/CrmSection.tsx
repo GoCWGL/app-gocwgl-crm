@@ -4,10 +4,13 @@ import { useState } from "react";
 import { Badge, Button, Icon, IconTile, LoadState, SegmentedControl } from "@/components/ui";
 import { CRM_ADDONS, CRM_FAQ, CRM_PACKAGES, CRM_STEPS, type CrmPackageKey } from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
+import type { Tone } from "@/lib/tones";
+import type { ClientCrmRequestOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { usePortalBuilds, usePortalCrmRequests } from "@/utils/hooks/useDelivery";
 import { BuildCards } from "../components/BuildCards";
 import { CrmRequestModal } from "../components/CrmRequestModal";
+import { PayConfirmModal } from "../components/PayConfirmModal";
 import { usePortal } from "../state/PortalContext";
 
 const PACKAGE_KEYS = Object.keys(CRM_PACKAGES) as CrmPackageKey[];
@@ -19,8 +22,11 @@ export function CrmSection() {
   const query = usePortalBuilds();
   const builds = (query.data ?? []).filter((b) => b.kind === "crm");
   // Requests not turned into a build yet (a started one shows as its build).
-  const requests = (usePortalCrmRequests().data ?? []).filter((r) => !r.projectId && r.status !== "declined");
-  const { update } = usePortal();
+  // Requests not turned into a build yet, plus any still waiting on payment (a paid, started one shows as its build).
+  const requests = (usePortalCrmRequests().data ?? []).filter(
+    (r) => r.status !== "declined" && (!r.projectId || (!!r.invoice && r.invoice.status !== "Paid")),
+  );
+  const { update, readOnly } = usePortal();
   const [picked, setPicked] = useState<CrmTab | "">("");
   // Open on their builds or requests when they have some, otherwise on the packages.
   const tab: CrmTab = picked || (builds.length || requests.length ? "builds" : "packages");
@@ -48,15 +54,7 @@ export function CrmSection() {
             <section className="card stack stack--10">
               <span className="kicker">YOUR REQUESTS · {requests.length}</span>
               {requests.map((r) => (
-                <div className="stack stack--2" key={r.id}>
-                  <span className="text-strong">
-                    {r.name} · {CRM_PACKAGES[r.package as CrmPackageKey]?.label ?? r.package}
-                  </span>
-                  <span className="text-small">
-                    Requested {formatShort(r.createdAt)} ·{" "}
-                    {r.status === "contacted" ? "Discovery call booked" : "Your team will review it before your call"}
-                  </span>
-                </div>
+                <CrmRequestRow key={r.id} request={r} readOnly={readOnly} />
               ))}
             </section>
           )}
@@ -80,6 +78,64 @@ export function CrmSection() {
             update({ toast: "Request sent to your GoCWGL team. Pick a time for your call in the new tab." });
           }}
         />
+      )}
+    </div>
+  );
+}
+
+/** How the client reads their request's invoice. */
+const PAYMENT: Record<string, { label: string; tone: Tone }> = {
+  Sent: { label: "Awaiting payment", tone: "amber" },
+  Overdue: { label: "Overdue", tone: "red" },
+  Paid: { label: "Paid", tone: "green" },
+  Refunded: { label: "Refunded", tone: "purple" },
+};
+
+/** One of the client's CRM requests: where it stands, whether it's paid, and Pay now (its package's Wise link) while it's open. */
+function CrmRequestRow({ request: r, readOnly }: { request: ClientCrmRequestOut; readOnly: boolean }) {
+  const [paying, setPaying] = useState<"" | "confirm" | "other-name">("");
+  const pkg = CRM_PACKAGES[r.package as CrmPackageKey];
+  const inv = r.invoice;
+  const payment = inv ? (PAYMENT[inv.status] ?? { label: inv.status, tone: "neutral" as Tone }) : null;
+
+  return (
+    <div className="crm-request-row">
+      <div className="stack stack--2 u-grow">
+        <span className="text-strong">
+          {r.name} · {pkg?.label ?? r.package}
+        </span>
+        <span className="text-small">
+          Requested {formatShort(r.createdAt)} ·{" "}
+          {inv
+            ? `Invoice ${inv.number} · ${formatCents(inv.totalCents)}${inv.paidAt ? ` · paid ${formatShort(inv.paidAt)}` : inv.dueDate ? ` · due ${formatShort(inv.dueDate)}` : ""}`
+            : r.status === "contacted"
+              ? "Discovery call booked · your invoice comes after the call"
+              : "Your team will review it before your call"}
+        </span>
+      </div>
+      {payment ? (
+        <Badge tone={payment.tone} dot>
+          {payment.label}
+        </Badge>
+      ) : (
+        <Badge tone="neutral">Not invoiced yet</Badge>
+      )}
+      {inv?.paymentUrl && !readOnly && (
+        <>
+          <Button variant="primary" size="sm" aria-haspopup="dialog" onClick={() => setPaying("confirm")}>
+            Pay {formatCents(inv.totalCents)}
+          </Button>
+          <Button variant="link" size="sm" onClick={() => setPaying("other-name")}>
+            Paid under a different name?
+          </Button>
+          {paying && (
+            <PayConfirmModal
+              target={{ number: inv.number, totalCents: inv.totalCents, payUrl: inv.paymentUrl, what: `${pkg?.label ?? "CRM"} · ${r.name}` }}
+              start={paying}
+              onClose={() => setPaying("")}
+            />
+          )}
+        </>
       )}
     </div>
   );

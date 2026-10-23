@@ -4,6 +4,7 @@ import type {
   BrandKitIn,
   BrandKitOut,
   ChecklistAdd,
+  ClientCrmRequestOut,
   CrmRequestIn,
   CrmRequestOut,
   CrmRequestStatus,
@@ -81,7 +82,7 @@ export const commentOnClientEmbed = (contactId: string, embedId: string, body: {
   post<EmbedOut>(`/admin/clients/${contactId}/embeds/${embedId}/comments`, body);
 
 // ------------------------------------------------------------------ Portal: build, assets, brand kit, links, embeds
-export const listPortalCrmRequests = () => get<CrmRequestOut[]>("/portal/crm-requests");
+export const listPortalCrmRequests = () => get<ClientCrmRequestOut[]>("/portal/crm-requests");
 export const createCrmRequest = (body: CrmRequestIn) => post<CrmRequestOut>("/portal/crm-requests", body);
 
 /** The client's builds, oldest first. */

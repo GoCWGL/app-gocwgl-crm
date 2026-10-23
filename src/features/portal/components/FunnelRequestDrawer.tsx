@@ -8,6 +8,7 @@ import { errorMessage, fieldErrors } from "@/utils/errors";
 import { formatCents } from "@/utils/format/money";
 import { useFunnelCatalog, usePortalFunnels, useRequestFunnel, useUpdateFunnelRequest } from "@/utils/hooks/usePortal";
 import { usePortal } from "../state/PortalContext";
+import { PaymentNotes } from "./PayConfirmModal";
 
 type CatalogType = { label: string; steps: string[] };
 type CatalogPackage = { label: string; price: number; list_price: number | null };
@@ -65,6 +66,8 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
   const create = useRequestFunnel();
   const save = useUpdateFunnelRequest();
   const [error, setError] = useState("");
+  // New requests are checked over in a confirmation before anything is sent or paid.
+  const [confirming, setConfirming] = useState(false);
 
   const [draft, setDraftState] = useState<Draft>(() => {
     const r = editing ? requestOf(editing) : null;
@@ -100,50 +103,55 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
   const pending = create.isPending || save.isPending;
   const apiFields = fieldErrors(create.error ?? save.error);
 
+  const onError = (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err));
+
+  // No package keeps the current price, which is what a locked (paid) funnel needs.
+  const body = () => ({
+    typeKey: scopeLocked && original ? original.typeKey : draft.type,
+    name: draft.name.trim(),
+    offer: draft.offer.trim(),
+    audience: draft.audience.trim(),
+    notes: draft.notes.trim(),
+    package: scopeLocked ? null : draft.package || null,
+  });
+
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!editing && !draft.package) return setError("Please choose a package.");
     if (!draft.name.trim() || !draft.offer.trim()) return setError("Please add a funnel name and its offer or main goal.");
     if (needsAgree && !draft.agree) return setError("Please confirm the additional charge to continue.");
 
-    // No package keeps the current price, which is what a locked (paid) funnel needs.
-    const body = {
-      typeKey: scopeLocked && original ? original.typeKey : draft.type,
-      name: draft.name.trim(),
-      offer: draft.offer.trim(),
-      audience: draft.audience.trim(),
-      notes: draft.notes.trim(),
-      package: scopeLocked ? null : draft.package || null,
-    };
-    const onError = (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err));
+    if (!editing) return setConfirming(true);
+    save.mutate(
+      { id: editing.id, body: body() },
+      {
+        onSuccess: (f) =>
+          update({
+            funnelRequestOpen: false,
+            editFunnelId: "",
+            toast: scopeChanged && f.priceCents ? `Request updated. Your new invoice is ${formatCents(f.priceCents)}.` : "Request updated. Your GoCWGL team can see the new details.",
+          }),
+        onError,
+      },
+    );
+  };
 
-    if (editing) {
-      save.mutate(
-        { id: editing.id, body },
-        {
-          onSuccess: (f) =>
-            update({
-              funnelRequestOpen: false,
-              editFunnelId: "",
-              toast: scopeChanged && f.priceCents ? `Request updated. Your new invoice is ${formatCents(f.priceCents)}.` : "Request updated. Your GoCWGL team can see the new details.",
-            }),
-          onError,
-        },
-      );
-      return;
-    }
-
+  /** From the confirmation: send the request, and with "Pay now" go on to its Wise link. */
+  const confirm = () => {
     // "Pay now" opens the package's Wise payment link in a new tab, so the client stays in their portal. The tab is opened
     // during the click: browsers block tabs opened after the request comes back.
     const payTab = draft.pay === "now" ? window.open("", "_blank") : null;
     create.mutate(
-      { ...body, payment: draft.pay },
+      { ...body(), payment: draft.pay },
       {
         onSuccess: (f) => {
           if (payTab && f.payUrl) {
             payTab.opener = null;
             payTab.location.href = f.payUrl;
-            update({ funnelRequestOpen: false, toast: "Request sent. Finish paying through Wise in the new tab; your build starts once it’s paid." });
+            update({
+              funnelRequestOpen: false,
+              toast: "Request sent. Finish paying in the Wise tab: we verify it within 24 business hours and email you once it’s verified.",
+            });
             return;
           }
           payTab?.close();
@@ -157,11 +165,64 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
         },
         onError: (err) => {
           payTab?.close();
+          setConfirming(false);
           onError(err);
         },
       },
     );
   };
+
+  if (confirming && pkg) {
+    return (
+      <Modal
+        open
+        onClose={() => setConfirming(false)}
+        titleId="fq-confirm-title"
+        kicker="CONFIRM YOUR REQUEST"
+        title={draft.pay === "now" ? `Request and pay ${totalText}` : `Request and get your ${totalText} invoice`}
+        subtitle="Check it over before we send it to your GoCWGL team."
+        width={600}
+        media={
+          <IconTile brand size="lg">
+            <Icon name="funnel" size={18} />
+          </IconTile>
+        }
+        footer={
+          <>
+            <Button onClick={() => setConfirming(false)} disabled={pending}>
+              Back to edit
+            </Button>
+            <Button variant="primary" onClick={confirm} disabled={pending}>
+              {pending ? "Sending…" : draft.pay === "now" ? `Confirm & pay ${totalText} with Wise ↗` : "Confirm & email my invoice"}
+            </Button>
+          </>
+        }
+      >
+        <dl className="inset crm-request-review">
+          <dt className="kicker kicker--sm kicker--muted">FUNNEL</dt>
+          <dd className="text-strong">
+            {draft.name.trim()} · {type.label}
+          </dd>
+          <dt className="kicker kicker--sm kicker--muted">PACKAGE</dt>
+          <dd className="text-strong">
+            {pkg.label} · {totalText} <span className="text-small">one-time</span>
+          </dd>
+          <dt className="kicker kicker--sm kicker--muted">PAYMENT</dt>
+          <dd className="text-body u-ink">
+            {draft.pay === "now"
+              ? "Pay now through Wise. It opens in a new tab when you confirm."
+              : "We email you an invoice with a Wise payment link. Pay it within 7 days."}
+          </dd>
+        </dl>
+        <PaymentNotes />
+        {error && (
+          <p className="text-error" role="alert">
+            {error}
+          </p>
+        )}
+      </Modal>
+    );
+  }
 
   return (
     <Modal
@@ -192,13 +253,7 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
             Cancel
           </Button>
           <Button type="submit" variant="primary" disabled={pending}>
-            {pending
-              ? "Sending…"
-              : editing
-                ? "Save changes"
-                : draft.pay === "now" && pkg
-                    ? `Submit & pay ${totalText}`
-                    : "Submit & send invoice"}
+            {pending ? "Sending…" : editing ? "Save changes" : "Review request"}
           </Button>
         </>
       }
@@ -334,7 +389,7 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
             <div className="cluster cluster--6" role="radiogroup" aria-label="How to pay">
               {(
                 [
-                  ["now", "Pay now", "Pay securely through Wise in a new tab, and we start the build once it’s paid"],
+                  ["now", "Pay now", "Pay through Wise in a new tab under your portal name. We verify it within 24 business hours and email you."],
                   ["invoice", "Send me an invoice", "We email you an invoice with a Wise payment link. Pay within 7 days."],
                 ] as const
               ).map(([key, label, desc]) => (

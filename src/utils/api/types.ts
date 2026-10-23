@@ -4017,6 +4017,54 @@ export interface components {
             /** Invoices */
             invoices: components["schemas"]["InvoiceOut"][];
         };
+        /** ClientCrmRequestInvoiceOut */
+        ClientCrmRequestInvoiceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /** Status */
+            status: string;
+            /** Totalcents */
+            totalCents: number;
+            /** Duedate */
+            dueDate: string | null;
+            /** Paidat */
+            paidAt: string | null;
+            /** Paymenturl */
+            paymentUrl: string | null;
+        };
+        /** ClientCrmRequestOut */
+        ClientCrmRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Package */
+            package: string;
+            /** Name */
+            name: string;
+            /** Goal */
+            goal: string;
+            status: components["schemas"]["CrmRequestStatus"];
+            /** Projectid */
+            projectId: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            invoice: components["schemas"]["ClientCrmRequestInvoiceOut"] | null;
+        };
         /** ClientMessageIn */
         ClientMessageIn: {
             /** Text */
@@ -16015,7 +16063,7 @@ export interface operations {
                 content: {
                     "application/json": {
                         /** Response My Crm Requests Api Portal Crm Requests Get */
-                        data: components["schemas"]["CrmRequestOut"][];
+                        data: components["schemas"]["ClientCrmRequestOut"][];
                     };
                 };
             };

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Badge, Button, ErrorState, FormError, Loading, StatGrid, buttonClass } from "@/components/ui";
 import type { Tone } from "@/lib/tones";
 import { toCsvDataUrl } from "@/lib/utils";
@@ -7,6 +8,7 @@ import type { InvoiceOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
 import { useDownloadInvoicePdf, usePortalBilling } from "@/utils/hooks/useBilling";
+import { PayConfirmModal } from "../components/PayConfirmModal";
 import { SubscriptionCard } from "../components/SubscriptionCard";
 import { usePortal } from "../state/PortalContext";
 
@@ -26,6 +28,8 @@ export function BillingSection() {
   const { notify, readOnly } = usePortal();
   const billing = usePortalBilling();
   const pdf = useDownloadInvoicePdf();
+  // The invoice being paid (confirmation first), or reported as paid under a different name.
+  const [paying, setPaying] = useState<{ invoice: InvoiceOut; start: "confirm" | "other-name" } | null>(null);
 
   if (billing.isPending) return <Loading text="Loading transactions…" />;
   if (billing.isError) return <ErrorState error={billing.error} onRetry={billing.refetch} />;
@@ -93,9 +97,14 @@ export function BillingSection() {
                     {/* Builds and the hosting plan are paid with their Wise link; for anything else, the team sends payment details. */}
                     {isOpen(iv.status) && !readOnly && (
                       iv.paymentUrl ? (
-                        <a className={buttonClass({ variant: "primary", size: "sm" })} href={iv.paymentUrl} target="_blank" rel="noopener noreferrer">
-                          Pay now ↗
-                        </a>
+                        <>
+                          <Button variant="primary" size="sm" aria-haspopup="dialog" onClick={() => setPaying({ invoice: iv, start: "confirm" })}>
+                            Pay now
+                          </Button>
+                          <Button variant="link" size="sm" onClick={() => setPaying({ invoice: iv, start: "other-name" })}>
+                            Paid under a different name?
+                          </Button>
+                        </>
                       ) : (
                         <span className="text-small">Your team will send payment details</span>
                       )
@@ -115,6 +124,18 @@ export function BillingSection() {
           </table>
         )}
       </section>
+      {paying?.invoice.paymentUrl && (
+        <PayConfirmModal
+          target={{
+            number: paying.invoice.number,
+            totalCents: paying.invoice.totalCents,
+            payUrl: paying.invoice.paymentUrl,
+            what: describe(paying.invoice),
+          }}
+          start={paying.start}
+          onClose={() => setPaying(null)}
+        />
+      )}
     </div>
   );
 }

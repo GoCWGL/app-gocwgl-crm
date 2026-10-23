@@ -7,10 +7,12 @@ import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { FunnelOut } from "@/utils/api/models";
 import { formatCents } from "@/utils/format/money";
+import { usePortalBilling } from "@/utils/hooks/useBilling";
 import { useEmbeds, usePortalBuilds } from "@/utils/hooks/useDelivery";
 import { useCancelFunnelRequest, usePortalFunnels } from "@/utils/hooks/usePortal";
 import { BuildCards } from "../components/BuildCards";
 import { missingRequestDetails } from "../components/FunnelRequestDrawer";
+import { PayConfirmModal } from "../components/PayConfirmModal";
 import { usePortal } from "../state/PortalContext";
 
 type Step = [string, number];
@@ -37,6 +39,8 @@ export function FunnelsSection() {
   // A request whose build has started shows as that build above, not twice.
   const listed = funnels.filter((f) => !(f.projectId && f.status === "build"));
   const embeds = useEmbeds().data ?? [];
+  // Invoice numbers for the pay confirmation (the reference the client pays with).
+  const invoices = usePortalBilling().data?.invoices ?? [];
   // Cancelling asks for a second click, like removing an embed code.
   const cancel = useCancelFunnelRequest();
   const [confirmCancelId, setConfirmCancelId] = useState("");
@@ -108,6 +112,7 @@ export function FunnelsSection() {
             confirmingCancel={confirmCancelId === f.id}
             embedCount={embeds.filter((e) => e.funnelId === f.id).length}
             embedIssues={embeds.filter((e) => e.funnelId === f.id && e.hasIssue).length}
+            invoiceNumber={invoices.find((i) => i.id === f.invoiceId)?.number ?? ""}
             onBuild={() => goTo("build")}
             onEdit={() => update({ funnelRequestOpen: true, editFunnelId: f.id })}
             onCancel={() => cancelRequest(f.id)}
@@ -133,6 +138,7 @@ type FunnelCardProps = {
   confirmingCancel: boolean;
   embedCount: number;
   embedIssues: number;
+  invoiceNumber: string;
   onBuild: () => void;
   onEdit: () => void;
   onCancel: () => void;
@@ -147,12 +153,14 @@ function FunnelCard({
   confirmingCancel,
   embedCount,
   embedIssues,
+  invoiceNumber,
   onBuild,
   onEdit,
   onCancel,
   onEmbed,
   onChange,
 }: FunnelCardProps) {
+  const [paying, setPaying] = useState<"" | "confirm" | "other-name">("");
   const status = STATUS[f.status as FunnelStatus] ?? STATUS.build;
   const isLive = f.status === "live";
   // Requests can be withdrawn until they're paid for.
@@ -294,9 +302,21 @@ function FunnelCard({
         {f.status === "pay" &&
           !readOnly &&
           (f.payUrl ? (
-            <a className={buttonClass({ variant: "primary", size: "sm" })} href={f.payUrl} target="_blank" rel="noopener noreferrer">
-              Pay {formatCents(f.priceCents)} with Wise ↗
-            </a>
+            <>
+              <Button variant="primary" size="sm" aria-haspopup="dialog" onClick={() => setPaying("confirm")}>
+                Pay {formatCents(f.priceCents)} with Wise
+              </Button>
+              <Button variant="link" size="sm" onClick={() => setPaying("other-name")}>
+                Paid under a different name?
+              </Button>
+              {paying && (
+                <PayConfirmModal
+                  target={{ number: invoiceNumber, totalCents: f.priceCents, payUrl: f.payUrl, what: `${f.name} · ${f.type}` }}
+                  start={paying}
+                  onClose={() => setPaying("")}
+                />
+              )}
+            </>
           ) : (
             <span className="text-small">Your GoCWGL team will send you a payment link for this quote.</span>
           ))}

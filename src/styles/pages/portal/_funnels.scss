@@ -209,3 +209,34 @@
 .crm-request-review__goal {
   white-space: pre-wrap;
 }
+
+// Portal CRM › Your requests: the request, its payment status and Pay now on one line (wraps on phones).
+.crm-request-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+
+  & + & {
+    padding-top: 10px;
+    border-top: 1px solid $line-soft;
+  }
+}
+
+// Pay with Wise › confirmation: the three things to know before paying.
+.pay-confirm {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: $ink-soft;
+}
+
+.pay-confirm__other {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+}

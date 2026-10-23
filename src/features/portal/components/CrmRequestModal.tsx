@@ -5,6 +5,7 @@ import { Button, Field, FormError, Icon, IconTile, Input, Modal, Textarea, butto
 import { CRM_BOOKING_URL, CRM_PACKAGES, type CrmPackageKey } from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
 import { useCreateCrmRequest } from "@/utils/hooks/useDelivery";
+import { PaymentNotes } from "./PayConfirmModal";
 
 const PACKAGE_KEYS = Object.keys(CRM_PACKAGES) as CrmPackageKey[];
 
@@ -150,16 +151,20 @@ export function CrmRequestModal({ onClose, onRequested }: { onClose: () => void;
           )}
         </>
       ) : (
-        <dl className="inset crm-request-review">
-          <dt className="kicker kicker--sm kicker--muted">CRM</dt>
-          <dd className="text-strong">
-            {p.label} · {formatCents(p.priceCents)} <span className="text-small">({p.timeline})</span>
-          </dd>
-          <dt className="kicker kicker--sm kicker--muted">NAME</dt>
-          <dd className="text-strong">{name.trim()}</dd>
-          <dt className="kicker kicker--sm kicker--muted">GOAL</dt>
-          <dd className="text-body u-ink crm-request-review__goal">{goal.trim()}</dd>
-        </dl>
+        <>
+          <dl className="inset crm-request-review">
+            <dt className="kicker kicker--sm kicker--muted">CRM</dt>
+            <dd className="text-strong">
+              {p.label} · {formatCents(p.priceCents)} <span className="text-small">({p.timeline})</span>
+            </dd>
+            <dt className="kicker kicker--sm kicker--muted">NAME</dt>
+            <dd className="text-strong">{name.trim()}</dd>
+            <dt className="kicker kicker--sm kicker--muted">GOAL</dt>
+            <dd className="text-body u-ink crm-request-review__goal">{goal.trim()}</dd>
+          </dl>
+          {/* Payment comes later (an invoice after the call), but the same rules apply when they pay it. */}
+          <PaymentNotes later />
+        </>
       )}
       <FormError error={create.error} />
     </Modal>
