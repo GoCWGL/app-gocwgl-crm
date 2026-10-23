@@ -2,13 +2,12 @@
 
 import { Badge, Button, FormError, LoadState, SegmentedControl } from "@/components/ui";
 import { INVOICE_TONES, SUBSCRIPTION_TONES, type InvoiceStatus, type SubscriptionStatus } from "@/data/admin";
-import { canWriteCrm } from "@/utils/auth/session";
+import { useState } from "react";
+import { canWriteCrm, isSuperAdmin } from "@/utils/auth/session";
 import { formatLong, formatShort } from "@/utils/format/dates";
 import { formatCentsExact, formatCents } from "@/utils/format/money";
 import {
   useCancelSubscription,
-  useDeleteInvoice,
-  useDeleteSubscription,
   useInvoices,
   useMarkInvoicePaid,
   useSendInvoice,
@@ -20,6 +19,7 @@ import { useAllContacts } from "@/utils/hooks/useContacts";
 import { useMe } from "@/utils/hooks/useUsers";
 import { contactName } from "../../lib/contacts";
 import type { BillingKind } from "../../modals/BillingModal";
+import { DeleteTransactionModal, type TransactionToDelete } from "./DeleteTransactionModal";
 
 type BillingTablesProps = {
   view: "subs" | "inv";
@@ -31,7 +31,11 @@ type BillingTablesProps = {
 
 /** Subscriptions and invoices tables with their row actions. */
 export function BillingTables({ view, onView, message, onMessage, onNew }: BillingTablesProps) {
-  const canWrite = canWriteCrm(useMe().data);
+  const me = useMe().data;
+  const canWrite = canWriteCrm(me);
+  // Deleting a subscription or invoice is for super admins only (the API enforces it too).
+  const canDelete = isSuperAdmin(me);
+  const [toDelete, setToDelete] = useState<TransactionToDelete | null>(null);
   const subsQuery = useSubscriptions();
   const invoicesQuery = useInvoices();
   const subscriptions = subsQuery.data ?? [];
@@ -44,19 +48,17 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
   };
 
   const updateSub = useUpdateSubscription();
-  const deleteSub = useDeleteSubscription();
   const cancelSub = useCancelSubscription();
   const send = useSendInvoice();
   const markPaid = useMarkInvoicePaid();
   const voidInv = useVoidInvoice();
-  const deleteInv = useDeleteInvoice();
-  const busy = updateSub.isPending || deleteSub.isPending || cancelSub.isPending;
+  const busy = updateSub.isPending || cancelSub.isPending;
   // Invoice actions lock only their own row, so one slow email never freezes the whole table.
-  const invoiceActions = [send, markPaid, voidInv, deleteInv];
+  const invoiceActions = [send, markPaid, voidInv];
   const rowBusy = (id: string) => invoiceActions.some((m) => m.isPending && m.variables === id);
   const pendingLabel = (m: { isPending: boolean; variables?: string }, id: string, idle: string, working: string) =>
     m.isPending && m.variables === id ? working : idle;
-  const error = updateSub.error ?? deleteSub.error ?? cancelSub.error ?? send.error ?? markPaid.error ?? voidInv.error ?? deleteInv.error;
+  const error = updateSub.error ?? cancelSub.error ?? send.error ?? markPaid.error ?? voidInv.error;
 
   return (
     <section className="card" aria-label="Billing">
@@ -171,13 +173,13 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                           {cancelSub.isPending && cancelSub.variables === sub.id ? "Cancelling…" : "Cancel"}
                         </button>
                       )}
-                      {canWrite && sub.status === "Canceled" && (
+                      {canDelete && (
                         <button
                           type="button"
                           className="row-action row-action--danger"
-                          aria-label={`Delete cancelled subscription for ${c.name}`}
+                          aria-label={`Delete subscription for ${c.name}`}
                           disabled={busy}
-                          onClick={() => deleteSub.mutate(sub.id, { onSuccess: () => onMessage(`${c.name}’s cancelled subscription was removed.`) })}
+                          onClick={() => setToDelete({ kind: "sub", id: sub.id, label: sub.plan, client: c.name })}
                         >
                           Delete
                         </button>
@@ -270,12 +272,13 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                           {pendingLabel(voidInv, iv.id, "Void", "Voiding…")}
                         </button>
                       )}
-                      {canWrite && iv.status === "Draft" && (
+                      {canDelete && (
                         <button
                           type="button"
                           className="row-action row-action--danger"
+                          aria-label={`Delete ${iv.number}`}
                           disabled={rowBusy(iv.id)}
-                          onClick={() => deleteInv.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} was deleted.`) })}
+                          onClick={() => setToDelete({ kind: "inv", id: iv.id, label: iv.number, client: c.name })}
                         >
                           Delete
                         </button>
@@ -296,6 +299,17 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
         <div className="notice notice--success u-strong" role="status">
           {message}
         </div>
+      )}
+
+      {toDelete && (
+        <DeleteTransactionModal
+          target={toDelete}
+          onClose={() => setToDelete(null)}
+          onDeleted={(text) => {
+            setToDelete(null);
+            onMessage(text);
+          }}
+        />
       )}
     </section>
   );

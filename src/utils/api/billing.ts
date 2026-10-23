@@ -26,7 +26,7 @@ export const getInvoice = (id: string) => get<InvoiceOut>(`/admin/invoices/${id}
 export const createInvoice = (body: InvoiceCreate) => post<InvoiceOut>("/admin/invoices", body);
 /** Drafts only. */
 export const updateInvoice = (id: string, body: InvoiceUpdate) => patch<InvoiceOut>(`/admin/invoices/${id}`, body);
-/** Drafts only. */
+/** Super admins only, any status. */
 export const deleteInvoice = (id: string) => del(`/admin/invoices/${id}`);
 export const sendInvoice = (id: string) => post<InvoiceOut>(`/admin/invoices/${id}/send`);
 export const markInvoicePaid = (id: string) => post<InvoiceOut>(`/admin/invoices/${id}/mark-paid`);
