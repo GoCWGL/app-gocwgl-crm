@@ -19,7 +19,7 @@ export const BRAND_PANEL = {
   ] satisfies BrandRow[],
 };
 
+/** Sign-in buttons on the login page. Microsoft sign-in still works in the API; add it back here to show it again. */
 export const SSO_PROVIDERS: Array<{ id: "google" | "microsoft"; label: string; mark: string; tone: Tone }> = [
   { id: "google", label: "Google", mark: "G", tone: "green" },
-  { id: "microsoft", label: "Microsoft", mark: "M", tone: "cyan" },
 ];
