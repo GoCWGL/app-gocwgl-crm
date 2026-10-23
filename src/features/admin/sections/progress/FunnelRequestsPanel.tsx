@@ -1,12 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { Avatar, Badge, Button, FormError, LoadState } from "@/components/ui";
 import { avatarTone, type Tone } from "@/lib/tones";
 import type { ContactOut, FunnelOut, InvoiceOut } from "@/utils/api/models";
 import { formatCents } from "@/utils/format/money";
 import { useInvoices } from "@/utils/hooks/useBilling";
 import { useAllContacts } from "@/utils/hooks/useContacts";
-import { useAdminFunnels, useMarkFunnelPaid, useSendFunnelInvoice, useStartFunnelBuild } from "@/utils/hooks/usePortal";
+import {
+  useAdminFunnels,
+  useDeleteAdminFunnel,
+  useMarkFunnelPaid,
+  useSendFunnelInvoice,
+  useStartFunnelBuild,
+} from "@/utils/hooks/usePortal";
 import { contactName } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
 import { RequestInvoiceRow } from "./RequestInvoiceRow";
@@ -33,6 +40,7 @@ export function FunnelRequestsPanel({ canWrite }: { canWrite: boolean }) {
   const markPaid = useMarkFunnelPaid();
   const send = useSendFunnelInvoice();
   const start = useStartFunnelBuild();
+  const remove = useDeleteAdminFunnel();
   // Waiting on you first: paid and ready, then awaiting payment, then quotes, then those already in build.
   const order = ["queued", "pay", "quote", "build"];
   const requests = openFunnelRequests(query.data ?? []).sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status));
@@ -43,7 +51,7 @@ export function FunnelRequestsPanel({ canWrite }: { canWrite: boolean }) {
       isEmpty={!requests.length}
       empty="No open funnel requests. When a client uses “Request a new funnel” in their portal, it shows up here."
     >
-      <FormError error={markPaid.error ?? send.error ?? start.error} />
+      <FormError error={markPaid.error ?? send.error ?? start.error ?? remove.error} />
       <div className="stack stack--10">
         {requests.map((f) => (
           <FunnelRequestCard
@@ -52,7 +60,7 @@ export function FunnelRequestsPanel({ canWrite }: { canWrite: boolean }) {
             contact={contacts.find((c) => c.id === f.contactId)}
             invoice={invoices.find((i) => i.id === f.invoiceId)}
             canWrite={canWrite}
-            busy={markPaid.isPending || send.isPending || start.isPending}
+            busy={markPaid.isPending || send.isPending || start.isPending || remove.isPending}
             sending={send.isPending && send.variables === f.invoiceId}
             onSend={() =>
               f.invoiceId && send.mutate(f.invoiceId, { onSuccess: (iv) => update({ toast: `Invoice ${iv.number} emailed with its Wise link.` }) })
@@ -67,6 +75,7 @@ export function FunnelRequestsPanel({ canWrite }: { canWrite: boolean }) {
               })
             }
             onOpen={() => update({ progressView: "builds", projectId: f.projectId ?? "" })}
+            onDelete={() => remove.mutate(f.id, { onSuccess: () => update({ toast: `${f.name} request deleted.` }) })}
           />
         ))}
       </div>
@@ -85,6 +94,7 @@ function FunnelRequestCard({
   onMarkPaid,
   onStart,
   onOpen,
+  onDelete,
 }: {
   funnel: FunnelOut;
   contact?: ContactOut;
@@ -96,7 +106,9 @@ function FunnelRequestCard({
   onMarkPaid: () => void;
   onStart: () => void;
   onOpen: () => void;
+  onDelete: () => void;
 }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const r = (f.request ?? {}) as Request;
   const status = STATUSES[f.status];
   const client = contact ? contactName(contact) : "Client";
@@ -171,6 +183,21 @@ function FunnelRequestCard({
             </Button>
           )}
           {f.status === "pay" && !f.payUrl && <span className="text-small">No Wise link for this price: send them payment details</span>}
+          <span className="u-spacer" />
+          {confirmDelete ? (
+            <>
+              <Button variant="danger-solid" size="sm" disabled={busy} onClick={onDelete}>
+                Yes, delete request
+              </Button>
+              <Button size="sm" onClick={() => setConfirmDelete(false)}>
+                Keep
+              </Button>
+            </>
+          ) : (
+            <Button variant="danger" size="sm" onClick={() => setConfirmDelete(true)}>
+              Delete
+            </Button>
+          )}
         </div>
       )}
     </article>
