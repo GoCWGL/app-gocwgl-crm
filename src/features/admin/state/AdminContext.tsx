@@ -34,13 +34,19 @@ export type AdminState = {
 
   // Overlays ("" = closed)
   addClientOpen: boolean;
+  /** "New build" modal on the Build Progress page. */
+  newBuildOpen: boolean;
+  /** Client picked in that modal when it opens ("" = choose). */
+  newBuildContactId: string;
   /** Contact shown in the edit drawer. */
   editContactId: string;
   /** Contact whose portal is open in "View as client". */
   viewAsId: string;
   /** Open media folder ("" = folder list). */
   mediaFolderId: string;
-  /** Selected client on the Build Progress page. */
+  /** Build Progress tab: the builds, clients' funnel requests, or their CRM requests. */
+  progressView: "builds" | "funnels" | "requests";
+  /** Selected card on the Build Progress page: a build id, or a client id for a paid client with no build yet. */
   projectId: string;
 };
 
@@ -63,9 +69,12 @@ function initialState(params: URLSearchParams | null): AdminState {
     composer: { mode: "one", contact: "", tag: "", stage: "", subject: "", body: "" },
     emailView: "compose",
     addClientOpen: false,
+    newBuildOpen: false,
+    newBuildContactId: "",
     editContactId: "",
     viewAsId: "",
     mediaFolderId: "",
+    progressView: "builds",
     projectId: "",
   };
 }

@@ -59,7 +59,7 @@ export function PrivacyPage() {
       <ul>
         <li>Our hosting and database providers, which store the service&apos;s data.</li>
         <li>Our email provider, which delivers account emails.</li>
-        <li>Polar, our payment processor, for billing.</li>
+        <li>Wise, our payment provider, when you pay an invoice.</li>
         <li>Google or Microsoft, only if you choose to sign in with them or connect a calendar.</li>
       </ul>
       <p>We may also disclose information when the law requires it.</p>

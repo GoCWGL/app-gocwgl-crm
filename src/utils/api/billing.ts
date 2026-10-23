@@ -1,6 +1,5 @@
 import { del, download, get, patch, post } from "./client";
 import type {
-  CheckoutOut,
   ClientBillingOut,
   InvoiceCreate,
   InvoiceOut,
@@ -37,8 +36,6 @@ export const voidInvoice = (id: string) => post<InvoiceOut>(`/admin/invoices/${i
 
 // ------------------------------------------------------------------ Client billing (portal)
 export const getPortalBilling = () => get<ClientBillingOut>("/portal/billing");
-/** Redirect the browser to the returned `url` (Polar checkout). */
-export const checkoutInvoice = (id: string) => post<CheckoutOut>(`/portal/billing/invoices/${id}/checkout`);
 /** The client cancels their own invoice-billed plan (e.g. yearly hosting). */
 export const cancelMySubscription = () => post<SubscriptionOut>("/portal/billing/subscription/cancel");
 /** Saves the invoice as `<number>.pdf`. */

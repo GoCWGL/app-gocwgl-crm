@@ -44,6 +44,8 @@ export const NOTIFICATION_OPTIONS = [
   { key: "booked", label: "Call booked", desc: "When a lead books a call on any calendar", defaultOn: true },
   { key: "paid", label: "Payment received", desc: "When a client pays a subscription", defaultOn: true },
   { key: "bug", label: "New bug reported", desc: "When a client reports a bug from their CRM", defaultOn: true },
+  { key: "funnel_request", label: "Funnel request", desc: "When a client requests a new funnel from their portal", defaultOn: true },
+  { key: "crm_request", label: "CRM request", desc: "When a client requests a CRM from their portal", defaultOn: true },
   { key: "form", label: "Every form submission", desc: "Includes newsletter and other non-lead forms", defaultOn: false },
   { key: "digest", label: "Daily summary email", desc: "One email a day with yesterday’s numbers, at the time you choose below", defaultOn: true },
 ];

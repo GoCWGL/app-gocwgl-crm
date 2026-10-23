@@ -150,7 +150,7 @@ export const FUNNEL_PACKAGE_COPY: Record<FunnelPackageKey, { tagline: string; ta
 };
 
 // ------------------------------------------------------------- CRM builds
-/** Where "Book a call" sends clients for a CRM build: the CRM discovery call calendar (gets ?package=simple|custom). Invoiced by the team, not through Polar. */
+/** Where "Book a call" sends clients for a CRM build: the CRM discovery call calendar (gets ?package=simple|custom). Invoiced by the team with a Wise payment link. */
 export const CRM_BOOKING_URL = "https://app.gocwgl.com/book/gocwgl-crm-discovery-call";
 
 export const CRM_PACKAGES: Record<

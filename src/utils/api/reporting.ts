@@ -1,5 +1,5 @@
-import { get } from "./client";
-import type { ActivityOut, ClientActivityOut } from "./models";
+import { get, post } from "./client";
+import type { ActivityOut, ClientActivityOut, InboxOut } from "./models";
 
 /**
  * GET /admin/reports/dashboard. The OpenAPI spec types this as a plain object, so the shape is
@@ -33,6 +33,10 @@ export const getDashboard = (range: DashboardRange = 30) =>
 /** Feeds page with `before` = createdAt of the last item. */
 export const listActivity = (opts: { contact_id?: string; before?: string; limit?: number } = {}) =>
   get<ActivityOut[]>("/admin/activity", opts);
+
+/** The notification bell: clients' requests, newest first, with this person's unread count. */
+export const getInbox = (opts: { before?: string; limit?: number } = {}) => get<InboxOut>("/admin/activity/inbox", opts);
+export const markInboxSeen = () => post<void>("/admin/activity/inbox/seen");
 
 export const listPortalActivity = (opts: { before?: string; limit?: number } = {}) =>
   get<ClientActivityOut[]>("/portal/activity", opts);

@@ -23,8 +23,7 @@ export function SubscriptionCard({ sub, readOnly, onCancelled }: SubscriptionCar
   const cancel = useCancelMySubscription();
   const [confirming, setConfirming] = useState(false);
   const cancelled = sub.status === "Canceled";
-  // Card plans are cancelled in Polar's portal, not here.
-  const canCancel = !readOnly && !cancelled && !sub.managedByPolar;
+  const canCancel = !readOnly && !cancelled;
   const every = sub.interval.toLowerCase();
 
   return (

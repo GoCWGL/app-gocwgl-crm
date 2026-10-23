@@ -72,7 +72,9 @@ function PortalLayout() {
         title={page.title}
         subtitle={page.subtitle}
         actions={
-          !readOnly && (
+          // Only on Support, where requests live.
+          !readOnly &&
+          state.tab === "support" && (
             <Button variant="primary" size="lg" onClick={() => openSupport()}>
               + New request
             </Button>

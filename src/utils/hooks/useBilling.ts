@@ -30,7 +30,4 @@ export const useVoidInvoice = () => useApiMutation(api.voidInvoice, { invalidate
 // ------------------------------------------------------------------ Portal billing
 export const usePortalBilling = () => useQuery({ queryKey: qk.portalBilling, queryFn: api.getPortalBilling });
 export const useCancelMySubscription = () => useApiMutation(api.cancelMySubscription, { invalidate: [qk.portalBilling] });
-/** Polar checkout: the browser leaves for the returned URL. */
-const redirect = (r: { url: string }) => window.location.assign(r.url);
 export const useDownloadInvoicePdf = () => useApiMutation(api.downloadInvoicePdf);
-export const useCheckoutInvoice = () => useApiMutation(api.checkoutInvoice, { onSuccess: redirect });

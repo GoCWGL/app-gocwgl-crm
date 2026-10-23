@@ -9,7 +9,7 @@ export type TemplateKey = ChecklistAdd["template"];
 
 const taskCount = (t: ProjectTemplateOut) => t.phases.reduce((n, p) => n + p.tasks.length, 0);
 
-/** Pick a build checklist: funnel & system, Simple CRM or Custom CRM, with what each one covers. */
+/** Pick a build checklist: Foundation Build, Full Bundle or VIP Repeat funnel, Simple CRM or Custom CRM, with what each one covers. */
 export function ChecklistOptions({
   value,
   onChange,
@@ -59,8 +59,8 @@ export function ChecklistOptions({
   );
 }
 
-/** On an existing build: add a CRM checklist after the phases already there (a funnel client who buys a CRM). */
-export function AddChecklist({ clientId }: { clientId: string }) {
+/** On an existing build: add a checklist after the phases already there (a funnel client who buys a CRM or a VIP repeat funnel). */
+export function AddChecklist({ projectId }: { projectId: string }) {
   const add = useAddProjectChecklist();
   const [open, setOpen] = useState(false);
   const [template, setTemplate] = useState<TemplateKey>("crm_simple");
@@ -68,21 +68,21 @@ export function AddChecklist({ clientId }: { clientId: string }) {
   if (!open) {
     return (
       <Button variant="outline" size="sm" className="u-self-start" onClick={() => setOpen(true)}>
-        + Add a CRM build checklist
+        + Add a checklist (CRM or VIP funnel)
       </Button>
     );
   }
   return (
     <div className="card stack stack--10">
-      <span className="kicker">ADD A CRM BUILD CHECKLIST</span>
-      <span className="text-small">Its phases are added after the ones above, named “CRM · …”. You can rename or remove them after.</span>
-      <ChecklistOptions value={template} onChange={setTemplate} only={["crm_simple", "crm_custom"]} />
+      <span className="kicker">ADD A CHECKLIST</span>
+      <span className="text-small">Its phases are added after the ones above, named “CRM · …” or “VIP funnel · …”. You can rename or remove them after.</span>
+      <ChecklistOptions value={template} onChange={setTemplate} only={["vip", "crm_simple", "crm_custom"]} />
       <FormError error={add.error} />
       <div className="cluster cluster--8">
         <Button
           variant="primary"
           disabled={add.isPending}
-          onClick={() => add.mutate({ contactId: clientId, template }, { onSuccess: () => setOpen(false) })}
+          onClick={() => add.mutate({ projectId, template }, { onSuccess: () => setOpen(false) })}
         >
           {add.isPending ? "Adding…" : "Add to this build"}
         </Button>

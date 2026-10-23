@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Badge, Button, Checkbox, ErrorState, Field, FormError, Icon, IconTile, Input, Loading, Modal, Textarea } from "@/components/ui";
+import { Badge, Button, Checkbox, ErrorState, Field, Icon, IconTile, Input, Loading, Modal, Textarea } from "@/components/ui";
 import { FUNNEL_PACKAGE_COPY, FUNNEL_TYPE_COPY, type FunnelPackageKey, type FunnelRequestDetails, type FunnelTypeKey } from "@/data/portal";
 import type { FunnelCatalogOut, FunnelOut } from "@/utils/api/models";
 import { errorMessage, fieldErrors } from "@/utils/errors";
 import { formatCents } from "@/utils/format/money";
-import { useCheckoutInvoice } from "@/utils/hooks/useBilling";
 import { useFunnelCatalog, usePortalFunnels, useRequestFunnel, useUpdateFunnelRequest } from "@/utils/hooks/usePortal";
 import { usePortal } from "../state/PortalContext";
 
@@ -65,7 +64,6 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
   const packageKeys = Object.keys(packages) as FunnelPackageKey[];
   const create = useRequestFunnel();
   const save = useUpdateFunnelRequest();
-  const checkout = useCheckoutInvoice();
   const [error, setError] = useState("");
 
   const [draft, setDraftState] = useState<Draft>(() => {
@@ -99,7 +97,7 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
   const totalText = pkg || price ? formatCents(price) : editing ? "Quote" : "Choose a package";
   const scopeChanged = !!editing && !scopeLocked && !!draft.package && draft.package !== original?.package;
   const needsAgree = !!pkg && (!editing || scopeChanged);
-  const pending = create.isPending || save.isPending || checkout.isPending;
+  const pending = create.isPending || save.isPending;
   const apiFields = fieldErrors(create.error ?? save.error);
 
   const submit = (e: FormEvent) => {
@@ -135,22 +133,34 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
       return;
     }
 
-    create.mutate(body, {
-      onSuccess: (f) => {
-        // Priced funnels come back with an invoice; "Pay now" goes straight to checkout.
-        if (f.invoiceId && draft.pay === "now") {
-          checkout.mutate(f.invoiceId, {
-            onError: (err) => update({ funnelRequestOpen: false, toast: `Request sent. ${errorMessage(err)} You can pay it from Transactions.` }),
+    // "Pay now" opens the package's Wise payment link in a new tab, so the client stays in their portal. The tab is opened
+    // during the click: browsers block tabs opened after the request comes back.
+    const payTab = draft.pay === "now" ? window.open("", "_blank") : null;
+    create.mutate(
+      { ...body, payment: draft.pay },
+      {
+        onSuccess: (f) => {
+          if (payTab && f.payUrl) {
+            payTab.opener = null;
+            payTab.location.href = f.payUrl;
+            update({ funnelRequestOpen: false, toast: "Request sent. Finish paying through Wise in the new tab; your build starts once it’s paid." });
+            return;
+          }
+          payTab?.close();
+          update({
+            funnelRequestOpen: false,
+            toast:
+              draft.pay === "now" && f.payUrl
+                ? "Request sent. Your browser blocked the payment tab: use Pay now on the funnel or in Transactions."
+                : `Request sent. We emailed your invoice for ${formatCents(f.priceCents)} with a Wise payment link; it’s also in Transactions.`,
           });
-          return;
-        }
-        update({
-          funnelRequestOpen: false,
-          toast: `Request sent. An invoice for ${formatCents(f.priceCents)} is in Transactions.`,
-        });
+        },
+        onError: (err) => {
+          payTab?.close();
+          onError(err);
+        },
       },
-      onError,
-    });
+    );
   };
 
   return (
@@ -324,8 +334,8 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
             <div className="cluster cluster--6" role="radiogroup" aria-label="How to pay">
               {(
                 [
-                  ["now", "Pay now", "Go to secure checkout and start the build right away"],
-                  ["invoice", "Send me an invoice", "Pay within 7 days from Transactions. The build starts once it is paid."],
+                  ["now", "Pay now", "Pay securely through Wise in a new tab, and we start the build once it’s paid"],
+                  ["invoice", "Send me an invoice", "We email you an invoice with a Wise payment link. Pay within 7 days."],
                 ] as const
               ).map(([key, label, desc]) => (
                 <button key={key} type="button" role="radio" aria-checked={draft.pay === key} className="option-card pay-option" onClick={() => set({ pay: key })}>
@@ -355,7 +365,6 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
           {error}
         </p>
       )}
-      {!error && <FormError error={checkout.error} />}
     </Modal>
   );
 }

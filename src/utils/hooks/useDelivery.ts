@@ -1,43 +1,59 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as api from "@/utils/api/delivery";
-import type { BrandKitIn, EmbedIn, EmbedPatch, FileCategory, FilePatch, LinksIn, PhaseIn, ProjectPatch, ProjectStart, ChecklistAdd } from "@/utils/api/models";
+import type { BrandKitIn, CrmRequestIn, CrmRequestStatus, ProjectSummary, EmbedIn, EmbedPatch, FileCategory, FilePatch, LinksIn, PhaseIn, ProjectPatch, ProjectStart, ChecklistAdd } from "@/utils/api/models";
 import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
 
 // ------------------------------------------------------------------ Build progress (admin)
 export const useProjects = () => useQuery({ queryKey: qk.projects, queryFn: api.listProjects });
-/** 404 until the build is started for that client. */
-export const useProject = (contactId: string) =>
-  useQuery({ queryKey: qk.project(contactId), queryFn: () => api.getProject(contactId), enabled: !!contactId, retry: false });
+export const useProject = (projectId: string) =>
+  useQuery({ queryKey: qk.project(projectId), queryFn: () => api.getProject(projectId), enabled: !!projectId, retry: false });
 
-const projectKeys = (contactId: string) => [qk.project(contactId), qk.projects, ["dashboard"]];
+const projectKeys = (projectId: string) => [qk.project(projectId), qk.projects, ["dashboard"]];
 export const useProjectTemplates = () => useQuery({ queryKey: qk.projectTemplates, queryFn: api.listProjectTemplates, staleTime: Infinity });
 export const useAddProjectChecklist = () =>
-  useApiMutation((v: { contactId: string; template: ChecklistAdd["template"] }) => api.addProjectChecklist(v.contactId, v.template), {
-    invalidate: (_, v) => projectKeys(v.contactId),
+  useApiMutation((v: { projectId: string; template: ChecklistAdd["template"] }) => api.addProjectChecklist(v.projectId, v.template), {
+    invalidate: (_, v) => projectKeys(v.projectId),
   });
-export const useStartProject = () =>
-  useApiMutation((v: { contactId: string; body: ProjectStart }) => api.startProject(v.contactId, v.body), {
-    invalidate: (_, v) => projectKeys(v.contactId),
+export const useStartProject = () => useApiMutation((body: ProjectStart) => api.startProject(body), { invalidate: [qk.projects, ["dashboard"]] });
+/** Drops the build from the cached list right away, so the page doesn't refetch the deleted build (404). */
+export const useDeleteProject = () => {
+  const qc = useQueryClient();
+  return useApiMutation((projectId: string) => api.deleteProject(projectId), {
+    onSuccess: (_, projectId) => {
+      qc.setQueryData<ProjectSummary[]>(qk.projects, (list) => list?.filter((p) => p.id !== projectId));
+      qc.removeQueries({ queryKey: qk.project(projectId), exact: true });
+      void qc.invalidateQueries({ queryKey: qk.projects, exact: true });
+    },
+    invalidate: [["dashboard"]],
   });
+};
 export const useUpdateProject = () =>
-  useApiMutation((v: { contactId: string; body: ProjectPatch }) => api.updateProject(v.contactId, v.body), {
-    invalidate: (_, v) => projectKeys(v.contactId),
+  useApiMutation((v: { projectId: string; body: ProjectPatch }) => api.updateProject(v.projectId, v.body), {
+    invalidate: (_, v) => projectKeys(v.projectId),
   });
 export const useSetProjectPhases = () =>
-  useApiMutation((v: { contactId: string; phases: PhaseIn[] }) => api.setProjectPhases(v.contactId, v.phases), {
-    invalidate: (_, v) => projectKeys(v.contactId),
+  useApiMutation((v: { projectId: string; phases: PhaseIn[] }) => api.setProjectPhases(v.projectId, v.phases), {
+    invalidate: (_, v) => projectKeys(v.projectId),
   });
 export const useToggleProjectTask = () =>
-  useApiMutation((v: { contactId: string; taskId: string; done: boolean }) => api.toggleProjectTask(v.contactId, v.taskId, v.done), {
-    invalidate: (_, v) => projectKeys(v.contactId),
+  useApiMutation((v: { projectId: string; taskId: string; done: boolean }) => api.toggleProjectTask(v.projectId, v.taskId, v.done), {
+    invalidate: (_, v) => projectKeys(v.projectId),
   });
 export const usePostProjectUpdate = () =>
-  useApiMutation((v: { contactId: string; text: string }) => api.postProjectUpdate(v.contactId, v.text), {
-    invalidate: (_, v) => projectKeys(v.contactId),
+  useApiMutation((v: { projectId: string; text: string }) => api.postProjectUpdate(v.projectId, v.text), {
+    invalidate: (_, v) => projectKeys(v.projectId),
   });
+
+// ------------------------------------------------------------------ CRM requests (admin)
+export const useCrmRequests = () => useQuery({ queryKey: qk.crmRequests, queryFn: api.listCrmRequests });
+export const useUpdateCrmRequest = () =>
+  useApiMutation((v: { id: string; status: CrmRequestStatus }) => api.updateCrmRequest(v.id, v.status), { invalidate: [qk.crmRequests] });
+export const useDeleteCrmRequest = () => useApiMutation(api.deleteCrmRequest, { invalidate: [qk.crmRequests] });
+export const useStartCrmRequestBuild = () =>
+  useApiMutation(api.startCrmRequestBuild, { invalidate: [qk.crmRequests, qk.projects, ["dashboard"]] });
 
 // ------------------------------------------------------------------ Client media (admin)
 export const useMediaFolders = () => useQuery({ queryKey: qk.mediaFolders, queryFn: api.listMediaFolders });
@@ -69,7 +85,9 @@ export const useCommentOnClientEmbed = () =>
   );
 
 // ------------------------------------------------------------------ Portal
-export const usePortalBuild = () => useQuery({ queryKey: qk.portalBuild, queryFn: api.getPortalBuild });
+export const usePortalCrmRequests = () => useQuery({ queryKey: qk.portalCrmRequests, queryFn: api.listPortalCrmRequests });
+export const useCreateCrmRequest = () => useApiMutation((v: CrmRequestIn) => api.createCrmRequest(v), { invalidate: [qk.portalCrmRequests] });
+export const usePortalBuilds = () => useQuery({ queryKey: qk.portalBuilds, queryFn: api.listPortalBuilds });
 export const useAssets = () => useQuery({ queryKey: qk.assets, queryFn: () => api.listAssets() });
 export const useUploadAsset = () =>
   useApiMutation((v: { file: File; category?: FileCategory }) => api.uploadAsset(v.file, v.category), { invalidate: [qk.assets] });

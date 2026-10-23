@@ -24,6 +24,13 @@
   font-weight: 800;
 }
 
+.project-title__input {
+  min-width: 0;
+  max-width: 420px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
 .project-share {
   padding-top: 12px;
   border-top: 1px solid $line-faint;
@@ -92,4 +99,10 @@
 .checklist-options {
   align-self: stretch;
   text-align: left;
+}
+
+// Build Progress › CRM requests: the client's goal keeps its line breaks.
+.crm-request__goal {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
 }

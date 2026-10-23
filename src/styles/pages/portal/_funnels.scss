@@ -181,3 +181,31 @@
   border-radius: $radius-lg;
   background: $white;
 }
+
+// Builds the team is working on (Funnels and CRM pages), each linking to Build progress.
+.build-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.build-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+// "Request a CRM" › check your request: label over value.
+.crm-request-review {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+
+  dd {
+    margin: 0 0 10px;
+  }
+}
+
+.crm-request-review__goal {
+  white-space: pre-wrap;
+}

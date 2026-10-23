@@ -18,7 +18,7 @@ export type BillingKind = "invoice" | "paid" | "sub";
 /** How a recorded payment came in; saved at the start of the invoice's note. */
 const PAID_BY = ["Bank transfer", "Cash", "Check", "Card (in person)", "Other"];
 
-/** One-click lines for CRM and funnel work, which is invoiced personally rather than through Polar. */
+/** One-click lines for CRM and funnel work, each with its own Wise payment link. */
 const QUICK_GROUPS: { label: string; icon: IconName; lines: LineDraft[] }[] = [
   {
     label: "CRM",
@@ -226,10 +226,10 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
                 isInvoice
                   ? isWiseBuild(filled)
                     ? `Wise payment link for the ${filled[0].desc.trim()}`
-                    : "Polar checkout, from their Transactions"
+                    : "Payment details you send them (no Wise link for this amount)"
                   : isWiseHosting
                     ? "Wise payment link, on every invoice"
-                    : "Polar checkout, on every invoice"
+                    : "Payment details you send them (no Wise link for this amount)"
               }
             />
           </Field>

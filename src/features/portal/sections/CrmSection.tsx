@@ -1,21 +1,100 @@
 "use client";
 
-import { Badge, Icon, IconTile, buttonClass } from "@/components/ui";
-import { CRM_ADDONS, CRM_BOOKING_URL, CRM_FAQ, CRM_PACKAGES, CRM_STEPS, type CrmPackageKey } from "@/data/portal";
+import { useState } from "react";
+import { Badge, Button, Icon, IconTile, LoadState, SegmentedControl } from "@/components/ui";
+import { CRM_ADDONS, CRM_FAQ, CRM_PACKAGES, CRM_STEPS, type CrmPackageKey } from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
+import { formatShort } from "@/utils/format/dates";
+import { usePortalBuilds, usePortalCrmRequests } from "@/utils/hooks/useDelivery";
+import { BuildCards } from "../components/BuildCards";
+import { CrmRequestModal } from "../components/CrmRequestModal";
 import { usePortal } from "../state/PortalContext";
 
 const PACKAGE_KEYS = Object.keys(CRM_PACKAGES) as CrmPackageKey[];
 
-/**
- * CRM builds: the two packages and how it works. Requests start with a CRM discovery call booked on app.gocwgl.com; the team
- * invoices CRM builds personally (not through Polar), so nothing here creates a request or an invoice.
- */
+type CrmTab = "builds" | "packages";
+
+/** CRM page: the client's CRM builds in one tab, the packages to start a new one in the other. */
 export function CrmSection() {
-  const { readOnly } = usePortal();
+  const query = usePortalBuilds();
+  const builds = (query.data ?? []).filter((b) => b.kind === "crm");
+  // Requests not turned into a build yet (a started one shows as its build).
+  const requests = (usePortalCrmRequests().data ?? []).filter((r) => !r.projectId && r.status !== "declined");
+  const { update } = usePortal();
+  const [picked, setPicked] = useState<CrmTab | "">("");
+  // Open on their builds or requests when they have some, otherwise on the packages.
+  const tab: CrmTab = picked || (builds.length || requests.length ? "builds" : "packages");
 
   return (
     <div className="page-stack">
+      <SegmentedControl<CrmTab>
+        kind="tabs"
+        label="CRM"
+        value={tab}
+        onChange={setPicked}
+        options={[
+          { value: "builds", label: `Your CRM builds · ${builds.length}` },
+          { value: "packages", label: "Get a CRM" },
+        ]}
+      />
+      {tab === "builds" ? (
+        <LoadState
+          query={query}
+          loadingText="Loading your CRM builds…"
+          isEmpty={!builds.length && !requests.length}
+          empty="No CRM builds yet. See Get a CRM for the packages, and request one to start."
+        >
+          {requests.length > 0 && (
+            <section className="card stack stack--10">
+              <span className="kicker">YOUR REQUESTS · {requests.length}</span>
+              {requests.map((r) => (
+                <div className="stack stack--2" key={r.id}>
+                  <span className="text-strong">
+                    {r.name} · {CRM_PACKAGES[r.package as CrmPackageKey]?.label ?? r.package}
+                  </span>
+                  <span className="text-small">
+                    Requested {formatShort(r.createdAt)} ·{" "}
+                    {r.status === "contacted" ? "Discovery call booked" : "Your team will review it before your call"}
+                  </span>
+                </div>
+              ))}
+            </section>
+          )}
+          {builds.length > 0 && (
+            <>
+              <div className="section-head">
+                <div className="stack stack--2">
+                  <h2 className="section-title">CRMs we’re building</h2>
+                  <span className="text-muted">Every CRM your GoCWGL team is working on for you, with its progress</span>
+                </div>
+              </div>
+              <BuildCards builds={builds} icon="users" />
+            </>
+          )}
+        </LoadState>
+      ) : (
+        <CrmPackages
+          onRequested={() => {
+            // Back on their requests, where the new one now shows; the booking page is in its own tab.
+            setPicked("builds");
+            update({ toast: "Request sent to your GoCWGL team. Pick a time for your call in the new tab." });
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * CRM packages and how it works. "Request a CRM" saves what they want for the team, then sends them to book the
+ * CRM discovery call on app.gocwgl.com. The team invoices CRM builds with their Wise payment link.
+ */
+function CrmPackages({ onRequested }: { onRequested: () => void }) {
+  const { readOnly } = usePortal();
+  const [requesting, setRequesting] = useState(false);
+
+  return (
+    <>
       <section className="crm-hero">
         <IconTile size="xl" tone="purple">
           <Icon name="users" size={22} />
@@ -32,9 +111,26 @@ export function CrmSection() {
       <div className="section-head">
         <div className="stack stack--2">
           <h2 className="section-title">Choose your CRM</h2>
-          <span className="text-muted">One-time build price. Book a call to start: you approve the plan and quote before anything is billed.</span>
+          <span className="text-muted">
+            One-time build price. Request a CRM to start: you book a call, then approve the plan and quote before anything is billed.
+          </span>
         </div>
+        {!readOnly && (
+          <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => setRequesting(true)}>
+            <Icon name="plus" strokeWidth={2.4} />
+            Request a CRM
+          </Button>
+        )}
       </div>
+      {requesting && (
+        <CrmRequestModal
+          onClose={() => setRequesting(false)}
+          onRequested={() => {
+            setRequesting(false);
+            onRequested();
+          }}
+        />
+      )}
 
       <div className="crm-packages">
         {PACKAGE_KEYS.map((key) => {
@@ -63,16 +159,6 @@ export function CrmSection() {
               <span className="text-small crm-package__timeline">
                 <Icon name="clock" size={13} /> {p.timeline}
               </span>
-              {!readOnly && (
-                <a
-                  className={buttonClass({ variant: p.tag ? "primary" : "outline", size: "lg" })}
-                  href={`${CRM_BOOKING_URL}?package=${key}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Book a call for {p.label} ↗
-                </a>
-              )}
             </article>
           );
         })}
@@ -115,6 +201,6 @@ export function CrmSection() {
           </details>
         ))}
       </section>
-    </div>
+    </>
   );
 }

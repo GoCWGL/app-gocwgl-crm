@@ -1175,7 +1175,7 @@ export interface paths {
         put?: never;
         /**
          * Create Subscription
-         * @description Manual subscription (e.g. bank transfer). Card subscriptions are created by Polar checkout.
+         * @description Billed by invoice; clients pay each invoice through its Wise link and staff mark it paid.
          */
         post: operations["create_subscription_api_admin_subscriptions_post"];
         delete?: never;
@@ -1356,7 +1356,12 @@ export interface paths {
         /** List Projects */
         get: operations["list_projects_api_admin_projects_get"];
         put?: never;
-        post?: never;
+        /**
+         * Start Project
+         * @description Start a build for `contactId` from a checklist template (default the Foundation Build funnel).
+         *     A client can have several builds (e.g. two funnels and a CRM).
+         */
+        post: operations["start_project_api_admin_projects_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1372,7 +1377,7 @@ export interface paths {
         };
         /**
          * Project Templates
-         * @description The checklists a build can start from (funnel & system, Simple CRM, Custom CRM).
+         * @description The checklists a build can start from (Foundation Build, Full Bundle, VIP Repeat Funnel, Simple CRM, Custom CRM).
          */
         get: operations["project_templates_api_admin_projects_templates_get"];
         put?: never;
@@ -1383,7 +1388,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/projects/{contact_id}": {
+    "/api/admin/projects/{project_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1391,21 +1396,21 @@ export interface paths {
             cookie?: never;
         };
         /** Get Project */
-        get: operations["get_project_api_admin_projects__contact_id__get"];
+        get: operations["get_project_api_admin_projects__project_id__get"];
         put?: never;
+        post?: never;
         /**
-         * Start Project
-         * @description Start a build from a checklist template (`template`, default the funnel & system build).
+         * Delete Project
+         * @description Cancel a build (e.g. a refund). The client keeps their other builds and their files.
          */
-        post: operations["start_project_api_admin_projects__contact_id__post"];
-        delete?: never;
+        delete: operations["delete_project_api_admin_projects__project_id__delete"];
         options?: never;
         head?: never;
         /** Update Project */
-        patch: operations["update_project_api_admin_projects__contact_id__patch"];
+        patch: operations["update_project_api_admin_projects__project_id__patch"];
         trace?: never;
     };
-    "/api/admin/projects/{contact_id}/checklists": {
+    "/api/admin/projects/{project_id}/checklists": {
         parameters: {
             query?: never;
             header?: never;
@@ -1418,14 +1423,14 @@ export interface paths {
          * Add Checklist
          * @description Add a template's phases to a build that already exists (e.g. a CRM for a funnel client).
          */
-        post: operations["add_checklist_api_admin_projects__contact_id__checklists_post"];
+        post: operations["add_checklist_api_admin_projects__project_id__checklists_post"];
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/api/admin/projects/{contact_id}/phases": {
+    "/api/admin/projects/{project_id}/phases": {
         parameters: {
             query?: never;
             header?: never;
@@ -1434,7 +1439,7 @@ export interface paths {
         };
         get?: never;
         /** Replace Phases */
-        put: operations["replace_phases_api_admin_projects__contact_id__phases_put"];
+        put: operations["replace_phases_api_admin_projects__project_id__phases_put"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1442,7 +1447,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/admin/projects/{contact_id}/tasks/{task_id}": {
+    "/api/admin/projects/{project_id}/tasks/{task_id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1456,10 +1461,10 @@ export interface paths {
         options?: never;
         head?: never;
         /** Toggle Task */
-        patch: operations["toggle_task_api_admin_projects__contact_id__tasks__task_id__patch"];
+        patch: operations["toggle_task_api_admin_projects__project_id__tasks__task_id__patch"];
         trace?: never;
     };
-    "/api/admin/projects/{contact_id}/updates": {
+    "/api/admin/projects/{project_id}/updates": {
         parameters: {
             query?: never;
             header?: never;
@@ -1469,7 +1474,65 @@ export interface paths {
         get?: never;
         put?: never;
         /** Post Update */
-        post: operations["post_update_api_admin_projects__contact_id__updates_post"];
+        post: operations["post_update_api_admin_projects__project_id__updates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/crm-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Crm Requests
+         * @description Every client's "Request a CRM", newest first: the package, the CRM's name and its goal.
+         */
+        get: operations["list_crm_requests_api_admin_crm_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/crm-requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Crm Request */
+        delete: operations["delete_crm_request_api_admin_crm_requests__request_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Crm Request */
+        patch: operations["update_crm_request_api_admin_crm_requests__request_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/crm-requests/{request_id}/build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Crm Request Build
+         * @description Start the CRM build for a request: its package's checklist, named after the CRM they asked for.
+         */
+        post: operations["start_crm_request_build_api_admin_crm_requests__request_id__build_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1669,6 +1732,26 @@ export interface paths {
         head?: never;
         /** Update Funnel */
         patch: operations["update_funnel_api_admin_funnels__funnel_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/funnels/{funnel_id}/build": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Funnel Build
+         * @description Start the build for a funnel request (Build progress): its package's checklist, named after the funnel.
+         */
+        post: operations["start_funnel_build_api_admin_funnels__funnel_id__build_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/admin/clients/{contact_id}/todos": {
@@ -2345,6 +2428,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/activity/inbox": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Inbox
+         * @description The notification bell: clients' CRM and funnel requests, calls booked and support tickets, newest first.
+         */
+        get: operations["inbox_api_admin_activity_inbox_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/activity/inbox/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Inbox Seen
+         * @description Opening the bell: everything up to now counts as read for this person.
+         */
+        post: operations["inbox_seen_api_admin_activity_inbox_seen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/notifications": {
         parameters: {
             query?: never;
@@ -2539,7 +2662,8 @@ export interface paths {
         put?: never;
         /**
          * Request Funnel
-         * @description Prices come from the server's catalog; an invoice is sent for anything that is not a custom quote.
+         * @description Prices come from the server's catalog. `payment: "now"` returns `payUrl` (the package's Wise link) to send the
+         *     client to; `"invoice"` emails the invoice with that link.
          */
         post: operations["request_funnel_api_portal_funnels_requests_post"];
         delete?: never;
@@ -2691,17 +2815,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/portal/build": {
+    "/api/portal/builds": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** My Build */
-        get: operations["my_build_api_portal_build_get"];
+        /**
+         * My Builds
+         * @description The client's builds, oldest first (e.g. a funnel and a CRM).
+         */
+        get: operations["my_builds_api_portal_builds_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/crm-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Crm Requests */
+        get: operations["my_crm_requests_api_portal_crm_requests_get"];
+        put?: never;
+        /**
+         * Request Crm
+         * @description "Request a CRM": saved for the team before the client books their CRM discovery call.
+         */
+        post: operations["request_crm_api_portal_crm_requests_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2887,43 +3035,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/portal/billing/invoices/{invoice_id}/checkout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Pay Invoice
-         * @description Returns a Polar checkout URL; redirect the browser there.
-         */
-        post: operations["pay_invoice_api_portal_billing_invoices__invoice_id__checkout_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portal/billing/subscription/checkout": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Start Subscription */
-        post: operations["start_subscription_api_portal_billing_subscription_checkout_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/portal/billing/subscription/cancel": {
         parameters: {
             query?: never;
@@ -2938,26 +3049,6 @@ export interface paths {
          * @description The client cancels their invoice-billed plan (e.g. yearly hosting). No more renewal invoices are sent.
          */
         post: operations["cancel_my_subscription_api_portal_billing_subscription_cancel_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/portal/billing/customer-portal": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Customer Portal
-         * @description Polar's hosted page to update the card or download receipts.
-         */
-        post: operations["customer_portal_api_portal_billing_customer_portal_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3254,23 +3345,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/billing/webhooks/polar": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Polar Webhook */
-        post: operations["polar_webhook_api_billing_webhooks_polar_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/intake/bugs": {
         parameters: {
             query?: never;
@@ -3384,6 +3458,39 @@ export interface components {
              * @default true
              */
             notify?: boolean;
+        };
+        /** AdminCrmRequestOut */
+        AdminCrmRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Package */
+            package: string;
+            /** Name */
+            name: string;
+            /** Goal */
+            goal: string;
+            status: components["schemas"]["CrmRequestStatus"];
+            /** Projectid */
+            projectId: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Clientname */
+            clientName: string;
+            /** Company */
+            company: string;
+            /** Email */
+            email: string;
         };
         /** AdminFunnelCreate */
         AdminFunnelCreate: {
@@ -3864,12 +3971,7 @@ export interface components {
              * Template
              * @enum {string}
              */
-            template: "system" | "crm_simple" | "crm_custom";
-        };
-        /** CheckoutOut */
-        CheckoutOut: {
-            /** Url */
-            url: string;
+            template: "foundation" | "bundle" | "vip" | "crm_simple" | "crm_custom";
         };
         /** ClientActivityOut */
         ClientActivityOut: {
@@ -3893,8 +3995,6 @@ export interface components {
             subscription: components["schemas"]["SubscriptionOut"] | null;
             /** Invoices */
             invoices: components["schemas"]["InvoiceOut"][];
-            /** Canmanagecard */
-            canManageCard: boolean;
         };
         /** ClientMessageIn */
         ClientMessageIn: {
@@ -4171,6 +4271,58 @@ export interface components {
             /** Tagids */
             tagIds?: string[] | null;
         };
+        /**
+         * CrmRequestIn
+         * @description "Request a CRM" in the portal, sent before the client books their discovery call.
+         */
+        CrmRequestIn: {
+            /**
+             * Package
+             * @enum {string}
+             */
+            package: "simple" | "custom";
+            /** Name */
+            name: string;
+            /** Goal */
+            goal: string;
+        };
+        /** CrmRequestOut */
+        CrmRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Package */
+            package: string;
+            /** Name */
+            name: string;
+            /** Goal */
+            goal: string;
+            status: components["schemas"]["CrmRequestStatus"];
+            /** Projectid */
+            projectId: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /** CrmRequestPatch */
+        CrmRequestPatch: {
+            status: components["schemas"]["CrmRequestStatus"];
+        };
+        /**
+         * CrmRequestStatus
+         * @description A client's "Request a CRM" from the portal, before and after the discovery call.
+         * @enum {string}
+         */
+        CrmRequestStatus: "new" | "contacted" | "started" | "declined";
         /** CustomLink */
         CustomLink: {
             /** Label */
@@ -4601,6 +4753,10 @@ export interface components {
             request: {
                 [key: string]: unknown;
             } | null;
+            /** Payurl */
+            payUrl: string | null;
+            /** Projectid */
+            projectId: string | null;
         };
         /** FunnelRequestIn */
         FunnelRequestIn: {
@@ -4628,6 +4784,12 @@ export interface components {
             notes?: string;
             /** Package */
             package?: ("foundation" | "bundle" | "vip") | null;
+            /**
+             * Payment
+             * @default invoice
+             * @enum {string}
+             */
+            payment?: "now" | "invoice";
         };
         /**
          * FunnelStatus
@@ -4695,6 +4857,15 @@ export interface components {
          * @enum {string}
          */
         HealthState: "ok" | "warning" | "down";
+        /** InboxOut */
+        InboxOut: {
+            /** Items */
+            items: components["schemas"]["ActivityOut"][];
+            /** Unread */
+            unread: number;
+            /** Seenat */
+            seenAt: string | null;
+        };
         /** InboxRow */
         InboxRow: {
             /**
@@ -5466,6 +5637,11 @@ export interface components {
             /** Timezone */
             timezone?: string | null;
         };
+        /**
+         * ProjectKind
+         * @enum {string}
+         */
+        ProjectKind: "funnel" | "crm";
         /** ProjectOut */
         ProjectOut: {
             /**
@@ -5480,6 +5656,7 @@ export interface components {
             contactId: string;
             /** Package */
             package: string;
+            kind: components["schemas"]["ProjectKind"];
             /** Startdate */
             startDate: string | null;
             /** Duedate */
@@ -5497,20 +5674,29 @@ export interface components {
         ProjectPatch: {
             /** Package */
             package?: string | null;
+            kind?: components["schemas"]["ProjectKind"] | null;
             /** Startdate */
             startDate?: string | null;
             /** Duedate */
             dueDate?: string | null;
             status?: components["schemas"]["ProjectStatus"] | null;
         };
-        /** ProjectStart */
+        /**
+         * ProjectStart
+         * @description Starts a build for a client. A client can have several builds at once.
+         */
         ProjectStart: {
             /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /**
              * Template
-             * @default system
+             * @default foundation
              * @enum {string}
              */
-            template?: "system" | "crm_simple" | "crm_custom";
+            template?: "foundation" | "bundle" | "vip" | "crm_simple" | "crm_custom";
             /** Package */
             package?: string | null;
             /** Startdate */
@@ -5526,6 +5712,11 @@ export interface components {
         /** ProjectSummary */
         ProjectSummary: {
             /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
              * Contactid
              * Format: uuid
              */
@@ -5536,6 +5727,9 @@ export interface components {
             company: string;
             /** Package */
             package: string;
+            kind: components["schemas"]["ProjectKind"];
+            /** Startdate */
+            startDate: string | null;
             /** Duedate */
             dueDate: string | null;
             /** Status */
@@ -6199,8 +6393,6 @@ export interface components {
             status: string;
             /** Cancelatperiodend */
             cancelAtPeriodEnd: boolean;
-            /** Managedbypolar */
-            managedByPolar: boolean;
         };
         /**
          * SubscriptionStatus
@@ -10798,87 +10990,11 @@ export interface operations {
             };
         };
     };
-    project_templates_api_admin_projects_templates_get: {
+    start_project_api_admin_projects_post: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** Response Project Templates Api Admin Projects Templates Get */
-                        data: components["schemas"]["ProjectTemplateOut"][];
-                    };
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    get_project_api_admin_projects__contact_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                contact_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["ProjectOut"];
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    start_project_api_admin_projects__contact_id__post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                contact_id: string;
-            };
             cookie?: never;
         };
         requestBody: {
@@ -10918,12 +11034,124 @@ export interface operations {
             };
         };
     };
-    update_project_api_admin_projects__contact_id__patch: {
+    project_templates_api_admin_projects_templates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Project Templates Api Admin Projects Templates Get */
+                        data: components["schemas"]["ProjectTemplateOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_project_api_admin_projects__project_id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                contact_id: string;
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProjectOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_project_api_admin_projects__project_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_project_api_admin_projects__project_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
             };
             cookie?: never;
         };
@@ -10964,12 +11192,12 @@ export interface operations {
             };
         };
     };
-    add_checklist_api_admin_projects__contact_id__checklists_post: {
+    add_checklist_api_admin_projects__project_id__checklists_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                contact_id: string;
+                project_id: string;
             };
             cookie?: never;
         };
@@ -11010,12 +11238,12 @@ export interface operations {
             };
         };
     };
-    replace_phases_api_admin_projects__contact_id__phases_put: {
+    replace_phases_api_admin_projects__project_id__phases_put: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                contact_id: string;
+                project_id: string;
             };
             cookie?: never;
         };
@@ -11056,12 +11284,12 @@ export interface operations {
             };
         };
     };
-    toggle_task_api_admin_projects__contact_id__tasks__task_id__patch: {
+    toggle_task_api_admin_projects__project_id__tasks__task_id__patch: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                contact_id: string;
+                project_id: string;
                 task_id: string;
             };
             cookie?: never;
@@ -11103,12 +11331,12 @@ export interface operations {
             };
         };
     };
-    post_update_api_admin_projects__contact_id__updates_post: {
+    post_update_api_admin_projects__project_id__updates_post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                contact_id: string;
+                project_id: string;
             };
             cookie?: never;
         };
@@ -11117,6 +11345,164 @@ export interface operations {
                 "application/json": components["schemas"]["UpdateIn"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProjectOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_crm_requests_api_admin_crm_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Crm Requests Api Admin Crm Requests Get */
+                        data: components["schemas"]["AdminCrmRequestOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_crm_request_api_admin_crm_requests__request_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_crm_request_api_admin_crm_requests__request_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmRequestPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrmRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_crm_request_build_api_admin_crm_requests__request_id__build_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             201: {
@@ -11808,6 +12194,48 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["FunnelOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_funnel_build_api_admin_funnels__funnel_id__build_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                funnel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProjectOut"];
                     };
                 };
             };
@@ -14530,6 +14958,76 @@ export interface operations {
             };
         };
     };
+    inbox_api_admin_activity_inbox_get: {
+        parameters: {
+            query?: {
+                before?: string | null;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InboxOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    inbox_seen_api_admin_activity_inbox_seen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     sent_notifications_api_admin_notifications_get: {
         parameters: {
             query?: {
@@ -15383,7 +15881,7 @@ export interface operations {
             };
         };
     };
-    my_build_api_portal_build_get: {
+    my_builds_api_portal_builds_get: {
         parameters: {
             query?: never;
             header?: never;
@@ -15399,9 +15897,85 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        /** Response My Build Api Portal Build Get */
-                        data: components["schemas"]["ProjectOut"] | null;
+                        /** Response My Builds Api Portal Builds Get */
+                        data: components["schemas"]["ProjectOut"][];
                     };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_crm_requests_api_portal_crm_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Crm Requests Api Portal Crm Requests Get */
+                        data: components["schemas"]["CrmRequestOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    request_crm_api_portal_crm_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CrmRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Error */
@@ -16051,79 +16625,6 @@ export interface operations {
             };
         };
     };
-    pay_invoice_api_portal_billing_invoices__invoice_id__checkout_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                invoice_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["CheckoutOut"];
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    start_subscription_api_portal_billing_subscription_checkout_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["CheckoutOut"];
-                    };
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
     cancel_my_subscription_api_portal_billing_subscription_cancel_post: {
         parameters: {
             query?: never;
@@ -16141,37 +16642,6 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["SubscriptionOut"];
-                    };
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    customer_portal_api_portal_billing_customer_portal_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["CheckoutOut"];
                     };
                 };
             };
@@ -16974,40 +17444,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    polar_webhook_api_billing_webhooks_polar_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            202: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** Response Polar Webhook Api Billing Webhooks Polar Post */
-                        data: {
-                            [key: string]: unknown;
-                        };
-                    };
                 };
             };
             /** @description Error */

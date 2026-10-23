@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { Badge, Button, ErrorState, FormError, Loading, StatGrid, buttonClass } from "@/components/ui";
 import type { Tone } from "@/lib/tones";
 import { toCsvDataUrl } from "@/lib/utils";
 import type { InvoiceOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
-import { useCheckoutInvoice, useDownloadInvoicePdf, usePortalBilling } from "@/utils/hooks/useBilling";
+import { useDownloadInvoicePdf, usePortalBilling } from "@/utils/hooks/useBilling";
 import { SubscriptionCard } from "../components/SubscriptionCard";
 import { usePortal } from "../state/PortalContext";
 
@@ -15,60 +14,18 @@ const INVOICE_TONES: Record<string, Tone> = { Paid: "green", Sent: "amber", Over
 const isOpen = (status: string) => status === "Sent" || status === "Overdue";
 /** Client-facing status: a sent invoice is waiting on payment. */
 const STATUS_LABELS: Record<string, string> = { Sent: "Pending" };
-const CONFIRM_POLL_MS = 2_000;
-const CONFIRM_TIMEOUT_MS = 60_000;
 /** When the transaction happened: paid, else sent, else created. */
 const txDate = (iv: InvoiceOut) => iv.paidAt ?? iv.sentAt ?? iv.createdAt;
 const describe = (iv: InvoiceOut) => iv.items.map((it) => it.description).join(", ") || iv.note || "Invoice";
 
 /**
- * Transaction history. Clients pay by personal transfer (the team marks it paid) or a one-time
- * Polar checkout per invoice, so no card is ever saved here.
+ * Transaction history. Clients pay each invoice through its Wise payment link (or by bank transfer), and the team marks it
+ * paid once it arrives, so no card is ever saved here.
  */
 export function BillingSection() {
   const { notify, readOnly } = usePortal();
   const billing = usePortalBilling();
-  const payInvoice = useCheckoutInvoice();
   const pdf = useDownloadInvoicePdf();
-  const { refetch } = billing;
-  // Back from Polar: /portal?tab=billing&paid=<invoice number>. Polar's webhook marks the invoice
-  // paid, often a few seconds after the redirect, so keep checking until it shows Paid.
-  const [confirming, setConfirming] = useState(() =>
-    typeof window === "undefined" ? "" : (new URLSearchParams(window.location.search).get("paid") ?? ""),
-  );
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).has("paid")) window.history.replaceState(null, "", "/portal");
-  }, []);
-
-  // The portal store (and so notify) changes on every state update; don't restart the polling for that.
-  const notifyRef = useRef(notify);
-  useEffect(() => {
-    notifyRef.current = notify;
-  }, [notify]);
-
-  useEffect(() => {
-    if (!confirming) return;
-    const startedAt = Date.now();
-    let done = false;
-    const finish = (message: string) => {
-      done = true;
-      window.clearInterval(timer);
-      setConfirming("");
-      notifyRef.current(message);
-    };
-    const check = async () => {
-      const { data } = await refetch();
-      if (done) return;
-      if (data?.invoices.some((iv) => iv.number === confirming && iv.status === "Paid")) finish("Payment received. Thank you!");
-      else if (Date.now() - startedAt > CONFIRM_TIMEOUT_MS) finish("Your payment is still being confirmed. It will show as Paid here shortly.");
-    };
-    const timer = window.setInterval(check, CONFIRM_POLL_MS);
-    void check();
-    return () => {
-      done = true;
-      window.clearInterval(timer);
-    };
-  }, [confirming, refetch]);
 
   if (billing.isPending) return <Loading text="Loading transactions…" />;
   if (billing.isError) return <ErrorState error={billing.error} onRetry={billing.refetch} />;
@@ -94,15 +51,9 @@ export function BillingSection() {
         ]}
       />
       <p className="text-muted">
-        Pay a pending invoice online with Pay now, or by bank transfer. Your GoCWGL team marks transfers as paid once they arrive. No card is saved.
+        Pay a pending invoice through Wise with Pay now, or by bank transfer. Your GoCWGL team marks it as paid once it arrives. No card is saved.
       </p>
-      {confirming && (
-        <div className="inset inset--brand text-small" role="status">
-          Confirming your payment for {confirming} with Polar. This usually takes a few seconds…
-        </div>
-      )}
-      {/* 502 payments_not_configured comes back with a message for the user. */}
-      <FormError error={payInvoice.error ?? pdf.error} />
+      <FormError error={pdf.error} />
 
       <section className="card card--table">
         {transactions.length === 0 ? (
@@ -131,11 +82,7 @@ export function BillingSection() {
                   <td>{describe(iv)}</td>
                   <td className="data-table__mono">{formatCentsExact(iv.totalCents, iv.currency)}</td>
                   <td>
-                    {confirming === iv.number && isOpen(iv.status) ? (
-                      <Badge tone="cyan">Confirming…</Badge>
-                    ) : (
-                      <Badge tone={INVOICE_TONES[iv.status] ?? "neutral"}>{STATUS_LABELS[iv.status] ?? iv.status}</Badge>
-                    )}
+                    <Badge tone={INVOICE_TONES[iv.status] ?? "neutral"}>{STATUS_LABELS[iv.status] ?? iv.status}</Badge>
                     {isOpen(iv.status) && (
                       <span className="text-small tx-status-note">
                         Already paid? It can take up to 24 hours to verify your payment. Once it’s verified, this changes to Paid.
@@ -143,16 +90,14 @@ export function BillingSection() {
                     )}
                   </td>
                   <td className="data-table__actions">
+                    {/* Builds and the hosting plan are paid with their Wise link; for anything else, the team sends payment details. */}
                     {isOpen(iv.status) && !readOnly && (
                       iv.paymentUrl ? (
-                        // CRM and funnel builds are paid with their Wise link.
                         <a className={buttonClass({ variant: "primary", size: "sm" })} href={iv.paymentUrl} target="_blank" rel="noopener noreferrer">
-                          Pay now
+                          Pay now ↗
                         </a>
                       ) : (
-                        <Button variant="primary" size="sm" disabled={payInvoice.isPending} onClick={() => payInvoice.mutate(iv.id)}>
-                          {payInvoice.isPending && payInvoice.variables === iv.id ? "Opening checkout…" : "Pay now"}
-                        </Button>
+                        <span className="text-small">Your team will send payment details</span>
                       )
                     )}
                     <Button

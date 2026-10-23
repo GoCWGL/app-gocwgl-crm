@@ -28,9 +28,11 @@ export type PortalState = {
   editFunnelId: string;
   /** Funnel shown in the embed code dialog ("" = closed). */
   embedFunnelId: string;
+  /** Build shown on Build progress ("" = the first one). */
+  buildId: string;
 };
 
-/** Payment return from Polar: /portal?tab=billing&paid=… */
+/** Deep links, e.g. /portal?tab=billing from an invoice email. */
 function initialState(params: URLSearchParams | null): PortalState {
   const tab = params?.get("tab") ?? "";
   return {
@@ -42,6 +44,7 @@ function initialState(params: URLSearchParams | null): PortalState {
     funnelRequestOpen: false,
     editFunnelId: "",
     embedFunnelId: "",
+    buildId: "",
   };
 }
 

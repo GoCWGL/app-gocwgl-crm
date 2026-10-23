@@ -1,5 +1,6 @@
 import { del, get, patch, post, put } from "./client";
 import type {
+  ProjectOut,
   AdminFunnelCreate,
   AdminFunnelUpdate,
   FunnelCatalogOut,
@@ -71,3 +72,5 @@ export const createAdminFunnel = (body: AdminFunnelCreate) => post<FunnelOut>("/
 /** `quoteCents` on a custom request sends the client an invoice. */
 export const updateAdminFunnel = (id: string, body: AdminFunnelUpdate) => patch<FunnelOut>(`/admin/funnels/${id}`, body);
 export const deleteAdminFunnel = (id: string) => del(`/admin/funnels/${id}`);
+/** Starts the build for a funnel request: its package's checklist, named after the funnel. */
+export const startFunnelBuild = (id: string) => post<ProjectOut>(`/admin/funnels/${id}/build`);

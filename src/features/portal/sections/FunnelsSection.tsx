@@ -7,9 +7,9 @@ import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { FunnelOut } from "@/utils/api/models";
 import { formatCents } from "@/utils/format/money";
-import { useCheckoutInvoice } from "@/utils/hooks/useBilling";
-import { useEmbeds } from "@/utils/hooks/useDelivery";
+import { useEmbeds, usePortalBuilds } from "@/utils/hooks/useDelivery";
 import { useCancelFunnelRequest, usePortalFunnels } from "@/utils/hooks/usePortal";
+import { BuildCards } from "../components/BuildCards";
 import { missingRequestDetails } from "../components/FunnelRequestDrawer";
 import { usePortal } from "../state/PortalContext";
 
@@ -29,9 +29,14 @@ export function FunnelsSection() {
   const query = usePortalFunnels();
   const funnels = query.data ?? [];
   const live = funnels.filter((f) => f.status === "live");
+  // Funnel builds from Build progress (a client can have several). Requests still waiting on a quote or payment aren't builds yet.
+  const buildsQuery = usePortalBuilds();
+  const builds = (buildsQuery.data ?? []).filter((b) => b.kind === "funnel");
+  const building = builds.filter((b) => b.status !== "Launched");
+  const requests = funnels.filter((f) => f.status === "quote" || f.status === "pay");
+  // A request whose build has started shows as that build above, not twice.
+  const listed = funnels.filter((f) => !(f.projectId && f.status === "build"));
   const embeds = useEmbeds().data ?? [];
-  // Paying goes to Polar's checkout; the funnel moves to "queued" once Polar confirms the payment.
-  const checkout = useCheckoutInvoice();
   // Cancelling asks for a second click, like removing an embed code.
   const cancel = useCancelFunnelRequest();
   const [confirmCancelId, setConfirmCancelId] = useState("");
@@ -45,16 +50,40 @@ export function FunnelsSection() {
       <StatGrid
         items={[
           { label: "Live funnels", value: live.length, tone: "green" },
-          { label: "Visits (30 days)", value: live.reduce((n, f) => n + (f.visits ?? 0), 0), tone: "cyan" },
-          { label: "Leads (30 days)", value: live.reduce((n, f) => n + (stepsOf(f)[1]?.[1] ?? 0), 0), tone: "purple" },
-          { label: "In the works", value: funnels.length - live.length, tone: "brand" },
+          {
+            label: "Visits (30 days)",
+            value: live.reduce((n, f) => n + (f.visits ?? 0), 0),
+            tone: "cyan",
+          },
+          {
+            label: "Leads (30 days)",
+            value: live.reduce((n, f) => n + (stepsOf(f)[1]?.[1] ?? 0), 0),
+            tone: "purple",
+          },
+          {
+            label: "In the works",
+            value: building.length + requests.length,
+            tone: "brand",
+          },
         ]}
       />
+
+      {builds.length > 0 && (
+        <>
+          <div className="section-head">
+            <div className="stack stack--2">
+              <h2 className="section-title">Funnels we’re building</h2>
+              <span className="text-muted">Every funnel your GoCWGL team is working on for you, with its progress</span>
+            </div>
+          </div>
+          <BuildCards builds={builds} icon="funnel" />
+        </>
+      )}
 
       <div className="section-head">
         <div className="stack stack--2">
           <h2 className="section-title">Your funnels</h2>
-          <span className="text-muted">Every funnel your GoCWGL team built for you, with last 30 days results</span>
+          <span className="text-muted">Your live funnels with last 30 days results, and the funnels you’ve requested</span>
         </div>
         {!readOnly && (
           <Button variant="primary" size="lg" onClick={() => update({ funnelRequestOpen: true, editFunnelId: "" })}>
@@ -63,26 +92,33 @@ export function FunnelsSection() {
           </Button>
         )}
       </div>
-      <FormError error={checkout.error} />
       <FormError error={cancel.error} />
 
-      <LoadState query={query} isEmpty={!funnels.length} empty="No funnels yet. Request your first one and your GoCWGL team will build it.">
-        {funnels.map((f) => (
+      <LoadState
+        query={query}
+        isEmpty={!listed.length}
+        empty={builds.length ? "No live funnels or open requests yet." : "No funnels yet. Request your first one and your GoCWGL team will build it."}
+      >
+        {listed.map((f) => (
           <FunnelCard
             key={f.id}
             funnel={f}
             readOnly={readOnly}
-            paying={checkout.isPending && checkout.variables === f.invoiceId}
             cancelling={cancel.isPending && cancel.variables === f.id}
             confirmingCancel={confirmCancelId === f.id}
             embedCount={embeds.filter((e) => e.funnelId === f.id).length}
             embedIssues={embeds.filter((e) => e.funnelId === f.id && e.hasIssue).length}
             onBuild={() => goTo("build")}
-            onPay={() => f.invoiceId && checkout.mutate(f.invoiceId)}
             onEdit={() => update({ funnelRequestOpen: true, editFunnelId: f.id })}
             onCancel={() => cancelRequest(f.id)}
             onEmbed={() => update({ embedFunnelId: f.id })}
-            onChange={() => openSupport({ type: "change", title: `Change to “${f.name}”`, details: "" })}
+            onChange={() =>
+              openSupport({
+                type: "change",
+                title: `Change to “${f.name}”`,
+                details: "",
+              })
+            }
           />
         ))}
       </LoadState>
@@ -93,13 +129,11 @@ export function FunnelsSection() {
 type FunnelCardProps = {
   funnel: FunnelOut;
   readOnly: boolean;
-  paying: boolean;
   cancelling: boolean;
   confirmingCancel: boolean;
   embedCount: number;
   embedIssues: number;
   onBuild: () => void;
-  onPay: () => void;
   onEdit: () => void;
   onCancel: () => void;
   onEmbed: () => void;
@@ -109,13 +143,11 @@ type FunnelCardProps = {
 function FunnelCard({
   funnel: f,
   readOnly,
-  paying,
   cancelling,
   confirmingCancel,
   embedCount,
   embedIssues,
   onBuild,
-  onPay,
   onEdit,
   onCancel,
   onEmbed,
@@ -135,7 +167,10 @@ function FunnelCard({
     ? [
         { label: "Visits", value: String(f.visits ?? 0) },
         { label: "Leads", value: String(leads) },
-        { label: "Conversion", value: Math.round((leads / base) * 1000) / 10 + "%" },
+        {
+          label: "Conversion",
+          value: Math.round((leads / base) * 1000) / 10 + "%",
+        },
         { label: "Revenue", value: formatCents(f.revenueCents ?? 0) },
       ]
     : [];
@@ -217,7 +252,8 @@ function FunnelCard({
         <div className="inset funnel-card__missing funnel-card__missing--issue">
           <span className="text-small">
             <strong>
-              {embedIssues} embed code{embedIssues === 1 ? "" : "s"} need{embedIssues === 1 ? "s" : ""} a fix.
+              {embedIssues} embed code{embedIssues === 1 ? "" : "s"} need
+              {embedIssues === 1 ? "s" : ""} a fix.
             </strong>{" "}
             Your team left a comment on what to change.
           </span>
@@ -254,14 +290,20 @@ function FunnelCard({
             See build progress
           </Button>
         )}
-        {f.status === "pay" && f.invoiceId && !readOnly && (
-          <Button variant="primary" size="sm" onClick={onPay} disabled={paying}>
-            {paying ? "Opening checkout…" : `Pay ${formatCents(f.priceCents)} to start`}
-          </Button>
-        )}
+        {/* Paid through the package's Wise link; your team marks the invoice paid and the funnel moves to the build queue. */}
+        {f.status === "pay" &&
+          !readOnly &&
+          (f.payUrl ? (
+            <a className={buttonClass({ variant: "primary", size: "sm" })} href={f.payUrl} target="_blank" rel="noopener noreferrer">
+              Pay {formatCents(f.priceCents)} with Wise ↗
+            </a>
+          ) : (
+            <span className="text-small">Your GoCWGL team will send you a payment link for this quote.</span>
+          ))}
         <Button variant="outline" size="sm" onClick={onEmbed}>
           <Icon name="code" size={14} />
-          Embed codes{embedCount > 0 && <span className="u-mono"> · {embedCount}</span>}
+          Embed codes
+          {embedCount > 0 && <span className="u-mono"> · {embedCount}</span>}
         </Button>
         {!isLive && !readOnly && (
           <Button variant="outline" size="sm" onClick={onEdit}>

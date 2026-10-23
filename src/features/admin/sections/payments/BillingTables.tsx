@@ -106,8 +106,6 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
               {subscriptions.map((sub) => {
                 const c = contactOf(sub.contactId);
                 const canPause = ["Active", "Paused", "Trial"].includes(sub.status);
-                // Polar-managed subscriptions are changed in Polar; the API keeps their fields read-only.
-                const editable = canWrite && !sub.managedByPolar;
                 return (
                   <tr key={sub.id}>
                     <td>
@@ -118,7 +116,6 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                     </td>
                     <td>
                       {sub.plan} · per {sub.interval.toLowerCase()}
-                      {sub.managedByPolar && <span className="text-small"> · via Polar</span>}
                     </td>
                     <td className="data-table__mono">{formatCents(sub.amountCents, sub.currency)}</td>
                     <td>{sub.status === "Paused" || sub.status === "Canceled" || !sub.nextBillingDate ? "—" : formatLong(sub.nextBillingDate)}</td>
@@ -129,7 +126,7 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                       </Badge>
                     </td>
                     <td className="data-table__actions">
-                      {editable && sub.status === "Awaiting payment" && (
+                      {canWrite && sub.status === "Awaiting payment" && (
                         <button
                           type="button"
                           className="row-action row-action--green"
@@ -144,7 +141,7 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                           Mark paid
                         </button>
                       )}
-                      {editable && canPause && (
+                      {canWrite && canPause && (
                         <button
                           type="button"
                           className="row-action"
@@ -159,7 +156,7 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                           {sub.status === "Paused" ? "Resume" : "Pause"}
                         </button>
                       )}
-                      {editable && sub.status !== "Canceled" && (
+                      {canWrite && sub.status !== "Canceled" && (
                         <button
                           type="button"
                           className="row-action row-action--danger"
@@ -174,7 +171,7 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                           {cancelSub.isPending && cancelSub.variables === sub.id ? "Cancelling…" : "Cancel"}
                         </button>
                       )}
-                      {editable && sub.status === "Canceled" && (
+                      {canWrite && sub.status === "Canceled" && (
                         <button
                           type="button"
                           className="row-action row-action--danger"

@@ -12,6 +12,10 @@ export const useDashboard = (range: api.DashboardRange = 30) =>
 export const useActivity = (opts: { contact_id?: string; limit?: number } = {}) =>
   useQuery({ queryKey: [...qk.activity, opts], queryFn: () => api.listActivity(opts) });
 
+/** Checks for new requests every minute, and whenever the tab comes back into focus. */
+export const useInbox = () => useQuery({ queryKey: qk.activityInbox, queryFn: () => api.getInbox({ limit: 30 }), refetchInterval: 60_000 });
+export const useMarkInboxSeen = () => useApiMutation(api.markInboxSeen, { invalidate: [qk.activityInbox] });
+
 // ------------------------------------------------------------------ Owner / admin tools
 export const useAuditLog = (filters: Parameters<typeof tools.listAuditLog>[0] = {}) =>
   useQuery({ queryKey: [...qk.auditLog, filters], queryFn: () => tools.listAuditLog(filters) });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button, Field, Icon, Input, Textarea } from "@/components/ui";
 import type { PublicBookingOut, PublicCalendarOut } from "@/utils/api/models";
@@ -26,7 +27,9 @@ const part = (iso: string, timeZone: string, opts: Intl.DateTimeFormatOptions) =
  */
 export function BookingDetailsForm({ slug, info, picked, onBack, onBooked, onTaken }: Props) {
   const book = useBookPublic(slug);
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", company: "", notes: "", website: "" });
+  // "Request a CRM" in the client portal links here with what they asked for as the note (?notes=…).
+  const prefill = (useSearchParams().get("notes") ?? "").slice(0, 2000);
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", phone: "", company: "", notes: prefill, website: "" });
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
   const errors = fieldErrors(book.error);
   const end = new Date(new Date(picked.slot).getTime() + info.durationMin * 60_000).toISOString();

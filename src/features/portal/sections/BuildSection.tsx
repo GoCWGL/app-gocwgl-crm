@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Badge, Button, Field, FormError, LoadState, ProgressBar, TaskRow, Textarea, Timeline, TimelineItem } from "@/components/ui";
+import { Badge, Button, Field, FormError, LoadState, ProgressBar, SegmentedControl, TaskRow, Textarea, Timeline, TimelineItem } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { formatShort } from "@/utils/format/dates";
-import { usePortalBuild } from "@/utils/hooks/useDelivery";
+import { usePortalBuilds } from "@/utils/hooks/useDelivery";
 import { useCompleteTodo, usePortalTodos } from "@/utils/hooks/usePortal";
 import { useSendPortalMessage } from "@/utils/hooks/useSupport";
 import { getBuildProgress } from "../lib/selectors";
@@ -14,15 +14,17 @@ const PHASE_TONES = { Done: "green", "In progress": "brand", "Up next": "neutral
 const STATUS_CLASS: Record<string, string> = { "On track": "u-green", "At risk": "u-pink", "Waiting on client": "u-amber", Launched: "u-green" };
 
 export function BuildSection() {
-  const { update, readOnly } = usePortal();
-  const buildQuery = usePortalBuild();
+  const { state, update, readOnly } = usePortal();
+  const buildQuery = usePortalBuilds();
   const todosQuery = usePortalTodos();
   const complete = useCompleteTodo();
   const sendMessage = useSendPortalMessage();
   const [message, setMessage] = useState("");
   const todos = todosQuery.data ?? [];
   const openCount = todos.filter((t) => !t.done).length;
-  const project = buildQuery.data;
+  // A client can have several builds (e.g. a funnel and a CRM): show one at a time.
+  const builds = buildQuery.data ?? [];
+  const project = builds.find((b) => b.id === state.buildId) ?? builds[0];
   const build = project ? getBuildProgress(project) : null;
 
   // Feedback goes to the team as a portal message.
@@ -48,9 +50,20 @@ export function BuildSection() {
             </div>
           ) : (
             <>
+              {builds.length > 1 && (
+                <SegmentedControl
+                  variant="soft"
+                  size="sm"
+                  label="Your builds"
+                  value={project.id}
+                  onChange={(buildId) => update({ buildId })}
+                  options={builds.map((b) => ({ value: b.id, label: `${b.package} · ${b.progress}%` }))}
+                />
+              )}
               <section className="build-hero">
                 <div className="stack stack--2">
-                  <span className="kicker">{project.package.toUpperCase()}</span>
+                  <span className="kicker">YOUR BUILD</span>
+                  <h2 className="project-title">{project.package}</h2>
                   <span className="text-muted">
                     Started {formatShort(project.startDate)}
                     {project.dueDate && ` · Target launch ${formatShort(project.dueDate)}`} · Status:{" "}

@@ -1,0 +1,114 @@
+@use "../abstracts" as *;
+
+// Admin header notification bell and its dropdown of client requests.
+.bell {
+  position: relative;
+
+  &__button {
+    position: relative;
+  }
+
+  &__count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: $radius-pill;
+    background: $orange;
+    color: $on-orange;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 18px;
+    text-align: center;
+  }
+
+  &__panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: $z-overlay;
+    display: flex;
+    flex-direction: column;
+    width: min(400px, calc(100vw - 32px));
+    max-height: min(560px, 80vh);
+    border: 1px solid $line;
+    border-radius: $radius-lg;
+    background: $white;
+    box-shadow: $shadow-modal;
+    overflow: hidden;
+  }
+
+  &__head,
+  &__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 12px;
+    padding: 12px 14px;
+  }
+
+  &__head {
+    justify-content: space-between;
+    border-bottom: 1px solid $line-soft;
+  }
+
+  &__foot {
+    border-top: 1px solid $line-soft;
+  }
+
+  &__list {
+    flex: 1 1 auto;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    overflow-y: auto;
+  }
+
+  &__item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    width: 100%;
+    padding: 10px;
+    border: 0;
+    border-radius: $radius-md;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: $bg-soft;
+    }
+
+    &--new {
+      background: rgba(255, 153, 0, 0.08);
+    }
+  }
+
+  &__icon {
+    @include center;
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: $radius-sm;
+    background: $bg-tint;
+    color: $ink-soft;
+  }
+
+  &__dot {
+    @include dot(8px, $orange);
+    flex: 0 0 auto;
+    margin-top: 6px;
+  }
+
+  &__empty {
+    padding: 16px 14px;
+  }
+
+  &__more {
+    margin: 4px 14px 8px;
+  }
+}

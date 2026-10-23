@@ -116,7 +116,7 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
         tagIds: d.tags,
       });
       const wasPaused = sub?.status === "Paused";
-      if (sub && !sub.managedByPolar && d.paused !== wasPaused) {
+      if (sub && d.paused !== wasPaused) {
         await billingApi.updateSubscription(sub.id, { status: d.paused ? "Paused" : "Active" });
       }
       for (const p of pipelines) {
@@ -404,7 +404,6 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
         <div className="inset inset--soft text-body">
           Subscription: {sub.plan} · {formatPerInterval(sub.amountCents, sub.interval, sub.currency)} ·{" "}
           {draft.paused && sub.status !== "Paused" ? "will be paused" : !draft.paused && sub.status === "Paused" ? "will be resumed" : sub.status}
-          {sub.managedByPolar && " · managed by Polar (change it from Transactions)"}
         </div>
       )}
       {error && (

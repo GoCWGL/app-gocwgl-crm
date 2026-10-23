@@ -10,6 +10,7 @@ import { useSettings } from "@/utils/hooks/useSettings";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useSectionChangeSweep } from "@/utils/navigation";
 import { AdminSidebar } from "./components/AdminSidebar";
+import { NotificationBell } from "./components/NotificationBell";
 import { AddClientModal } from "./modals/AddClientModal";
 import { EditContactDrawer } from "./modals/EditContactDrawer";
 import { ViewAsClient } from "./modals/ViewAsClient";
@@ -24,6 +25,7 @@ import { FormsSection } from "./sections/forms/FormsSection";
 import { MediaSection } from "./sections/media/MediaSection";
 import { PaymentsSection } from "./sections/payments/PaymentsSection";
 import { PipelineSection } from "./sections/pipeline/PipelineSection";
+import { NewBuildModal } from "./sections/progress/NewBuildModal";
 import { ProgressSection } from "./sections/progress/ProgressSection";
 import { ReportingSection } from "./sections/reporting/ReportingSection";
 import { SettingsSection } from "./sections/settings/SettingsSection";
@@ -81,6 +83,7 @@ function AdminLayout() {
       overlays={
         <>
           <AddClientModal />
+          <NewBuildModal />
           <EditContactDrawer />
           <ViewAsClient />
           <Toast floating message={state.toast} onClose={() => update({ toast: "" })} />
@@ -92,11 +95,24 @@ function AdminLayout() {
         title={page.title}
         subtitle={page.subtitle}
         actions={
-          canWrite && (
-            <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => update({ addClientOpen: true })}>
-              + Add client
-            </Button>
-          )
+          <>
+            <NotificationBell />
+            {canWrite && (
+              <>
+                {tab === "progress" && (
+                  <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => update({ newBuildOpen: true })}>
+                    + New build
+                  </Button>
+                )}
+                {/* Only under Contacts (every contact view, and Tags). */}
+                {(tab === "clients" || tab === "tags") && (
+                  <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => update({ addClientOpen: true })}>
+                    + Add client
+                  </Button>
+                )}
+              </>
+            )}
+          </>
         }
       />
       {/* Keyed by view so filters reset when switching Contacts / Clients / Inactive, and the entrance replays. */}
