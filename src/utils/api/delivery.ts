@@ -56,6 +56,8 @@ export const postProjectUpdate = (projectId: string, text: string) =>
 export const listCrmRequests = () => get<AdminCrmRequestOut[]>("/admin/crm-requests");
 export const updateCrmRequest = (id: string, status: CrmRequestStatus) => patch<CrmRequestOut>(`/admin/crm-requests/${id}`, { status });
 export const deleteCrmRequest = (id: string) => del(`/admin/crm-requests/${id}`);
+/** Emails the invoice for the CRM package they chose (with its Wise link); again = re-send the open one. */
+export const sendCrmRequestInvoice = (id: string) => post<AdminCrmRequestOut>(`/admin/crm-requests/${id}/invoice`);
 /** Starts the CRM build from the request: its package's checklist, named after the CRM they asked for. */
 export const startCrmRequestBuild = (id: string) => post<ProjectOut>(`/admin/crm-requests/${id}/build`);
 

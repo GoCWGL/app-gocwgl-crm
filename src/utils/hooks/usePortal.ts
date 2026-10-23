@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { markInvoicePaid } from "@/utils/api/billing";
+import { markInvoicePaid, sendInvoice } from "@/utils/api/billing";
 import * as api from "@/utils/api/portal";
 import type {
   AdminFunnelCreate,
@@ -108,6 +108,8 @@ export const useUpdateAdminFunnel = () =>
 export const useDeleteAdminFunnel = () => useApiMutation(api.deleteAdminFunnel, { invalidate: [qk.adminFunnels] });
 export const useStartFunnelBuild = () =>
   useApiMutation(api.startFunnelBuild, { invalidate: [qk.adminFunnels, qk.projects, ["dashboard"]] });
+/** Emails (or re-emails) a funnel request's invoice, with its package's Wise link. */
+export const useSendFunnelInvoice = () => useApiMutation(sendInvoice, { invalidate: [qk.adminFunnels, qk.invoices, qk.portalBilling] });
 /** Wise payments arrive outside the app: marking the invoice paid moves the funnel into the build queue. */
 export const useMarkFunnelPaid = () =>
   useApiMutation(markInvoicePaid, { invalidate: [qk.adminFunnels, qk.invoices, qk.portalBilling, ["dashboard"]] });

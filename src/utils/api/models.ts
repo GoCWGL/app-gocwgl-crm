@@ -47,6 +47,7 @@ export type ContactOut = S["ContactOut"];
 export type ContactSubmissionOut = S["ContactSubmissionOut"];
 export type ContactUpdate = S["ContactUpdate"];
 export type CrmRequestIn = S["CrmRequestIn"];
+export type CrmRequestInvoiceOut = S["CrmRequestInvoiceOut"];
 export type CrmRequestOut = S["CrmRequestOut"];
 export type CrmRequestPatch = S["CrmRequestPatch"];
 export type CrmRequestStatus = S["CrmRequestStatus"];

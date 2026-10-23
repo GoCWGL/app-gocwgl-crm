@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { markInvoicePaid } from "@/utils/api/billing";
 import * as api from "@/utils/api/delivery";
 import type { BrandKitIn, CrmRequestIn, CrmRequestStatus, ProjectSummary, EmbedIn, EmbedPatch, FileCategory, FilePatch, LinksIn, PhaseIn, ProjectPatch, ProjectStart, ChecklistAdd } from "@/utils/api/models";
 import { qk } from "./keys";
@@ -52,6 +53,11 @@ export const useCrmRequests = () => useQuery({ queryKey: qk.crmRequests, queryFn
 export const useUpdateCrmRequest = () =>
   useApiMutation((v: { id: string; status: CrmRequestStatus }) => api.updateCrmRequest(v.id, v.status), { invalidate: [qk.crmRequests] });
 export const useDeleteCrmRequest = () => useApiMutation(api.deleteCrmRequest, { invalidate: [qk.crmRequests] });
+export const useSendCrmRequestInvoice = () =>
+  useApiMutation(api.sendCrmRequestInvoice, { invalidate: [qk.crmRequests, qk.invoices, ["dashboard"]] });
+/** Their Wise payment arrived: mark the CRM request's invoice paid. */
+export const useMarkCrmRequestPaid = () =>
+  useApiMutation(markInvoicePaid, { invalidate: [qk.crmRequests, qk.invoices, qk.portalBilling, ["dashboard"]] });
 export const useStartCrmRequestBuild = () =>
   useApiMutation(api.startCrmRequestBuild, { invalidate: [qk.crmRequests, qk.projects, ["dashboard"]] });
 

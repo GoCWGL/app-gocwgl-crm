@@ -7,8 +7,16 @@ import { avatarTone, type Tone } from "@/lib/tones";
 import type { AdminCrmRequestOut, CrmRequestStatus } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { formatCents } from "@/utils/format/money";
-import { useCrmRequests, useDeleteCrmRequest, useStartCrmRequestBuild, useUpdateCrmRequest } from "@/utils/hooks/useDelivery";
+import {
+  useCrmRequests,
+  useDeleteCrmRequest,
+  useMarkCrmRequestPaid,
+  useSendCrmRequestInvoice,
+  useStartCrmRequestBuild,
+  useUpdateCrmRequest,
+} from "@/utils/hooks/useDelivery";
 import { useAdmin } from "../../state/AdminContext";
+import { RequestInvoiceRow } from "./RequestInvoiceRow";
 
 const STATUSES: Array<{ value: CrmRequestStatus; label: string; tone: Tone }> = [
   { value: "new", label: "New", tone: "brand" },
@@ -25,6 +33,8 @@ export function CrmRequestsPanel({ canWrite }: { canWrite: boolean }) {
   const updateRequest = useUpdateCrmRequest();
   const start = useStartCrmRequestBuild();
   const remove = useDeleteCrmRequest();
+  const invoice = useSendCrmRequestInvoice();
+  const markPaid = useMarkCrmRequestPaid();
   const requests = query.data ?? [];
 
   return (
@@ -33,14 +43,21 @@ export function CrmRequestsPanel({ canWrite }: { canWrite: boolean }) {
       isEmpty={!requests.length}
       empty="No CRM requests yet. When a client uses “Request a CRM” in their portal, it shows up here."
     >
-      <FormError error={updateRequest.error ?? start.error ?? remove.error} />
+      <FormError error={updateRequest.error ?? start.error ?? remove.error ?? invoice.error ?? markPaid.error} />
       <div className="stack stack--10">
         {requests.map((r) => (
           <RequestCard
             key={r.id}
             request={r}
             canWrite={canWrite}
-            busy={updateRequest.isPending || start.isPending || remove.isPending}
+            busy={updateRequest.isPending || start.isPending || remove.isPending || invoice.isPending || markPaid.isPending}
+            sending={invoice.isPending && invoice.variables === r.id}
+            onMarkPaid={() => r.invoice && markPaid.mutate(r.invoice.id, { onSuccess: () => update({ toast: `${r.invoice?.number} marked paid.` }) })}
+            onSendInvoice={() =>
+              invoice.mutate(r.id, {
+                onSuccess: (row) => update({ toast: `Invoice ${row.invoice?.number ?? ""} sent to ${row.email || row.clientName}.` }),
+              })
+            }
             onStatus={(status) => updateRequest.mutate({ id: r.id, status })}
             onStart={() =>
               start.mutate(r.id, {
@@ -60,6 +77,9 @@ function RequestCard({
   request: r,
   canWrite,
   busy,
+  sending,
+  onSendInvoice,
+  onMarkPaid,
   onStatus,
   onStart,
   onDelete,
@@ -67,6 +87,9 @@ function RequestCard({
   request: AdminCrmRequestOut;
   canWrite: boolean;
   busy: boolean;
+  sending: boolean;
+  onSendInvoice: () => void;
+  onMarkPaid: () => void;
   onStatus: (status: CrmRequestStatus) => void;
   onStart: () => void;
   onDelete: () => void;
@@ -103,6 +126,18 @@ function RequestCard({
         <p className="text-body u-ink crm-request__goal">{r.goal}</p>
       </div>
 
+      {/* Whether you've invoiced them yet, for the package they chose. */}
+      <RequestInvoiceRow
+        invoice={r.invoice ?? null}
+        email={r.email}
+        newInvoiceLabel={pkg ? `${formatCents(pkg.priceCents)} ${pkg.label}` : undefined}
+        canWrite={canWrite}
+        busy={busy}
+        sending={sending}
+        onSend={onSendInvoice}
+        onMarkPaid={onMarkPaid}
+      />
+
       {canWrite && (
         <div className="cluster cluster--8">
           {r.projectId ? (
@@ -116,6 +151,7 @@ function RequestCard({
           )}
           <Select
             size="sm"
+            className="crm-request__status"
             aria-label={`Status of ${r.name}`}
             value={r.status}
             disabled={busy}

@@ -106,3 +106,13 @@
   margin: 4px 0 0;
   white-space: pre-wrap;
 }
+
+.crm-request__invoice {
+  padding-top: 2px;
+}
+
+// The status picker sits in the action row at its own width, not stretched across the card.
+.crm-request__status {
+  flex: 0 0 auto;
+  width: auto;
+}

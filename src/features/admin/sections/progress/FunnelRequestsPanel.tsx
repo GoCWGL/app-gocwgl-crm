@@ -2,12 +2,14 @@
 
 import { Avatar, Badge, Button, FormError, LoadState } from "@/components/ui";
 import { avatarTone, type Tone } from "@/lib/tones";
-import type { ContactOut, FunnelOut } from "@/utils/api/models";
+import type { ContactOut, FunnelOut, InvoiceOut } from "@/utils/api/models";
 import { formatCents } from "@/utils/format/money";
+import { useInvoices } from "@/utils/hooks/useBilling";
 import { useAllContacts } from "@/utils/hooks/useContacts";
-import { useAdminFunnels, useMarkFunnelPaid, useStartFunnelBuild } from "@/utils/hooks/usePortal";
+import { useAdminFunnels, useMarkFunnelPaid, useSendFunnelInvoice, useStartFunnelBuild } from "@/utils/hooks/usePortal";
 import { contactName } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
+import { RequestInvoiceRow } from "./RequestInvoiceRow";
 
 const PACKAGE_LABELS: Record<string, string> = { foundation: "Foundation Build", bundle: "Full Bundle", vip: "VIP Repeat Funnel" };
 const STATUSES: Record<string, { label: string; tone: Tone }> = {
@@ -27,7 +29,9 @@ export function FunnelRequestsPanel({ canWrite }: { canWrite: boolean }) {
   const { update } = useAdmin();
   const query = useAdminFunnels();
   const contacts = useAllContacts().data ?? [];
+  const invoices = useInvoices().data ?? [];
   const markPaid = useMarkFunnelPaid();
+  const send = useSendFunnelInvoice();
   const start = useStartFunnelBuild();
   // Waiting on you first: paid and ready, then awaiting payment, then quotes, then those already in build.
   const order = ["queued", "pay", "quote", "build"];
@@ -39,15 +43,20 @@ export function FunnelRequestsPanel({ canWrite }: { canWrite: boolean }) {
       isEmpty={!requests.length}
       empty="No open funnel requests. When a client uses “Request a new funnel” in their portal, it shows up here."
     >
-      <FormError error={markPaid.error ?? start.error} />
+      <FormError error={markPaid.error ?? send.error ?? start.error} />
       <div className="stack stack--10">
         {requests.map((f) => (
           <FunnelRequestCard
             key={f.id}
             funnel={f}
             contact={contacts.find((c) => c.id === f.contactId)}
+            invoice={invoices.find((i) => i.id === f.invoiceId)}
             canWrite={canWrite}
-            busy={markPaid.isPending || start.isPending}
+            busy={markPaid.isPending || send.isPending || start.isPending}
+            sending={send.isPending && send.variables === f.invoiceId}
+            onSend={() =>
+              f.invoiceId && send.mutate(f.invoiceId, { onSuccess: (iv) => update({ toast: `Invoice ${iv.number} emailed with its Wise link.` }) })
+            }
             onMarkPaid={() =>
               f.invoiceId && markPaid.mutate(f.invoiceId, { onSuccess: () => update({ toast: `${f.name} is paid and ready to build.` }) })
             }
@@ -68,16 +77,22 @@ export function FunnelRequestsPanel({ canWrite }: { canWrite: boolean }) {
 function FunnelRequestCard({
   funnel: f,
   contact,
+  invoice,
   canWrite,
   busy,
+  sending,
+  onSend,
   onMarkPaid,
   onStart,
   onOpen,
 }: {
   funnel: FunnelOut;
   contact?: ContactOut;
+  invoice?: InvoiceOut;
   canWrite: boolean;
   busy: boolean;
+  sending: boolean;
+  onSend: () => void;
   onMarkPaid: () => void;
   onStart: () => void;
   onOpen: () => void;
@@ -125,6 +140,25 @@ function FunnelRequestCard({
         )}
       </dl>
 
+      {invoice ? (
+        <RequestInvoiceRow
+          invoice={invoice}
+          email={contact?.email ?? ""}
+          canWrite={canWrite}
+          busy={busy}
+          sending={sending}
+          onSend={onSend}
+          onMarkPaid={onMarkPaid}
+        />
+      ) : (
+        f.status === "quote" && (
+          <div className="cluster cluster--8 crm-request__invoice">
+            <span className="kicker kicker--sm kicker--muted">INVOICE</span>
+            <span className="text-small">No invoice yet: this request was made before packages, so it has no price. Send them an invoice from Transactions.</span>
+          </div>
+        )
+      )}
+
       {canWrite && (
         <div className="cluster cluster--8">
           {f.projectId ? (
@@ -136,14 +170,7 @@ function FunnelRequestCard({
               Start {r.package ? `${PACKAGE_LABELS[r.package]} ` : ""}build
             </Button>
           )}
-          {f.status === "pay" && f.invoiceId && (
-            <Button size="sm" disabled={busy} onClick={onMarkPaid} title="When their Wise payment has arrived">
-              Mark paid
-            </Button>
-          )}
-          {f.status === "pay" && (
-            <span className="text-small">{f.payUrl ? "Paying through its Wise link" : "No Wise link for this price: send them payment details"}</span>
-          )}
+          {f.status === "pay" && !f.payUrl && <span className="text-small">No Wise link for this price: send them payment details</span>}
         </div>
       )}
     </article>

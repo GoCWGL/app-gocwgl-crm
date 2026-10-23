@@ -1519,6 +1519,26 @@ export interface paths {
         patch: operations["update_crm_request_api_admin_crm_requests__request_id__patch"];
         trace?: never;
     };
+    "/api/admin/crm-requests/{request_id}/invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Crm Request Invoice
+         * @description Email the client the invoice for the CRM package they chose, with its Wise link. Again = re-send the open one.
+         */
+        post: operations["send_crm_request_invoice_api_admin_crm_requests__request_id__invoice_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/crm-requests/{request_id}/build": {
         parameters: {
             query?: never;
@@ -3491,6 +3511,7 @@ export interface components {
             company: string;
             /** Email */
             email: string;
+            invoice: components["schemas"]["CrmRequestInvoiceOut"] | null;
         };
         /** AdminFunnelCreate */
         AdminFunnelCreate: {
@@ -4285,6 +4306,28 @@ export interface components {
             name: string;
             /** Goal */
             goal: string;
+        };
+        /** CrmRequestInvoiceOut */
+        CrmRequestInvoiceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /** Status */
+            status: string;
+            /** Totalcents */
+            totalCents: number;
+            /** Sentat */
+            sentAt: string | null;
+            /** Paidat */
+            paidAt: string | null;
+            /** Lastemailedat */
+            lastEmailedAt: string | null;
+            /** Paymenturl */
+            paymentUrl: string | null;
         };
         /** CrmRequestOut */
         CrmRequestOut: {
@@ -11470,6 +11513,48 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["CrmRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    send_crm_request_invoice_api_admin_crm_requests__request_id__invoice_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminCrmRequestOut"];
                     };
                 };
             };
