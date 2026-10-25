@@ -40,6 +40,8 @@ export type AdminState = {
   newBuildContactId: string;
   /** Contact shown in the edit drawer. */
   editContactId: string;
+  /** Scroll the edit drawer to its team notes when it opens (from a "mentioned you" notification). */
+  editContactFocusNotes?: boolean;
   /** Contact whose portal is open in "View as client". */
   viewAsId: string;
   /** Open media folder ("" = folder list). */

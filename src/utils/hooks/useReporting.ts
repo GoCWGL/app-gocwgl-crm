@@ -1,13 +1,17 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import * as tools from "@/utils/api/admin-tools";
 import * as api from "@/utils/api/reporting";
 import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
 
-export const useDashboard = (range: api.DashboardRange = 30) =>
-  useQuery({ queryKey: qk.dashboard(range), queryFn: () => api.getDashboard(range) });
+export const useDashboard = (range: api.DashboardRange = 30, custom?: api.CustomRange | null) =>
+  useQuery({
+    queryKey: custom ? [...qk.dashboard(range), custom.start, custom.end] : qk.dashboard(range),
+    queryFn: () => api.getDashboard(range, custom),
+    placeholderData: keepPreviousData,
+  });
 
 export const useActivity = (opts: { contact_id?: string; limit?: number } = {}) =>
   useQuery({ queryKey: [...qk.activity, opts], queryFn: () => api.listActivity(opts) });

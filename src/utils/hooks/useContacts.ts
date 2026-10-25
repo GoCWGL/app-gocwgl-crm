@@ -73,3 +73,22 @@ export function useCustomPipelineDetails() {
   });
   return { isPending: list.isPending || details.some((d) => d.isPending), data: details.map((d) => d.data).filter(Boolean) as PipelineDetail[] };
 }
+
+// ------------------------------------------------------------------ Team notes
+export const useContactNotes = (contactId: string) =>
+  useQuery({ queryKey: qk.contactNotes(contactId), queryFn: () => api.listContactNotes(contactId), enabled: !!contactId });
+export const useAddContactNote = () =>
+  useApiMutation((v: { contactId: string; text: string; mentionIds?: string[] }) => api.addContactNote(v.contactId, v.text, v.mentionIds), {
+    invalidate: (_, v) => [qk.contactNotes(v.contactId)],
+  });
+export const useEditContactNote = () =>
+  useApiMutation(
+    (v: { contactId: string; noteId: string; text: string; mentionIds?: string[] }) => api.editContactNote(v.contactId, v.noteId, v.text, v.mentionIds),
+    {
+      invalidate: (_, v) => [qk.contactNotes(v.contactId)],
+    },
+  );
+export const useDeleteContactNote = () =>
+  useApiMutation((v: { contactId: string; noteId: string }) => api.deleteContactNote(v.contactId, v.noteId), {
+    invalidate: (_, v) => [qk.contactNotes(v.contactId)],
+  });

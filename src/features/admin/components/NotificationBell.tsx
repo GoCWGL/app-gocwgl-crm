@@ -15,10 +15,19 @@ const KINDS: Record<string, { label: string; icon: IconName; open: Partial<Admin
   "crm.requested": { label: "CRM request", icon: "users", open: { tab: "progress", progressView: "requests" } },
   "ticket.created": { label: "Support request", icon: "message", open: { tab: "bugs" } },
   "booking.created": { label: "Call booked", icon: "calendar", open: { tab: "calendar" } },
+  // Only in the mentioned teammate's bell; opens that contact's profile (see `openFor`).
+  "note.mentioned": { label: "Mentioned you", icon: "userPlus", open: {} },
 };
+
+/** Where clicking an item goes: a mention opens the contact's profile, where the note is. */
+const openFor = (item: ActivityOut, k: (typeof KINDS)[string]): Partial<AdminState> =>
+  item.kind === "note.mentioned" && item.contactId ? { tab: "clients", contactView: "all", editContactId: item.contactId, editContactFocusNotes: true } : k.open;
 const kindOf = (kind: string) => KINDS[kind] ?? { label: "Request", icon: "bell" as IconName, open: {} };
 
-/** Admin header bell: every client request (funnel, CRM, support, calls booked), with the ones since you last looked marked new. */
+/**
+ * Admin header bell: every client request (funnel, CRM, support, calls booked) and notes where a teammate mentioned you,
+ * with the ones since you last looked marked new.
+ */
 export function NotificationBell() {
   const { update } = useAdmin();
   const inbox = useInbox();
@@ -94,7 +103,7 @@ export function NotificationBell() {
           {inbox.isPending ? (
             <Loading inline text="Loading…" />
           ) : items.length === 0 ? (
-            <p className="text-muted bell__empty">No requests yet. Funnel, CRM and support requests and booked calls show up here.</p>
+            <p className="text-muted bell__empty">No requests yet. Funnel, CRM and support requests, booked calls and notes that mention you show up here.</p>
           ) : (
             <ul className="bell__list">
               {items.map((item) => {
@@ -102,7 +111,7 @@ export function NotificationBell() {
                 const isNew = since !== null && (!since || item.createdAt > since);
                 return (
                   <li key={item.id}>
-                    <button type="button" className={cn("bell__item", isNew && "bell__item--new")} onClick={() => go(k.open)}>
+                    <button type="button" className={cn("bell__item", isNew && "bell__item--new")} onClick={() => go(openFor(item, k))}>
                       <span className="bell__icon" aria-hidden="true">
                         <Icon name={k.icon} size={15} />
                       </span>

@@ -7,6 +7,9 @@ import type { ActivityOut, ClientActivityOut, InboxOut } from "./models";
  */
 export type DashboardNumbers = {
   period_days: number;
+  /** The custom range asked for ("YYYY-MM-DD"), else null. */
+  start: string | null;
+  end: string | null;
   new_leads: number;
   /** % change vs the previous period; null when there is nothing to compare with. */
   new_leads_delta: number | null;
@@ -26,9 +29,12 @@ export type DashboardNumbers = {
 };
 
 export type DashboardRange = 7 | 30 | 90;
+/** Whole days, inclusive, in the business time zone. */
+export type CustomRange = { start: string; end: string };
 
-export const getDashboard = (range: DashboardRange = 30) =>
-  get<DashboardNumbers>("/admin/reports/dashboard", { range: String(range) });
+/** The last 7/30/90 days, or a custom range (which wins when given). */
+export const getDashboard = (range: DashboardRange = 30, custom?: CustomRange | null) =>
+  get<DashboardNumbers>("/admin/reports/dashboard", custom ? { start: custom.start, end: custom.end } : { range: String(range) });
 
 /** Feeds page with `before` = createdAt of the last item. */
 export const listActivity = (opts: { contact_id?: string; before?: string; limit?: number } = {}) =>

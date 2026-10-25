@@ -9,6 +9,25 @@
   &__summary {
     flex: 1 1 100%;
   }
+
+  // From / To and the quick picks, under the presets.
+  &__custom {
+    @include cluster(12px);
+    flex: 1 1 100%;
+    align-items: flex-end;
+
+    .field {
+      flex: 0 1 180px;
+    }
+  }
+
+  &__shortcuts {
+    padding-bottom: 2px;
+  }
+
+  &__error {
+    flex: 1 1 100%;
+  }
 }
 
 .report-metric-card {

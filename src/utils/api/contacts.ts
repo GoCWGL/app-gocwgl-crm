@@ -1,5 +1,6 @@
 import { del, get, patch, post, type Page } from "./client";
 import type {
+  ContactNoteOut,
   ContactCreate,
   ContactOut,
   ContactUpdate,
@@ -70,3 +71,12 @@ export const deletePipeline = (id: string) => del(`/admin/pipelines/${id}`);
 export const movePipelineItem = (id: string, body: { contactId: string; stageId: string; beforeId?: string | null }) =>
   post<void>(`/admin/pipelines/${id}/move`, body);
 export const removePipelineItem = (id: string, contactId: string) => del(`/admin/pipelines/${id}/items/${contactId}`);
+
+// ------------------------------------------------------------------ Team notes (staff only; never shown in the client portal)
+export const listContactNotes = (contactId: string) => get<ContactNoteOut[]>(`/admin/contacts/${contactId}/notes`);
+/** `mentionIds`: teammates to @mention (each new one is notified in their bell). */
+export const addContactNote = (contactId: string, text: string, mentionIds: string[] = []) =>
+  post<ContactNoteOut>(`/admin/contacts/${contactId}/notes`, { text, mentionIds });
+export const editContactNote = (contactId: string, noteId: string, text: string, mentionIds: string[] = []) =>
+  patch<ContactNoteOut>(`/admin/contacts/${contactId}/notes/${noteId}`, { text, mentionIds });
+export const deleteContactNote = (contactId: string, noteId: string) => del(`/admin/contacts/${contactId}/notes/${noteId}`);

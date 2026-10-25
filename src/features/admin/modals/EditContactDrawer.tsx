@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Avatar, Button, Field, FolderGlyph, FormError, Icon, Input, Loading, Modal, Select, Textarea } from "@/components/ui";
+import { Avatar, Button, Field, FolderGlyph, FormError, Icon, Input, Loading, Modal, Select } from "@/components/ui";
 import { CORE_STAGES, LEAD_SOURCES, SOCIAL_LABELS, SOURCE_LABELS, type CoreStage, type LeadSource } from "@/data/admin";
 import { avatarTone, toneClass } from "@/lib/tones";
 import { cn, copyToClipboard, isEmail } from "@/lib/utils";
@@ -28,6 +28,8 @@ import { qk } from "@/utils/hooks/keys";
 import { useMe } from "@/utils/hooks/useUsers";
 import { ClientEmbedsCard } from "../components/ClientEmbedsCard";
 import { ContactAnswersCard } from "../components/ContactAnswersCard";
+import { ContactNotesCard } from "../components/ContactNotesCard";
+import { ContactOverviewCard } from "../components/ContactOverviewCard";
 import { PortalLoginCard } from "../components/PortalLoginCard";
 import { ReferredByContactCard } from "../components/ReferredByContactCard";
 import { TagPicker } from "../components/TagPicker";
@@ -44,7 +46,6 @@ type Draft = {
   stage: CoreStage;
   paused: boolean;
   tags: string[];
-  notes: string;
   /** Stage id in each custom pipeline ("" = not in it). */
   other: Record<string, string>;
 };
@@ -55,7 +56,7 @@ export function EditContactDrawer() {
   const contact = useContact(id);
   const pipelines = useCustomPipelineDetails();
   if (!id) return null;
-  const onClose = () => update({ editContactId: "" });
+  const onClose = () => update({ editContactId: "", editContactFocusNotes: false });
   if (!contact.data || pipelines.isPending) {
     return (
       <Modal open variant="drawer" width={520} onClose={onClose} titleId="ec-title" kicker="EDIT PROFILE" title="Contact">
@@ -95,7 +96,6 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
     stage: (CORE_STAGES.includes(c.stage as CoreStage) ? c.stage : "lead") as CoreStage,
     paused: sub?.status === "Paused",
     tags: c.tags.map((t) => t.id),
-    notes: c.notes,
     other: Object.fromEntries(pipelines.map((p) => [p.id, stageInPipeline(p, c.id)])),
   });
   const [error, setError] = useState("");
@@ -113,7 +113,6 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
         company: d.company.trim(),
         source: d.source as LeadSource,
         stage: d.stage,
-        notes: d.notes.trim(),
         tagIds: d.tags,
       });
       const wasPaused = sub?.status === "Paused";
@@ -247,6 +246,38 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
       )}
       <FormError error={archive.error ?? unarchive.error ?? (hasBilling ? null : remove.error)} />
 
+      {/* Who they are comes first; everything linked to the account follows. */}
+      <div className="stack stack--10">
+        <span className="kicker">PROFILE</span>
+        <div className="form-grid form-grid--narrow">
+          {(
+            [
+              ["first", "First name", "text"],
+              ["last", "Last name", "text"],
+              ["email", "Email", "email"],
+              ["phone", "Phone", "tel"],
+              ["company", "Business name", "text"],
+            ] as const
+          ).map(([key, label, type]) => (
+            <Field key={key} label={label} htmlFor={`ec-${key}`}>
+              <Input
+                id={`ec-${key}`}
+                type={type}
+                autoComplete="off"
+                value={draft[key]}
+                aria-invalid={!!error && ((key === "first" && !draft.first.trim()) || (key === "email" && !isEmail(draft.email)))}
+                onChange={(e) => set({ [key]: e.target.value })}
+              />
+            </Field>
+          ))}
+          <Field label="Lead source" htmlFor="ec-source">
+            <Select id="ec-source" value={draft.source} options={sourceOptions} onChange={(e) => set({ source: e.target.value })} />
+          </Field>
+        </div>
+      </div>
+
+      <ContactOverviewCard contact={c} />
+
       <div className="inset inset--brand status-box">
         <span className="kicker kicker--brand">STATUS &amp; STAGE</span>
         <Field label="Status">
@@ -362,35 +393,6 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
         </span>
       </button>
 
-      <div className="stack stack--10">
-        <span className="kicker">PROFILE</span>
-        <div className="form-grid form-grid--narrow">
-          {(
-            [
-              ["first", "First name", "text"],
-              ["last", "Last name", "text"],
-              ["email", "Email", "email"],
-              ["phone", "Phone", "tel"],
-              ["company", "Business name", "text"],
-            ] as const
-          ).map(([key, label, type]) => (
-            <Field key={key} label={label} htmlFor={`ec-${key}`}>
-              <Input
-                id={`ec-${key}`}
-                type={type}
-                autoComplete="off"
-                value={draft[key]}
-                aria-invalid={!!error && ((key === "first" && !draft.first.trim()) || (key === "email" && !isEmail(draft.email)))}
-                onChange={(e) => set({ [key]: e.target.value })}
-              />
-            </Field>
-          ))}
-          <Field label="Lead source" htmlFor="ec-source">
-            <Select id="ec-source" value={draft.source} options={sourceOptions} onChange={(e) => set({ source: e.target.value })} />
-          </Field>
-        </div>
-      </div>
-
       <div className="stack stack--8">
         <span className="kicker">TAGS</span>
         <TagPicker tags={tags} selected={draft.tags} onChange={(ids) => set({ tags: ids })} />
@@ -398,9 +400,8 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
 
       <ContactAnswersCard contact={c} />
 
-      <Field label={<span className="kicker">NOTES</span>} htmlFor="ec-notes">
-        <Textarea id="ec-notes" rows={4} value={draft.notes} onChange={(e) => set({ notes: e.target.value })} placeholder="Anything worth remembering about this contact" />
-      </Field>
+      {/* Saved one by one (not with "Save changes"), team-only. */}
+      <ContactNotesCard contact={c} />
 
       {sub && (
         <div className="inset inset--soft text-body">
