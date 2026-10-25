@@ -17,7 +17,7 @@ type SignupFormProps = {
   onLogin: () => void;
 };
 
-type TextFieldKey = "name" | "business" | "email" | "phone" | "invite";
+type TextFieldKey = "name" | "business" | "email" | "phone" | "invite" | "referral";
 
 const TEXT_FIELDS: Array<{
   key: TextFieldKey;
@@ -43,6 +43,16 @@ const TEXT_FIELDS: Array<{
     hint: "(optional, from your welcome email)",
     mono: true,
   },
+  {
+    key: "referral",
+    id: "su-ref",
+    label: "Referral ID",
+    type: "text",
+    autoComplete: "off",
+    placeholder: "K7M2-Q9XA",
+    hint: "(optional, from the client who referred you)",
+    mono: true,
+  },
 ];
 
 const STRENGTH_TONES = ["neutral", "red", "amber", "cyan", "green"] as const;
@@ -54,6 +64,7 @@ function validate(data: SignupData): Record<TextFieldKey | "password", string> {
     email: emailError(data.email),
     phone: data.phone && data.phone.replace(/\D/g, "").length < 7 ? "That phone number looks too short." : "",
     invite: "",
+    referral: "",
     password: data.password.length < 8 ? "Use at least 8 characters." : "",
   };
 }
@@ -70,6 +81,7 @@ export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormPro
     email: local.email || api.email || "",
     phone: local.phone || api.phone || "",
     invite: local.invite || api.inviteCode || "",
+    referral: local.referral || api.referralCode || "",
     password: local.password || api.password || "",
   };
   const generalError =
@@ -88,6 +100,7 @@ export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormPro
         phone: data.phone.trim(),
         password: data.password,
         inviteCode: data.invite.trim() || null,
+        referralCode: data.referral.trim() || null,
         agree: true,
       },
       { onSuccess: (r) => onCreated(r?.message ?? "") },

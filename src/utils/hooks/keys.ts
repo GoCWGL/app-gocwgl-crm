@@ -39,6 +39,9 @@ export const qk = {
   clientHealth: (id: string) => ["client", id, "health"] as const,
   adminFunnels: ["admin-funnels"] as const,
 
+  referrals: ["referrals"] as const,
+  affiliateProgram: ["affiliate-program"] as const,
+
   tickets: ["tickets"] as const,
   intakeKeys: ["intake-keys"] as const,
   inbox: ["inbox"] as const,
@@ -78,4 +81,5 @@ export const qk = {
   portalTickets: ["portal", "tickets"] as const,
   portalIntakeKeys: ["portal", "intake-keys"] as const,
   portalMessages: ["portal", "messages"] as const,
+  portalAffiliate: ["portal", "affiliate"] as const,
 };

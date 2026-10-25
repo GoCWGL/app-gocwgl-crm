@@ -46,6 +46,7 @@ export const ICONS = {
   folder: "M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
   folderUpload: "M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM12 11v6M9 14l3-3 3 3",
   pipeline: "M3 3h5v18H3zM10 3h5v12h-5zM17 3h4v8h-4z",
+  gift: "M3 8h18v4H3zM5 12v9h14v-9M12 8v13M12 8S10 3 7.5 4.5 9 8 12 8zM12 8s2-5 4.5-3.5S15 8 12 8",
   dollar: "M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
   trendUp: "m3 17 6-6 4 4 8-8M15 7h6v6",
   chart: "M3 3v18h18M8 17v-5M13 17V8M18 17v-9",

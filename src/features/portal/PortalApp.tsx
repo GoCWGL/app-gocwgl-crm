@@ -12,6 +12,7 @@ import { FunnelRequestDrawer } from "./components/FunnelRequestDrawer";
 import { PortalSidebar } from "./components/PortalSidebar";
 import { TodoDrawer } from "./components/TodoDrawer";
 import { AccountSection } from "./sections/AccountSection";
+import { AffiliateSection } from "./sections/AffiliateSection";
 import { AssetsSection } from "./sections/AssetsSection";
 import { BillingSection } from "./sections/BillingSection";
 import { BuildSection } from "./sections/BuildSection";
@@ -27,6 +28,7 @@ const SECTIONS: Record<PortalTab, ComponentType> = {
   assets: AssetsSection,
   support: SupportSection,
   billing: BillingSection,
+  affiliate: AffiliateSection,
   account: AccountSection,
 };
 

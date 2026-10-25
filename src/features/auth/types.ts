@@ -13,6 +13,8 @@ export type SignupData = {
   email: string;
   phone: string;
   invite: string;
+  /** Referral ID of the client who referred them (their portal’s Affiliate page). */
+  referral: string;
   password: string;
   agree: boolean;
 };
@@ -23,6 +25,7 @@ export const EMPTY_SIGNUP: SignupData = {
   email: "",
   phone: "",
   invite: "",
+  referral: "",
   password: "",
   agree: false,
 };

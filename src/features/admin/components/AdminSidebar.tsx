@@ -23,6 +23,7 @@ const SALES: NavLink[] = [
   link("pipeline", "Pipeline", "pipeline", "pink"),
   link("calendar", "Calendar", "calendar", "orange"),
   link("payments", "Transactions", "invoice", "green"),
+  link("affiliates", "Affiliates", "gift", "amber"),
 ];
 
 const GROUPS: Array<{ title: string; links: NavLink[] }> = [

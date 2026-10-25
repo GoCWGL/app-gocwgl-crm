@@ -48,6 +48,11 @@ function readLink(params: URLSearchParams) {
   return { reset: params.get("reset_token"), invite: params.get("invite"), oauth: params.get("oauth") };
 }
 
+/** A client's sign-up link (/login?ref=ID, from their Affiliate page) opens sign-up with the referral ID filled in. */
+function readReferral(params: URLSearchParams): string {
+  return (params.get("ref") ?? "").trim().slice(0, 32);
+}
+
 function initialScreen(link: ReturnType<typeof readLink>): { mode: AuthMode; notice: Notice } {
   if (link.reset) return { mode: "reset", notice: null };
   if (link.invite) return { mode: "invite", notice: null };
@@ -61,11 +66,15 @@ export function SignInPage() {
   const { status } = useSession();
   const params = useSearchParams();
   const [link] = useState(() => readLink(params));
-  const [first] = useState(() => initialScreen(link));
+  const [referral] = useState(() => readReferral(params));
+  const [first] = useState(() => {
+    const screen = initialScreen(link);
+    return referral && screen.mode === "login" && !screen.notice ? { mode: "signup" as AuthMode, notice: null } : screen;
+  });
   const [mode, setMode] = useState<AuthMode>(first.mode);
   const [notice, setNotice] = useState<Notice>(first.notice);
   const [loginEmail, setLoginEmail] = useState("");
-  const [signup, setSignup] = useState<SignupData>(EMPTY_SIGNUP);
+  const [signup, setSignup] = useState<SignupData>(() => ({ ...EMPTY_SIGNUP, referral }));
   // After Google / Microsoft sign-in the 2-step challenge travels in a cookie, so there is no mfaToken.
   const [verifyReason, setVerifyReason] = useState<VerifyReason>(link.oauth === "mfa" ? "admin2fa" : "signup");
   const [verifyEmail, setVerifyEmail] = useState("");
@@ -113,10 +122,11 @@ export function SignInPage() {
 
   // Already signed in (the session was restored from the cookie): go straight to the right app.
   useEffect(() => {
-    if (status !== "authenticated" || fromLink || mode !== "login") return;
+    // A sign-up link (?ref=) opens on sign-up, but someone already signed in still goes to their app.
+    if (status !== "authenticated" || fromLink || (mode !== "login" && !(referral && mode === "signup"))) return;
     const { user } = getSession();
     if (user) router.replace(homeFor(user));
-  }, [status, mode, router, fromLink]);
+  }, [status, mode, router, fromLink, referral]);
 
   const head = getHeading(mode, { verifyReason, doneAfterSignup, isStaff: !!session?.user.isStaff, email: verifyEmail });
 

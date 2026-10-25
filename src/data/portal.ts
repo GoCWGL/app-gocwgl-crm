@@ -14,6 +14,7 @@ export type PortalTab =
   | "assets"
   | "support"
   | "billing"
+  | "affiliate"
   | "account";
 
 export type FunnelStatus = "live" | "build" | "pay" | "queued" | "quote";
@@ -44,6 +45,7 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   assets: { title: "Assets", subtitle: "Upload your logos, photos and brand files for your GoCWGL team." },
   support: { title: "Support", subtitle: "Ask for changes, report a problem, or message your team." },
   billing: { title: "Transaction history", subtitle: "Your invoices and payments to GoCWGL." },
+  affiliate: { title: "Affiliate", subtitle: "Your referral ID, the businesses you referred, and your bonuses." },
   account: { title: "Account", subtitle: "Your profile, alerts and who can see this portal." },
 };
 
@@ -63,6 +65,10 @@ export const PORTAL_NAV: Array<{ group: string; items: Array<{ tab: PortalTab; l
       { tab: "support", label: "Support", icon: "message", tone: "sky" },
       { tab: "billing", label: "Transactions", icon: "invoice", tone: "pink" },
     ],
+  },
+  {
+    group: "Refer & earn",
+    items: [{ tab: "affiliate", label: "Affiliate", icon: "gift", tone: "amber" }],
   },
 ];
 

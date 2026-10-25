@@ -14,6 +14,7 @@ import { NotificationBell } from "./components/NotificationBell";
 import { AddClientModal } from "./modals/AddClientModal";
 import { EditContactDrawer } from "./modals/EditContactDrawer";
 import { ViewAsClient } from "./modals/ViewAsClient";
+import { AffiliatesSection } from "./sections/affiliates/AffiliatesSection";
 import { AutomationSection } from "./sections/automation/AutomationSection";
 import { BugsSection } from "./sections/bugs/BugsSection";
 import { CalendarSection } from "./sections/calendar/CalendarSection";
@@ -39,6 +40,7 @@ const SECTIONS: Record<AdminTab, ComponentType> = {
   pipeline: PipelineSection,
   calendar: CalendarSection,
   payments: PaymentsSection,
+  affiliates: AffiliatesSection,
   progress: ProgressSection,
   media: MediaSection,
   email: EmailSection,

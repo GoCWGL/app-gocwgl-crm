@@ -1,0 +1,32 @@
+@use "../../abstracts" as *;
+
+// Affiliate: the client's referral ID, ready to share.
+.affiliate-hero {
+  @include stack(14px);
+  padding: 20px 22px;
+
+  &__head {
+    align-items: flex-start;
+  }
+
+  &__title {
+    font-size: 17px;
+  }
+
+  &__code {
+    @include cluster(14px);
+    justify-content: space-between;
+    padding: 14px 16px;
+    border: 1px dashed $line-strong;
+    border-radius: $radius-lg;
+    background: $bg-soft;
+  }
+
+  &__id {
+    font-family: $font-mono;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: $ink;
+  }
+}

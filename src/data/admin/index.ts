@@ -15,6 +15,7 @@ export type AdminTab =
   | "pipeline"
   | "calendar"
   | "payments"
+  | "affiliates"
   | "progress"
   | "media"
   | "email"
@@ -32,6 +33,7 @@ export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> 
   pipeline: { title: "Pipeline", subtitle: "Move each lead from signup to paid subscriber." },
   calendar: { title: "Calendar", subtitle: "Discovery calls booked by your leads." },
   payments: { title: "Transactions", subtitle: "Invoices, payments and subscriptions from your clients. Clients pay through Wise payment links." },
+  affiliates: { title: "Affiliates", subtitle: "Clients who refer clients. Each referral earns its referrer a bonus once the new client pays for a CRM." },
   progress: { title: "Build Progress", subtitle: "Track the system you are building for each paid client and share the progress with them." },
   media: { title: "Client Media", subtitle: "One media folder per client. Files your clients upload from their portal land here." },
   email: { title: "Email", subtitle: "Send emails to one contact, a tag or a whole pipeline stage." },
