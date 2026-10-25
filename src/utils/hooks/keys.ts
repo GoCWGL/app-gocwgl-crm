@@ -41,6 +41,9 @@ export const qk = {
 
   referrals: ["referrals"] as const,
   affiliateProgram: ["affiliate-program"] as const,
+  affiliates: ["affiliates"] as const,
+  affiliate: (contactId: string) => ["affiliates", contactId] as const,
+  contactReferrer: (contactId: string) => ["affiliates", "referred-by", contactId] as const,
 
   tickets: ["tickets"] as const,
   intakeKeys: ["intake-keys"] as const,
@@ -82,4 +85,5 @@ export const qk = {
   portalIntakeKeys: ["portal", "intake-keys"] as const,
   portalMessages: ["portal", "messages"] as const,
   portalAffiliate: ["portal", "affiliate"] as const,
+  referredBy: ["portal", "referred-by"] as const,
 };

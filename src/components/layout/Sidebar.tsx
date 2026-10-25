@@ -42,20 +42,29 @@ type NavItemProps = {
   expanded?: boolean;
   /** Parent of the current page (lighter highlight). */
   highlighted?: boolean;
+  /** Greyed out with a lock; `lockedHint` says when it opens. */
+  locked?: boolean;
+  lockedHint?: string;
 };
 
-export function NavItem({ icon, label, active, onClick, badge, expanded, highlighted }: NavItemProps) {
+export function NavItem({ icon, label, active, onClick, badge, expanded, highlighted, locked, lockedHint }: NavItemProps) {
   const collapsible = expanded !== undefined;
   return (
     <button
       type="button"
-      className={cn("nav-item", highlighted && "nav-item--open")}
-      onClick={onClick}
+      className={cn("nav-item", highlighted && "nav-item--open", locked && "nav-item--locked")}
+      onClick={locked ? undefined : onClick}
+      aria-disabled={locked || undefined}
+      title={locked ? lockedHint : undefined}
       aria-current={active ? "page" : undefined}
       aria-expanded={collapsible ? expanded : undefined}
     >
       {icon}
-      <span className="nav-item__label">{label}</span>
+      <span className="nav-item__label">
+        {label}
+        {locked && lockedHint && <span className="nav-item__hint">{lockedHint}</span>}
+      </span>
+      {locked && <Icon name="lock" size={13} strokeWidth={2.2} className="nav-item__lock" />}
       {badge && <CountChip tone={badge.tone}>{badge.text}</CountChip>}
       {collapsible && (
         <Icon

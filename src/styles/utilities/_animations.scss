@@ -3,6 +3,7 @@
 @include keyframes-blink;
 @include keyframes-fade-in;
 @include keyframes-slide-up;
+@include keyframes-pop-in;
 
 .u-pulse {
   animation: blink 1.6s ease-in-out infinite;

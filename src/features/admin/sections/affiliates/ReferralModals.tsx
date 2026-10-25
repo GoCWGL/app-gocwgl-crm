@@ -2,10 +2,10 @@
 
 import { useState, type FormEvent } from "react";
 import { Button, Checkbox, Field, FormError, Icon, IconTile, Input, Modal, Select, Textarea } from "@/components/ui";
-import { formatReferralCode } from "@/data/affiliates";
+import { formatReferralCode, payoutMethodLabel } from "@/data/affiliates";
 import type { ReferralOut } from "@/utils/api/models";
 import { centsToDollars, dollarsToCents, formatCents } from "@/utils/format/money";
-import { useAffiliateProgram, useCreateReferral, useUpdateReferral } from "@/utils/hooks/useAffiliates";
+import { useAffiliateProgram, useCreateReferral, usePayoutDetails, useUpdateReferral } from "@/utils/hooks/useAffiliates";
 import { useAllContacts } from "@/utils/hooks/useContacts";
 import { contactName } from "../../lib/contacts";
 
@@ -94,7 +94,7 @@ function EditReferralForm({ referral: r, onClose }: { referral: ReferralOut; onC
   const save = useUpdateReferral();
   const paid = r.bonusStatus === "paid";
   const [useProgram, setUseProgram] = useState(!r.customBonus);
-  const [amount, setAmount] = useState(centsToDollars(r.bonusCents));
+  const [amount, setAmount] = useState(r.bonusCents === null ? "" : centsToDollars(r.bonusCents));
   const [note, setNote] = useState(r.note);
   const referred = r.referred.name || r.referred.email;
 
@@ -110,8 +110,8 @@ function EditReferralForm({ referral: r, onClose }: { referral: ReferralOut; onC
       onClose={onClose}
       titleId="edit-ref-title"
       kicker={`REFERRAL · ${r.code ? formatReferralCode(r.code) : "LINKED BY THE TEAM"}`}
-      title={`${referred}’s referral bonus`}
-      subtitle={`Referred by ${r.referrer.name || r.referrer.email}`}
+      title={`${r.referrer.name || r.referrer.email}’s bonus`}
+      subtitle={`For referring ${referred}. The bonus is paid to the referrer, not the new client.`}
       width={500}
       onSubmit={submit}
       footer={
@@ -126,18 +126,22 @@ function EditReferralForm({ referral: r, onClose }: { referral: ReferralOut; onC
       <div className="stack stack--12">
         {paid ? (
           <div className="notice notice--success" role="status">
-            {formatCents(r.bonusCents)} was paid to {r.referrer.name || r.referrer.email}. Undo the payout to change the amount.
+            {formatCents(r.bonusCents ?? 0)} was paid to {r.referrer.name || r.referrer.email}. Undo the payout to change the amount.
           </div>
         ) : (
           <>
             <Checkbox
               brand
-              label={`Use the program’s bonus${program ? ` (${formatCents(program.bonusCents, program.currency)})` : ""}`}
+              label={`Use the program’s bonus for their CRM package${
+                program
+                  ? ` (${formatCents(program.simpleBonusCents, program.currency)} Simple, ${formatCents(program.customBonusCents, program.currency)} Custom)`
+                  : ""
+              }`}
               checked={useProgram}
               onChange={() => setUseProgram((v) => !v)}
             />
             {!useProgram && (
-              <Field label="This referral’s bonus" htmlFor="edit-ref-amount" strongLabel>
+              <Field label={`${r.referrer.name || r.referrer.email}’s bonus for this referral`} htmlFor="edit-ref-amount" strongLabel>
                 <Input id="edit-ref-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} autoFocus />
               </Field>
             )}
@@ -148,6 +152,68 @@ function EditReferralForm({ referral: r, onClose }: { referral: ReferralOut; onC
         </Field>
         <FormError error={save.error} />
       </div>
+    </Modal>
+  );
+}
+
+const DETAIL_LABELS: Record<string, string> = {
+  email: "Account email",
+  payment_link: "Wise payment link",
+  bank_name: "Bank",
+  account_number: "Account number",
+  routing_number: "Routing number",
+  swift: "SWIFT / BIC",
+  country: "Country",
+};
+
+/** Where the referrer wants bonuses sent, in full, for sending the money. Owners and admins only; each look is logged. */
+export function PayoutDetailsModal({ referral: r, onClose }: { referral: ReferralOut; onClose: () => void }) {
+  const query = usePayoutDetails(r.referrer.id);
+  const p = query.data;
+  const who = r.referrer.name || r.referrer.email;
+
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      titleId="payout-title"
+      kicker="PAYOUT DETAILS"
+      title={`Send ${who}’s bonus`}
+      subtitle={r.bonusCents !== null ? `${formatCents(r.bonusCents)} for referring ${r.referred.name || r.referred.email}` : undefined}
+      width={480}
+      media={
+        <IconTile tone="green" size="lg">
+          <Icon name="dollar" size={18} />
+        </IconTile>
+      }
+      footer={<Button onClick={onClose}>Close</Button>}
+    >
+      {query.isPending ? (
+        <p className="text-small">Loading…</p>
+      ) : p ? (
+        <dl className="payout-details">
+          <dt>Method</dt>
+          <dd>{payoutMethodLabel(p.method)}</dd>
+          <dt>Name on account</dt>
+          <dd>{p.holderName}</dd>
+          {Object.entries(p.details).map(([k, v]) => (
+            <div key={k} className="payout-details__row">
+              <dt>{DETAIL_LABELS[k] ?? k}</dt>
+              <dd className="data-table__mono">
+                {k === "payment_link" && /^https:\/\//.test(String(v)) ? (
+                  <a href={String(v)} target="_blank" rel="noopener noreferrer">
+                    {String(v)}
+                  </a>
+                ) : (
+                  String(v)
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      ) : null}
+      <FormError error={query.error} />
+      <p className="text-small">Only owners and admins can see these details, and each view is recorded in the audit log.</p>
     </Modal>
   );
 }

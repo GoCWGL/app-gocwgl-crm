@@ -30,3 +30,67 @@
     color: $ink;
   }
 }
+
+// Before the client has a build: what the page will offer, and where to follow the build.
+.affiliate-locked {
+  @include stack(12px);
+  align-items: flex-start;
+  padding: 24px 22px;
+}
+
+// Where the client wants bonuses sent.
+.payout-card {
+  @include stack(14px);
+  padding: 20px 22px;
+
+  &__head {
+    align-items: flex-start;
+  }
+
+  &__saved {
+    @include cluster(12px);
+    flex-direction: row; // .inset is a column
+    justify-content: space-between;
+  }
+
+  &__secure {
+    @include row(6px);
+  }
+}
+
+// Account settings › "Who referred you?", with its 48-hour countdown under the field.
+.referred-by {
+  @include stack(14px);
+  padding: 20px 22px;
+
+  &__head {
+    align-items: flex-start;
+  }
+
+  &__row {
+    align-items: flex-end;
+
+    .field {
+      flex: 0 1 280px;
+    }
+  }
+
+  &__time {
+    @include stack(4px);
+  }
+
+  &__countdown {
+    @include row(6px);
+    font-family: $font-mono;
+    font-size: 15px;
+    font-weight: 800;
+    color: $orange-ink;
+    font-variant-numeric: tabular-nums;
+  }
+
+  // The 48 hours have ended: greyed out.
+  &__form--closed &__row {
+    filter: grayscale(1);
+    opacity: 0.55;
+  }
+}

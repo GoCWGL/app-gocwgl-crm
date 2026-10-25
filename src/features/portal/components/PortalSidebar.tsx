@@ -8,6 +8,7 @@ import { PORTAL_NAV, type PortalTab } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
 import { initials } from "@/lib/utils";
 import { usePortalBilling } from "@/utils/hooks/useBilling";
+import { useMyAffiliate } from "@/utils/hooks/useAffiliates";
 import { usePortalTodos } from "@/utils/hooks/usePortal";
 import { useMe } from "@/utils/hooks/useUsers";
 import { usePortal } from "../state/PortalContext";
@@ -24,6 +25,8 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const invoices = usePortalBilling().data?.invoices ?? [];
   const openInvoices = invoices.filter((i) => i.status === "Sent" || i.status === "Overdue").length;
   const me = useMe().data;
+  // Affiliate opens once the client is a paid subscriber (greyed out until then, and while loading).
+  const affiliateLocked = !useMyAffiliate().data?.unlocked;
   // In "View as client" the signed-in user is the staff member; show the business instead.
   const name = readOnly && me?.isStaff ? business : me?.fullName || me?.email || "";
 
@@ -71,6 +74,8 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
               active={state.tab === item.tab}
               onClick={() => goTo(item.tab)}
               badge={badges[item.tab]}
+              locked={item.tab === "affiliate" && affiliateLocked}
+              lockedHint="For paid subscribers"
               icon={
                 <IconTile tone={item.tone} size="sm">
                   <Icon name={item.icon} size={14} strokeWidth={1.9} />

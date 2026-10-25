@@ -7,7 +7,7 @@ import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
 
 /** Everything that shows a contact (lists, board, pipelines, dashboards) refreshes after a contact change. */
-const CONTACT_KEYS = [qk.contacts, qk.salesBoard, qk.pipelines, qk.tags, ["dashboard"], qk.activity, qk.projects, qk.mediaFolders];
+const CONTACT_KEYS = [qk.contacts, qk.salesBoard, qk.pipelines, qk.tags, ["dashboard"], qk.activity, qk.projects, qk.mediaFolders, qk.affiliates, qk.referrals];
 
 /** One page of contacts (paged: use `total`). */
 export const useContactsPage = (filters: api.ContactFilters) =>

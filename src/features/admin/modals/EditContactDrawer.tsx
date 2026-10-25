@@ -29,6 +29,7 @@ import { useMe } from "@/utils/hooks/useUsers";
 import { ClientEmbedsCard } from "../components/ClientEmbedsCard";
 import { ContactAnswersCard } from "../components/ContactAnswersCard";
 import { PortalLoginCard } from "../components/PortalLoginCard";
+import { ReferredByContactCard } from "../components/ReferredByContactCard";
 import { TagPicker } from "../components/TagPicker";
 import { CONTACT_STATUS, contactName, contactStatus, getSalesStages, salesPipeline, subscriptionOf, type ContactStatus } from "../lib/contacts";
 import { useAdmin } from "../state/AdminContext";
@@ -292,6 +293,7 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
       </div>
 
       <PortalLoginCard contact={c} />
+      <ReferredByContactCard contact={c} />
 
       {linkItems.length > 0 && (
         <div className="inset inset--brand client-links">

@@ -1,11 +1,12 @@
 "use client";
 
 import { Badge, Button, ErrorState, Icon, IconTile, Loading, StatGrid } from "@/components/ui";
-import { BONUS_STATUS, CRM_PROGRESS, formatReferralCode, referralLink } from "@/data/affiliates";
+import { BONUS_STATUS, CRM_PACKAGE_LABELS, CRM_PROGRESS, formatReferralCode, referralLink } from "@/data/affiliates";
 import { copyToClipboard } from "@/lib/utils";
 import { formatShort } from "@/utils/format/dates";
 import { formatCents } from "@/utils/format/money";
 import { useMyAffiliate } from "@/utils/hooks/useAffiliates";
+import { PayoutCard } from "../components/PayoutCard";
 import { usePortal } from "../state/PortalContext";
 
 /**
@@ -20,6 +21,19 @@ export function AffiliateSection() {
   if (query.isError) return <ErrorState error={query.error} onRetry={query.refetch} />;
   const a = query.data;
   const money = (cents: number) => formatCents(cents, a.currency);
+  const bonuses = `${money(a.simpleBonusCents)} for a Simple CRM build and ${money(a.customBonusCents)} for a Custom CRM build`;
+
+  if (!a.unlocked) {
+    return (
+      <section className="card affiliate-locked">
+        <IconTile tone="slate" size="lg">
+          <Icon name="lock" size={20} />
+        </IconTile>
+        <span className="text-strong affiliate-hero__title">Your Affiliate page opens once you’re a paid subscriber</span>
+        <p className="text-small">As a paid GoCWGL subscriber you’ll get your own referral ID here. Refer a business and earn {bonuses}.</p>
+      </section>
+    );
+  }
   const link = referralLink(a.referralCode);
 
   return (
@@ -30,9 +44,11 @@ export function AffiliateSection() {
             <Icon name="gift" size={20} />
           </IconTile>
           <div className="stack stack--4 u-grow">
-            <span className="text-strong affiliate-hero__title">Refer a business, earn {money(a.bonusCents)}</span>
+            <span className="text-strong affiliate-hero__title">
+              Refer a business, earn up to {money(Math.max(a.simpleBonusCents, a.customBonusCents))}
+            </span>
             <span className="text-small">
-              Share your referral ID. When someone signs up with it and pays for a CRM from GoCWGL, you earn {money(a.bonusCents)}.
+              Share your referral ID. When someone signs up with it and goes ahead with a CRM build from GoCWGL, you earn {bonuses}.
             </span>
           </div>
         </div>
@@ -72,10 +88,12 @@ export function AffiliateSection() {
           </div>
         </div>
         <p className="text-small">
-          They can type your ID in the <span className="u-strong">Referral ID</span> field when they create their account, or open your sign-up
-          link, which fills it in for them.
+          They can type your ID in the <span className="u-strong">Referral ID</span> field when they create their account, or open your
+          sign-up link, which fills it in for them.
         </p>
       </section>
+
+      <PayoutCard payout={a.payout} bonuses={bonuses} />
 
       <StatGrid
         items={[
@@ -94,11 +112,11 @@ export function AffiliateSection() {
             <table className="data-table referral-table">
               <thead>
                 <tr>
-                  <th>Contact</th>
+                  <th>Business you referred</th>
                   <th>Joined</th>
                   <th>CRM</th>
-                  <th>Bonus</th>
-                  <th>Bonus status</th>
+                  <th>Your bonus</th>
+                  <th>Your bonus status</th>
                 </tr>
               </thead>
               <tbody>
@@ -118,9 +136,21 @@ export function AffiliateSection() {
                         <Badge tone={crm.tone} dot>
                           {crm.label}
                         </Badge>
-                        {r.crmPaidAt && <span className="text-small referral-table__sub">Paid {formatShort(r.crmPaidAt)}</span>}
+                        <span className="text-small referral-table__sub">
+                          {[r.crmPackage && CRM_PACKAGE_LABELS[r.crmPackage], r.crmPaidAt && `Paid ${formatShort(r.crmPaidAt)}`]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
                       </td>
-                      <td className="data-table__mono">{money(r.bonusCents)}</td>
+                      <td className="data-table__mono">
+                        {r.bonusCents === null ? (
+                          <span className="text-small">
+                            {money(a.simpleBonusCents)} or {money(a.customBonusCents)}
+                          </span>
+                        ) : (
+                          money(r.bonusCents)
+                        )}
+                      </td>
                       <td>
                         <Badge tone={bonus.tone} dot>
                           {r.bonusStatus === "earned" ? "Earned · on its way" : bonus.label}

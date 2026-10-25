@@ -83,7 +83,8 @@
 }
 
 // The contact's own portal login (set password / reset link / invite).
-.portal-login {
+.portal-login,
+.referred-by-contact {
   gap: 10px;
   padding: 14px;
   border-color: rgba(8, 145, 178, 0.35);

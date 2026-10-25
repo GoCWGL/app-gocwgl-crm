@@ -20,6 +20,7 @@ import {
   useSetMyNotifications,
   useUpdateMe,
 } from "@/utils/hooks/useUsers";
+import { ReferredByCard } from "../components/ReferredByCard";
 import { SocialLinksCard } from "../components/SocialLinksCard";
 import { usePortal } from "../state/PortalContext";
 
@@ -29,6 +30,7 @@ export function AccountSection() {
   const { readOnly } = usePortal();
   return (
     <div className="card-row">
+      <ReferredByCard />
       <ProfileCard readOnly={readOnly} />
       <TeamCard />
       <SocialLinksCard />

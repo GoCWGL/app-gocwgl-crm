@@ -16,11 +16,6 @@
   &__amount {
     max-width: 180px;
   }
-
-  // Line up with the input, not the hint under it.
-  &__actions {
-    padding-bottom: 22px;
-  }
 }
 
 // Also the client portal's Affiliate page.
@@ -33,5 +28,82 @@
   &__sub {
     display: block;
     margin-top: 4px;
+  }
+}
+
+// Full payout details (admin dialog).
+.payout-details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: $radius-lg;
+  background: $bg-soft;
+  font-size: 13px;
+
+  &__row {
+    display: contents;
+  }
+
+  dt {
+    color: $ink-muted;
+    font-weight: 700;
+  }
+
+  dd {
+    margin: 0;
+    color: $ink;
+    overflow-wrap: anywhere;
+  }
+}
+
+// Filters and search above the affiliates and referrals tables.
+.affiliates-toolbar {
+  @include cluster(8px);
+  padding: 0 18px 12px;
+
+  &__search {
+    flex: 1 1 240px;
+    max-width: 360px;
+  }
+}
+
+// Each affiliate opens their account.
+.affiliate-table__row {
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    background: $bg-soft;
+  }
+}
+
+.affiliate-facts {
+  font-size: 14px;
+}
+
+// An affiliate's account: a large dialog floating in the middle of the screen, popping in.
+.affiliate-modal {
+  align-items: center;
+
+  .modal__panel {
+    animation: pop-in 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15);
+    transition: max-width 0.28s ease;
+  }
+
+  // "Widen": nearly the full window.
+  &--wide .modal__panel {
+    max-width: min(1440px, 96vw);
+  }
+
+  .modal__body {
+    max-height: min(68vh, 720px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .modal__panel {
+      animation: fade-in 0.15s ease-out;
+    }
   }
 }

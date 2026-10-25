@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type CSSProperties, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Icon } from "./Icon";
 
@@ -21,6 +21,10 @@ type ModalProps = {
   /** Render the panel as a <form> with this submit handler. */
   onSubmit?: (event: FormEvent<HTMLFormElement>) => void;
   footer?: ReactNode;
+  /** Extra class on the overlay, for a page's own sizing or entrance. */
+  className?: string;
+  /** Buttons in the header, before the close button (e.g. widen). */
+  headerActions?: ReactNode;
   children: ReactNode;
 };
 
@@ -36,12 +40,19 @@ export function Modal({
   width,
   onSubmit,
   footer,
+  className,
+  headerActions,
   children,
 }: ModalProps) {
-  // Close with Escape.
+  const root = useRef<HTMLDivElement>(null);
+  // Close with Escape: only the topmost dialog, so a dialog opened over another closes on its own.
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      const open = document.querySelectorAll(".modal");
+      if (open[open.length - 1] === root.current) onClose();
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
@@ -52,7 +63,7 @@ export function Modal({
   const style = width ? ({ "--modal-width": `${width}px` } as CSSProperties) : undefined;
 
   return (
-    <div className={cn("modal", variant === "drawer" && "modal--drawer")}>
+    <div ref={root} className={cn("modal", variant === "drawer" && "modal--drawer", className)}>
       <button type="button" className="modal__backdrop" onClick={onClose} aria-label="Close" tabIndex={-1} />
       <Panel
         className="modal__panel"
@@ -72,6 +83,7 @@ export function Modal({
             </h2>
             {subtitle && <span className="text-small">{subtitle}</span>}
           </div>
+          {headerActions}
           <button type="button" className="icon-btn icon-btn--lg" onClick={onClose} aria-label="Close">
             <Icon name="close" />
           </button>

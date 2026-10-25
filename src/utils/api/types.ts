@@ -2644,6 +2644,92 @@ export interface paths {
         patch: operations["update_program_api_admin_affiliates_program_patch"];
         trace?: never;
     };
+    "/api/admin/affiliates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Affiliates
+         * @description Every client eligible for the program (Paid subscriber stage), including removed ones.
+         */
+        get: operations["list_affiliates_api_admin_affiliates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/affiliates/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Affiliate */
+        get: operations["get_affiliate_api_admin_affiliates__contact_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Affiliate
+         * @description Change the client's referral ID, or remove them from the program / restore them.
+         */
+        patch: operations["update_affiliate_api_admin_affiliates__contact_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/affiliates/{contact_id}/payout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Affiliate Payout
+         * @description Enter or correct where a client's bonuses are sent, on their behalf.
+         */
+        put: operations["set_affiliate_payout_api_admin_affiliates__contact_id__payout_put"];
+        post?: never;
+        /** Remove Affiliate Payout */
+        delete: operations["remove_affiliate_payout_api_admin_affiliates__contact_id__payout_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/referred-by/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Contact Referrer
+         * @description Who referred this contact (CRM profile).
+         */
+        get: operations["contact_referrer_api_admin_referred_by__contact_id__get"];
+        /**
+         * Set Contact Referrer
+         * @description Super admins only: set, change or clear who referred this contact.
+         */
+        put: operations["set_contact_referrer_api_admin_referred_by__contact_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/referrals": {
         parameters: {
             query?: never;
@@ -2654,7 +2740,10 @@ export interface paths {
         /** List Referrals */
         get: operations["list_referrals_api_admin_referrals_get"];
         put?: never;
-        /** Create Referral */
+        /**
+         * Create Referral
+         * @description Super admins only: who referred whom is otherwise set by the client (sign-up or their 48 hours).
+         */
         post: operations["create_referral_api_admin_referrals_post"];
         delete?: never;
         options?: never;
@@ -2696,6 +2785,26 @@ export interface paths {
         post: operations["mark_bonus_paid_api_admin_referrals__referral_id__bonus_paid_post"];
         /** Undo Bonus Paid */
         delete: operations["undo_bonus_paid_api_admin_referrals__referral_id__bonus_paid_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/affiliates/payouts/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Payout Details
+         * @description Full payout details for sending a bonus (owners and admins; every look is audited).
+         */
+        get: operations["payout_details_api_admin_affiliates_payouts__contact_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3280,6 +3389,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/affiliate/payout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save Payout
+         * @description Where the client wants referral bonuses sent. Only the portal owner can set it.
+         */
+        put: operations["save_payout_api_portal_affiliate_payout_put"];
+        post?: never;
+        /** Remove Payout */
+        delete: operations["remove_payout_api_portal_affiliate_payout_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/referred-by": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Referred By
+         * @description Who referred this client, and whether they can still add it (within 48 hours of creating their account).
+         */
+        get: operations["referred_by_api_portal_referred_by_get"];
+        put?: never;
+        /** Add Referrer */
+        post: operations["add_referrer_api_portal_referred_by_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/booking/invite/{token}": {
         parameters: {
             query?: never;
@@ -3662,12 +3813,102 @@ export interface components {
             /** Quotecents */
             quoteCents?: number | null;
         };
+        /** AdminPayoutOut */
+        AdminPayoutOut: {
+            method: components["schemas"]["PayoutMethod"];
+            /** Holdername */
+            holderName: string;
+            /** Summary */
+            summary: string;
+            /** Updatedat */
+            updatedAt: string | null;
+            /** Details */
+            details: {
+                [key: string]: unknown;
+            };
+        };
+        /** AffiliateDetailOut */
+        AffiliateDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+            /** Email */
+            email: string;
+            /** Referralcode */
+            referralCode: string;
+            /** Phone */
+            phone: string;
+            /** Stage */
+            stage: string;
+            /** Removedat */
+            removedAt: string | null;
+            /** Referralscount */
+            referralsCount: number;
+            /** Earnedcents */
+            earnedCents: number;
+            /** Paidcents */
+            paidCents: number;
+            /** Owedcents */
+            owedCents: number;
+            payout: components["schemas"]["PayoutOut"] | null;
+            /** Referrals */
+            referrals: components["schemas"]["ReferralOut"][];
+        };
+        /**
+         * AffiliateOut
+         * @description A client in the affiliate program (Paid subscriber stage), with their totals.
+         */
+        AffiliateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+            /** Email */
+            email: string;
+            /** Referralcode */
+            referralCode: string;
+            /** Phone */
+            phone: string;
+            /** Stage */
+            stage: string;
+            /** Removedat */
+            removedAt: string | null;
+            /** Referralscount */
+            referralsCount: number;
+            /** Earnedcents */
+            earnedCents: number;
+            /** Paidcents */
+            paidCents: number;
+            /** Owedcents */
+            owedCents: number;
+            payout: components["schemas"]["PayoutOut"] | null;
+        };
+        /** AffiliatePatch */
+        AffiliatePatch: {
+            /** Referralcode */
+            referralCode?: string | null;
+            /** Removed */
+            removed?: boolean | null;
+        };
         /** AffiliateProgramOut */
         AffiliateProgramOut: {
             /** Enabled */
             enabled: boolean;
-            /** Bonuscents */
-            bonusCents: number;
+            /** Simplebonuscents */
+            simpleBonusCents: number;
+            /** Custombonuscents */
+            customBonusCents: number;
             /** Currency */
             currency: string;
         };
@@ -3675,8 +3916,10 @@ export interface components {
         AffiliateProgramUpdate: {
             /** Enabled */
             enabled?: boolean | null;
-            /** Bonuscents */
-            bonusCents?: number | null;
+            /** Simplebonuscents */
+            simpleBonusCents?: number | null;
+            /** Custombonuscents */
+            customBonusCents?: number | null;
         };
         /** AnswerOut */
         AnswerOut: {
@@ -4411,6 +4654,30 @@ export interface components {
             /** Tags */
             tags: components["schemas"]["TagOut"][];
         };
+        /** ContactReferrerIn */
+        ContactReferrerIn: {
+            /** Referrercontactid */
+            referrerContactId: string | null;
+        };
+        /**
+         * ContactReferrerOut
+         * @description Who referred a contact (their CRM profile).
+         */
+        ContactReferrerOut: {
+            referrer: components["schemas"]["ReferralParty"] | null;
+            /** Referralid */
+            referralId: string | null;
+            /** Code */
+            code: string;
+            /** Linkedat */
+            linkedAt: string | null;
+            /** Bonuspaid */
+            bonusPaid: boolean;
+            /** Deadline */
+            deadline: string | null;
+            /** Windowopen */
+            windowOpen: boolean;
+        };
         /**
          * ContactSubmissionOut
          * @description A submission on a contact's profile, with field labels resolved.
@@ -4459,6 +4726,11 @@ export interface components {
             /** Tagids */
             tagIds?: string[] | null;
         };
+        /**
+         * CrmPackage
+         * @enum {string}
+         */
+        CrmPackage: "simple" | "custom";
         /**
          * CrmProgress
          * @description How far the referred client is with a CRM. The bonus is earned at PAID.
@@ -5690,6 +5962,53 @@ export interface components {
              */
             updatedAt: string;
         };
+        /**
+         * PayoutDetails
+         * @description Wise or PayPal: the account email (Wise may add their payment link). Bank: bank name, account number, and a routing
+         *     number or SWIFT/BIC.
+         */
+        PayoutDetails: {
+            /** Email */
+            email?: string | null;
+            /** Paymentlink */
+            paymentLink?: string | null;
+            /** Bankname */
+            bankName?: string | null;
+            /** Accountnumber */
+            accountNumber?: string | null;
+            /** Routingnumber */
+            routingNumber?: string | null;
+            /** Swift */
+            swift?: string | null;
+            /** Country */
+            country?: string | null;
+        };
+        /** PayoutIn */
+        PayoutIn: {
+            method: components["schemas"]["PayoutMethod"];
+            /** Holdername */
+            holderName: string;
+            details: components["schemas"]["PayoutDetails"];
+        };
+        /**
+         * PayoutMethod
+         * @description How a client wants their bonuses sent. Card numbers are never collected.
+         * @enum {string}
+         */
+        PayoutMethod: "wise" | "paypal" | "bank";
+        /**
+         * PayoutOut
+         * @description Masked: never the full account number.
+         */
+        PayoutOut: {
+            method: components["schemas"]["PayoutMethod"];
+            /** Holdername */
+            holderName: string;
+            /** Summary */
+            summary: string;
+            /** Updatedat */
+            updatedAt: string | null;
+        };
         /** PhaseIn */
         PhaseIn: {
             /** Id */
@@ -5798,12 +6117,17 @@ export interface components {
         PortalAffiliateOut: {
             /** Enabled */
             enabled: boolean;
-            /** Bonuscents */
-            bonusCents: number;
+            /** Simplebonuscents */
+            simpleBonusCents: number;
+            /** Custombonuscents */
+            customBonusCents: number;
             /** Currency */
             currency: string;
+            /** Unlocked */
+            unlocked: boolean;
             /** Referralcode */
             referralCode: string;
+            payout: components["schemas"]["PayoutOut"] | null;
             /** Referrals */
             referrals: components["schemas"]["PortalReferralOut"][];
             /** Earnedcents */
@@ -5878,10 +6202,11 @@ export interface components {
              */
             joinedAt: string;
             crm: components["schemas"]["CrmProgress"];
+            crmPackage: components["schemas"]["CrmPackage"] | null;
             /** Crmpaidat */
             crmPaidAt: string | null;
             /** Bonuscents */
-            bonusCents: number;
+            bonusCents: number | null;
             bonusStatus: components["schemas"]["BonusStatus"];
             /** Bonuspaidat */
             bonusPaidAt: string | null;
@@ -6228,10 +6553,11 @@ export interface components {
              */
             joinedAt: string;
             crm: components["schemas"]["CrmProgress"];
+            crmPackage: components["schemas"]["CrmPackage"] | null;
             /** Crmpaidat */
             crmPaidAt: string | null;
             /** Bonuscents */
-            bonusCents: number;
+            bonusCents: number | null;
             /** Custombonus */
             customBonus: boolean;
             bonusStatus: components["schemas"]["BonusStatus"];
@@ -6239,6 +6565,7 @@ export interface components {
             bonusPaidAt: string | null;
             /** Note */
             note: string;
+            referrerPayout: components["schemas"]["PayoutOut"] | null;
         };
         /** ReferralParty */
         ReferralParty: {
@@ -6262,6 +6589,35 @@ export interface components {
             bonusCents?: number | null;
             /** Note */
             note?: string | null;
+        };
+        /** ReferredByIn */
+        ReferredByIn: {
+            /** Referralcode */
+            referralCode: string;
+        };
+        /** ReferredByOut */
+        ReferredByOut: {
+            referrer: components["schemas"]["ReferrerOut"] | null;
+            /** Linkedat */
+            linkedAt: string | null;
+            /** Signedupat */
+            signedUpAt: string | null;
+            /** Deadline */
+            deadline: string | null;
+            /** Open */
+            open: boolean;
+            /** Programenabled */
+            programEnabled: boolean;
+        };
+        /**
+         * ReferrerOut
+         * @description What a client sees of whoever referred them.
+         */
+        ReferrerOut: {
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
         };
         /** RegisterRequest */
         RegisterRequest: {
@@ -15815,6 +16171,298 @@ export interface operations {
             };
         };
     };
+    list_affiliates_api_admin_affiliates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Affiliates Api Admin Affiliates Get */
+                        data: components["schemas"]["AffiliateOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_affiliate_api_admin_affiliates__contact_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AffiliateDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_affiliate_api_admin_affiliates__contact_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AffiliatePatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AffiliateDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_affiliate_payout_api_admin_affiliates__contact_id__payout_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayoutIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PayoutOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_affiliate_payout_api_admin_affiliates__contact_id__payout_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    contact_referrer_api_admin_referred_by__contact_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContactReferrerOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_contact_referrer_api_admin_referred_by__contact_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactReferrerIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContactReferrerOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_referrals_api_admin_referrals_get: {
         parameters: {
             query?: never;
@@ -16036,6 +16684,48 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ReferralOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    payout_details_api_admin_affiliates_payouts__contact_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AdminPayoutOut"];
                     };
                 };
             };
@@ -17693,6 +18383,152 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["PortalAffiliateOut"];
                     };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    save_payout_api_portal_affiliate_payout_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayoutIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PayoutOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_payout_api_portal_affiliate_payout_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    referred_by_api_portal_referred_by_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReferredByOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_referrer_api_portal_referred_by_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferredByIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReferredByOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Error */
