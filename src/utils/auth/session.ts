@@ -88,6 +88,16 @@ export function isStaffAdmin(user: User | null | undefined): boolean {
   return !!user?.isStaff && (user.role === "super_admin" || user.role === "admin");
 }
 
+/**
+ * Whether this teammate may use a CRM menu (Settings › Team › Menus). No list means every menu; super admins always
+ * have every menu. The API enforces the same rule.
+ */
+export function canUseMenu(user: User | null | undefined, menu: string | null): boolean {
+  if (!user?.isStaff) return false;
+  if (!menu || user.role === "super_admin" || user.menuAccess == null) return true;
+  return user.menuAccess.includes(menu);
+}
+
 /** Only a super admin may add, promote, demote or remove admins and super admins (the API enforces it). */
 export function isSuperAdmin(user: User | null | undefined): boolean {
   return !!user?.isStaff && user.role === "super_admin";

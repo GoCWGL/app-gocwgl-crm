@@ -522,6 +522,26 @@ export interface paths {
         patch: operations["change_role_api_admin_team__user_id__patch"];
         trace?: never;
     };
+    "/api/admin/team/{user_id}/menus": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change Menu Access
+         * @description Which CRM menus this teammate may use (null = every menu). Super admins always have every menu.
+         */
+        put: operations["change_menu_access_api_admin_team__user_id__menus_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/contacts/{contact_id}/portal-login": {
         parameters: {
             query?: never;
@@ -2422,7 +2442,7 @@ export interface paths {
         };
         /**
          * Dashboard
-         * @description Numbers for the admin Dashboard and Reporting pages.
+         * @description Numbers for the admin Dashboard and Reporting pages: the last 7/30/90 days, or `start`..`end`.
          */
         get: operations["dashboard_api_admin_reports_dashboard_get"];
         put?: never;
@@ -5585,6 +5605,8 @@ export interface components {
              * @constant
              */
             status?: "Invited";
+            /** Menuaccess */
+            menuAccess?: string[] | null;
         };
         /** InvitationPreview */
         InvitationPreview: {
@@ -5807,6 +5829,8 @@ export interface components {
             role: string;
             /** Portalrole */
             portalRole: string | null;
+            /** Menuaccess */
+            menuAccess?: string[] | null;
             /**
              * Status
              * @default Active
@@ -5815,6 +5839,11 @@ export interface components {
             status?: "Active" | "Invited";
             /** Lastloginat */
             lastLoginAt?: string | null;
+        };
+        /** MenuAccessChange */
+        MenuAccessChange: {
+            /** Menuaccess */
+            menuAccess?: ("dashboard" | "contacts" | "pipeline" | "calendar" | "payments" | "affiliates" | "progress" | "media" | "email" | "forms" | "surveys" | "automation" | "reporting" | "bugs")[] | null;
         };
         /** MessageOut */
         MessageOut: {
@@ -6991,6 +7020,8 @@ export interface components {
              * @enum {string}
              */
             role?: "super_admin" | "admin" | "sales" | "viewer";
+            /** Menuaccess */
+            menuAccess?: ("dashboard" | "contacts" | "pipeline" | "calendar" | "payments" | "affiliates" | "progress" | "media" | "email" | "forms" | "surveys" | "automation" | "reporting" | "bugs")[] | null;
         };
         /** StaffMessageIn */
         StaffMessageIn: {
@@ -7663,6 +7694,8 @@ export interface components {
              * @default false
              */
             isStaff?: boolean;
+            /** Menuaccess */
+            menuAccess?: string[] | null;
         };
         /** VerifyEmailRequest */
         VerifyEmailRequest: {
@@ -8873,6 +8906,52 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["RoleChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MemberOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    change_menu_access_api_admin_team__user_id__menus_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MenuAccessChange"];
             };
         };
         responses: {
@@ -15779,6 +15858,10 @@ export interface operations {
         parameters: {
             query?: {
                 range?: "7" | "30" | "90";
+                /** @description Custom range: first day (business time zone). Send with `end`. */
+                start?: string | null;
+                /** @description Custom range: last day, inclusive. */
+                end?: string | null;
             };
             header?: never;
             path?: never;

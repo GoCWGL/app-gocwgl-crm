@@ -13,8 +13,11 @@ export const setMyNotifications = (prefs: NotificationPrefsMap) =>
 // ------------------------------------------------------------------ Staff team (admin)
 export type StaffRole = RoleChange["role"];
 export const getStaffTeam = () => get<TeamOut>("/admin/team");
-export const inviteStaff = (body: { email: string; fullName: string; role: StaffRole }) =>
+/** `menuAccess`: the CRM menus they may use; null = every menu. */
+export const inviteStaff = (body: { email: string; fullName: string; role: StaffRole; menuAccess?: string[] | null }) =>
   post<InvitationOut>("/admin/team/invitations", body);
+/** null = every menu. Super admins always have every menu. */
+export const changeMenuAccess = (userId: string, menuAccess: string[] | null) => put<MemberOut>(`/admin/team/${userId}/menus`, { menuAccess });
 export const cancelStaffInvitation = (id: string) => del(`/admin/team/invitations/${id}`);
 export const changeStaffRole = (userId: string, role: StaffRole) => patch<MemberOut>(`/admin/team/${userId}`, { role });
 export const removeStaff = (userId: string) => del(`/admin/team/${userId}`);

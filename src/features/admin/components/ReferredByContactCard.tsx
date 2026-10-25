@@ -8,7 +8,7 @@ import { isSuperAdmin } from "@/utils/auth/session";
 import { formatShort } from "@/utils/format/dates";
 import { useContactReferrer, useSetContactReferrer } from "@/utils/hooks/useAffiliates";
 import { useAllContacts } from "@/utils/hooks/useContacts";
-import { useMe } from "@/utils/hooks/useUsers";
+import { useCanUseMenu, useMe } from "@/utils/hooks/useUsers";
 import { contactName } from "../lib/contacts";
 import { useAdmin } from "../state/AdminContext";
 
@@ -19,6 +19,7 @@ import { useAdmin } from "../state/AdminContext";
 export function ReferredByContactCard({ contact: c }: { contact: ContactOut }) {
   const { update } = useAdmin();
   const canEdit = isSuperAdmin(useMe().data);
+  const seeAffiliates = useCanUseMenu("affiliates");
   const query = useContactReferrer(c.id);
   const save = useSetContactReferrer();
   const contacts = useAllContacts({}, canEdit).data ?? [];
@@ -42,6 +43,9 @@ export function ReferredByContactCard({ contact: c }: { contact: ContactOut }) {
         },
       },
     );
+
+  // Part of the Affiliates menu (Settings › Team › Menus).
+  if (!seeAffiliates) return null;
 
   return (
     <div className="inset referred-by-contact">

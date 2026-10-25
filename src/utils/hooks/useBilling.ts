@@ -4,12 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import * as api from "@/utils/api/billing";
 import type { InvoiceUpdate, SubscriptionUpdate } from "@/utils/api/models";
 import { qk } from "./keys";
+import { useCanUseMenu } from "./useUsers";
 import { useApiMutation } from "./mutation";
 
 const BILLING_KEYS = [qk.subscriptions, qk.invoices, ["dashboard"], qk.contacts, qk.activity];
 
+/** Transactions data: not requested for teammates without the Transactions menu. */
 export const useSubscriptions = (contactId?: string) =>
-  useQuery({ queryKey: [...qk.subscriptions, contactId ?? "all"], queryFn: () => api.listSubscriptions(contactId) });
+  useQuery({ queryKey: [...qk.subscriptions, contactId ?? "all"], queryFn: () => api.listSubscriptions(contactId), enabled: useCanUseMenu("payments") });
 export const useCreateSubscription = () => useApiMutation(api.createSubscription, { invalidate: BILLING_KEYS });
 export const useUpdateSubscription = () =>
   useApiMutation((v: { id: string; body: SubscriptionUpdate }) => api.updateSubscription(v.id, v.body), { invalidate: BILLING_KEYS });
@@ -17,7 +19,7 @@ export const useDeleteSubscription = () => useApiMutation(api.deleteSubscription
 export const useCancelSubscription = () => useApiMutation(api.cancelSubscription, { invalidate: BILLING_KEYS });
 
 export const useInvoices = (filters: { status?: string; contact_id?: string } = {}) =>
-  useQuery({ queryKey: [...qk.invoices, filters], queryFn: () => api.listInvoices(filters) });
+  useQuery({ queryKey: [...qk.invoices, filters], queryFn: () => api.listInvoices(filters), enabled: useCanUseMenu("payments") });
 export const useCreateInvoice = () => useApiMutation(api.createInvoice, { invalidate: BILLING_KEYS });
 export const useUpdateInvoice = () =>
   useApiMutation((v: { id: string; body: InvoiceUpdate }) => api.updateInvoice(v.id, v.body), { invalidate: BILLING_KEYS });

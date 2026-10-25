@@ -4,10 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import type { ClientTicketIn, IntakeKeyIn, PortalIntakeKeyIn, StaffTicketIn, TicketPatch } from "@/utils/api/models";
 import * as api from "@/utils/api/support";
 import { qk } from "./keys";
+import { useCanUseMenu } from "./useUsers";
 import { useApiMutation } from "./mutation";
 
 export const useTickets = (filters: { status?: string; type?: string; contact_id?: string } = {}) =>
-  useQuery({ queryKey: [...qk.tickets, filters], queryFn: () => api.listTickets(filters) });
+  useQuery({ queryKey: [...qk.tickets, filters], queryFn: () => api.listTickets(filters), enabled: useCanUseMenu("bugs") });
 export const useCreateTicket = () => useApiMutation((v: StaffTicketIn) => api.createTicket(v), { invalidate: [qk.tickets, ["dashboard"]] });
 export const useUpdateTicket = () =>
   useApiMutation((v: { id: string; body: TicketPatch }) => api.updateTicket(v.id, v.body), { invalidate: [qk.tickets, ["dashboard"]] });
@@ -17,7 +18,7 @@ export const usePostTicketMessage = () =>
     invalidate: [qk.tickets],
   });
 
-export const useIntakeKeys = () => useQuery({ queryKey: qk.intakeKeys, queryFn: () => api.listIntakeKeys() });
+export const useIntakeKeys = () => useQuery({ queryKey: qk.intakeKeys, queryFn: () => api.listIntakeKeys(), enabled: useCanUseMenu("bugs") });
 export const useCreateIntakeKey = () => useApiMutation((v: IntakeKeyIn) => api.createIntakeKey(v), { invalidate: [qk.intakeKeys] });
 export const useRevokeIntakeKey = () => useApiMutation(api.revokeIntakeKey, { invalidate: [qk.intakeKeys] });
 

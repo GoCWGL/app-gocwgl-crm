@@ -5,10 +5,12 @@ import { markInvoicePaid } from "@/utils/api/billing";
 import * as api from "@/utils/api/delivery";
 import type { BrandKitIn, CrmRequestIn, CrmRequestStatus, ProjectSummary, EmbedIn, EmbedPatch, FileCategory, FilePatch, LinksIn, PhaseIn, ProjectPatch, ProjectStart, ChecklistAdd } from "@/utils/api/models";
 import { qk } from "./keys";
+import { useCanUseMenu } from "./useUsers";
 import { useApiMutation } from "./mutation";
 
 // ------------------------------------------------------------------ Build progress (admin)
-export const useProjects = () => useQuery({ queryKey: qk.projects, queryFn: api.listProjects });
+/** Build Progress data: not requested for teammates without that menu. */
+export const useProjects = () => useQuery({ queryKey: qk.projects, queryFn: api.listProjects, enabled: useCanUseMenu("progress") });
 export const useProject = (projectId: string) =>
   useQuery({ queryKey: qk.project(projectId), queryFn: () => api.getProject(projectId), enabled: !!projectId, retry: false });
 
@@ -49,7 +51,7 @@ export const usePostProjectUpdate = () =>
   });
 
 // ------------------------------------------------------------------ CRM requests (admin)
-export const useCrmRequests = () => useQuery({ queryKey: qk.crmRequests, queryFn: api.listCrmRequests });
+export const useCrmRequests = () => useQuery({ queryKey: qk.crmRequests, queryFn: api.listCrmRequests, enabled: useCanUseMenu("progress") });
 export const useUpdateCrmRequest = () =>
   useApiMutation((v: { id: string; status: CrmRequestStatus }) => api.updateCrmRequest(v.id, v.status), { invalidate: [qk.crmRequests] });
 export const useDeleteCrmRequest = () => useApiMutation(api.deleteCrmRequest, { invalidate: [qk.crmRequests] });
@@ -62,7 +64,7 @@ export const useStartCrmRequestBuild = () =>
   useApiMutation(api.startCrmRequestBuild, { invalidate: [qk.crmRequests, qk.projects, ["dashboard"]] });
 
 // ------------------------------------------------------------------ Client media (admin)
-export const useMediaFolders = () => useQuery({ queryKey: qk.mediaFolders, queryFn: api.listMediaFolders });
+export const useMediaFolders = () => useQuery({ queryKey: qk.mediaFolders, queryFn: api.listMediaFolders, enabled: useCanUseMenu("media") });
 export const useMedia = (contactId: string) =>
   useQuery({ queryKey: qk.media(contactId), queryFn: () => api.listMedia(contactId), enabled: !!contactId });
 export const useUploadMedia = () =>

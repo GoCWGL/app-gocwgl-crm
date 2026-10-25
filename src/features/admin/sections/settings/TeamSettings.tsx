@@ -7,6 +7,7 @@ import { avatarTone } from "@/lib/tones";
 import { isEmail } from "@/lib/utils";
 import type { StaffRole } from "@/utils/api/users";
 import { isStaffAdmin, isSuperAdmin } from "@/utils/auth/session";
+import type { MemberOut } from "@/utils/api/models";
 import { fieldErrors } from "@/utils/errors";
 import {
   useCancelStaffInvitation,
@@ -16,6 +17,7 @@ import {
   useRemoveStaff,
   useStaffTeam,
 } from "@/utils/hooks/useUsers";
+import { MenuAccessDialog, MenuAccessPicker, menuAccessLabel, type MenuAccess } from "./MenuAccessPicker";
 
 export function TeamSettings({ onMessage }: { onMessage: (message: string) => void }) {
   const me = useMe().data;
@@ -25,6 +27,7 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
   const remove = useRemoveStaff();
   const cancelInvite = useCancelStaffInvitation();
   const [adding, setAdding] = useState(false);
+  const [editingMenus, setEditingMenus] = useState<MemberOut | null>(null);
 
   // Only a super admin grants or takes away the admin and super admin roles (the API enforces it too).
   const superAdmin = isSuperAdmin(me);
@@ -64,8 +67,16 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
                   {isSelf && " (you)"}
                 </span>
                 <span className="text-small">{m.email}</span>
+                <span className="text-tiny team-row__menus" title={menuAccessLabel(m.menuAccess)}>
+                  <Icon name="grid" size={11} /> {m.role === "super_admin" ? "Every menu (super admin)" : menuAccessLabel(m.menuAccess)}
+                </span>
               </div>
               <Badge tone="green">{m.status ?? "Active"}</Badge>
+              {!isSelf && !lockedOwner && m.role !== "super_admin" && (
+                <Button size="sm" variant="outline" aria-label={`Menu access for ${m.fullName || m.email}`} onClick={() => setEditingMenus(m)}>
+                  Menus
+                </Button>
+              )}
               <Select
                 size="sm"
                 className="input--auto"
@@ -100,6 +111,9 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
             <div className="stack stack--2 team-row__who">
               <span className="text-strong">{inv.fullName || inv.email}</span>
               <span className="text-small">{inv.email}</span>
+              <span className="text-tiny team-row__menus">
+                <Icon name="grid" size={11} /> {inv.role === "super_admin" ? "Every menu (super admin)" : menuAccessLabel(inv.menuAccess)}
+              </span>
             </div>
             <Badge tone="amber">Invited</Badge>
             <span className="text-small u-strong">{TEAM_ROLES.find((r) => r.value === inv.role)?.label ?? inv.role}</span>
@@ -115,9 +129,20 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
           </div>
         ))}
       </LoadState>
+      {editingMenus && (
+        <MenuAccessDialog
+          member={editingMenus}
+          onClose={() => setEditingMenus(null)}
+          onSaved={(text) => {
+            setEditingMenus(null);
+            onMessage(text);
+          }}
+        />
+      )}
 
       <span className="text-small">
         Super Admin: everything · Admin: everything except managing admins · Sales: contacts, pipeline, calendar and email · Viewer: read only.
+        Use Menus to limit which pages someone can open.
       </span>
     </div>
   );
@@ -147,7 +172,9 @@ function AddTeamMemberDialog({
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<StaffRole>("sales");
+  const [menus, setMenus] = useState<MenuAccess>(null);
   const [tried, setTried] = useState(false);
+  const noMenus = role !== "super_admin" && menus !== null && menus.length === 0;
   const api = fieldErrors(invite.error);
   const nameErr = !fullName.trim() ? "Enter their name." : api.fullName || "";
   const emailErr = !isEmail(email) ? "Enter a valid email." : api.email || "";
@@ -155,10 +182,10 @@ function AddTeamMemberDialog({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setTried(true);
-    if (!fullName.trim() || !isEmail(email)) return;
+    if (!fullName.trim() || !isEmail(email) || noMenus) return;
     const address = email.trim();
     invite.mutate(
-      { email: address, fullName: fullName.trim(), role },
+      { email: address, fullName: fullName.trim(), role, menuAccess: role === "super_admin" ? null : menus },
       { onSuccess: () => onAdded(`${fullName.trim()} was added as ${TEAM_ROLES.find((r) => r.value === role)?.label}. An invite is on its way to ${address}.`) },
     );
   };
@@ -208,6 +235,12 @@ function AddTeamMemberDialog({
       <Field label="Role" htmlFor="tm-role" hint={ROLE_HELP[role]}>
         <Select id="tm-role" value={role} options={roleOptions} onChange={(e) => setRole(e.target.value as StaffRole)} />
       </Field>
+      {role === "super_admin" ? (
+        <span className="text-small">Super admins always have every menu.</span>
+      ) : (
+        <MenuAccessPicker value={menus} onChange={setMenus} idPrefix="tm-menus" />
+      )}
+      {tried && noMenus && <span className="field__error">Give them access to at least one menu.</span>}
       {invite.error && !api.email && !api.fullName ? <FormError error={invite.error} /> : null}
     </Modal>
   );

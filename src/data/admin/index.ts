@@ -53,3 +53,57 @@ export const CONTACT_VIEWS: Record<ContactView, { title: string; subtitle: strin
   active: { title: "Active Clients", subtitle: "Clients who are currently paying for their subscription." },
   inactive: { title: "Inactive Clients", subtitle: "Lost leads, paused subscriptions and clients who stopped paying." },
 };
+
+/** The CRM menus a team member can be given (Settings › Team). Same keys as the API. */
+export type MenuKey =
+  | "dashboard"
+  | "contacts"
+  | "pipeline"
+  | "calendar"
+  | "payments"
+  | "affiliates"
+  | "progress"
+  | "media"
+  | "email"
+  | "forms"
+  | "surveys"
+  | "automation"
+  | "reporting"
+  | "bugs";
+
+export const MENUS: Array<{ key: MenuKey; label: string }> = [
+  { key: "dashboard", label: "Dashboard" },
+  { key: "contacts", label: "Contacts" },
+  { key: "pipeline", label: "Pipeline" },
+  { key: "calendar", label: "Calendar" },
+  { key: "payments", label: "Transactions" },
+  { key: "affiliates", label: "Affiliates" },
+  { key: "progress", label: "Build Progress" },
+  { key: "media", label: "Client Media" },
+  { key: "email", label: "Email" },
+  { key: "forms", label: "Forms" },
+  { key: "surveys", label: "Surveys" },
+  { key: "automation", label: "Automation" },
+  { key: "reporting", label: "Reporting" },
+  { key: "bugs", label: "Report Bugs" },
+];
+
+/** Which menu each page belongs to (Settings is always available: everyone has a profile). */
+export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
+  dashboard: "dashboard",
+  clients: "contacts",
+  tags: "contacts",
+  pipeline: "pipeline",
+  calendar: "calendar",
+  payments: "payments",
+  affiliates: "affiliates",
+  progress: "progress",
+  media: "media",
+  email: "email",
+  forms: "forms",
+  surveys: "surveys",
+  automation: "automation",
+  reporting: "reporting",
+  bugs: "bugs",
+  settings: null,
+};

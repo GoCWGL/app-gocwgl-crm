@@ -125,6 +125,7 @@ export type LinksIn = S["LinksIn"];
 export type LinksOut = S["LinksOut"];
 export type LoginRequest = S["LoginRequest"];
 export type MemberOut = S["MemberOut"];
+export type MenuAccessChange = S["MenuAccessChange"];
 export type MessageOut = S["MessageOut"];
 export type MfaLoginRequest = S["MfaLoginRequest"];
 export type MfaRequiredResponse = S["MfaRequiredResponse"];

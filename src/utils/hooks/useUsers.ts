@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@/utils/api/models";
 import * as api from "@/utils/api/users";
-import { setUser, useSession } from "@/utils/auth/session";
+import { canUseMenu, setUser, useSession } from "@/utils/auth/session";
 import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
 
@@ -12,6 +12,15 @@ export function useMe() {
   const { user, status } = useSession();
   const query = useQuery({ queryKey: qk.me, queryFn: api.getMe, enabled: status === "authenticated", initialData: user ?? undefined });
   return { ...query, data: (query.data ?? user) as User | null };
+}
+
+/**
+ * Whether the signed-in teammate may use any of these CRM menus. Data hooks for a menu's own data use it so a
+ * teammate without that menu never requests it (the API would refuse anyway).
+ */
+export function useCanUseMenu(...menus: string[]): boolean {
+  const me = useMe().data;
+  return menus.some((m) => canUseMenu(me, m));
 }
 
 export const useUpdateMe = () =>
@@ -29,6 +38,10 @@ export const useInviteStaff = () => useApiMutation(api.inviteStaff, { invalidate
 export const useCancelStaffInvitation = () => useApiMutation(api.cancelStaffInvitation, { invalidate: [qk.staffTeam] });
 export const useChangeStaffRole = () =>
   useApiMutation((v: { userId: string; role: api.StaffRole }) => api.changeStaffRole(v.userId, v.role), { invalidate: [qk.staffTeam] });
+export const useChangeMenuAccess = () =>
+  useApiMutation((v: { userId: string; menuAccess: string[] | null }) => api.changeMenuAccess(v.userId, v.menuAccess), {
+    invalidate: [qk.staffTeam],
+  });
 export const useRemoveStaff = () => useApiMutation(api.removeStaff, { invalidate: [qk.staffTeam] });
 
 // ------------------------------------------------------------------ Portal team

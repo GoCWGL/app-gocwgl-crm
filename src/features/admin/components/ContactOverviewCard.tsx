@@ -13,7 +13,7 @@ import { useInvoices, useSubscriptions } from "@/utils/hooks/useBilling";
 import { usePortalLogin } from "@/utils/hooks/useContacts";
 import { useCrmRequests, useProjects } from "@/utils/hooks/useDelivery";
 import { useTickets } from "@/utils/hooks/useSupport";
-import { useMe } from "@/utils/hooks/useUsers";
+import { useCanUseMenu, useMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../state/AdminContext";
 
 const OPEN_INVOICE = new Set(["Sent", "Overdue"]);
@@ -66,6 +66,11 @@ export function ContactOverviewCard({ contact: c }: { contact: ContactOut }) {
   const affiliate = useAffiliate(c.id).data;
   const referrer = useContactReferrer(c.id).data;
   const [showPayout, setShowPayout] = useState(false);
+  // Only the parts of the account this teammate's menus cover (Settings › Team › Menus).
+  const seeBilling = useCanUseMenu("payments");
+  const seeBuilds = useCanUseMenu("progress");
+  const seeSupport = useCanUseMenu("bugs");
+  const seeAffiliate = useCanUseMenu("affiliates");
 
   const open = invoices.filter((i) => OPEN_INVOICE.has(i.status));
   const paidCents = invoices.filter((i) => i.status === "Paid").reduce((t, i) => t + i.totalCents, 0);
@@ -97,115 +102,121 @@ export function ContactOverviewCard({ contact: c }: { contact: ContactOut }) {
             <Row label="Signed up">
               {formatShort(c.createdAt)} · {c.source}
             </Row>
-            <Row label="Portal login">{login ? LOGIN_LABELS[login.status] ?? login.status : "…"}</Row>
-            <Row label="Support">{tickets.length ? `${openTickets} open · ${tickets.length} total` : "No requests"}</Row>
+            <Row label="Portal login">{login ? (LOGIN_LABELS[login.status] ?? login.status) : "…"}</Row>
+            {seeSupport && <Row label="Support">{tickets.length ? `${openTickets} open · ${tickets.length} total` : "No requests"}</Row>}
           </dl>
         </section>
 
-        <section className="glance__group" aria-label="Billing">
-          <span className="glance__title">Billing</span>
-          <dl className="glance__facts">
-            <Row label="Subscription">
-              {subs.length
-                ? subs.map((s) => (
-                    <span key={s.id} className="glance__line">
-                      {s.plan} · {formatPerInterval(s.amountCents, s.interval, s.currency)} · {s.status}
-                      {s.nextBillingDate && s.status !== "Canceled" ? ` · next ${formatShort(s.nextBillingDate)}` : ""}
-                    </span>
-                  ))
-                : "None"}
-            </Row>
-            <Row label="Paid so far">{formatCents(paidCents)}</Row>
-            <Row label="Open invoices">
-              {open.length
-                ? open.map((i) => (
-                    <span key={i.id} className="glance__line">
-                      {i.number} · {formatCents(i.totalCents, i.currency)} · {i.status}
-                      {i.dueDate ? ` · due ${formatShort(i.dueDate)}` : ""}
-                      {i.paymentUrl && (
-                        <>
-                          {" · "}
-                          <a href={i.paymentUrl} target="_blank" rel="noopener noreferrer">
-                            Payment link
-                          </a>
-                          <CopyValue value={i.paymentUrl} label="Payment link" />
-                        </>
-                      )}
-                    </span>
-                  ))
-                : "None"}
-            </Row>
-          </dl>
-        </section>
+        {seeBilling && (
+          <section className="glance__group" aria-label="Billing">
+            <span className="glance__title">Billing</span>
+            <dl className="glance__facts">
+              <Row label="Subscription">
+                {subs.length
+                  ? subs.map((s) => (
+                      <span key={s.id} className="glance__line">
+                        {s.plan} · {formatPerInterval(s.amountCents, s.interval, s.currency)} · {s.status}
+                        {s.nextBillingDate && s.status !== "Canceled" ? ` · next ${formatShort(s.nextBillingDate)}` : ""}
+                      </span>
+                    ))
+                  : "None"}
+              </Row>
+              <Row label="Paid so far">{formatCents(paidCents)}</Row>
+              <Row label="Open invoices">
+                {open.length
+                  ? open.map((i) => (
+                      <span key={i.id} className="glance__line">
+                        {i.number} · {formatCents(i.totalCents, i.currency)} · {i.status}
+                        {i.dueDate ? ` · due ${formatShort(i.dueDate)}` : ""}
+                        {i.paymentUrl && (
+                          <>
+                            {" · "}
+                            <a href={i.paymentUrl} target="_blank" rel="noopener noreferrer">
+                              Payment link
+                            </a>
+                            <CopyValue value={i.paymentUrl} label="Payment link" />
+                          </>
+                        )}
+                      </span>
+                    ))
+                  : "None"}
+              </Row>
+            </dl>
+          </section>
+        )}
 
-        <section className="glance__group" aria-label="Builds">
-          <span className="glance__title">Builds &amp; requests</span>
-          <dl className="glance__facts">
-            <Row label="Builds">
-              {builds.length
-                ? builds.map((p) => (
-                    <span key={p.id} className="glance__line">
-                      {p.package} · {p.kind === "crm" ? "CRM" : "Funnel"} · {p.status} · {p.progress}%
-                    </span>
-                  ))
-                : "None"}
-            </Row>
-            <Row label="CRM requests">
-              {crmRequests.length
-                ? crmRequests.map((r) => (
-                    <span key={r.id} className="glance__line">
-                      {r.name} · {r.package === "custom" ? "Custom" : "Simple"} · {r.status}
-                      {r.invoice ? ` · invoice ${r.invoice.status.toLowerCase()}` : ""}
-                    </span>
-                  ))
-                : "None"}
-            </Row>
-          </dl>
-        </section>
+        {seeBuilds && (
+          <section className="glance__group" aria-label="Builds">
+            <span className="glance__title">Builds &amp; requests</span>
+            <dl className="glance__facts">
+              <Row label="Builds">
+                {builds.length
+                  ? builds.map((p) => (
+                      <span key={p.id} className="glance__line">
+                        {p.package} · {p.kind === "crm" ? "CRM" : "Funnel"} · {p.status} · {p.progress}%
+                      </span>
+                    ))
+                  : "None"}
+              </Row>
+              <Row label="CRM requests">
+                {crmRequests.length
+                  ? crmRequests.map((r) => (
+                      <span key={r.id} className="glance__line">
+                        {r.name} · {r.package === "custom" ? "Custom" : "Simple"} · {r.status}
+                        {r.invoice ? ` · invoice ${r.invoice.status.toLowerCase()}` : ""}
+                      </span>
+                    ))
+                  : "None"}
+              </Row>
+            </dl>
+          </section>
+        )}
 
-        <section className="glance__group" aria-label="Affiliate">
-          <span className="glance__title">Affiliate</span>
-          <dl className="glance__facts">
-            <Row label="Referral ID">
-              {affiliate ? (
-                <>
-                  <span className="data-table__mono">{formatReferralCode(affiliate.referralCode)}</span>
-                  <CopyValue value={affiliate.referralCode} label="Referral ID" />
-                </>
-              ) : (
-                "…"
-              )}
-            </Row>
-            <Row label="Status">{affiliateStatus}</Row>
-            <Row label="Referred by">
-              {referrer?.referrer
-                ? `${referrer.referrer.name || referrer.referrer.email}${referrer.code ? ` (ID ${formatReferralCode(referrer.code)})` : " (set by the team)"}`
-                : "No one"}
-            </Row>
-            <Row label="Their referrals">
-              {affiliate
-                ? affiliate.referralsCount
-                  ? `${affiliate.referralsCount} · earned ${formatCents(affiliate.earnedCents)} · to pay ${formatCents(affiliate.owedCents)}`
-                  : "None yet"
-                : "…"}
-            </Row>
-            <Row label="Payout">
-              {affiliate?.payout ? (
-                <span className="glance__line">
-                  {payoutMethodLabel(affiliate.payout.method)} · {affiliate.payout.holderName} · {affiliate.payout.summary}
-                  {isAdmin && !showPayout && (
-                    <Button size="sm" variant="link" onClick={() => setShowPayout(true)}>
-                      Show details
-                    </Button>
-                  )}
-                </span>
-              ) : (
-                "Not added"
-              )}
-            </Row>
-          </dl>
-          {showPayout && affiliate?.payout && <PayoutReveal contactId={c.id} />}
-        </section>
+        {seeAffiliate && (
+          <section className="glance__group" aria-label="Affiliate">
+            <span className="glance__title">Affiliate</span>
+            <dl className="glance__facts">
+              <Row label="Referral ID">
+                {affiliate ? (
+                  <>
+                    <span className="data-table__mono">{formatReferralCode(affiliate.referralCode)}</span>
+                    <CopyValue value={affiliate.referralCode} label="Referral ID" />
+                  </>
+                ) : (
+                  "…"
+                )}
+              </Row>
+              <Row label="Status">{affiliateStatus}</Row>
+              <Row label="Referred by">
+                {referrer?.referrer
+                  ? `${referrer.referrer.name || referrer.referrer.email}${referrer.code ? ` (ID ${formatReferralCode(referrer.code)})` : " (set by the team)"}`
+                  : "No one"}
+              </Row>
+              <Row label="Their referrals">
+                {affiliate
+                  ? affiliate.referralsCount
+                    ? `${affiliate.referralsCount} · earned ${formatCents(affiliate.earnedCents)} · to pay ${formatCents(affiliate.owedCents)}`
+                    : "None yet"
+                  : "…"}
+              </Row>
+              <Row label="Payout">
+                {affiliate?.payout ? (
+                  <span className="glance__line">
+                    {payoutMethodLabel(affiliate.payout.method)} · {affiliate.payout.holderName} · {affiliate.payout.summary}
+                    {isAdmin && !showPayout && (
+                      <Button size="sm" variant="link" onClick={() => setShowPayout(true)}>
+                        Show details
+                      </Button>
+                    )}
+                  </span>
+                ) : (
+                  "Not added"
+                )}
+              </Row>
+            </dl>
+            {showPayout && affiliate?.payout && <PayoutReveal contactId={c.id} />}
+          </section>
+        )}
       </div>
       {affiliate?.removedAt && (
         <Badge tone="neutral" dot>

@@ -25,7 +25,7 @@ import {
 import { useClientLinks, useMediaFolders } from "@/utils/hooks/useDelivery";
 import { useApiMutation } from "@/utils/hooks/mutation";
 import { qk } from "@/utils/hooks/keys";
-import { useMe } from "@/utils/hooks/useUsers";
+import { useMe, useCanUseMenu } from "@/utils/hooks/useUsers";
 import { ClientEmbedsCard } from "../components/ClientEmbedsCard";
 import { ContactAnswersCard } from "../components/ContactAnswersCard";
 import { ContactNotesCard } from "../components/ContactNotesCard";
@@ -82,6 +82,8 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
   const tags = useTags().data ?? [];
   const links = useClientLinks(c.id).data;
   const folder = useMediaFolders().data?.find((f) => f.contactId === c.id);
+  // The Client Media menu (Settings › Team › Menus).
+  const seeMedia = useCanUseMenu("media");
   const archive = useArchiveContact();
   const unarchive = useUnarchiveContact();
   const remove = useDeleteContact();
@@ -380,18 +382,20 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
           →
         </span>
       </button>
-      <button type="button" className="link-card" onClick={() => openMediaFolder(c.id)}>
-        <FolderGlyph width={26} height={22} strokeWidth={2.5} fill="rgba(255,153,0,0.18)" stroke="#FF9900" />
-        <span className="stack stack--2 u-grow">
-          <span className="text-strong">Media folder</span>
-          <span className="text-small">
-            {folder?.fileCount ? `${folder.fileCount} files · logos, photos and documents` : "Empty — files the client uploads appear here"}
+      {seeMedia && (
+        <button type="button" className="link-card" onClick={() => openMediaFolder(c.id)}>
+          <FolderGlyph width={26} height={22} strokeWidth={2.5} fill="rgba(255,153,0,0.18)" stroke="#FF9900" />
+          <span className="stack stack--2 u-grow">
+            <span className="text-strong">Media folder</span>
+            <span className="text-small">
+              {folder?.fileCount ? `${folder.fileCount} files · logos, photos and documents` : "Empty — files the client uploads appear here"}
+            </span>
           </span>
-        </span>
-        <span className="link-card__arrow" aria-hidden="true">
-          →
-        </span>
-      </button>
+          <span className="link-card__arrow" aria-hidden="true">
+            →
+          </span>
+        </button>
+      )}
 
       <div className="stack stack--8">
         <span className="kicker">TAGS</span>

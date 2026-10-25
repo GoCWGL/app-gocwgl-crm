@@ -4,6 +4,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import * as tools from "@/utils/api/admin-tools";
 import * as api from "@/utils/api/reporting";
 import { qk } from "./keys";
+import { useCanUseMenu } from "./useUsers";
 import { useApiMutation } from "./mutation";
 
 export const useDashboard = (range: api.DashboardRange = 30, custom?: api.CustomRange | null) =>
@@ -11,6 +12,7 @@ export const useDashboard = (range: api.DashboardRange = 30, custom?: api.Custom
     queryKey: custom ? [...qk.dashboard(range), custom.start, custom.end] : qk.dashboard(range),
     queryFn: () => api.getDashboard(range, custom),
     placeholderData: keepPreviousData,
+    enabled: useCanUseMenu("dashboard", "reporting", "pipeline"),
   });
 
 export const useActivity = (opts: { contact_id?: string; limit?: number } = {}) =>

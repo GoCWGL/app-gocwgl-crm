@@ -6,9 +6,10 @@ import { useState } from "react";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
 import { Avatar, CountChip, Icon, IconTile, type IconName } from "@/components/ui";
-import type { AdminTab, ContactView } from "@/data/admin";
+import { TAB_MENU, type AdminTab, type ContactView } from "@/data/admin";
 import type { Tone } from "@/lib/tones";
 import { useSubscriptions } from "@/utils/hooks/useBilling";
+import { canUseMenu } from "@/utils/auth/session";
 import { useSignOut } from "@/utils/hooks/useAuth";
 import { useAllContacts, useTags } from "@/utils/hooks/useContacts";
 import { useMe } from "@/utils/hooks/useUsers";
@@ -30,9 +31,12 @@ const GROUPS: Array<{ title: string; links: NavLink[] }> = [
   { title: "Delivery", links: [link("progress", "Build Progress", "rocket", "brand"), link("media", "Client Media", "folder", "indigo")] },
   {
     title: "Marketing",
-    links: [link("email", "Email", "mail", "sky"), link("forms", "Forms", "form", "indigo"),
+    links: [
+      link("email", "Email", "mail", "sky"),
+      link("forms", "Forms", "form", "indigo"),
       link("surveys", "Surveys", "survey", "purple"),
-      link("automation", "Automation", "bolt", "amber")],
+      link("automation", "Automation", "bolt", "amber"),
+    ],
   },
   { title: "Insights", links: [link("reporting", "Reporting", "chart", "teal")] },
 ];
@@ -57,6 +61,10 @@ export function AdminSidebar() {
   const signOut = useSignOut();
   const [contactsOpen, setContactsOpen] = useState(true);
   const name = me?.fullName || me?.email || "";
+  // Settings › Team › Menus: only the menus this teammate may use are shown.
+  const can = (t: AdminTab) => canUseMenu(me, TAB_MENU[t]);
+  const sales = SALES.filter((l) => can(l.tab));
+  const groups = GROUPS.map((g) => ({ ...g, links: g.links.filter((l) => can(l.tab)) })).filter((g) => g.links.length);
 
   const inContacts = tab === "clients" || tab === "tags";
   const subnavOpen = contactsOpen || inContacts;
@@ -85,12 +93,9 @@ export function AdminSidebar() {
       footer={
         <>
           <SidebarGroup title="Support">
-            <NavItem
-              label="Report Bugs"
-              active={tab === "bugs"}
-              onClick={() => goTo("bugs")}
-              icon={<NavIcon icon="bug" tone="red" />}
-            />
+            {can("bugs") && (
+              <NavItem label="Report Bugs" active={tab === "bugs"} onClick={() => goTo("bugs")} icon={<NavIcon icon="bug" tone="red" />} />
+            )}
             <NavItem
               label={signOut.isPending ? "Signing out…" : "Sign out"}
               onClick={() => signOut.mutate(undefined, { onSettled: () => router.replace("/login") })}
@@ -108,48 +113,54 @@ export function AdminSidebar() {
         </>
       }
     >
-      <SidebarGroup>
-        <NavItem
-          label="Dashboard"
-          active={tab === "dashboard"}
-          onClick={() => goTo("dashboard")}
-          icon={<NavIcon icon="grid" tone="cyan" />}
-        />
-      </SidebarGroup>
+      {can("dashboard") && (
+        <SidebarGroup>
+          <NavItem
+            label="Dashboard"
+            active={tab === "dashboard"}
+            onClick={() => goTo("dashboard")}
+            icon={<NavIcon icon="grid" tone="cyan" />}
+          />
+        </SidebarGroup>
+      )}
 
-      <SidebarGroup title="Sales">
-        <NavItem
-          label="Contacts"
-          highlighted={inContacts}
-          expanded={subnavOpen}
-          onClick={() => setContactsOpen(inContacts ? true : !contactsOpen)}
-          icon={<NavIcon icon="users" tone="purple" />}
-        />
-        {subnavOpen && (
-          <div className="subnav" role="group" aria-label="Contacts">
-            {contactLinks.map((l, i) => {
-              const active = l.view === "tags" ? tab === "tags" : tab === "clients" && state.contactView === l.view;
-              return (
-                <button
-                  key={l.view}
-                  type="button"
-                  className="subnav__item"
-                  aria-current={active ? "page" : undefined}
-                  onClick={() => (l.view === "tags" ? goTo("tags") : openContacts(l.view))}
-                >
-                  <span className="subnav__node" aria-hidden="true" />
-                  <span className="subnav__index">0{i + 1}</span>
-                  <span className="u-grow">{l.label}</span>
-                  <CountChip>{l.count}</CountChip>
-                </button>
-              );
-            })}
-          </div>
-        )}
-        {SALES.map(renderLink)}
-      </SidebarGroup>
+      {(can("clients") || sales.length > 0) && (
+        <SidebarGroup title="Sales">
+          {can("clients") && (
+            <NavItem
+              label="Contacts"
+              highlighted={inContacts}
+              expanded={subnavOpen}
+              onClick={() => setContactsOpen(inContacts ? true : !contactsOpen)}
+              icon={<NavIcon icon="users" tone="purple" />}
+            />
+          )}
+          {can("clients") && subnavOpen && (
+            <div className="subnav" role="group" aria-label="Contacts">
+              {contactLinks.map((l, i) => {
+                const active = l.view === "tags" ? tab === "tags" : tab === "clients" && state.contactView === l.view;
+                return (
+                  <button
+                    key={l.view}
+                    type="button"
+                    className="subnav__item"
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => (l.view === "tags" ? goTo("tags") : openContacts(l.view))}
+                  >
+                    <span className="subnav__node" aria-hidden="true" />
+                    <span className="subnav__index">0{i + 1}</span>
+                    <span className="u-grow">{l.label}</span>
+                    <CountChip>{l.count}</CountChip>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {sales.map(renderLink)}
+        </SidebarGroup>
+      )}
 
-      {GROUPS.map((g) => (
+      {groups.map((g) => (
         <SidebarGroup key={g.title} title={g.title}>
           {g.links.map(renderLink)}
         </SidebarGroup>

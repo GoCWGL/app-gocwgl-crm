@@ -3,9 +3,9 @@
 import { useEffect, type ComponentType } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button, Toast } from "@/components/ui";
-import { ADMIN_PAGES, CONTACT_VIEWS, type AdminTab } from "@/data/admin";
+import { ADMIN_PAGES, CONTACT_VIEWS, TAB_MENU, type AdminTab } from "@/data/admin";
 import { RequireStaff } from "@/utils/auth/guards";
-import { canWriteCrm } from "@/utils/auth/session";
+import { canUseMenu, canWriteCrm } from "@/utils/auth/session";
 import { useSettings } from "@/utils/hooks/useSettings";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useSectionChangeSweep } from "@/utils/navigation";
@@ -68,7 +68,14 @@ function AdminLayout() {
   const { tab, contactView } = state;
   // Loads the business currency and time zone every admin screen formats with.
   useSettings();
-  const canWrite = canWriteCrm(useMe().data);
+  const me = useMe().data;
+  const canWrite = canWriteCrm(me);
+  // Settings › Team › Menus: a page this teammate can't use sends them to their first one (Settings if none).
+  const allowed = canUseMenu(me, TAB_MENU[tab]);
+  const firstAllowed = (Object.keys(SECTIONS) as AdminTab[]).find((t) => canUseMenu(me, TAB_MENU[t])) ?? "settings";
+  useEffect(() => {
+    if (me && !allowed) update({ tab: firstAllowed, editContactId: "" });
+  }, [me, allowed, firstAllowed, update]);
 
   // Start each section at the top of the page, with the top progress sweep.
   useEffect(() => {
@@ -119,7 +126,7 @@ function AdminLayout() {
       />
       {/* Keyed by view so filters reset when switching Contacts / Clients / Inactive, and the entrance replays. */}
       <div className="page-enter" key={tab === "clients" ? contactView : tab}>
-        <Section />
+        {allowed ? <Section /> : <div className="empty-state">You don’t have access to this page. Ask a super admin for access.</div>}
       </div>
     </AppShell>
   );
