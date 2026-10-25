@@ -101,22 +101,146 @@
   }
 }
 
-// Settings › Team › which CRM menus someone may use.
+// Settings › Team › which CRM menus someone may use: a switch, then a grid of selectable menu tiles.
 .menu-access {
-  @include stack(8px);
+  @include stack(10px);
   margin: 0;
   padding: 0;
   border: 0;
 
+  &__head {
+    @include row(8px);
+    justify-content: space-between;
+
+    legend {
+      float: left; // lets the legend sit in a flex row
+      padding: 0;
+    }
+  }
+
+  &__count {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: $bg-soft;
+    color: $ink-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+  }
+
+  &__all {
+    @include row(12px);
+    padding: 12px 14px;
+    border: 1px solid $line-strong;
+    border-radius: $radius-lg;
+    background: $white;
+    transition:
+      border-color 0.15s,
+      background-color 0.15s;
+
+    &--on {
+      border-color: rgba(255, 153, 0, 0.45);
+      background: rgba(255, 153, 0, 0.06);
+    }
+  }
+
+  &__tools {
+    margin-bottom: -4px;
+  }
+
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 6px 12px;
-    padding: 10px 12px;
-    border-radius: $radius-lg;
-    background: $bg-soft;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
   }
 }
+
+// One menu in the picker: icon, name and a check badge; the whole tile toggles.
+.menu-tile {
+  position: relative;
+  @include row(10px);
+  padding: 9px 10px;
+  border: 1px solid $line-strong;
+  border-radius: $radius-lg;
+  background: $white;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s,
+    box-shadow 0.15s,
+    transform 0.1s;
+
+  &:hover {
+    border-color: rgba(255, 153, 0, 0.5);
+    box-shadow: 0 4px 14px rgba(11, 20, 36, 0.06);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  // The real checkbox: hidden but focusable, with the focus ring drawn on the tile.
+  &__input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+
+  &:has(&__input:focus-visible) {
+    outline: 2px solid $cyan-700;
+    outline-offset: 2px;
+  }
+
+  &__label {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: $ink-soft;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  &__check {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid $line-strong;
+    border-radius: 50%;
+    color: transparent;
+    transition:
+      background-color 0.15s,
+      border-color 0.15s,
+      color 0.15s;
+  }
+
+  &--on {
+    border-color: rgba(255, 153, 0, 0.6);
+    background: rgba(255, 153, 0, 0.07);
+
+    .menu-tile__label {
+      color: $ink;
+    }
+
+    .menu-tile__check {
+      border-color: #ff9900;
+      background: #ff9900;
+      color: $white;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:active {
+      transform: none;
+    }
+  }
+}
+
 
 .invite-form {
   @include cluster(10px);

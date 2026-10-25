@@ -193,7 +193,7 @@ function AddTeamMemberDialog({
   return (
     <Modal
       open
-      width={520}
+      width={640}
       onClose={onClose}
       onSubmit={submit}
       titleId="tm-title"
