@@ -33,6 +33,7 @@ export interface paths {
         /**
          * Register
          * @description Create a client account. Always answers the same way, so it cannot be used to discover accounts.
+         *     A filled-in honeypot gets that same answer, but nothing is created.
          */
         post: operations["register_api_auth_register_post"];
         delete?: never;
@@ -5813,6 +5814,13 @@ export interface components {
              * @default false
              */
             remember?: boolean;
+            /** Captchatoken */
+            captchaToken?: string | null;
+            /**
+             * Website
+             * @default
+             */
+            website?: string;
         };
         /** MemberOut */
         MemberOut: {
@@ -6740,8 +6748,12 @@ export interface components {
         };
         /** RegisterRequest */
         RegisterRequest: {
+            /** Firstname */
+            firstName?: string | null;
+            /** Lastname */
+            lastName?: string | null;
             /** Fullname */
-            fullName: string;
+            fullName?: string | null;
             /** Business */
             business: string;
             /**
@@ -6766,6 +6778,13 @@ export interface components {
              * @constant
              */
             agree: true;
+            /** Captchatoken */
+            captchaToken?: string | null;
+            /**
+             * Website
+             * @default
+             */
+            website?: string;
         };
         /** ReportIn */
         ReportIn: {

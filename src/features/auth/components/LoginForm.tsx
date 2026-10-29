@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Checkbox, Field } from "@/components/ui";
 import { SSO_PROVIDERS } from "@/data/auth";
 import { toneClass } from "@/lib/tones";
@@ -9,6 +9,7 @@ import type { SessionResponse } from "@/utils/api/models";
 import { errorMessage, fieldErrors, hasCode } from "@/utils/errors";
 import { useLogin } from "@/utils/hooks/useAuth";
 import { emailError } from "../lib/validation";
+import { useBotCheck } from "./useBotCheck";
 import { PasswordInput } from "@/components/ui";
 
 type LoginFormProps = {
@@ -30,6 +31,8 @@ export function LoginForm({ email, onEmailChange, onSignedIn, onMfaRequired, onE
   const [tried, setTried] = useState(false);
   const [ssoError, setSsoError] = useState("");
   const login = useLogin();
+  const bot = useBotCheck("login");
+  const honeypot = useRef("");
 
   const apiFields = fieldErrors(login.error);
   const emailErr = emailError(email) || apiFields.email || "";
@@ -43,9 +46,9 @@ export function LoginForm({ email, onEmailChange, onSignedIn, onMfaRequired, onE
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setTried(true);
-    if (emailError(email) || !password) return;
+    if (emailError(email) || !password || !bot.ready) return;
     login.mutate(
-      { email: email.trim(), password, remember },
+      { email: email.trim(), password, remember, captchaToken: bot.token, website: honeypot.current },
       {
         onSuccess: (result: LoginResult) => {
           if (result.status === "mfa_required") onMfaRequired(result.mfaToken);
@@ -54,6 +57,8 @@ export function LoginForm({ email, onEmailChange, onSignedIn, onMfaRequired, onE
         onError: (error) => {
           if (hasCode(error, "email_not_verified")) onEmailNotVerified(email.trim(), errorMessage(error));
         },
+        // Each bot-check token works once.
+        onSettled: bot.reset,
       },
     );
   };
@@ -143,6 +148,19 @@ export function LoginForm({ email, onEmailChange, onSignedIn, onMfaRequired, onE
           checked={remember}
           onChange={() => setRemember((v) => !v)}
         />
+
+        {/* Honeypot: hidden from people; bots fill it in and the API turns them away. */}
+        <input
+          className="sr-only"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          name="website"
+          onChange={(e) => (honeypot.current = e.target.value)}
+        />
+
+        {bot.widget}
+        {tried && !bot.ready && <span className="field__error">{bot.message}</span>}
 
         <button type="submit" className="btn btn--primary btn--lg btn--block auth-submit" disabled={login.isPending}>
           {login.isPending ? "Signing in…" : "Sign in"}

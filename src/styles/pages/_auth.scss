@@ -721,3 +721,8 @@ $brand-grid: 32px;
   font-size: 12px;
   color: $muted;
 }
+
+// Cloudflare Turnstile "I'm human" box. Space is held while it loads so the button doesn't jump.
+.auth-bot-check {
+  min-height: 65px;
+}

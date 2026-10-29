@@ -8,11 +8,11 @@ export type NoticeKind = "info" | "success" | "warning";
 export type Notice = { kind: NoticeKind; text: string } | null;
 
 export type SignupData = {
-  name: string;
+  firstName: string;
+  lastName: string;
   business: string;
   email: string;
   phone: string;
-  invite: string;
   /** Referral ID of the client who referred them (their portal’s Affiliate page). */
   referral: string;
   password: string;
@@ -20,11 +20,11 @@ export type SignupData = {
 };
 
 export const EMPTY_SIGNUP: SignupData = {
-  name: "",
+  firstName: "",
+  lastName: "",
   business: "",
   email: "",
   phone: "",
-  invite: "",
   referral: "",
   password: "",
   agree: false,

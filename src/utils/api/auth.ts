@@ -17,7 +17,15 @@ export type LoginResult = SessionResponse | MfaRequiredResponse;
 export type OAuthProvider = "google" | "microsoft";
 
 // ------------------------------------------------------------------ Sign in / up
-export const login = (body: { email: string; password: string; remember: boolean }) =>
+export const login = (body: {
+  email: string;
+  password: string;
+  remember: boolean;
+  /** Cloudflare Turnstile token (when the bot check is on). */
+  captchaToken?: string | null;
+  /** Honeypot: always empty for people. */
+  website?: string;
+}) =>
   post<LoginResult>("/auth/login", body);
 
 /** `mfaToken` is omitted after Google / Microsoft sign-in (it travels in a cookie). */

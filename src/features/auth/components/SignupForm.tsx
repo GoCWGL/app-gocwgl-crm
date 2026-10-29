@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { Field } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { errorMessage, fieldErrors } from "@/utils/errors";
 import { useRegister } from "@/utils/hooks/useAuth";
 import { emailError, passwordStrength } from "../lib/validation";
 import type { SignupData } from "../types";
+import { useBotCheck } from "./useBotCheck";
 import { PasswordInput } from "@/components/ui";
 
 type SignupFormProps = {
@@ -17,7 +18,7 @@ type SignupFormProps = {
   onLogin: () => void;
 };
 
-type TextFieldKey = "name" | "business" | "email" | "phone" | "invite" | "referral";
+type TextFieldKey = "firstName" | "lastName" | "business" | "email" | "phone" | "referral";
 
 const TEXT_FIELDS: Array<{
   key: TextFieldKey;
@@ -28,21 +29,14 @@ const TEXT_FIELDS: Array<{
   placeholder: string;
   hint?: string;
   mono?: boolean;
+  /** Takes the whole row instead of sharing it. */
+  full?: boolean;
 }> = [
-  { key: "name", id: "su-name", label: "Full name", type: "text", autoComplete: "name", placeholder: "Aisha Rahman" },
-  { key: "business", id: "su-biz", label: "Business name", type: "text", autoComplete: "organization", placeholder: "Rahman Wellness" },
-  { key: "email", id: "su-email", label: "Work email", type: "email", autoComplete: "email", placeholder: "you@business.com" },
-  { key: "phone", id: "su-phone", label: "Phone (optional)", type: "tel", autoComplete: "tel", placeholder: "+1 555 010 2030" },
-  {
-    key: "invite",
-    id: "su-inv",
-    label: "Invite code",
-    type: "text",
-    autoComplete: "off",
-    placeholder: "GO-XXXX",
-    hint: "(optional, from your welcome email)",
-    mono: true,
-  },
+  { key: "firstName", id: "su-first", label: "First name", type: "text", autoComplete: "given-name", placeholder: "Aisha" },
+  { key: "lastName", id: "su-last", label: "Last name", type: "text", autoComplete: "family-name", placeholder: "Rahman" },
+  { key: "business", id: "su-biz", label: "Business name", type: "text", autoComplete: "organization", placeholder: "Rahman Wellness", full: true },
+  { key: "email", id: "su-email", label: "Work email", type: "email", autoComplete: "email", placeholder: "you@business.com", full: true },
+  { key: "phone", id: "su-phone", label: "Phone (optional)", type: "tel", autoComplete: "tel", placeholder: "+1 555 010 2030", full: true },
   {
     key: "referral",
     id: "su-ref",
@@ -52,6 +46,7 @@ const TEXT_FIELDS: Array<{
     placeholder: "K7M2-Q9XA",
     hint: "(optional, from the client who referred you)",
     mono: true,
+    full: true,
   },
 ];
 
@@ -59,11 +54,11 @@ const STRENGTH_TONES = ["neutral", "red", "amber", "cyan", "green"] as const;
 
 function validate(data: SignupData): Record<TextFieldKey | "password", string> {
   return {
-    name: data.name.trim() ? "" : "Enter your full name.",
+    firstName: data.firstName.trim() ? "" : "Enter your first name.",
+    lastName: data.lastName.trim() ? "" : "Enter your last name.",
     business: data.business.trim() ? "" : "Enter your business name.",
     email: emailError(data.email),
     phone: data.phone && data.phone.replace(/\D/g, "").length < 7 ? "That phone number looks too short." : "",
-    invite: "",
     referral: "",
     password: data.password.length < 8 ? "Use at least 8 characters." : "",
   };
@@ -72,15 +67,17 @@ function validate(data: SignupData): Record<TextFieldKey | "password", string> {
 export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormProps) {
   const [tried, setTried] = useState(false);
   const register = useRegister();
+  const bot = useBotCheck("register");
+  const honeypot = useRef("");
   const local = validate(data);
   const api = fieldErrors(register.error);
   // 422 field errors from the API sit next to the matching fields.
   const errors: Record<TextFieldKey | "password", string> = {
-    name: local.name || api.fullName || "",
+    firstName: local.firstName || api.firstName || api.fullName || "",
+    lastName: local.lastName || api.lastName || "",
     business: local.business || api.business || "",
     email: local.email || api.email || "",
     phone: local.phone || api.phone || "",
-    invite: local.invite || api.inviteCode || "",
     referral: local.referral || api.referralCode || "",
     password: local.password || api.password || "",
   };
@@ -91,19 +88,22 @@ export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormPro
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setTried(true);
-    if (Object.values(local).some(Boolean) || !data.agree) return;
+    if (Object.values(local).some(Boolean) || !data.agree || !bot.ready) return;
     register.mutate(
       {
-        fullName: data.name.trim(),
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
         business: data.business.trim(),
         email: data.email.trim(),
         phone: data.phone.trim(),
         password: data.password,
-        inviteCode: data.invite.trim() || null,
         referralCode: data.referral.trim() || null,
         agree: true,
+        captchaToken: bot.token,
+        website: honeypot.current,
       },
-      { onSuccess: (r) => onCreated(r?.message ?? "") },
+      // Each bot-check token works once.
+      { onSuccess: (r) => onCreated(r?.message ?? ""), onSettled: bot.reset },
     );
   };
 
@@ -121,6 +121,7 @@ export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormPro
             return (
               <Field
                 key={f.key}
+                className={cn(f.full && "form-grid__full")}
                 htmlFor={f.id}
                 strongLabel
                 error={error}
@@ -195,6 +196,19 @@ export function SignupForm({ data, onChange, onCreated, onLogin }: SignupFormPro
           </span>
         </label>
         {tried && !data.agree && <span className="field__error">Please accept the terms to continue.</span>}
+
+        {/* Honeypot: hidden from people; bots fill it in and the API turns them away. */}
+        <input
+          className="sr-only"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          name="website"
+          onChange={(e) => (honeypot.current = e.target.value)}
+        />
+
+        {bot.widget}
+        {tried && !bot.ready && <span className="field__error">{bot.message}</span>}
 
         {tried && generalError && (
           <span className="field__error" role="alert">
