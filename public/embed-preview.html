@@ -1,0 +1,35 @@
+<!doctype html>
+<!--
+  Shows a client's CRM embed code (EmbedCodeDialog). Loaded in a sandboxed iframe, so it has no access to the app.
+  Its own Content-Security-Policy (next.config.ts) lets that code load from its CRM; the srcdoc frame below inherits
+  that policy and the sandbox.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      html,
+      body,
+      iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      // Only ever run the code sandboxed (no origin, "null"), never as the app itself.
+      if (window.origin === "null") {
+        addEventListener("message", function (event) {
+          if (event.source !== parent || typeof event.data !== "string") return;
+          var frame = document.querySelector("iframe") || document.body.appendChild(document.createElement("iframe"));
+          frame.srcdoc = event.data;
+        });
+        parent.postMessage("gocwgl:embed-preview-ready", "*");
+      }
+    </script>
+  </body>
+</html>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { EmbedThread } from "@/components/embeds/EmbedThread";
 import { Badge, Button, Field, FormError, Icon, IconTile, Input, Modal, SegmentedControl, Textarea } from "@/components/ui";
 import { EMBED_KINDS, type EmbedKind } from "@/data/embeds";
@@ -14,6 +14,8 @@ import { usePortal } from "../state/PortalContext";
 
 type Draft = { id: string; kind: EmbedKind; label: string; code: string };
 
+const EMBED_PREVIEW_READY = "gocwgl:embed-preview-ready";
+
 const kindOf = (k: string) => EMBED_KINDS.find((x) => x.kind === k) ?? EMBED_KINDS[3];
 
 /** Embed codes look like HTML (<iframe>, <script>, <div>…) or a plain widget link. */
@@ -22,14 +24,31 @@ const looksLikeEmbed = (code: string) => /<[a-z!][\s\S]*>/i.test(code) || /^http
 /**
  * Embed code is untrusted HTML: it is only ever rendered inside a sandboxed iframe
  * (scripts and forms run, but it can't reach this page, its cookies or the access token).
+ * The frame is /embed-preview.html rather than srcdoc, so the code gets that page's looser
+ * Content-Security-Policy instead of inheriting this one. The page says when it's ready for the code.
  */
 function SandboxedPreview({ code }: { code: string }) {
+  const frame = useRef<HTMLIFrameElement>(null);
+  const html = /^https?:\/\/\S+$/i.test(code.trim())
+    ? `<iframe src="${code.trim().replace(/"/g, "&quot;")}" style="width:100%;height:100%;border:0"></iframe>`
+    : code;
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      const target = frame.current?.contentWindow;
+      // The sandboxed page has no origin of its own, so "*" is the only target that reaches it.
+      if (target && e.source === target && e.data === EMBED_PREVIEW_READY) target.postMessage(html, "*");
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [html]);
   return (
     <iframe
+      key={html}
+      ref={frame}
       className="embed-preview"
       title="Embed code preview"
       sandbox="allow-scripts allow-forms"
-      srcDoc={/^https?:\/\/\S+$/i.test(code.trim()) ? `<iframe src="${code.trim().replace(/"/g, "&quot;")}" style="width:100%;height:100%;border:0"></iframe>` : code}
+      src="/embed-preview.html"
     />
   );
 }
