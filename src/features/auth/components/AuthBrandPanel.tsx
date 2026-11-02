@@ -12,7 +12,9 @@ const titleWords = BRAND_PANEL.title.split(" ");
 export function AuthBrandPanel() {
   return (
     <section className="auth-brand" aria-label="About GoCWGL">
-      <Image className="auth-brand__logo" src={logoWordmark} alt="GoCWGL" priority />
+      <a className="auth-brand__logo-link" href="https://gocwgl.com">
+        <Image className="auth-brand__logo" src={logoWordmark} alt="GoCWGL" priority />
+      </a>
 
       <div className="auth-brand__pitch hide-sm">
         <span className="kicker">{BRAND_PANEL.kicker}</span>

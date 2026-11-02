@@ -62,7 +62,14 @@
     border-bottom: 1px solid $line;
   }
 
+  // The link hugs the logo so the whole panel row isn't clickable.
+  &__logo-link {
+    display: block;
+    align-self: flex-start;
+  }
+
   &__logo {
+    display: block;
     width: 176px;
     height: auto;
   }
