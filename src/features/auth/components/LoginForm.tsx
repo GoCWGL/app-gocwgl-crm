@@ -22,10 +22,9 @@ type LoginFormProps = {
   /** The email isn't confirmed yet; the API just sent a new code. */
   onEmailNotVerified: (email: string, message: string) => void;
   onForgot: () => void;
-  onSignup: () => void;
 };
 
-export function LoginForm({ email, onEmailChange, onSignedIn, onMfaRequired, onEmailNotVerified, onForgot, onSignup }: LoginFormProps) {
+export function LoginForm({ email, onEmailChange, onSignedIn, onMfaRequired, onEmailNotVerified, onForgot }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
   const [tried, setTried] = useState(false);
@@ -166,13 +165,6 @@ export function LoginForm({ email, onEmailChange, onSignedIn, onMfaRequired, onE
           {login.isPending ? "Signing in…" : "Sign in"}
         </button>
       </form>
-
-      <p className="auth-switch">
-        New client?{" "}
-        <button type="button" className="auth-switch__link" onClick={onSignup}>
-          Create an account
-        </button>
-      </p>
     </>
   );
 }

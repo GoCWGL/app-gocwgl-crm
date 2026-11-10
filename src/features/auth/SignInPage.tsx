@@ -15,9 +15,8 @@ import { ForgotForm } from "./components/ForgotForm";
 import { LoginForm } from "./components/LoginForm";
 import { ResetPasswordForm } from "./components/ResetPasswordForm";
 import { SignedInCard } from "./components/SignedInCard";
-import { SignupForm } from "./components/SignupForm";
 import { VerifyForm } from "./components/VerifyForm";
-import { EMPTY_SIGNUP, type AuthMode, type Notice, type SignupData, type VerifyReason } from "./types";
+import type { AuthMode, Notice, VerifyReason } from "./types";
 
 const OAUTH_NOTICES: Record<string, Notice> = {
   unverified: {
@@ -40,17 +39,12 @@ function homeFor(user: User | null | undefined, enrollMfa = false): string {
 }
 
 /**
- * Sign in, sign up, forgot / reset password, accept invite and the security-code step.
+ * Sign in, forgot / reset password, accept invite and the security-code step.
  * The API decides who is staff (→ /admin) and who is a client (→ /portal).
  */
 /** Links from emails and the Google / Microsoft round trip land on /login with one of these. */
 function readLink(params: URLSearchParams) {
   return { reset: params.get("reset_token"), invite: params.get("invite"), oauth: params.get("oauth") };
-}
-
-/** A client's sign-up link (/login?ref=ID, from their Affiliate page) opens sign-up with the referral ID filled in. */
-function readReferral(params: URLSearchParams): string {
-  return (params.get("ref") ?? "").trim().slice(0, 32);
 }
 
 function initialScreen(link: ReturnType<typeof readLink>): { mode: AuthMode; notice: Notice } {
@@ -66,15 +60,11 @@ export function SignInPage() {
   const { status } = useSession();
   const params = useSearchParams();
   const [link] = useState(() => readLink(params));
-  const [referral] = useState(() => readReferral(params));
-  const [first] = useState(() => {
-    const screen = initialScreen(link);
-    return referral && screen.mode === "login" && !screen.notice ? { mode: "signup" as AuthMode, notice: null } : screen;
-  });
+  // No self sign-up: client accounts are created by the team (Clients › Add client).
+  const [first] = useState(() => initialScreen(link));
   const [mode, setMode] = useState<AuthMode>(first.mode);
   const [notice, setNotice] = useState<Notice>(first.notice);
   const [loginEmail, setLoginEmail] = useState("");
-  const [signup, setSignup] = useState<SignupData>(() => ({ ...EMPTY_SIGNUP, referral }));
   // After Google / Microsoft sign-in the 2-step challenge travels in a cookie, so there is no mfaToken.
   const [verifyReason, setVerifyReason] = useState<VerifyReason>(link.oauth === "mfa" ? "admin2fa" : "signup");
   const [verifyEmail, setVerifyEmail] = useState("");
@@ -122,11 +112,10 @@ export function SignInPage() {
 
   // Already signed in (the session was restored from the cookie): go straight to the right app.
   useEffect(() => {
-    // A sign-up link (?ref=) opens on sign-up, but someone already signed in still goes to their app.
-    if (status !== "authenticated" || fromLink || (mode !== "login" && !(referral && mode === "signup"))) return;
+    if (status !== "authenticated" || fromLink || mode !== "login") return;
     const { user } = getSession();
     if (user) router.replace(homeFor(user));
-  }, [status, mode, router, fromLink, referral]);
+  }, [status, mode, router, fromLink]);
 
   const head = getHeading(mode, { verifyReason, doneAfterSignup, isStaff: !!session?.user.isStaff, email: verifyEmail });
 
@@ -160,22 +149,9 @@ export function SignInPage() {
                 go("verify", { kind: "info", text: message });
               }}
               onForgot={() => go("forgot")}
-              onSignup={() => go("signup")}
             />
           )}
 
-          {mode === "signup" && (
-            <SignupForm
-              data={signup}
-              onChange={(patch) => setSignup((s) => ({ ...s, ...patch }))}
-              onCreated={(message) => {
-                setVerifyEmail(signup.email.trim());
-                setVerifyReason("signup");
-                go("verify", { kind: "success", text: message || "Account created. One last step: confirm your email." });
-              }}
-              onLogin={backToLogin}
-            />
-          )}
 
           {mode === "forgot" && (
             <ForgotForm
@@ -230,12 +206,6 @@ export function SignInPage() {
 // ----------------------------------------------------------------- Copy
 function getHeading(mode: AuthMode, ctx: { verifyReason: VerifyReason; doneAfterSignup: boolean; isStaff: boolean; email: string }) {
   switch (mode) {
-    case "signup":
-      return {
-        kicker: "NEW CLIENT ACCOUNT",
-        title: "Create your portal account",
-        sub: "Set up your login to track your system, reports and billing.",
-      };
     case "forgot":
       return {
         kicker: "RESET PASSWORD",

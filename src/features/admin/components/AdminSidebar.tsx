@@ -9,7 +9,7 @@ import { canUseMenu } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../state/AdminContext";
 
-/** One menu entry. Contacts and Clients are both the "clients" page, opened on a different view. */
+/** One menu entry. */
 type MenuItem = { key: string; tab: AdminTab; label: string; icon: IconName };
 
 const item = (tab: AdminTab, label: string, icon: IconName, key: string = tab): MenuItem => ({ key, tab, label, icon });
@@ -17,10 +17,7 @@ const item = (tab: AdminTab, label: string, icon: IconName, key: string = tab): 
 /** The admin menu, by what each part of the work is for. */
 const MENU: Array<{ title: string; items: MenuItem[] }> = [
   { title: "Overview", items: [item("dashboard", "Dashboard", "grid"), item("reporting", "Reports", "chart")] },
-  {
-    title: "Customers",
-    items: [item("clients", "Contacts", "users", "contacts"), item("clients", "Clients", "user", "clients"), item("pipeline", "Pipeline", "pipeline")],
-  },
+  { title: "Customers", items: [item("clients", "Clients", "user"), item("pipeline", "Pipeline", "pipeline")] },
   {
     title: "Delivery",
     items: [item("calendar", "Calendar", "calendar"), item("progress", "Build Progress", "rocket"), item("media", "Client Media", "folder")],
@@ -48,10 +45,10 @@ export function AdminSidebar() {
   const can = (t: AdminTab) => !HIDDEN_TABS.has(t) && canUseMenu(me, TAB_MENU[t]);
   const groups = MENU.map((g) => ({ ...g, items: g.items.filter((i) => can(i.tab)) })).filter((g) => g.items.length);
 
-  const isActive = (i: MenuItem) =>
-    i.key === "contacts" ? tab === "clients" && contactView === "all" : i.key === "clients" ? tab === "clients" && contactView !== "all" : tab === i.tab;
+  const isActive = (i: MenuItem) => tab === i.tab;
+  // Clients opens on Active, or stays on the tab you're already viewing.
   const open = (i: MenuItem) =>
-    i.key === "contacts" ? openContacts("all") : i.key === "clients" ? openContacts(isActive(i) ? contactView : "active") : goTo(i.tab);
+    i.tab === "clients" ? openContacts(isActive(i) && contactView !== "all" ? contactView : "active") : goTo(i.tab);
 
   return (
     <Sidebar
