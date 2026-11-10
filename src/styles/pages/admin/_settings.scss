@@ -32,6 +32,31 @@
       background: rgba(255, 153, 0, 0.12);
       color: $orange-ink;
     }
+
+    // Sign out sits under the tabs, set apart by a hairline.
+    &--signout {
+      position: relative;
+      margin-top: 9px;
+      color: $red-700;
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: -6px;
+        left: 4px;
+        right: 4px;
+        border-top: 1px solid $line-faint;
+      }
+
+      &:hover {
+        background: rgba(217, 45, 32, 0.07);
+      }
+
+      &:disabled {
+        cursor: progress;
+        opacity: 0.6;
+      }
+    }
   }
 
   &__panel {

@@ -256,3 +256,83 @@
     color: #c2410c;
   }
 }
+
+// Admin menu: grouped sections with quiet single-colour icons; the current page gets a brand accent bar.
+.sidebar--admin {
+  gap: 18px;
+
+  .sidebar__nav {
+    gap: 18px;
+  }
+
+  .sidebar__group {
+    gap: 1px;
+  }
+
+  .sidebar__label {
+    padding: 0 12px 6px;
+    font-family: $font-sans;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: $muted-light;
+  }
+
+  .nav-item {
+    position: relative;
+    gap: 12px;
+    min-height: 38px;
+    padding: 0 12px;
+    color: $ink-soft;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: $bg-tint;
+      color: $ink;
+
+      .nav-item__icon {
+        color: $ink-soft;
+      }
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &[aria-current="page"] {
+      background: rgba(255, 153, 0, 0.1);
+      color: $ink;
+      font-weight: 700;
+
+      // Accent bar on the left edge.
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: $orange;
+      }
+
+      .nav-item__icon {
+        color: #c2410c;
+      }
+    }
+  }
+
+  .nav-item__icon {
+    flex: none;
+    color: $muted-light;
+    transition: color 0.15s ease;
+  }
+
+  .sidebar__footer {
+    gap: 12px;
+    padding-top: 14px;
+    border-top: 1px solid $line-faint;
+  }
+}

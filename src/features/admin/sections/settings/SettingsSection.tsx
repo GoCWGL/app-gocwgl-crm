@@ -1,13 +1,16 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, FormError, Icon, LoadState } from "@/components/ui";
 import { SETTINGS_TABS, type SettingsTab } from "@/data/admin";
 import type { OrgSettingsOut, OrgSettingsUpdate, ProfileUpdate, User } from "@/utils/api/models";
-import { isStaffAdmin } from "@/utils/auth/session";
+import { canUseMenu, isStaffAdmin } from "@/utils/auth/session";
+import { useSignOut } from "@/utils/hooks/useAuth";
 import { useSettings, useUpdateSettings } from "@/utils/hooks/useSettings";
 import { useMe, useUpdateMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../../state/AdminContext";
+import { TagsSection } from "../contacts/TagsSection";
 import { DomainSettings } from "./DomainSettings";
 import { BusinessSettings, NotificationSettings, ProfileSettings, type BusinessDraft, type ProfileDraft } from "./GeneralSettings";
 import { SecuritySettings } from "./SecuritySettings";
@@ -36,6 +39,8 @@ const businessOf = (s: OrgSettingsOut): BusinessDraft => ({
 
 export function SettingsSection() {
   const { state, update } = useAdmin();
+  const router = useRouter();
+  const signOut = useSignOut();
   const me = useMe();
   const settings = useSettings();
   const saveMe = useUpdateMe();
@@ -93,7 +98,8 @@ export function SettingsSection() {
   return (
     <div className="split settings">
       <nav className="card card--tight settings__nav" aria-label="Settings sections">
-        {SETTINGS_TABS.map((t) => (
+        {/* Tags belong to the Contacts menu: hidden for teammates without it. */}
+        {SETTINGS_TABS.filter((t) => t.id !== "tags" || canUseMenu(user, "contacts")).map((t) => (
           <button
             key={t.id}
             type="button"
@@ -108,6 +114,15 @@ export function SettingsSection() {
             {t.label}
           </button>
         ))}
+        <button
+          type="button"
+          className="settings__tab settings__tab--signout"
+          disabled={signOut.isPending}
+          onClick={() => signOut.mutate(undefined, { onSettled: () => router.replace("/login") })}
+        >
+          <Icon name="arrowLeft" strokeWidth={1.9} />
+          {signOut.isPending ? "Signing out…" : "Sign out"}
+        </button>
       </nav>
 
       <section className="card card--roomy settings__panel">
@@ -153,6 +168,7 @@ export function SettingsSection() {
         )}
         {tab === "team" && <TeamSettings onMessage={setMessage} />}
         {tab === "domains" && <DomainSettings />}
+        {tab === "tags" && <TagsSection />}
         {tab === "security" && <SecuritySettings onMessage={setMessage} promptMfa={state.mfaPrompt && !user?.mfaEnabled} />}
 
         {DRAFT_TABS.includes(tab) && (

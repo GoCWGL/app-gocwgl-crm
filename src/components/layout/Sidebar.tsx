@@ -6,15 +6,16 @@ import type { Tone } from "@/lib/tones";
 
 type SidebarProps = {
   label: string;
+  className?: string;
   brand?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
 };
 
 /** Sticky left navigation column. */
-export function Sidebar({ label, brand, footer, children }: SidebarProps) {
+export function Sidebar({ label, className, brand, footer, children }: SidebarProps) {
   return (
-    <nav className="sidebar" aria-label={label}>
+    <nav className={cn("sidebar", className)} aria-label={label}>
       {brand && <div className="sidebar__brand">{brand}</div>}
       <div className="sidebar__nav">{children}</div>
       {footer && <div className="sidebar__footer">{footer}</div>}

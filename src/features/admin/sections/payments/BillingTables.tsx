@@ -1,15 +1,17 @@
 "use client";
 
 import { Badge, Button, FormError, LoadState, SegmentedControl } from "@/components/ui";
-import { INVOICE_TONES, SUBSCRIPTION_TONES, type InvoiceStatus, type SubscriptionStatus } from "@/data/admin";
+import { INVOICE_TONES, SUBSCRIPTION_TONES, paymentMethodLabel, type InvoiceStatus, type SubscriptionStatus } from "@/data/admin";
 import { useState } from "react";
 import { canWriteCrm, isSuperAdmin } from "@/utils/auth/session";
 import { formatLong, formatShort } from "@/utils/format/dates";
 import { formatCentsExact, formatCents } from "@/utils/format/money";
+import type { PaymentOptionOut } from "@/utils/api/models";
 import {
   useCancelSubscription,
   useInvoices,
   useMarkInvoicePaid,
+  usePaymentOptions,
   useSendInvoice,
   useSubscriptions,
   useUpdateSubscription,
@@ -20,16 +22,20 @@ import { useMe } from "@/utils/hooks/useUsers";
 import { contactName } from "../../lib/contacts";
 import type { BillingKind } from "../../modals/BillingModal";
 import { DeleteTransactionModal, type TransactionToDelete } from "./DeleteTransactionModal";
+import { PaymentOptionModal } from "./PaymentOptionModal";
+import { PaymentOptionsTable } from "./PaymentOptionsTable";
+
+export type BillingView = "subs" | "inv" | "opts";
 
 type BillingTablesProps = {
-  view: "subs" | "inv";
-  onView: (view: "subs" | "inv") => void;
+  view: BillingView;
+  onView: (view: BillingView) => void;
   message: string;
   onMessage: (message: string) => void;
   onNew: (kind: BillingKind) => void;
 };
 
-/** Subscriptions and invoices tables with their row actions. */
+/** Subscriptions, invoices and products, with their row actions. */
 export function BillingTables({ view, onView, message, onMessage, onNew }: BillingTablesProps) {
   const me = useMe().data;
   const canWrite = canWriteCrm(me);
@@ -38,6 +44,10 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
   const [toDelete, setToDelete] = useState<TransactionToDelete | null>(null);
   const subsQuery = useSubscriptions();
   const invoicesQuery = useInvoices();
+  const optionsQuery = usePaymentOptions();
+  const options = optionsQuery.data ?? [];
+  // undefined: closed; null: adding a new one.
+  const [editing, setEditing] = useState<PaymentOptionOut | null | undefined>(undefined);
   const subscriptions = subsQuery.data ?? [];
   const invoices = invoicesQuery.data ?? [];
   const contacts = useAllContacts().data ?? [];
@@ -72,15 +82,21 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
           options={[
             { value: "subs", label: "Subscriptions", count: subscriptions.length },
             { value: "inv", label: "Invoices", count: invoices.length },
+            { value: "opts", label: "Products", count: options.length },
           ]}
         />
-        {canWrite && (
+        {canWrite && view === "opts" && (
+          <Button variant="primary" onClick={() => setEditing(null)}>
+            + Add product
+          </Button>
+        )}
+        {canWrite && view !== "opts" && (
           <div className="cluster cluster--8">
             <Button variant="accent" onClick={() => onNew("sub")}>
               + New subscription
             </Button>
-            <Button variant="outline" onClick={() => onNew("paid")}>
-              + Record paid invoice
+            <Button variant="outline" onClick={() => onNew("custom")}>
+              + Custom invoice
             </Button>
             <Button variant="primary" onClick={() => onNew("invoice")}>
               + New invoice
@@ -90,9 +106,11 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
       </div>
       <FormError error={error} />
 
-      <LoadState query={view === "subs" ? subsQuery : invoicesQuery}>
+      <LoadState query={view === "subs" ? subsQuery : view === "inv" ? invoicesQuery : optionsQuery}>
       <div className="table-scroll">
-        {view === "subs" ? (
+        {view === "opts" ? (
+          <PaymentOptionsTable options={options} canWrite={canWrite} onEdit={setEditing} onMessage={onMessage} />
+        ) : view === "subs" ? (
           <table className="data-table data-table--plain billing-table">
             <thead>
               <tr>
@@ -117,7 +135,12 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                       </div>
                     </td>
                     <td>
-                      {sub.plan} · per {sub.interval.toLowerCase()}
+                      <div className="stack stack--2">
+                        <span>
+                          {sub.plan} · per {sub.interval.toLowerCase()}
+                        </span>
+                        {sub.paymentUrl && <span className="text-small text-muted">Paid with {paymentMethodLabel(sub.paymentMethod)}</span>}
+                      </div>
                     </td>
                     <td className="data-table__mono">{formatCents(sub.amountCents, sub.currency)}</td>
                     <td>{sub.status === "Paused" || sub.status === "Canceled" || !sub.nextBillingDate ? "—" : formatLong(sub.nextBillingDate)}</td>
@@ -212,6 +235,7 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                       <div className="stack stack--2">
                         <span className="data-table__code">{iv.number}</span>
                         <span className="text-small">{iv.items.map((it) => it.description).filter(Boolean).join(", ") || "No items"}</span>
+                        {iv.paymentUrl && <span className="text-small text-muted">Paid with {paymentMethodLabel(iv.paymentMethod)}</span>}
                       </div>
                     </td>
                     <td className="u-strong u-ink">{c.name}</td>
@@ -252,10 +276,11 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
                           {pendingLabel(send, iv.id, "Resend", "Sending…")}
                         </button>
                       )}
-                      {canWrite && isOpen && (
+                      {canWrite && (isOpen || iv.status === "Draft") && (
                         <button
                           type="button"
                           className="row-action row-action--green"
+                          title="Payment received (Wise, bank transfer, cash…): marks it paid and emails the client a thank-you"
                           disabled={rowBusy(iv.id)}
                           onClick={() => markPaid.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} marked as paid.`) })}
                         >
@@ -292,6 +317,9 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
         )}
         {view === "subs" && subscriptions.length === 0 && <p className="table-empty">No subscriptions yet.</p>}
         {view === "inv" && invoices.length === 0 && <p className="table-empty">No invoices yet.</p>}
+        {view === "opts" && options.length === 0 && (
+          <p className="table-empty">No products yet. Add what you sell and its price, then pick it when you bill a client.</p>
+        )}
       </div>
       </LoadState>
 
@@ -299,6 +327,17 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
         <div className="notice notice--success u-strong" role="status">
           {message}
         </div>
+      )}
+
+      {editing !== undefined && (
+        <PaymentOptionModal
+          option={editing ?? undefined}
+          onClose={() => setEditing(undefined)}
+          onSaved={(text) => {
+            setEditing(undefined);
+            onMessage(text);
+          }}
+        />
       )}
 
       {toDelete && (

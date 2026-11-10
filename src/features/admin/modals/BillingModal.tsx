@@ -2,46 +2,28 @@
 
 import { useState, type FormEvent } from "react";
 import { Button, Checkbox, Field, Icon, IconButton, IconTile, Input, Modal, SegmentedControl, Select, type IconName } from "@/components/ui";
-import { BILLING_INTERVALS, HOSTING_PLAN, type BillingInterval } from "@/data/admin";
-import { CRM_PACKAGES } from "@/data/portal";
+import {
+  BILLING_INTERVALS,
+  HOSTING_PLAN,
+  PAYMENT_METHODS,
+  isPayUrl,
+  paymentMethodLabel,
+  type BillingInterval,
+  type PaymentMethod,
+} from "@/data/admin";
+import type { PaymentOptionOut } from "@/utils/api/models";
 import { addDaysIso, todayIso } from "@/utils/format/dates";
 import { centsToDollars, dollarsToCents, formatCents, formatCentsExact } from "@/utils/format/money";
 import { errorMessage, fieldErrors } from "@/utils/errors";
-import { useCreateInvoice, useCreateSubscription } from "@/utils/hooks/useBilling";
+import { useCreateInvoice, useCreatePaymentOption, useCreateSubscription, usePaymentOptions } from "@/utils/hooks/useBilling";
 import { useAllContacts } from "@/utils/hooks/useContacts";
 import { contactName } from "../lib/contacts";
 
 type LineDraft = { desc: string; qty: string; price: string };
 
-export type BillingKind = "invoice" | "paid" | "sub";
+export type BillingKind = "invoice" | "custom" | "sub";
 
-/** How a recorded payment came in; saved at the start of the invoice's note. */
-const PAID_BY = ["Bank transfer", "Cash", "Check", "Card (in person)", "Other"];
-
-/** One-click lines for CRM and funnel work, each with its own Wise payment link. */
-const QUICK_GROUPS: { label: string; icon: IconName; lines: LineDraft[] }[] = [
-  {
-    label: "CRM",
-    icon: "pipeline",
-    lines: [
-      { desc: CRM_PACKAGES.simple.label + " build", qty: "1", price: centsToDollars(CRM_PACKAGES.simple.priceCents) },
-      { desc: CRM_PACKAGES.custom.label + " build", qty: "1", price: centsToDollars(CRM_PACKAGES.custom.priceCents) },
-      { desc: "Custom CRM - Discounted Price", qty: "1", price: centsToDollars(1_200_000) },
-    ],
-  },
-  {
-    label: "Funnel",
-    icon: "funnel",
-    lines: [
-      { desc: "Funnel - Foundation Build", qty: "1", price: centsToDollars(150_000) },
-      { desc: "Funnel - Full Bundle", qty: "1", price: centsToDollars(195_000) },
-      { desc: "Funnel - VIP Repeat Funnel", qty: "1", price: centsToDollars(145_000) },
-    ],
-  },
-];
-const QUICK_LINES = QUICK_GROUPS.flatMap((g) => g.lines);
-
-/** Shorter names shown in the preset picker; the invoice line keeps the full description. */
+/** Shorter names shown in the preset picker; the invoice line keeps the full name. */
 const PRESET_NAMES: Record<string, string> = {
   "Custom CRM - Discounted Price": "Custom CRM",
   "Funnel - Foundation Build": "Foundation Build Funnel",
@@ -49,9 +31,25 @@ const PRESET_NAMES: Record<string, string> = {
   "Funnel - VIP Repeat Funnel": "VIP Repeat Funnel",
 };
 
-/** A single quick line at its list price is paid with that item's Wise link (set by the API). */
-const isWiseBuild = (lines: LineDraft[]) =>
-  lines.length === 1 && QUICK_LINES.some((q) => q.desc === lines[0].desc.trim() && dollarsToCents(q.price) === dollarsToCents(lines[0].price) && Number(lines[0].qty) === 1);
+/** One-time products grouped for the product picker. */
+function presetGroups(options: PaymentOptionOut[]): { label: string; icon: IconName; options: PaymentOptionOut[] }[] {
+  const groups: { label: string; icon: IconName; test: (n: string) => boolean }[] = [
+    { label: "CRM", icon: "pipeline", test: (n) => /\bcrm\b/i.test(n) },
+    { label: "Funnel", icon: "funnel", test: (n) => /funnel/i.test(n) },
+    { label: "Other", icon: "sparkle", test: () => true },
+  ];
+  const placed = new Set<string>();
+  return groups
+    .map((g) => {
+      const mine = options.filter((o) => !placed.has(o.id) && g.test(o.name));
+      mine.forEach((o) => placed.add(o.id));
+      return { label: g.label, icon: g.icon, options: mine };
+    })
+    .filter((g) => g.options.length);
+}
+
+const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+
 
 type BillingModalProps = {
   kind: BillingKind;
@@ -62,13 +60,18 @@ type BillingModalProps = {
 };
 
 /**
- * Create a one-time invoice, record a payment taken outside the app (saved as a Paid invoice the client sees in
- * Transactions; nothing is emailed), or set up a recurring subscription. Totals are computed by the API.
+ * Create a one-time invoice, a custom invoice (your own price, payment method and link), or set up a recurring
+ * subscription. A payment that comes in outside the app is recorded with "Mark paid" on the invoice list. Prices and
+ * links come from your products (Invoices › Products), so a price change needs no code. Totals are computed by the API.
  */
 export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalProps) {
   const contacts = useAllContacts().data ?? [];
+  const options = usePaymentOptions().data ?? [];
+  const oneTime = options.filter((o) => !o.interval);
+  const plans = options.filter((o) => o.interval);
   const createInvoice = useCreateInvoice();
   const createSub = useCreateSubscription();
+  const createOption = useCreatePaymentOption();
 
   const [clientId, setClientId] = useState("");
   const [items, setItems] = useState<LineDraft[]>([{ desc: "", qty: "1", price: "" }]);
@@ -78,77 +81,138 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
   const [amount, setAmount] = useState(centsToDollars(HOSTING_PLAN.amountCents));
   const [interval, setInterval] = useState<BillingInterval>(HOSTING_PLAN.interval);
   const [trial, setTrial] = useState("0");
-  const [paidOn, setPaidOn] = useState(todayIso());
-  const [paidBy, setPaidBy] = useState(PAID_BY[0]);
-  const [markClientPaid, setMarkClientPaid] = useState(true);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  // Custom invoice (and subscription) payment details.
+  const [customName, setCustomName] = useState("");
+  const [customPrice, setCustomPrice] = useState("");
+  const [method, setMethod] = useState<PaymentMethod>("wise");
+  const [payUrl, setPayUrl] = useState("");
+  const [saveOption, setSaveOption] = useState(true);
   const [error, setError] = useState("");
 
-  const isPaid = kind === "paid";
-  const isInvoice = kind === "invoice" || isPaid;
+  const isCustom = kind === "custom";
+  const isInvoice = kind === "invoice";
+  const isSub = kind === "sub";
   const client = contacts.find((c) => c.id === clientId);
-  const lineCents = (it: LineDraft) => (Math.max(1, Number(it.qty) || 1)) * dollarsToCents(it.price || 0);
+  const lineCents = (it: LineDraft) => Math.max(1, Number(it.qty) || 1) * dollarsToCents(it.price || 0);
   // Preview only: the saved invoice's total comes back from the API as totalCents.
-  const estimate = items.reduce((n, it) => n + lineCents(it), 0);
+  const estimate = isCustom ? dollarsToCents(customPrice || 0) : items.reduce((n, it) => n + lineCents(it), 0);
   const patchItem = (i: number, patch: Partial<LineDraft>) => {
     setItems(items.map((it, k) => (k === i ? { ...it, ...patch } : it)));
     setError("");
   };
-  const isWiseHosting =
-    plan.trim() === HOSTING_PLAN.plan && dollarsToCents(amount) === HOSTING_PLAN.amountCents && interval === HOSTING_PLAN.interval;
   const filled = items.filter((it) => it.desc.trim() && dollarsToCents(it.price) > 0);
-  const pending = createInvoice.isPending || createSub.isPending;
+  // The API gives a single line that is exactly a saved option (name and price) that option's link.
+  const invoiceMatch =
+    filled.length === 1 && Number(filled[0].qty || 1) === 1
+      ? oneTime.find((o) => sameName(o.name, filled[0].desc) && o.amountCents === dollarsToCents(filled[0].price))
+      : undefined;
+  const planMatch = plans.find((o) => sameName(o.name, plan) && o.amountCents === dollarsToCents(amount) && o.interval === interval);
+  // Custom invoice / subscription: offer to save it unless it's already a saved option as entered.
+  const customCents = isCustom ? dollarsToCents(customPrice || 0) : dollarsToCents(amount || 0);
+  const customLabel = isCustom ? customName : plan;
+  const alreadySaved = (isCustom ? oneTime : plans).some(
+    (o) =>
+      sameName(o.name, customLabel) &&
+      o.amountCents === customCents &&
+      o.paymentUrl === payUrl.trim() &&
+      o.method === method &&
+      (isCustom || o.interval === interval),
+  );
+  const canSave = !alreadySaved && payUrl.trim() !== "";
+  const pending = createInvoice.isPending || createSub.isPending || createOption.isPending;
   const onError = (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err));
+
+  const fillFromOption = (o: PaymentOptionOut | undefined) => {
+    setError("");
+    if (!o) return;
+    setMethod(o.method as PaymentMethod);
+    setPayUrl(o.paymentUrl);
+    if (o.interval) {
+      setPlan(o.name);
+      setAmount(centsToDollars(o.amountCents));
+      setInterval(o.interval as BillingInterval);
+    } else {
+      setCustomName(o.name);
+      setCustomPrice(centsToDollars(o.amountCents));
+    }
+  };
+
+  /** Save the entered price and link as a payment option first (when ticked), then run `then`. */
+  const withSavedOption = (then: () => void) => {
+    if (!(saveOption && canSave)) return then();
+    createOption.mutate(
+      { name: customLabel.trim(), amountCents: customCents, method, paymentUrl: payUrl.trim(), interval: isSub ? interval : null },
+      { onSuccess: then, onError },
+    );
+  };
 
   const create = (draft: boolean) => {
     if (!client) return setError("Choose a client first.");
+    const dueDate = due === "0" ? null : addDaysIso(todayIso(), Number(due));
+    const sentMessage = (iv: { number: string; totalCents: number; currency: string }) =>
+      draft ? `${iv.number} saved as a draft.` : `${iv.number} (${formatCentsExact(iv.totalCents, iv.currency)}) sent to ${client.email}.`;
+
+    if (isCustom) {
+      const cents = dollarsToCents(customPrice);
+      if (!customName.trim()) return setError("Enter what the invoice is for.");
+      if (!(cents > 0)) return setError("Enter a price above zero.");
+      if (!isPayUrl(payUrl)) return setError("Enter the payment link, starting with https://");
+      withSavedOption(() =>
+        createInvoice.mutate(
+          {
+            contactId: client.id,
+            items: [{ description: customName.trim(), quantity: 1, unitPriceCents: cents }],
+            dueDate,
+            note: note.trim(),
+            send: !draft,
+            paymentUrl: payUrl.trim(),
+            paymentMethod: method,
+          },
+          { onSuccess: (iv) => onCreated("inv", sentMessage(iv)), onError },
+        ),
+      );
+      return;
+    }
 
     if (isInvoice) {
       const lines = filled;
       if (!lines.length) return setError("Add at least one line with a description and price.");
-      if (isPaid && !paidOn) return setError("Choose the date it was paid.");
       createInvoice.mutate(
         {
           contactId: client.id,
           items: lines.map((it) => ({ description: it.desc.trim(), quantity: Math.max(1, Number(it.qty) || 1), unitPriceCents: dollarsToCents(it.price) })),
-          dueDate: isPaid || due === "0" ? null : addDaysIso(todayIso(), Number(due)),
-          note: isPaid ? [`Paid by ${paidBy.toLowerCase()}`, note.trim()].filter(Boolean).join(". ") : note.trim(),
-          send: !draft && !isPaid,
-          ...(isPaid && { paidOn, markClientPaid }),
+          dueDate,
+          note: note.trim(),
+          send: !draft,
         },
-        {
-          onSuccess: (iv) =>
-            onCreated(
-              "inv",
-              isPaid
-                ? `${iv.number} (${formatCentsExact(iv.totalCents, iv.currency)}) recorded as paid. It shows in ${contactName(client)}’s Transactions.`
-                : draft
-                  ? `${iv.number} saved as a draft.`
-                  : `${iv.number} (${formatCentsExact(iv.totalCents, iv.currency)}) sent to ${client.email}.`,
-            ),
-          onError,
-        },
+        { onSuccess: (iv) => onCreated("inv", sentMessage(iv)), onError },
       );
       return;
     }
 
     const cents = dollarsToCents(amount);
     if (!(cents > 0)) return setError("Enter an amount above zero.");
+    if (payUrl.trim() && !isPayUrl(payUrl)) return setError("The payment link must start with https://");
     const trialDays = Number(trial);
-    createSub.mutate(
-      {
-        contactId: client.id,
-        plan: plan.trim() || HOSTING_PLAN.plan,
-        amountCents: cents,
-        interval,
-        nextBillingDate: addDaysIso(todayIso(), trialDays),
-        status: trialDays ? "Trial" : "Awaiting payment",
-      },
-      {
-        onSuccess: (sub) =>
-          onCreated("subs", `Subscription for ${contactName(client)} created: ${formatCents(sub.amountCents, sub.currency)} per ${sub.interval.toLowerCase()}.`),
-        onError,
-      },
+    withSavedOption(() =>
+      createSub.mutate(
+        {
+          contactId: client.id,
+          plan: plan.trim() || HOSTING_PLAN.plan,
+          amountCents: cents,
+          interval,
+          nextBillingDate: addDaysIso(todayIso(), trialDays),
+          status: trialDays ? "Trial" : "Awaiting payment",
+          // Empty: the API uses the saved plan's link when one matches.
+          ...(payUrl.trim() && { paymentUrl: payUrl.trim(), paymentMethod: method }),
+        },
+        {
+          onSuccess: (sub) =>
+            onCreated("subs", `Subscription for ${contactName(client)} created: ${formatCents(sub.amountCents, sub.currency)} per ${sub.interval.toLowerCase()}.`),
+          onError,
+        },
+      ),
     );
   };
 
@@ -157,6 +221,59 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
     create(false);
   };
 
+  const subLink = payUrl.trim() ? `${paymentMethodLabel(method)} link` : planMatch ? `your saved ${paymentMethodLabel(planMatch.method)} link` : "";
+
+  const linkFields = (
+    <div className="form-grid">
+      <Field label="Payment method" htmlFor="bm-pay-method">
+        <Select id="bm-pay-method" value={method} options={PAYMENT_METHODS} onChange={(e) => setMethod(e.target.value as PaymentMethod)} />
+      </Field>
+      <Field
+        label="Payment link"
+        htmlFor="bm-pay-url"
+        required={isCustom}
+        hint={
+          isCustom
+            ? "The Pay button in the invoice email opens this link."
+            : planMatch && !payUrl.trim()
+              ? `Empty: uses your saved ${paymentMethodLabel(planMatch.method)} link for this plan.`
+              : "On every invoice. Leave empty to send payment details yourself."
+        }
+      >
+        <Input
+          id="bm-pay-url"
+          type="url"
+          value={payUrl}
+          placeholder="https://wise.com/pay/r/…"
+          onChange={(e) => {
+            setPayUrl(e.target.value);
+            setError("");
+          }}
+        />
+      </Field>
+    </div>
+  );
+
+  const saveBox = canSave && (
+    <Checkbox
+      brand
+      label={`Save ${customLabel.trim() || "it"} as a product, so you can pick it next time`}
+      checked={saveOption}
+      onChange={() => setSaveOption(!saveOption)}
+    />
+  );
+
+  const dueField = (
+    <Field label="Due" htmlFor="bm-due" hint="A follow-up email goes out every 2 days until it’s paid.">
+      <Select id="bm-due" value={due} onChange={(e) => setDue(e.target.value)}>
+        <option value="0">On receipt</option>
+        <option value="7">In 7 days</option>
+        <option value="14">In 14 days</option>
+        <option value="30">In 30 days</option>
+      </Select>
+    </Field>
+  );
+
   return (
     <Modal
       open
@@ -164,9 +281,9 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       onClose={onClose}
       onSubmit={submit}
       titleId="bm-title"
-      kicker={isPaid ? "RECORD A PAYMENT" : "BILL A CLIENT"}
-      title={isPaid ? "Record a paid invoice" : isInvoice ? "New invoice" : "New subscription"}
-      subtitle={isPaid ? "For payments you took yourself, like a CRM build paid by bank transfer. Nothing is emailed to the client." : undefined}
+      kicker="BILL A CLIENT"
+      title={isCustom ? "Custom invoice" : isInvoice ? "New invoice" : "New subscription"}
+      subtitle={isCustom ? "Your own price, payment method and link. Sent with the same invoice email and follow-ups." : undefined}
       media={
         <IconTile brand size="lg">
           <Icon name="invoice" size={18} />
@@ -175,13 +292,19 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          {isInvoice && !isPaid && (
+          {(isInvoice || isCustom) && (
             <Button variant="accent" onClick={() => create(true)} disabled={pending}>
               Save as draft
             </Button>
           )}
           <Button type="submit" variant="primary" disabled={pending}>
-            {pending ? "Saving…" : isPaid ? "Record paid invoice" : isInvoice ? "Send invoice" : Number(trial) ? "Create subscription" : "Create and send invoice"}
+            {pending
+              ? "Saving…"
+              : isInvoice || isCustom
+                  ? "Send invoice"
+                  : Number(trial)
+                    ? "Create subscription"
+                    : "Create and send invoice"}
           </Button>
         </>
       }
@@ -196,7 +319,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
         }}
         options={[
           { value: "invoice", label: "One-time invoice" },
-          { value: "paid", label: "Paid invoice" },
+          { value: "custom", label: "Custom invoice" },
           { value: "sub", label: "Subscription" },
         ]}
       />
@@ -213,9 +336,22 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
             }}
           />
         </Field>
-        {isPaid ? (
-          <Field label="Paid by" htmlFor="bm-paid-by">
-            <Select id="bm-paid-by" value={paidBy} options={PAID_BY} onChange={(e) => setPaidBy(e.target.value)} />
+        {isCustom || isSub ? (
+          <Field
+            label="Product"
+            htmlFor="bm-option"
+            hint={isSub ? "Fills in the plan, price and link." : "Fills in the item, price and link. Or type your own below."}
+          >
+            <Select
+              id="bm-option"
+              value=""
+              placeholder={(isSub ? plans : oneTime).length ? "Choose a product…" : "No products yet"}
+              options={(isSub ? plans : oneTime).map((o) => ({
+                value: o.id,
+                label: `${o.name} · ${formatCents(o.amountCents)}${o.interval ? ` / ${o.interval.toLowerCase()}` : ""}`,
+              }))}
+              onChange={(e) => fillFromOption(options.find((o) => o.id === e.target.value))}
+            />
           </Field>
         ) : (
           <Field label="Clients pay with" htmlFor="bm-method" hint="Or they pay you directly; then mark it paid.">
@@ -223,77 +359,120 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
               id="bm-method"
               readOnly
               value={
-                isInvoice
-                  ? isWiseBuild(filled)
-                    ? `Wise payment link for the ${filled[0].desc.trim()}`
-                    : "Payment details you send them (no Wise link for this amount)"
-                  : isWiseHosting
-                    ? "Wise payment link, on every invoice"
-                    : "Payment details you send them (no Wise link for this amount)"
+                invoiceMatch
+                  ? `${paymentMethodLabel(invoiceMatch.method)} payment link for the ${invoiceMatch.name}`
+                  : "Payment details you send them (no saved link for this item and price)"
               }
             />
           </Field>
         )}
       </div>
 
-      {isInvoice ? (
+      {isCustom ? (
+        <div className="stack stack--8">
+          <span className="kicker">INVOICE</span>
+          <div className="form-grid">
+            <Field label="Item" htmlFor="bm-custom-name" required>
+              <Input
+                id="bm-custom-name"
+                value={customName}
+                placeholder="e.g. Website redesign"
+                onChange={(e) => {
+                  setCustomName(e.target.value);
+                  setError("");
+                }}
+              />
+            </Field>
+            <Field label="Price" htmlFor="bm-custom-price" required>
+              <Input
+                id="bm-custom-price"
+                type="number"
+                min={0}
+                step="0.01"
+                mono
+                placeholder="0.00"
+                value={customPrice}
+                onChange={(e) => {
+                  setCustomPrice(e.target.value);
+                  setError("");
+                }}
+              />
+            </Field>
+          </div>
+          {linkFields}
+          <div className="invoice-total">
+            {dueField}
+            <div className="invoice-total__amount">
+              <span className="text-small">Total</span>
+              <span className="billing-summary__amount">{formatCentsExact(estimate)}</span>
+            </div>
+          </div>
+          <Field label="Note to client" htmlFor="bm-note">
+            <Input id="bm-note" value={note} placeholder="Thank you for your business!" onChange={(e) => setNote(e.target.value)} />
+          </Field>
+          {saveBox}
+        </div>
+      ) : isInvoice ? (
         <div className="stack stack--8">
           <span className="kicker">LINE ITEMS</span>
-          <div className="preset-picker">
-            <button
-              type="button"
-              className="preset-picker__trigger"
-              aria-expanded={presetsOpen}
-              aria-controls="bm-presets"
-              onClick={() => setPresetsOpen(!presetsOpen)}
-            >
-              <IconTile size="sm" brand>
-                <Icon name="sparkle" size={14} />
-              </IconTile>
-              <span className="preset-picker__trigger-text">
-                <span className="text-strong">Add a preset item</span>
-                <span className="text-small text-muted">CRM and funnel builds, paid with their Wise link</span>
-              </span>
-              <Icon name={presetsOpen ? "chevronUp" : "chevronDown"} size={16} className="preset-picker__chevron" />
-            </button>
-            {presetsOpen && (
-              <div id="bm-presets" className="preset-picker__panel u-slide-up">
-                {QUICK_GROUPS.map((g) => (
-                  <div className="preset-picker__group" key={g.label} role="group" aria-label={g.label}>
-                    <span className="preset-picker__group-label">
-                      <Icon name={g.icon} size={13} />
-                      {g.label}
-                    </span>
-                    {g.lines.map((q) => {
-                      const added = items.some((it) => it.desc.trim() === q.desc);
-                      return (
-                        <button
-                          type="button"
-                          key={q.desc}
-                          className="preset-picker__item"
-                          data-added={added || undefined}
-                          onClick={() => {
-                            // Fill the first empty line, or add one.
-                            const empty = items.findIndex((it) => !it.desc.trim() && !it.price);
-                            setItems(empty >= 0 ? items.map((it, k) => (k === empty ? q : it)) : [...items, q]);
-                            setPresetsOpen(false);
-                            setError("");
-                          }}
-                        >
-                          <span className="preset-picker__item-name">
-                            {PRESET_NAMES[q.desc] ?? q.desc}
-                            {q.desc.endsWith("Discounted Price") && <span className="preset-picker__item-tag">Discounted</span>}
-                          </span>
-                          <span className="preset-picker__item-price">{formatCents(dollarsToCents(q.price))}</span>
-                          <Icon name={added ? "check" : "plus"} size={14} className="preset-picker__item-icon" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+          {oneTime.length > 0 && (
+            <div className="preset-picker">
+              <button
+                type="button"
+                className="preset-picker__trigger"
+                aria-expanded={presetsOpen}
+                aria-controls="bm-presets"
+                onClick={() => setPresetsOpen(!presetsOpen)}
+              >
+                <IconTile size="sm" brand>
+                  <Icon name="sparkle" size={14} />
+                </IconTile>
+                <span className="preset-picker__trigger-text">
+                  <span className="text-strong">Add a product</span>
+                  <span className="text-small text-muted">From your products, at their price</span>
+                </span>
+                <Icon name={presetsOpen ? "chevronUp" : "chevronDown"} size={16} className="preset-picker__chevron" />
+              </button>
+              {presetsOpen && (
+                <div id="bm-presets" className="preset-picker__panel u-slide-up">
+                  {presetGroups(oneTime).map((g) => (
+                    <div className="preset-picker__group" key={g.label} role="group" aria-label={g.label}>
+                      <span className="preset-picker__group-label">
+                        <Icon name={g.icon} size={13} />
+                        {g.label}
+                      </span>
+                      {g.options.map((o) => {
+                        const added = items.some((it) => sameName(it.desc, o.name));
+                        const line = { desc: o.name, qty: "1", price: centsToDollars(o.amountCents) };
+                        return (
+                          <button
+                            type="button"
+                            key={o.id}
+                            className="preset-picker__item"
+                            data-added={added || undefined}
+                            onClick={() => {
+                              // Fill the first empty line, or add one.
+                              const empty = items.findIndex((it) => !it.desc.trim() && !it.price);
+                              setItems(empty >= 0 ? items.map((it, k) => (k === empty ? line : it)) : [...items, line]);
+                              setPresetsOpen(false);
+                              setError("");
+                            }}
+                          >
+                            <span className="preset-picker__item-name">
+                              {PRESET_NAMES[o.name] ?? o.name}
+                              {/discount/i.test(o.name) && <span className="preset-picker__item-tag">Discounted</span>}
+                            </span>
+                            <span className="preset-picker__item-price">{formatCents(o.amountCents)}</span>
+                            <Icon name={added ? "check" : "plus"} size={14} className="preset-picker__item-icon" />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           {items.map((it, i) => (
             <div className="line-item" key={i}>
               <Input
@@ -337,36 +516,15 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
             + Add line
           </Button>
           <div className="invoice-total">
-            {isPaid ? (
-              <Field label="Paid on" htmlFor="bm-paid-on" required>
-                <Input id="bm-paid-on" type="date" max={todayIso()} value={paidOn} onChange={(e) => setPaidOn(e.target.value)} />
-              </Field>
-            ) : (
-              <Field label="Due" htmlFor="bm-due" hint="A follow-up email goes out every 2 days until it’s paid.">
-                <Select id="bm-due" value={due} onChange={(e) => setDue(e.target.value)}>
-                  <option value="0">On receipt</option>
-                  <option value="7">In 7 days</option>
-                  <option value="14">In 14 days</option>
-                  <option value="30">In 30 days</option>
-                </Select>
-              </Field>
-            )}
+            {dueField}
             <div className="invoice-total__amount">
-              <span className="text-small">{isPaid ? "Amount paid" : "Estimated total"}</span>
+              <span className="text-small">Estimated total</span>
               <span className="billing-summary__amount">{formatCentsExact(estimate)}</span>
             </div>
           </div>
-          <Field label="Note to client" htmlFor="bm-note" hint={isPaid ? `Shown as “Paid by ${paidBy.toLowerCase()}. …” in their Transactions.` : undefined}>
+          <Field label="Note to client" htmlFor="bm-note">
             <Input id="bm-note" value={note} placeholder="Thank you for your business!" onChange={(e) => setNote(e.target.value)} />
           </Field>
-          {isPaid && (
-            <Checkbox
-              brand
-              label="Move the client to Paid (an active client, so you can start their build)"
-              checked={markClientPaid}
-              onChange={() => setMarkClientPaid(!markClientPaid)}
-            />
-          )}
         </div>
       ) : (
         <>
@@ -389,12 +547,14 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
               </Select>
             </Field>
           </div>
+          {linkFields}
+          {saveBox}
           <div className="inset inset--soft text-body">
             {Number(trial) ? `After a ${trial}-day free trial, ` : ""}
             {client ? contactName(client) : "The client"} gets a {formatCents(dollarsToCents(amount))} invoice
             {Number(trial) ? "" : " now"} and then every {interval.toLowerCase()} until it’s cancelled
-            {isWiseHosting ? ", with the Wise payment link" : ""}. Nothing is charged automatically; the client pays each invoice. Unpaid
-            invoices get a follow-up every 2 days. You or the client can cancel anytime from Transactions.
+            {subLink ? `, with ${subLink}` : ""}. Nothing is charged automatically; the client pays each invoice. Unpaid invoices get a
+            follow-up every 2 days. You or the client can cancel anytime from Transactions.
           </div>
         </>
       )}

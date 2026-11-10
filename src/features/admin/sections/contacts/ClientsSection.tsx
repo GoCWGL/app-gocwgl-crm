@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Badge, Button, Field, Icon, Input, LoadState, Select } from "@/components/ui";
+import { useState, type KeyboardEvent } from "react";
+import { Badge, Button, Field, Icon, Input, LoadState, Select, type IconName } from "@/components/ui";
 import { SOURCE_LABELS, type CoreStage, type LeadSource } from "@/data/admin";
 import { cn } from "@/lib/utils";
 import type { ContactOut } from "@/utils/api/models";
@@ -30,6 +30,62 @@ type CallFilter = "any" | "scheduled" | "needs" | "none";
 const DATE_LABELS: Record<Exclude<DateFilter, "any">, string> = { "7": "Last 7 days", "30": "Last 30 days", month: "This month" };
 const CALL_LABELS: Record<Exclude<CallFilter, "any">, string> = { scheduled: "Call scheduled", needs: "Needs a time", none: "No call" };
 
+type ClientTab = "active" | "inactive";
+
+const CLIENT_TABS: Array<{ value: ClientTab; label: string; hint: string; icon: IconName }> = [
+  { value: "active", label: "Active clients", hint: "Paying now", icon: "circleCheck" },
+  { value: "inactive", label: "Inactive clients", hint: "Lost, paused or stopped paying", icon: "clock" },
+];
+
+/** The Clients page's two tabs, as cards with an icon, a short description and a count. Arrow keys move between them. */
+function ClientTabs({
+  value,
+  onChange,
+  counts,
+  loading,
+}: {
+  value: ClientTab;
+  onChange: (v: ClientTab) => void;
+  counts: Record<ClientTab, number>;
+  loading: boolean;
+}) {
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    const next = value === "active" ? "inactive" : "active";
+    onChange(next);
+    e.currentTarget.querySelector<HTMLButtonElement>(`[data-tab="${next}"]`)?.focus();
+  };
+  return (
+    <div className="client-tabs" role="tablist" aria-label="Clients" onKeyDown={onKeyDown}>
+      {CLIENT_TABS.map((t) => {
+        const on = t.value === value;
+        return (
+          <button
+            key={t.value}
+            type="button"
+            role="tab"
+            data-tab={t.value}
+            aria-selected={on}
+            tabIndex={on ? 0 : -1}
+            className={cn("client-tab", `client-tab--${t.value}`)}
+            onClick={() => onChange(t.value)}
+          >
+            <span className="client-tab__icon" aria-hidden="true">
+              <Icon name={t.icon} size={18} strokeWidth={2} />
+            </span>
+            <span className="client-tab__text">
+              <span className="client-tab__label">{t.label}</span>
+              <span className="client-tab__hint">{t.hint}</span>
+            </span>
+            <span className="client-tab__count">{loading ? "–" : counts[t.value]}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ClientsSection() {
   const { state, update } = useAdmin();
   const { contactView } = state;
@@ -53,6 +109,9 @@ export function ClientsSection() {
   const tags = useTags().data ?? [];
   const stages = getSalesStages(usePipelines().data);
   const contacts: ContactOut[] = [...(active.data ?? []), ...(contactView === "inactive" ? (archived.data ?? []) : [])];
+
+  const activeCount = (active.data ?? []).filter((c) => isActiveClient(c, subscriptions)).length;
+  const inactiveCount = (active.data ?? []).filter((c) => isInactiveClient(c, subscriptions)).length + (archived.data?.length ?? 0);
 
   const count = (s: CoreStage) => contacts.filter((c) => c.stage === s && inView(c)).length;
 
@@ -107,6 +166,14 @@ export function ClientsSection() {
 
   return (
     <div className="stack stack--16">
+      {contactView !== "all" && (
+        <ClientTabs
+          value={contactView}
+          onChange={(v) => update({ contactView: v })}
+          counts={{ active: activeCount, inactive: inactiveCount }}
+          loading={active.isPending || subsQuery.isPending}
+        />
+      )}
       <div className="section-head section-head--end">
         <div className="cluster cluster--8" role="group" aria-label="Filter by stage">
           {pills.map((p) => (

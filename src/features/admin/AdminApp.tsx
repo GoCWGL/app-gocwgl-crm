@@ -125,7 +125,7 @@ function AdminLayout() {
         }
       />
       {/* Keyed by view so filters reset when switching Contacts / Clients / Inactive, and the entrance replays. */}
-      <div className="page-enter" key={tab === "clients" ? contactView : tab}>
+      <div className="page-enter" key={tab === "clients" ? (contactView === "all" ? "contacts" : "clients") : tab}>
         {allowed ? <Section /> : <div className="empty-state">You don’t have access to this page. Ask a super admin for access.</div>}
       </div>
     </AppShell>

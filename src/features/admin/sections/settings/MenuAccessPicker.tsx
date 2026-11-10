@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button, FormError, Icon, IconTile, Modal, Toggle, type IconName } from "@/components/ui";
-import { MENUS, type MenuKey } from "@/data/admin";
+import { MENUS, VISIBLE_MENUS, type MenuKey } from "@/data/admin";
 import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { MemberOut } from "@/utils/api/models";
@@ -14,8 +14,8 @@ export type MenuAccess = MenuKey[] | null;
 /** "Every menu", "3 of 14 menus: Contacts, Pipeline, Calendar". */
 export function menuAccessLabel(access: string[] | null | undefined): string {
   if (access == null) return "Every menu";
-  const names = MENUS.filter((m) => access.includes(m.key)).map((m) => m.label);
-  return `${names.length} of ${MENUS.length} menus: ${names.join(", ")}`;
+  const names = VISIBLE_MENUS.filter((m) => access.includes(m.key)).map((m) => m.label);
+  return `${names.length} of ${VISIBLE_MENUS.length} menus: ${names.join(", ")}`;
 }
 
 /** Each menu's sidebar icon and colour, so the picker reads like the menu itself. */
@@ -54,7 +54,7 @@ export function MenuAccessPicker({ value, onChange, idPrefix }: { value: MenuAcc
     <fieldset className="menu-access">
       <div className="menu-access__head">
         <legend className="field__label field__label--strong">Menu access</legend>
-        <span className="menu-access__count">{all ? "All menus" : `${chosen.size} of ${MENUS.length}`}</span>
+        <span className="menu-access__count">{all ? "All menus" : `${VISIBLE_MENUS.filter((m) => chosen.has(m.key)).length} of ${VISIBLE_MENUS.length}`}</span>
       </div>
 
       <div className={cn("menu-access__all", all && "menu-access__all--on")}>
@@ -76,7 +76,7 @@ export function MenuAccessPicker({ value, onChange, idPrefix }: { value: MenuAcc
             </Button>
           </div>
           <div className="menu-access__grid" role="group" aria-label="Menus they can use">
-            {MENUS.map((m) => {
+            {VISIBLE_MENUS.map((m) => {
               const on = chosen.has(m.key);
               const look = MENU_LOOK[m.key];
               return (

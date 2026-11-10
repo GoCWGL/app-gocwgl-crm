@@ -177,3 +177,10 @@
     }
   }
 }
+
+// Payment options table: the link wraps instead of widening the table.
+.payment-option__link {
+  max-width: 280px;
+  overflow-wrap: anywhere;
+  color: inherit;
+}

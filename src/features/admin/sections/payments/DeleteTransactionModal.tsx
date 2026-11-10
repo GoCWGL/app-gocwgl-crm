@@ -49,7 +49,7 @@ export function DeleteTransactionModal({
       }
     >
       <p className="text-body">
-        This removes the {noun} <span className="text-strong">{target.label}</span> for {target.client} from Transactions and their portal.
+        This removes the {noun} <span className="text-strong">{target.label}</span> for {target.client} from Invoices and their portal.
       </p>
       <div className="notice notice--warning u-strong" role="status">
         This can’t be undone.

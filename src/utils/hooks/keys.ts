@@ -24,6 +24,7 @@ export const qk = {
 
   subscriptions: ["subscriptions"] as const,
   invoices: ["invoices"] as const,
+  paymentOptions: ["payment-options"] as const,
   portalBilling: ["portal", "billing"] as const,
 
   projects: ["projects"] as const,

@@ -166,7 +166,7 @@ function FunnelRequestCard({
         f.status === "quote" && (
           <div className="cluster cluster--8 crm-request__invoice">
             <span className="kicker kicker--sm kicker--muted">INVOICE</span>
-            <span className="text-small">No invoice yet: this request was made before packages, so it has no price. Send them an invoice from Transactions.</span>
+            <span className="text-small">No invoice yet: this request was made before packages, so it has no price. Send them an invoice from Invoices.</span>
           </div>
         )
       )}

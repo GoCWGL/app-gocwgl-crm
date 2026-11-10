@@ -2,7 +2,7 @@
 
 import type { CSSProperties, DragEvent } from "react";
 import { Avatar, GripIcon, Icon, IconButton, IconTile, type IconName } from "@/components/ui";
-import { SOURCE_LABELS, type CoreStage, type LeadSource } from "@/data/admin";
+import { HIDDEN_TABS, SOURCE_LABELS, type CoreStage, type LeadSource } from "@/data/admin";
 import { avatarTone, toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { ContactOut } from "@/utils/api/models";
@@ -221,9 +221,11 @@ function PipelineCard({
             {isSales ? "Active client" : "Completed"}
           </span>
         )}
-        <IconButton label={`Email ${name}`} className="deal-card__icon u-sky" onClick={() => emailContact(c.id)}>
-          <Icon name="mail" size={15} />
-        </IconButton>
+        {!HIDDEN_TABS.has("email") && (
+          <IconButton label={`Email ${name}`} className="deal-card__icon u-sky" onClick={() => emailContact(c.id)}>
+            <Icon name="mail" size={15} />
+          </IconButton>
+        )}
         {!isSales && canWrite && (
           <IconButton label={`Remove ${name} from this pipeline`} className="deal-card__icon" onClick={() => onRemove(c.id)}>
             <Icon name="close" size={14} strokeWidth={2.2} />

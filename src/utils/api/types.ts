@@ -1377,6 +1377,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/payment-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Payment Options
+         * @description Saved prices with their payment links, picked when making an invoice or subscription.
+         */
+        get: operations["list_payment_options_api_admin_payment_options_get"];
+        put?: never;
+        /** Create Payment Option */
+        post: operations["create_payment_option_api_admin_payment_options_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/payment-options/{option_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update Payment Option
+         * @description Invoices already sent keep the link they were sent with.
+         */
+        put: operations["update_payment_option_api_admin_payment_options__option_id__put"];
+        post?: never;
+        /** Delete Payment Option */
+        delete: operations["delete_payment_option_api_admin_payment_options__option_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/payment-connections": {
         parameters: {
             query?: never;
@@ -5655,6 +5697,10 @@ export interface components {
              * @default true
              */
             markClientPaid?: boolean;
+            /** Paymenturl */
+            paymentUrl?: string | null;
+            /** Paymentmethod */
+            paymentMethod?: ("wise" | "paypal" | "stripe" | "paymongo" | "square" | "xendit" | "gcash" | "bank" | "other") | null;
         };
         /** InvoiceItem */
         InvoiceItem: {
@@ -5714,6 +5760,8 @@ export interface components {
             createdAt: string;
             /** Paymenturl */
             paymentUrl?: string | null;
+            /** Paymentmethod */
+            paymentMethod?: string | null;
             /**
              * Reminderssent
              * @default 0
@@ -6083,6 +6131,49 @@ export interface components {
              * @default true
              */
             connected?: boolean;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /**
+         * PaymentOptionIn
+         * @description A product: a name and price, optionally with the link clients pay it with. `interval` set makes it a
+         *     subscription plan (billed every interval). Without a link, its invoices say the team will send payment details.
+         */
+        PaymentOptionIn: {
+            /** Name */
+            name: string;
+            /** Amountcents */
+            amountCents: number;
+            /**
+             * Method
+             * @default wise
+             * @enum {string}
+             */
+            method?: "wise" | "paypal" | "stripe" | "paymongo" | "square" | "xendit" | "gcash" | "bank" | "other";
+            /** Paymenturl */
+            paymentUrl?: string | null;
+            interval?: components["schemas"]["Interval"] | null;
+        };
+        /** PaymentOptionOut */
+        PaymentOptionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Amountcents */
+            amountCents: number;
+            /** Method */
+            method: string;
+            /** Paymenturl */
+            paymentUrl: string;
+            /** Interval */
+            interval: string | null;
             /**
              * Updatedat
              * Format: date-time
@@ -7194,6 +7285,10 @@ export interface components {
             nextBillingDate?: string | null;
             /** @default Awaiting payment */
             status?: components["schemas"]["SubscriptionStatus"];
+            /** Paymenturl */
+            paymentUrl?: string | null;
+            /** Paymentmethod */
+            paymentMethod?: ("wise" | "paypal" | "stripe" | "paymongo" | "square" | "xendit" | "gcash" | "bank" | "other") | null;
         };
         /** SubscriptionOut */
         SubscriptionOut: {
@@ -7221,6 +7316,10 @@ export interface components {
             status: string;
             /** Cancelatperiodend */
             cancelAtPeriodEnd: boolean;
+            /** Paymenturl */
+            paymentUrl?: string | null;
+            /** Paymentmethod */
+            paymentMethod?: string | null;
         };
         /**
          * SubscriptionStatus
@@ -7237,6 +7336,10 @@ export interface components {
             /** Nextbillingdate */
             nextBillingDate?: string | null;
             status?: components["schemas"]["SubscriptionStatus"] | null;
+            /** Paymenturl */
+            paymentUrl?: string | null;
+            /** Paymentmethod */
+            paymentMethod?: ("wise" | "paypal" | "stripe" | "paymongo" | "square" | "xendit" | "gcash" | "bank" | "other") | null;
         };
         /** SurveyIn */
         SurveyIn: {
@@ -11872,6 +11975,166 @@ export interface operations {
                         data: components["schemas"]["InvoiceOut"];
                     };
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_payment_options_api_admin_payment_options_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Payment Options Api Admin Payment Options Get */
+                        data: components["schemas"]["PaymentOptionOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_payment_option_api_admin_payment_options_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentOptionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PaymentOptionOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_payment_option_api_admin_payment_options__option_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                option_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentOptionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PaymentOptionOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_payment_option_api_admin_payment_options__option_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                option_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

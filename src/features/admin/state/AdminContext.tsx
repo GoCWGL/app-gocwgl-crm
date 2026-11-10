@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import type { AdminTab, ContactView, SettingsTab } from "@/data/admin";
+import { HIDDEN_TABS, type AdminTab, type ContactView, type SettingsTab } from "@/data/admin";
 
 /** The email composer can be prefilled from other pages (pipeline cards, progress). */
 export type ComposerDraft = {
@@ -59,10 +59,12 @@ const TABS: AdminTab[] = [
 
 /** Deep links from sign-in: /admin?tab=settings&section=security&enroll=mfa */
 function initialState(params: URLSearchParams | null): AdminState {
-  const tab = params?.get("tab") as AdminTab | null;
-  const section = params?.get("section") as SettingsTab | null;
+  const asked = params?.get("tab") as AdminTab | null;
+  // Tags now live in Settings: an old ?tab=tags link opens Settings › Tags.
+  const tab: AdminTab | null = asked === "tags" ? "settings" : asked;
+  const section = asked === "tags" ? "tags" : (params?.get("section") as SettingsTab | null);
   return {
-    tab: tab && TABS.includes(tab) ? tab : "dashboard",
+    tab: tab && TABS.includes(tab) && !HIDDEN_TABS.has(tab) ? tab : "dashboard",
     contactView: "all",
     settingsTab: section ?? "profile",
     mfaPrompt: params?.get("enroll") === "mfa",

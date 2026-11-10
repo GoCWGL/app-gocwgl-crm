@@ -1,9 +1,11 @@
-import { del, download, get, patch, post } from "./client";
+import { del, download, get, patch, post, put } from "./client";
 import type {
   ClientBillingOut,
   InvoiceCreate,
   InvoiceOut,
   InvoiceUpdate,
+  PaymentOptionIn,
+  PaymentOptionOut,
   SubscriptionCreate,
   SubscriptionOut,
   SubscriptionUpdate,
@@ -32,7 +34,12 @@ export const sendInvoice = (id: string) => post<InvoiceOut>(`/admin/invoices/${i
 export const markInvoicePaid = (id: string) => post<InvoiceOut>(`/admin/invoices/${id}/mark-paid`);
 export const voidInvoice = (id: string) => post<InvoiceOut>(`/admin/invoices/${id}/void`);
 
-// ------------------------------------------------------------------ Payment connections (secrets come back masked)
+// ------------------------------------------------------------------ Payment options (saved prices with their payment links)
+export const listPaymentOptions = () => get<PaymentOptionOut[]>("/admin/payment-options");
+export const createPaymentOption = (body: PaymentOptionIn) => post<PaymentOptionOut>("/admin/payment-options", body);
+/** Invoices already sent keep the link they were sent with. */
+export const updatePaymentOption = (id: string, body: PaymentOptionIn) => put<PaymentOptionOut>(`/admin/payment-options/${id}`, body);
+export const deletePaymentOption = (id: string) => del(`/admin/payment-options/${id}`);
 
 // ------------------------------------------------------------------ Client billing (portal)
 export const getPortalBilling = () => get<ClientBillingOut>("/portal/billing");

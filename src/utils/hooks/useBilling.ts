@@ -2,14 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import * as api from "@/utils/api/billing";
-import type { InvoiceUpdate, SubscriptionUpdate } from "@/utils/api/models";
+import type { InvoiceUpdate, PaymentOptionIn, SubscriptionUpdate } from "@/utils/api/models";
 import { qk } from "./keys";
 import { useCanUseMenu } from "./useUsers";
 import { useApiMutation } from "./mutation";
 
 const BILLING_KEYS = [qk.subscriptions, qk.invoices, ["dashboard"], qk.contacts, qk.activity];
 
-/** Transactions data: not requested for teammates without the Transactions menu. */
+/** Invoices page data: not requested for teammates without the Invoices menu. */
 export const useSubscriptions = (contactId?: string) =>
   useQuery({ queryKey: [...qk.subscriptions, contactId ?? "all"], queryFn: () => api.listSubscriptions(contactId), enabled: useCanUseMenu("payments") });
 export const useCreateSubscription = () => useApiMutation(api.createSubscription, { invalidate: BILLING_KEYS });
@@ -28,6 +28,13 @@ export const useSendInvoice = () => useApiMutation(api.sendInvoice, { invalidate
 export const useMarkInvoicePaid = () => useApiMutation(api.markInvoicePaid, { invalidate: BILLING_KEYS });
 export const useVoidInvoice = () => useApiMutation(api.voidInvoice, { invalidate: BILLING_KEYS });
 
+// ------------------------------------------------------------------ Payment options
+export const usePaymentOptions = () =>
+  useQuery({ queryKey: qk.paymentOptions, queryFn: api.listPaymentOptions, enabled: useCanUseMenu("payments") });
+export const useCreatePaymentOption = () => useApiMutation(api.createPaymentOption, { invalidate: [qk.paymentOptions] });
+export const useUpdatePaymentOption = () =>
+  useApiMutation((v: { id: string; body: PaymentOptionIn }) => api.updatePaymentOption(v.id, v.body), { invalidate: [qk.paymentOptions] });
+export const useDeletePaymentOption = () => useApiMutation(api.deletePaymentOption, { invalidate: [qk.paymentOptions] });
 
 // ------------------------------------------------------------------ Portal billing
 export const usePortalBilling = () => useQuery({ queryKey: qk.portalBilling, queryFn: api.getPortalBilling });
