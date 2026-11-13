@@ -46,6 +46,40 @@
   }
 }
 
+// Request CRM / Request Funnel: first in their second sidebar, in the brand orange so they stand out.
+.nav-panel .nav-item.nav-item--cta {
+  margin-bottom: 6px;
+  border: 1px solid rgba(255, 153, 0, 0.45);
+  background: linear-gradient(90deg, rgba(255, 153, 0, 0.14), rgba(255, 178, 63, 0.06));
+  color: $orange-ink;
+  font-weight: 700;
+
+  .nav-item__icon {
+    color: #c2410c;
+  }
+
+  &:hover {
+    border-color: $orange;
+    background: linear-gradient(90deg, rgba(255, 153, 0, 0.22), rgba(255, 178, 63, 0.1));
+    color: $orange-ink;
+  }
+
+  &[aria-current="page"] {
+    border-color: $orange;
+    background: $grad-orange;
+    color: $on-orange;
+    box-shadow: $glow-orange-soft;
+
+    &::before {
+      display: none;
+    }
+
+    .nav-item__icon {
+      color: $on-orange;
+    }
+  }
+}
+
 // "POWERED BY GoCWGL" under the account button.
 .portal-powered {
   @include center;

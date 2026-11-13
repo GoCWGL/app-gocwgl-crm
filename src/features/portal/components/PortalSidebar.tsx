@@ -121,16 +121,18 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
     else update({ tab: i.tab });
   };
 
-  const navItem = (i: PortalMenuItem, tooltip?: string) => (
+  // While a second sidebar is open, only its category is highlighted in the main menu (not also the page you're on).
+  const navItem = (i: PortalMenuItem, tooltip?: string, inMainMenu = false) => (
     <NavItem
       key={i.key}
       label={i.label}
       tooltip={tooltip}
-      active={isActive(i)}
+      active={isActive(i) && !(inMainMenu && openFlyout)}
       onClick={() => open(i)}
       badge={badges[i.key]}
       locked={i.tab === "affiliate" && affiliateLocked}
       lockedHint="For paid subscribers"
+      className={i.highlight ? "nav-item--cta" : undefined}
       icon={<NavIcon icon={i.icon} />}
     />
   );
@@ -194,7 +196,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
           <SidebarGroup key={g.title} title={g.title}>
             {g.items.map((e) => {
               const tooltip = compact ? e.label : undefined;
-              if (!isPortalFlyout(e)) return navItem(e, tooltip);
+              if (!isPortalFlyout(e)) return navItem(e, tooltip, true);
               const count = countOf(e);
               const isOpen = panel.key === e.key;
               return (
@@ -204,7 +206,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
                   tooltip={tooltip}
                   onClick={() => togglePanel(e.key)}
                   expanded={isOpen}
-                  highlighted={isOpen || holds(e, tab)}
+                  highlighted={openFlyout ? isOpen : holds(e, tab)}
                   badge={count ? { text: String(count), tone: "brand" } : undefined}
                   icon={<NavIcon icon={e.icon} />}
                 />

@@ -75,6 +75,8 @@ export type PortalMenuItem = {
   view?: "builds" | "packages" | "progress" | "tracker" | "live";
   /** Shown only once the client has an active VA: new clients don't see it yet. */
   needsVa?: boolean;
+  /** Stands out in the brand orange (Request CRM, Request Funnel). */
+  highlight?: boolean;
 };
 
 /** A category in the menu that opens its own second sidebar listing its pages (under headings). */
@@ -100,9 +102,10 @@ const page = (tab: PortalTab, label: string, icon: IconName, extra?: Partial<Por
 });
 
 /** Build pages (CRM, Funnels) share the same three tabs. */
-const buildPages = (tab: "crm" | "funnels", noun: string, icon: IconName): PortalMenuItem[] => [
+const buildPages = (tab: "crm" | "funnels", noun: string, request: string, icon: IconName): PortalMenuItem[] => [
+  // First and highlighted: where the client asks for a new one (the packages to pick from).
+  page(tab, request, "sparkle", { key: `${tab}-packages`, view: "packages", highlight: true }),
   page(tab, `Your ${noun} builds`, icon, { key: `${tab}-builds`, view: "builds" }),
-  page(tab, `Get a ${noun}`, "sparkle", { key: `${tab}-packages`, view: "packages" }),
   page(tab, "Build progress", "gauge", { key: `${tab}-progress`, view: "progress" }),
 ];
 
@@ -120,14 +123,14 @@ export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
         label: "CRM",
         icon: "users",
         description: "Your CRM builds, packages and progress",
-        groups: [{ items: buildPages("crm", "CRM", "rocket") }],
+        groups: [{ items: buildPages("crm", "CRM", "Request CRM", "rocket") }],
       },
       {
         key: "funnel-menu",
         label: "Funnel",
         icon: "funnel",
         description: "Your funnels, packages and progress",
-        groups: [{ items: buildPages("funnels", "funnel", "funnel") }],
+        groups: [{ items: buildPages("funnels", "funnel", "Request Funnel", "funnel") }],
       },
       {
         key: "vas",

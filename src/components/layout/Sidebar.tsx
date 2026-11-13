@@ -48,14 +48,15 @@ type NavItemProps = {
   lockedHint?: string;
   /** Hover text, e.g. when the label is hidden in an icon-only menu. */
   tooltip?: string;
+  className?: string;
 };
 
-export function NavItem({ icon, label, active, onClick, badge, expanded, highlighted, locked, lockedHint, tooltip }: NavItemProps) {
+export function NavItem({ icon, label, active, onClick, badge, expanded, highlighted, locked, lockedHint, tooltip, className }: NavItemProps) {
   const collapsible = expanded !== undefined;
   return (
     <button
       type="button"
-      className={cn("nav-item", highlighted && "nav-item--open", locked && "nav-item--locked")}
+      className={cn("nav-item", highlighted && "nav-item--open", locked && "nav-item--locked", className)}
       onClick={locked ? undefined : onClick}
       aria-disabled={locked || undefined}
       title={locked ? lockedHint : tooltip}
