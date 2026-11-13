@@ -11,7 +11,7 @@ import { formatCentsExact } from "@/utils/format/money";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useVas } from "@/utils/hooks/useVas";
 import { AddVaModal } from "../../modals/AddVaModal";
-import { LOGIN_STATUS, rateText, VA_STATUS, VA_STATUSES, vaTab } from "../../lib/vas";
+import { LOGIN_STATUS, rateText, VA_STATUS, VA_STATUSES, vaRate, vaTab } from "../../lib/vas";
 import { useAdmin } from "../../state/AdminContext";
 import { VaFullProfile } from "./VaFullProfile";
 
@@ -117,7 +117,15 @@ function VaRow({ va, onFull }: VaRowProps) {
       </td>
       <td>{va.headline || (va.skills.length ? va.skills.slice(0, 3).join(", ") : "—")}</td>
       <td>{va.clientCount}</td>
-      <td>{rateText(va.hourlyRateCents, (c) => formatCentsExact(c))}</td>
+      <td>
+        {rateText(vaRate(va).cents, (c) => formatCentsExact(c))}
+        {vaRate(va).asking && (
+          <span className="text-small" title="From their resume. Set what GoCWGL pays them in Edit profile.">
+            {" "}
+            asking
+          </span>
+        )}
+      </td>
       <td>
         <Badge tone={login.tone} dot>
           {va.isActive ? login.label : "Deactivated"}

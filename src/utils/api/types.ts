@@ -1255,6 +1255,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/va/resume/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Resume Lookup
+         * @description Company or school names for what's typed so far (from Wikidata), places in `country` first.
+         *     Empty when nothing fits or it's unreachable.
+         */
+        get: operations["my_resume_lookup_api_va_resume_lookup_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/va/resume/new-link": {
         parameters: {
             query?: never;
@@ -7110,6 +7131,21 @@ export interface components {
             kind: string;
             /** Accountname */
             accountName: string;
+            /**
+             * Bankname
+             * @default
+             */
+            bankName?: string;
+            /**
+             * Accountnumber
+             * @default
+             */
+            accountNumber?: string;
+            /**
+             * Paymentlink
+             * @default
+             */
+            paymentLink?: string;
             /** Details */
             details: string;
         };
@@ -8672,6 +8708,21 @@ export interface components {
             kind: string;
             /** Accountname */
             accountName: string;
+            /**
+             * Bankname
+             * @default
+             */
+            bankName?: string;
+            /**
+             * Accountnumber
+             * @default
+             */
+            accountNumber?: string;
+            /**
+             * Paymentlink
+             * @default
+             */
+            paymentLink?: string;
             /** Details */
             details: string;
         };
@@ -9533,6 +9584,13 @@ export interface components {
             /** Availability */
             availability?: components["schemas"]["DayHours"][] | null;
         };
+        /** OrgSuggestion */
+        OrgSuggestion: {
+            /** Name */
+            name: string;
+            /** Description */
+            description: string;
+        };
         /** OverviewOut */
         OverviewOut: {
             /** Business */
@@ -9610,7 +9668,10 @@ export interface components {
              */
             updatedAt: string;
         };
-        /** PaymentMethodIn */
+        /**
+         * PaymentMethodIn
+         * @description A bank transfer needs the bank name and account number; anything else an account number (or email) or a payment link.
+         */
         PaymentMethodIn: {
             /**
              * Kind
@@ -9624,6 +9685,21 @@ export interface components {
              * @default
              */
             accountName?: string;
+            /**
+             * Bankname
+             * @default
+             */
+            bankName?: string;
+            /**
+             * Accountnumber
+             * @default
+             */
+            accountNumber?: string;
+            /**
+             * Paymentlink
+             * @default
+             */
+            paymentLink?: string;
             /**
              * Details
              * @default
@@ -9651,6 +9727,12 @@ export interface components {
             label: string;
             /** Accountname */
             accountName: string;
+            /** Bankname */
+            bankName: string;
+            /** Accountnumber */
+            accountNumber: string;
+            /** Paymentlink */
+            paymentLink: string;
             /** Details */
             details: string;
             /** Isdefault */
@@ -9669,6 +9751,12 @@ export interface components {
             label?: string | null;
             /** Accountname */
             accountName?: string | null;
+            /** Bankname */
+            bankName?: string | null;
+            /** Accountnumber */
+            accountNumber?: string | null;
+            /** Paymentlink */
+            paymentLink?: string | null;
             /** Details */
             details?: string | null;
             /** Isdefault */
@@ -10813,6 +10901,16 @@ export interface components {
              * @default
              */
             result?: string;
+            /**
+             * Url
+             * @default
+             */
+            url?: string;
+            /**
+             * Credentialid
+             * @default
+             */
+            credentialId?: string;
             /** Documentid */
             documentId?: string | null;
             /**
@@ -10828,25 +10926,42 @@ export interface components {
         };
         /**
          * ResumeCertIn
-         * @description Name, type, issuer and date are required; a result and a document are optional.
+         * @description Only the name is needed; issuer, date, result, link, credential ID and a document are optional.
          */
         ResumeCertIn: {
             /**
              * Kind
+             * @default certification
              * @enum {string}
              */
-            kind: "certification" | "personality" | "skills" | "other";
+            kind?: "certification" | "personality" | "skills" | "other";
             /** Name */
             name: string;
-            /** Issuer */
-            issuer: string;
-            /** Year */
-            year: string;
+            /**
+             * Issuer
+             * @default
+             */
+            issuer?: string;
+            /**
+             * Year
+             * @default
+             */
+            year?: string;
             /**
              * Result
              * @default
              */
             result?: string;
+            /**
+             * Url
+             * @default
+             */
+            url?: string;
+            /**
+             * Credentialid
+             * @default
+             */
+            credentialId?: string;
             /** Documentid */
             documentId?: string | null;
         };
@@ -10957,6 +11072,11 @@ export interface components {
              * @default
              */
             end?: string;
+            /**
+             * Current
+             * @default false
+             */
+            current?: boolean;
             /** Bullets */
             bullets?: string[];
         };
@@ -11030,10 +11150,30 @@ export interface components {
              */
             degree?: string;
             /**
+             * Field
+             * @default
+             */
+            field?: string;
+            /**
+             * Start
+             * @default
+             */
+            start?: string;
+            /**
+             * End
+             * @default
+             */
+            end?: string;
+            /**
              * Year
              * @default
              */
             year?: string;
+            /**
+             * Country
+             * @default
+             */
+            country?: string;
         };
         /** ResumeSocialLink */
         ResumeSocialLink: {
@@ -12681,6 +12821,8 @@ export interface components {
             country: string;
             /** Hourlyratecents */
             hourlyRateCents: number | null;
+            /** Askingratecents */
+            askingRateCents?: number | null;
             /** Clientcount */
             clientCount: number;
             /** Loginstatus */
@@ -12702,6 +12844,7 @@ export interface components {
              * @default false
              */
             resumePublic?: boolean;
+            resume?: components["schemas"]["VaResumeFacts"] | null;
         };
         /** VaInvitationOut */
         VaInvitationOut: {
@@ -13194,6 +13337,150 @@ export interface components {
             /** Vaid */
             vaId?: string | null;
         };
+        /** VaResumeCert */
+        VaResumeCert: {
+            /**
+             * Kind
+             * @default certification
+             */
+            kind?: string;
+            /**
+             * Name
+             * @default
+             */
+            name?: string;
+            /**
+             * Issuer
+             * @default
+             */
+            issuer?: string;
+            /**
+             * Year
+             * @default
+             */
+            year?: string;
+            /**
+             * Result
+             * @default
+             */
+            result?: string;
+            /**
+             * Url
+             * @default
+             */
+            url?: string;
+        };
+        /**
+         * VaResumeFacts
+         * @description What the VA keeps on their resume, for the team (read-only here; the VA edits it in their portal).
+         */
+        VaResumeFacts: {
+            /** Ratecents */
+            rateCents?: number | null;
+            /**
+             * Yearsexperience
+             * @default
+             */
+            yearsExperience?: string;
+            /**
+             * Availability
+             * @default
+             */
+            availability?: string;
+            /**
+             * Workinghours
+             * @default
+             */
+            workingHours?: string;
+            /**
+             * Website
+             * @default
+             */
+            website?: string;
+            /** Languages */
+            languages?: string[];
+            /** Tools */
+            tools?: string[];
+            /** Workhistory */
+            workHistory?: components["schemas"]["VaResumeJob"][];
+            /** Education */
+            education?: components["schemas"]["VaResumeSchool"][];
+            /** Certifications */
+            certifications?: components["schemas"]["VaResumeCert"][];
+        };
+        /** VaResumeJob */
+        VaResumeJob: {
+            /**
+             * Title
+             * @default
+             */
+            title?: string;
+            /**
+             * Company
+             * @default
+             */
+            company?: string;
+            /**
+             * Location
+             * @default
+             */
+            location?: string;
+            /**
+             * Start
+             * @default
+             */
+            start?: string;
+            /**
+             * End
+             * @default
+             */
+            end?: string;
+            /**
+             * Current
+             * @default false
+             */
+            current?: boolean;
+            /** Bullets */
+            bullets?: string[];
+        };
+        /** VaResumeSchool */
+        VaResumeSchool: {
+            /**
+             * School
+             * @default
+             */
+            school?: string;
+            /**
+             * Degree
+             * @default
+             */
+            degree?: string;
+            /**
+             * Field
+             * @default
+             */
+            field?: string;
+            /**
+             * Start
+             * @default
+             */
+            start?: string;
+            /**
+             * End
+             * @default
+             */
+            end?: string;
+            /**
+             * Year
+             * @default
+             */
+            year?: string;
+            /**
+             * Country
+             * @default
+             */
+            country?: string;
+        };
         /**
          * VaStatus
          * @description Where a VA is with GoCWGL (set by staff).
@@ -13279,6 +13566,8 @@ export interface components {
             country: string;
             /** Hourlyratecents */
             hourlyRateCents: number | null;
+            /** Askingratecents */
+            askingRateCents?: number | null;
             /** Clientcount */
             clientCount: number;
             /** Loginstatus */
@@ -16534,6 +16823,51 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ResumeOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_resume_lookup_api_va_resume_lookup_get: {
+        parameters: {
+            query: {
+                kind: "company" | "school" | "highschool";
+                q: string;
+                country?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Resume Lookup Api Va Resume Lookup Get */
+                        data: components["schemas"]["OrgSuggestion"][];
                     };
                 };
             };

@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentLines } from "@/features/va/sections/invoices/PaymentLines";
 import { useState } from "react";
 import { Avatar, Badge, Button, LoadState, Modal, StatGrid, TabBar } from "@/components/ui";
 import { avatarTone } from "@/lib/tones";
@@ -164,8 +165,7 @@ function VaInvoiceModal({ id, onClose }: { id: string; onClose: () => void }) {
               <section className="cp-pay">
                 <span className="kicker kicker--sm">HOW TO PAY</span>
                 <strong>{inv.payment.label}</strong>
-                {inv.payment.accountName && <span>{inv.payment.accountName}</span>}
-                <span className="cp-pay__details">{inv.payment.details}</span>
+                <PaymentLines payment={inv.payment} payNow={inv.status !== "paid"} />
               </section>
             )}
             {inv.note && <p className="va-pre">{inv.note}</p>}

@@ -5,7 +5,9 @@ import { Badge, Button, Field, FormError, Icon, IconButton, IconTile, Input, Loa
 import type { PaymentMethodOut } from "@/utils/api/models";
 import { useAddPaymentMethod, useDeletePaymentMethod, usePaymentMethods, useUpdatePaymentMethod } from "@/utils/hooks/useVaInvoices";
 import { useVaAccess } from "../../lib/access";
-import { METHOD_KINDS, kindLabel, type MethodKind } from "./shared";
+import { METHOD_KINDS, kindInfo, kindLabel, type MethodKind } from "./shared";
+import { PaymentLines } from "./PaymentLines";
+import { fieldErrors } from "@/utils/errors";
 
 /** Invoices › Payment details: where clients pay the VA. Picked when creating an invoice. */
 export function PaymentDetails() {
@@ -39,8 +41,7 @@ export function PaymentDetails() {
                 </span>
                 {m.isDefault && <Badge tone="green">Default</Badge>}
               </header>
-              {m.accountName && <span className="text-small">Account name: {m.accountName}</span>}
-              {m.details && <p className="va-pre pay-card__details">{m.details}</p>}
+              <PaymentLines payment={m} />
               <footer className="pay-card__foot">
                 {!m.isDefault && (
                   <Button size="sm" variant="link" disabled={save.isPending} onClick={() => save.mutate({ id: m.id, body: { isDefault: true } })}>
@@ -75,25 +76,81 @@ export function PaymentDetails() {
   );
 }
 
+/** "wise.com/pay/me/maria" → "https://wise.com/pay/me/maria" (same as the API). */
+const fullLink = (v: string) => {
+  const t = v.trim();
+  if (!t) return "";
+  if (/^http:\/\//i.test(t)) return `https://${t.slice(7)}`;
+  return /^https:\/\//i.test(t) ? t : `https://${t.replace(/^\/+/, "")}`;
+};
+const linkOk = (v: string) => {
+  try {
+    const u = new URL(fullLink(v));
+    return u.hostname.includes(".") && !/\s/.test(v.trim());
+  } catch {
+    return false;
+  }
+};
+
 function MethodModal({ method, onClose }: { method: PaymentMethodOut | null; onClose: () => void }) {
   const add = useAddPaymentMethod();
   const save = useUpdatePaymentMethod();
   const [kind, setKind] = useState<MethodKind>(method?.kind ?? "bank");
   const [label, setLabel] = useState(method?.label ?? "");
   const [accountName, setAccountName] = useState(method?.accountName ?? "");
+  const [bankName, setBankName] = useState(method?.bankName ?? "");
+  const [accountNumber, setAccountNumber] = useState(method?.accountNumber ?? "");
+  const [paymentLink, setPaymentLink] = useState(method?.paymentLink ?? "");
   const [details, setDetails] = useState(method?.details ?? "");
   const [isDefault, setIsDefault] = useState(method?.isDefault ?? false);
   const [tried, setTried] = useState(false);
   const busy = add.isPending || save.isPending;
-  const hint = METHOD_KINDS.find((k) => k.value === kind)?.hint;
+  const info = kindInfo(kind);
+  const bank = kind === "bank";
+
+  // Each problem under its own field; the API's own answers land in the same places.
+  const api = fieldErrors(add.error ?? save.error);
+  const errors: Record<string, string | undefined> = {
+    label: tried && !label.trim() ? "Give it a name." : api.label,
+    bankName: tried && bank && !bankName.trim() ? "Enter the bank name." : api.bankName,
+    accountNumber:
+      tried && bank && !accountNumber.trim()
+        ? "Enter the account number."
+        : tried && !bank && !accountNumber.trim() && !(info.link && paymentLink.trim())
+          ? info.link
+            ? `Add your ${info.number.toLowerCase()} or a payment link.`
+            : `Enter your ${info.number.toLowerCase()}.`
+          : api.accountNumber,
+    paymentLink: paymentLink.trim() && !linkOk(paymentLink) ? "Use a full payment link, like https://wise.com/pay/me/yourname." : api.paymentLink,
+  };
+  // An API "how to pay" problem is reported on the link; show it by the account number when there's no link box.
+  if (!info.link && api.paymentLink && !errors.accountNumber) errors.accountNumber = api.paymentLink;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setTried(true);
-    if (!label.trim()) return;
-    const body = { kind, label: label.trim(), accountName: accountName.trim(), details: details.trim(), isDefault };
+    const bad =
+      !label.trim() ||
+      (bank && (!bankName.trim() || !accountNumber.trim())) ||
+      (!bank && !accountNumber.trim() && !(info.link && paymentLink.trim())) ||
+      (info.link && paymentLink.trim() && !linkOk(paymentLink));
+    if (bad) return;
+    const body = {
+      kind,
+      label: label.trim(),
+      accountName: accountName.trim(),
+      bankName: bank ? bankName.trim() : "",
+      accountNumber: accountNumber.trim(),
+      paymentLink: info.link ? fullLink(paymentLink) : "",
+      details: details.trim(),
+      isDefault,
+    };
     if (method) save.mutate({ id: method.id, body }, { onSuccess: onClose });
     else add.mutate(body, { onSuccess: onClose });
+  };
+  const reset = () => {
+    add.reset();
+    save.reset();
   };
 
   return (
@@ -104,8 +161,8 @@ function MethodModal({ method, onClose }: { method: PaymentMethodOut | null; onC
       titleId="pay-method"
       kicker="PAYMENT DETAILS"
       title={method ? "Edit payment details" : "Add payment details"}
-      subtitle="Shown on the invoices you pick it for."
-      width={540}
+      subtitle="Shown on the invoices you pick it for, so clients know how to pay you."
+      width={560}
       footer={
         <>
           <span className="u-spacer" />
@@ -116,21 +173,56 @@ function MethodModal({ method, onClose }: { method: PaymentMethodOut | null; onC
         </>
       }
     >
-      <div className="stack stack--14">
-        <FormError error={add.error ?? save.error} />
+      <div className="stack stack--14" onInput={reset}>
+        <FormError error={Object.keys(api).length ? null : (add.error ?? save.error)} />
         <div className="form-grid">
           <Field label="Type" htmlFor="pm-kind">
             <Select id="pm-kind" value={kind} options={METHOD_KINDS.map((k) => ({ value: k.value, label: k.label }))} onChange={(e) => setKind(e.target.value as MethodKind)} />
           </Field>
-          <Field label="Name it" htmlFor="pm-label" required error={tried && !label.trim() && "Give it a name."}>
-            <Input id="pm-label" maxLength={80} placeholder="BPI savings" value={label} onChange={(e) => setLabel(e.target.value)} />
+          <Field label="Name it" htmlFor="pm-label" required error={errors.label} hint="Only you see this, e.g. “BPI savings”.">
+            <Input id="pm-label" maxLength={80} aria-invalid={errors.label ? true : undefined} placeholder={bank ? "BPI savings" : info.label} value={label} onChange={(e) => setLabel(e.target.value)} />
           </Field>
         </div>
-        <Field label="Account name" htmlFor="pm-name">
-          <Input id="pm-name" maxLength={120} placeholder="As it appears on the account" value={accountName} onChange={(e) => setAccountName(e.target.value)} />
-        </Field>
-        <Field label="Details" htmlFor="pm-details" hint={hint}>
-          <Textarea id="pm-details" rows={4} maxLength={2000} value={details} onChange={(e) => setDetails(e.target.value)} />
+        {bank && (
+          <Field label="Bank name" htmlFor="pm-bank" required error={errors.bankName}>
+            <Input id="pm-bank" maxLength={120} aria-invalid={errors.bankName ? true : undefined} placeholder="BPI, BDO, Metrobank…" value={bankName} onChange={(e) => setBankName(e.target.value)} />
+          </Field>
+        )}
+        <div className="form-grid">
+          <Field label="Account name" htmlFor="pm-name" hint="As it appears on the account">
+            <Input id="pm-name" maxLength={120} placeholder="Maria Santos" value={accountName} onChange={(e) => setAccountName(e.target.value)} />
+          </Field>
+          <Field label={info.number} htmlFor="pm-number" required={bank || !info.link} error={errors.accountNumber}>
+            <Input
+              id="pm-number"
+              maxLength={120}
+              aria-invalid={errors.accountNumber ? true : undefined}
+              placeholder={info.numberPlaceholder}
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value)}
+            />
+          </Field>
+        </div>
+        {info.link && (
+          <Field
+            label="Payment link"
+            htmlFor="pm-link"
+            error={errors.paymentLink}
+            hint={kind === "wise" ? "Your Wise “Request payment” or wise.com/pay link. Clients get a Pay now button." : "Clients get a Pay now button on your invoice."}
+          >
+            <Input
+              id="pm-link"
+              maxLength={500}
+              inputMode="url"
+              aria-invalid={errors.paymentLink ? true : undefined}
+              placeholder={info.linkPlaceholder}
+              value={paymentLink}
+              onChange={(e) => setPaymentLink(e.target.value)}
+            />
+          </Field>
+        )}
+        <Field label="Other details" htmlFor="pm-details" hint={info.detailsHint}>
+          <Textarea id="pm-details" rows={3} maxLength={2000} value={details} onChange={(e) => setDetails(e.target.value)} />
         </Field>
         <Toggle checked={isDefault} onChange={setIsDefault} label="Use by default on new invoices" showLabel />
       </div>

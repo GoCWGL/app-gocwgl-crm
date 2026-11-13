@@ -27,3 +27,12 @@ export function vaTab(va: Pick<VaSummary, "status" | "isActive">): VaStatus {
 export function rateText(cents: number | null | undefined, format: (cents: number) => string): string {
   return cents == null ? "—" : `${format(cents)}/hr`;
 }
+
+/**
+ * The rate to show for a VA: what GoCWGL pays them, or, when the team hasn't set that, the rate the VA asks
+ * for on their resume (marked as asking, since it never sets their pay).
+ */
+export function vaRate(va: Pick<VaSummary, "hourlyRateCents" | "askingRateCents">): { cents: number | null; asking: boolean } {
+  if (va.hourlyRateCents != null) return { cents: va.hourlyRateCents, asking: false };
+  return { cents: va.askingRateCents ?? null, asking: va.askingRateCents != null };
+}

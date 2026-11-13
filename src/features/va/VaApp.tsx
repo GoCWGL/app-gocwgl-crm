@@ -14,6 +14,7 @@ import { InvoicesSection } from "./sections/InvoicesSection";
 import { OpenJobsSection } from "./sections/OpenJobsSection";
 import { ReferralsSection } from "./sections/ReferralsSection";
 import { RequestSupportSection } from "./sections/RequestSupportSection";
+import { AccountSection } from "./sections/AccountSection";
 import { ResumeSection } from "./sections/ResumeSection";
 import { SopLibrarySection } from "./sections/SopLibrarySection";
 import { TasksSection } from "./sections/TasksSection";
@@ -67,6 +68,7 @@ const SECTIONS: Record<VaTab, () => React.ReactNode> = {
   sops: SopLibrarySection,
   support: RequestSupportSection,
   resume: ResumeSection,
+  account: AccountSection,
 };
 
 function Section({ tab }: { tab: VaTab }) {

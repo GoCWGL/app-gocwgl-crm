@@ -47,6 +47,10 @@ const EMBED_PREVIEW: Policy = {
   "frame-ancestors": ["*"],
 };
 
+// Pages that show a VA's resume (VA portal, client portal, the public resume page): a VA's intro video can come
+// from any https video host, as a sandboxed player frame or a video file.
+const RESUME: Policy = { ...APP, "frame-src": ["'self'", TURNSTILE, "https:"], "media-src": ["'self'", "blob:", "https:"] };
+
 // Booking pages, forms and surveys are embedded on clients' own websites.
 const PUBLIC: Policy = { ...APP, "frame-ancestors": ["*"] };
 
@@ -69,6 +73,7 @@ const nextConfig: NextConfig = {
     return [
       // /api/* answers come from the backend, which sets its own policy.
       { source: "/((?!api/).*)", headers: header(APP) },
+      ...["/va", "/portal", "/resume/:path*"].map((source) => ({ source, headers: header(RESUME) })),
       { source: "/embed-preview.html", headers: header(EMBED_PREVIEW) },
       ...["/book/:path*", "/form/:path*", "/survey/:path*"].map((source) => ({ source, headers: header(PUBLIC) })),
     ];

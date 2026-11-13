@@ -28,6 +28,15 @@ export const useMyReferrals = (enabled = true) => useQuery({ queryKey: qk.myRefe
 export const useResume = (enabled = true) => useQuery({ queryKey: qk.resume, queryFn: api.getResume, enabled });
 export const useSaveResume = () => useApiMutation(api.saveResume, { invalidate: [qk.resume, qk.vas] });
 export const useUploadResumeDocument = () => useApiMutation(api.uploadResumeDocument);
+/** Suggestions for a company or school name; waits for 2+ characters and keeps results for 10 minutes. */
+export const useOrgLookup = (kind: api.OrgKind, q: string, country = "") =>
+  useQuery({
+    queryKey: ["va", "org-lookup", kind, q.trim().toLowerCase(), country],
+    queryFn: () => api.lookupOrg(kind, q.trim(), country),
+    enabled: q.trim().length >= 2,
+    staleTime: 10 * 60_000,
+    placeholderData: (prev) => prev,
+  });
 export const useNewResumeLink = () => useApiMutation(() => api.newResumeLink(), { invalidate: [qk.resume] });
 export const usePublicResume = (slug: string) =>
   useQuery({ queryKey: ["public-resume", slug], queryFn: () => api.getPublicResume(slug), enabled: !!slug, retry: false });

@@ -6,7 +6,6 @@ import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
 import { Avatar, Icon } from "@/components/ui";
 import { VA_NAV } from "@/data/va";
-import { useSignOut } from "@/utils/hooks/useAuth";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useInactiveAsks, useOpenJobs, useVaTasks } from "@/utils/hooks/useVaPortal";
 import { useMenuCounts } from "@/utils/hooks/useMenuCounts";
@@ -16,7 +15,6 @@ import { useVa } from "../state/VaContext";
 export function VaSidebar() {
   const { tab, goTo } = useVa();
   const router = useRouter();
-  const signOut = useSignOut();
   const me = useMe().data;
   const name = me?.fullName || me?.email || "";
   // How many jobs are open right now, so VAs notice new ones.
@@ -54,9 +52,10 @@ export function VaSidebar() {
           <ProfileButton
             avatar={<Avatar name={name} brand ring />}
             name={name}
-            subtitle={signOut.isPending ? "Signing out…" : "Sign out"}
-            onClick={() => signOut.mutate(undefined, { onSettled: () => router.replace("/login") })}
-            trailing={<Icon name="arrowRight" size={17} strokeWidth={1.9} className="profile-button__icon" />}
+            subtitle="Profile & settings"
+            active={tab === "account"}
+            onClick={() => goTo("account")}
+            trailing={<Icon name="settings" size={17} strokeWidth={1.9} className="profile-button__icon" />}
           />
         </>
       }

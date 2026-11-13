@@ -1,16 +1,21 @@
 "use client";
 
-import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
-import { Button, Field, FormError, Icon, IconButton, Input, LoadState, Select, Textarea, Toggle } from "@/components/ui";
-import type { ResumeCert, ResumeJob, ResumeOut, ResumeSchool } from "@/utils/api/models";
+import { useId, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
+import { Button, Field, FormError, Icon, IconButton, Input, LoadState, SegmentedControl, Select, Textarea, Toggle } from "@/components/ui";
+import type { ResumeOut } from "@/utils/api/models";
 import { formatLong } from "@/utils/format/dates";
+import { isApiError } from "@/utils/errors";
 import { openResumeDocument } from "@/utils/api/vaPortal";
 import { useBlobUrl } from "@/utils/hooks/useBlobUrl";
+import { videoSourceFrom } from "@/lib/video";
+import { countryFrom } from "@/data/countries";
 import { useNewResumeLink, useResume, useSaveResume, useUploadResumeDocument } from "@/utils/hooks/useVaPortal";
-import { videoEmbed } from "@/lib/video";
 import { ResumePaper, type ResumeContent } from "../components/ResumePaper";
 import { SocialIcon, brandColor } from "../components/SocialIcon";
-import { SOCIAL_NETWORKS, networkOf, normalizeLink, socialLinkOk, type SocialLink, type SocialNetwork } from "../lib/socials";
+import { SOCIAL_NETWORKS, networkOf, normalizeLink, type SocialLink, type SocialNetwork } from "../lib/socials";
+import { LIMITS, apiResumeErrors, certIsEmpty, uploadProblem, charCount, errorUnder, fieldLabel, validateResume, type ResumeErrors } from "../lib/resumeErrors";
+import { hasSchool } from "../lib/resumeFormat";
+import { AddEntryButton, CertCard, JobCard, SchoolCard, emptyCert, emptyJob, emptySchool } from "../components/ResumeEntries";
 import { useVaAccess } from "../lib/access";
 
 type Draft = ResumeContent;
@@ -54,24 +59,61 @@ function ResumeEditor({ data }: { data: ResumeOut }) {
   const [draft, setDraft] = useState<Draft>(() => pick(data));
   const [saved, setSaved] = useState(false);
   const photoUrl = useBlobUrl(draft.photoId ? `/va/resume/documents/${draft.photoId}` : null);
+  const photoUpload = useUploadResumeDocument();
   const [tried, setTried] = useState(false);
-  const certsIncomplete = draft.certifications.some((c) => !c.name?.trim() || !c.issuer?.trim() || !c.year?.trim());
-  const linksInvalid = draft.socialLinks.some((l) => !socialLinkOk(l.network, l.url) || (l.network === "other" && !l.label?.trim()));
+  const check = useMemo(() => validateResume(draft), [draft]);
+  // Length and format problems show as you type; "still empty" ones after the first Save click.
+  const clientErrors = tried ? check.errors : Object.fromEntries(Object.entries(check.errors).filter(([k]) => !check.missing.has(k)));
+  // The API's own 422 field errors (cleared on the next edit), in the same places.
+  const apiErrors = isApiError(save.error) && save.error.status === 422 ? apiResumeErrors(save.error.details) : {};
+  const errors: ResumeErrors = { ...apiErrors, ...clientErrors };
+  const errorPaths = Object.keys(errors);
   const dirty = JSON.stringify(draft) !== JSON.stringify(pick(data));
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => {
     setSaved(false);
+    if (save.error) save.reset();
     setDraft((d) => ({ ...d, [key]: value }));
   };
+  /** Change one entry of a list, applied to the latest draft (two quick edits never undo each other). */
+  const patchAt = <K extends "workHistory" | "education" | "certifications">(key: K, i: number, p: Partial<Draft[K][number]>) => {
+    setSaved(false);
+    if (save.error) save.reset();
+    setDraft((d) => ({ ...d, [key]: (d[key] as Array<Draft[K][number]>).map((x, k) => (k === i ? { ...x, ...p } : x)) }));
+  };
+  /** The error under one field, and the red border on its control. */
+  const err = (path: string) => errors[path];
+  const inv = (path: string) => ({ "aria-invalid": errors[path] ? true : undefined });
+
+  // The role being edited (the others show as summary cards).
+  const [openJob, setOpenJob] = useState<number | null>(null);
+  const jobHasError = (i: number) => Object.keys(errors).some((k) => k.startsWith(`workHistory.${i}.`));
+
+  const showFirstError = () =>
+    window.requestAnimationFrame(() => document.querySelector(".resume-form .field__error")?.scrollIntoView({ behavior: "smooth", block: "center" }));
 
   // Email is the sign-in address: shown, never sent.
   const submit = () => {
     setTried(true);
-    if (certsIncomplete || linksInvalid) {
-      // Show where the problem is: the first marked field.
-      window.requestAnimationFrame(() => document.querySelector(".resume-form .field__error")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+    const problems = Object.keys(check.errors);
+    if (problems.length) {
+      // Open the first role with a problem so its field (and message) can be seen.
+      const job = problems.map((k) => /^workHistory\.(\d+)\./.exec(k)?.[1]).find((x) => x !== undefined);
+      if (job !== undefined) setOpenJob(Number(job));
+      showFirstError();
       return;
     }
-    const rest: Omit<Draft, "email"> & { email?: string } = { ...draft };
+    // Entries left completely empty are dropped (the list here matches what's sent, so API errors line up).
+    const cleaned: Draft = {
+      ...draft,
+      workHistory: draft.workHistory.filter((j) => j.title?.trim() || j.company?.trim() || j.location?.trim() || j.start || j.end || (j.bullets ?? []).some((b) => b.trim())),
+      education: draft.education.filter(hasSchool),
+      certifications: draft.certifications.filter((c) => !certIsEmpty(c)),
+    };
+    if (JSON.stringify(cleaned) !== JSON.stringify(draft)) {
+      setDraft(cleaned);
+      setOpenJob(null);
+    }
+    const rest: Omit<Draft, "email"> & { email?: string } = { ...cleaned };
     delete rest.email;
     save.mutate(
       {
@@ -85,13 +127,30 @@ function ResumeEditor({ data }: { data: ResumeOut }) {
           issuer: (c.issuer ?? "").trim(),
           year: (c.year ?? "").trim(),
           result: (c.result ?? "").trim(),
+          url: normalizeLink(c.url ?? ""),
+          credentialId: (c.credentialId ?? "").trim(),
           documentId: c.documentId ?? null,
         })),
-        workHistory: draft.workHistory.map((j) => ({ ...j, bullets: (j.bullets ?? []).map((b) => b.trim()).filter(Boolean) })),
+        workHistory: rest.workHistory.map((j) => ({ ...j, end: j.current ? "" : j.end, bullets: (j.bullets ?? []).map((b) => b.trim()).filter(Boolean) })),
       },
-      { onSuccess: () => setSaved(true) },
+      { onSuccess: () => setSaved(true), onError: showFirstError },
     );
   };
+  /** "Save experience": close the role if it's fine, then save the resume. */
+  const saveJob = (i: number) => {
+    if (Object.keys(check.errors).some((k) => k.startsWith(`workHistory.${i}.`))) {
+      setTried(true);
+      showFirstError();
+      return;
+    }
+    setOpenJob(null);
+    if (dirty) submit();
+  };
+  const addJob = () => {
+    set("workHistory", [...draft.workHistory, emptyJob()]);
+    setOpenJob(draft.workHistory.length);
+  };
+  const hasFieldErrors = errorPaths.length > 0 && (tried || Object.keys(apiErrors).length > 0);
 
   return (
     <div className="resume">
@@ -108,43 +167,38 @@ function ResumeEditor({ data }: { data: ResumeOut }) {
             <Icon name="check" size={13} /> Saved
           </span>
         )}
-        <Button variant="primary" disabled={!dirty || save.isPending} onClick={submit}>
-          {save.isPending ? "Saving…" : "Save resume"}
+        <Button variant="primary" disabled={!dirty || save.isPending || photoUpload.isPending} onClick={submit}>
+          {save.isPending ? "Saving…" : photoUpload.isPending ? "Uploading photo…" : "Save resume"}
         </Button>
       </div>
       <PageLink data={data} />
-      <FormError error={save.error} />
-      {tried && (certsIncomplete || linksInvalid) && (
-        <div className="field__error" role="alert">
-          {certsIncomplete ? "Fill in the name, issued by and date for each certification. " : ""}
-          {linksInvalid ? "Fix the social media links marked below." : ""}
-        </div>
-      )}
+      {hasFieldErrors ? <ErrorSummary paths={errorPaths} /> : <FormError error={save.error} />}
 
       <div className="resume-layout">
         <div className="resume-form">
           <Section title="Header" icon="user" note="Name, phone, title and location come from your VA profile.">
-            <HeadshotField photoUrl={photoUrl} name={draft.name} hasPhoto={!!draft.photoId} onChange={(id) => set("photoId", id)} />
+            <HeadshotField upload={photoUpload} photoUrl={photoUrl} name={draft.name} hasPhoto={!!draft.photoId} error={err("photoId")} onChange={(id) => set("photoId", id)} />
             <div className="form-grid">
-              <Field label="Full name" htmlFor="rs-name">
-                <Input id="rs-name" maxLength={120} value={draft.name} onChange={(e) => set("name", e.target.value)} />
+              <Field label="Full name" htmlFor="rs-name" required error={err("name")}>
+                <Input id="rs-name" {...inv("name")} maxLength={120} value={draft.name} onChange={(e) => set("name", e.target.value)} />
               </Field>
-              <Field label="Professional title" htmlFor="rs-title">
-                <Input id="rs-title" maxLength={120} placeholder="Executive Virtual Assistant" value={draft.title} onChange={(e) => set("title", e.target.value)} />
+              <Field label="Professional title" htmlFor="rs-title" required error={err("title")}>
+                <Input id="rs-title" {...inv("title")} maxLength={120} placeholder="Executive Virtual Assistant" value={draft.title} onChange={(e) => set("title", e.target.value)} />
               </Field>
-              <Field label="Email" htmlFor="rs-email" hint="Not shown on your resume page: clients reach you through GoCWGL.">
+              <Field label="Email" htmlFor="rs-email" required hint="Not shown on your resume page: clients reach you through GoCWGL.">
                 <Input id="rs-email" type="email" value={draft.email} disabled title="Your sign-in email. Ask the GoCWGL team to change it." />
               </Field>
-              <Field label="Phone" htmlFor="rs-phone" hint="Kept on your VA profile; not shown to clients.">
-                <Input id="rs-phone" maxLength={40} value={draft.phone} onChange={(e) => set("phone", e.target.value)} />
+              <Field label="Phone" htmlFor="rs-phone" error={err("phone")} hint="Kept on your VA profile; not shown to clients.">
+                <Input id="rs-phone" {...inv("phone")} maxLength={40} value={draft.phone} onChange={(e) => set("phone", e.target.value)} />
               </Field>
-              <Field label="Location" htmlFor="rs-loc">
-                <Input id="rs-loc" maxLength={80} placeholder="Manila, Philippines" value={draft.location} onChange={(e) => set("location", e.target.value)} />
+              <Field label="Location" htmlFor="rs-loc" error={err("location")}>
+                <Input id="rs-loc" {...inv("location")} maxLength={80} placeholder="Manila, Philippines" value={draft.location} onChange={(e) => set("location", e.target.value)} />
               </Field>
 
-              <Field label="Your rate (per hour, USD)" htmlFor="rs-rate" hint="Shown on your resume. It doesn’t change what GoCWGL pays you.">
+              <Field label="Your rate (per hour, USD)" htmlFor="rs-rate" required error={err("rateCents")} hint="Shown on your resume. It doesn’t change what GoCWGL pays you.">
                 <Input
                   id="rs-rate"
+                  {...inv("rateCents")}
                   type="number"
                   min={0}
                   step={0.5}
@@ -154,25 +208,26 @@ function ResumeEditor({ data }: { data: ResumeOut }) {
                   onChange={(e) => set("rateCents", e.target.value === "" ? null : Math.max(0, Math.round(Number(e.target.value) * 100)))}
                 />
               </Field>
-              <Field label="Years of experience" htmlFor="rs-years">
-                <Input id="rs-years" maxLength={20} placeholder="6" value={draft.yearsExperience} onChange={(e) => set("yearsExperience", e.target.value)} />
+              <Field label="Years of experience" htmlFor="rs-years" error={err("yearsExperience")}>
+                <Input id="rs-years" {...inv("yearsExperience")} maxLength={20} placeholder="6" value={draft.yearsExperience} onChange={(e) => set("yearsExperience", e.target.value)} />
               </Field>
-              <Field label="Availability" htmlFor="rs-avail">
-                <Input id="rs-avail" maxLength={60} placeholder="40 hrs / week" value={draft.availability} onChange={(e) => set("availability", e.target.value)} />
+              <Field label="Availability" htmlFor="rs-avail" error={err("availability")}>
+                <Input id="rs-avail" {...inv("availability")} maxLength={60} placeholder="40 hrs / week" value={draft.availability} onChange={(e) => set("availability", e.target.value)} />
               </Field>
-              <Field label="Working hours" htmlFor="rs-hours">
-                <Input id="rs-hours" maxLength={60} placeholder="US Eastern" value={draft.workingHours} onChange={(e) => set("workingHours", e.target.value)} />
+              <Field label="Working hours" htmlFor="rs-hours" error={err("workingHours")}>
+                <Input id="rs-hours" {...inv("workingHours")} maxLength={60} placeholder="US Eastern" value={draft.workingHours} onChange={(e) => set("workingHours", e.target.value)} />
               </Field>
-              <Field label="Portfolio or website" htmlFor="rs-web">
-                <Input id="rs-web" maxLength={500} placeholder="https://…" value={draft.website} onChange={(e) => set("website", e.target.value)} />
+              <Field label="Portfolio or website" htmlFor="rs-web" error={err("website")}>
+                <Input id="rs-web" {...inv("website")} maxLength={500} placeholder="https://…" value={draft.website} onChange={(e) => set("website", e.target.value)} />
               </Field>
             </div>
           </Section>
 
           <Section title="About me" icon="textLong" note="Your VA profile bio.">
-            <Field label="About you" htmlFor="rs-about" hint="Shown first on your resume page. 2–4 sentences on who you help, what you’re great at, and the results you bring.">
+            <Field label="About you" htmlFor="rs-about" error={err("summary")} hint="Shown first on your resume page. 2–4 sentences on who you help, what you’re great at, and the results you bring.">
               <Textarea
                 id="rs-about"
+                {...inv("summary")}
                 rows={5}
                 maxLength={2000}
                 placeholder="I help real estate and service businesses respond to every lead within the hour…"
@@ -180,7 +235,7 @@ function ResumeEditor({ data }: { data: ResumeOut }) {
                 onChange={(e) => set("summary", e.target.value)}
               />
             </Field>
-            <span className="text-small">{draft.summary.length} / 2000</span>
+            <span className="text-small">{charCount(draft.summary)} / {LIMITS.summary}</span>
           </Section>
 
           <Section
@@ -198,7 +253,8 @@ function ResumeEditor({ data }: { data: ResumeOut }) {
               <SocialRow
                 key={i}
                 link={l}
-                showErrors={tried}
+                urlError={err(`socialLinks.${i}.url`) ?? err(`socialLinks.${i}`)}
+                labelError={err(`socialLinks.${i}.label`)}
                 onChange={(next) => set("socialLinks", draft.socialLinks.map((x, k) => (k === i ? next : x)))}
                 onRemove={() => set("socialLinks", draft.socialLinks.filter((_, k) => k !== i))}
               />
@@ -206,75 +262,76 @@ function ResumeEditor({ data }: { data: ResumeOut }) {
           </Section>
 
           <Section title="Intro video" icon="video">
-            <Field
-              label="Video link"
-              htmlFor="rs-video"
-              hint="A 1–2 minute hello: who you are, what you’re great at. Paste a YouTube, Loom or Vimeo link."
-              error={draft.introVideoUrl.trim() && !videoEmbed(draft.introVideoUrl) && "Use a YouTube, Loom or Vimeo link."}
-            >
-              <Input
-                id="rs-video"
-                maxLength={500}
-                placeholder="https://www.loom.com/share/…"
-                value={draft.introVideoUrl}
-                onChange={(e) => set("introVideoUrl", e.target.value)}
-              />
-            </Field>
+            <IntroVideoField value={draft.introVideoUrl} error={err("introVideoUrl")} onChange={(v) => set("introVideoUrl", v)} />
           </Section>
 
 
-          <Section title="Work experience" icon="briefcase" action={<AddButton onClick={() => set("workHistory", [...draft.workHistory, { title: "", company: "", location: "", start: "", end: "", bullets: [""] }])} />}>
-            {draft.workHistory.length === 0 && <span className="vp-empty">Add your roles, most recent first.</span>}
+          <Section title="Work experience" icon="briefcase" note="Most recent first. Save each role when it’s done.">
+            {draft.workHistory.length === 0 && <span className="vp-empty">Add the roles you’ve held: title, company, dates and what you achieved.</span>}
             {draft.workHistory.map((job, i) => (
-              <JobEditor
+              <JobCard
                 key={i}
                 job={job}
-                onChange={(j) => set("workHistory", draft.workHistory.map((x, k) => (k === i ? j : x)))}
-                onRemove={() => set("workHistory", draft.workHistory.filter((_, k) => k !== i))}
-                onUp={i > 0 ? () => set("workHistory", swap(draft.workHistory, i, i - 1)) : undefined}
+                editing={openJob === i}
+                hasError={jobHasError(i)}
+                saving={save.isPending}
+                error={(k) => (k === "bullets" ? errorUnder(errors, `workHistory.${i}.bullets`) : err(`workHistory.${i}.${k}`))}
+                onEdit={() => setOpenJob(i)}
+                onChange={(p) => patchAt("workHistory", i, p)}
+                onSave={() => saveJob(i)}
+                onRemove={() => {
+                  set("workHistory", draft.workHistory.filter((_, k) => k !== i));
+                  setOpenJob((o) => (o === i ? null : o !== null && o > i ? o - 1 : o));
+                }}
+                onUp={
+                  i > 0
+                    ? () => {
+                        set("workHistory", swap(draft.workHistory, i, i - 1));
+                        setOpenJob((o) => (o === i ? i - 1 : o === i - 1 ? i : o));
+                      }
+                    : undefined
+                }
               />
             ))}
+            <AddEntryButton onClick={addJob}>{draft.workHistory.length ? "Add another experience" : "Add work experience"}</AddEntryButton>
           </Section>
 
-          <Section title="Education" icon="graduation" action={<AddButton onClick={() => set("education", [...draft.education, { school: "", degree: "", year: "" }])} />}>
-            {draft.education.length === 0 && <span className="vp-empty">Schools, degrees and courses.</span>}
+          <Section title="Education" icon="graduation" note="Optional. Search your school, then add your degree and years.">
             {draft.education.map((ed, i) => (
-              <RowEditor key={i} onRemove={() => set("education", draft.education.filter((_, k) => k !== i))}>
-                <Input aria-label="School" placeholder="School" value={ed.school} onChange={(e) => set("education", update(draft.education, i, { school: e.target.value }))} />
-                <Input aria-label="Degree" placeholder="Degree or course" value={ed.degree} onChange={(e) => set("education", update(draft.education, i, { degree: e.target.value }))} />
-                <Input aria-label="Year" placeholder="Year" className="resume-row__year" value={ed.year} onChange={(e) => set("education", update(draft.education, i, { year: e.target.value }))} />
-              </RowEditor>
+              <SchoolCard
+                key={i}
+                school={ed}
+                error={(k) => err(`education.${i}.${k}`)}
+                onChange={(p) => patchAt("education", i, p)}
+                onRemove={() => set("education", draft.education.filter((_, k) => k !== i))}
+              />
             ))}
+            <AddEntryButton onClick={() => set("education", [...draft.education, emptySchool(countryFrom(draft.location))])}>{draft.education.length ? "Add another school" : "Add education"}</AddEntryButton>
           </Section>
 
-          <Section
-            title="Certifications & test results"
-            icon="circleCheck"
-            note="Name, type, issued by and date are required."
-            action={<AddButton onClick={() => set("certifications", [...draft.certifications, { kind: "certification", name: "", issuer: "", year: "", result: "" }])} />}
-          >
-            {draft.certifications.length === 0 && (
-              <span className="vp-empty">Certificates, personality tests (DISC, 16 Personalities), skills tests (typing, English, Excel) — with your results.</span>
-            )}
+          <Section title="Certifications & test results" icon="circleCheck" note="Optional. Certificates, personality and skills tests, with your score and a link clients can check.">
             {draft.certifications.map((c, i) => (
-              <CertEditor
+              <CertCard
                 key={i}
                 cert={c}
-                showErrors={tried}
-                onChange={(next) => set("certifications", draft.certifications.map((x, k) => (k === i ? next : x)))}
+                error={(k) => err(`certifications.${i}.${k}`)}
+                onChange={(p) => patchAt("certifications", i, p)}
                 onRemove={() => set("certifications", draft.certifications.filter((_, k) => k !== i))}
               />
             ))}
+            <AddEntryButton onClick={() => set("certifications", [...draft.certifications, emptyCert()])}>
+              {draft.certifications.length ? "Add another certification or test" : "Add a certification or test"}
+            </AddEntryButton>
           </Section>
 
           <Section title="Skills, tools and languages" icon="sparkle" note="Skills are your VA profile skills.">
-            <Field label="Skills" htmlFor="rs-skills">
+            <Field label="Skills" htmlFor="rs-skills" error={errorUnder(errors, "skills")}>
               <TagInput id="rs-skills" values={draft.skills} max={30} maxLength={40} placeholder="Inbox management, Lead follow-up…" onChange={(v) => set("skills", v)} />
             </Field>
-            <Field label="Tools" htmlFor="rs-tools">
+            <Field label="Tools" htmlFor="rs-tools" error={errorUnder(errors, "tools")}>
               <TagInput id="rs-tools" values={draft.tools} max={40} placeholder="HubSpot, Canva, Google Workspace…" onChange={(v) => set("tools", v)} />
             </Field>
-            <Field label="Languages" htmlFor="rs-langs">
+            <Field label="Languages" htmlFor="rs-langs" error={errorUnder(errors, "languages")}>
               <TagInput id="rs-langs" values={draft.languages} max={15} placeholder="English (fluent), Filipino (native)…" onChange={(v) => set("languages", v)} />
             </Field>
           </Section>
@@ -310,6 +367,103 @@ function ResumeEditor({ data }: { data: ResumeOut }) {
 }
 
 // ---------------------------------------------------------------- Editor pieces
+/**
+ * The intro video: a link (one line) or a video host's embed code (a big box, so the whole code shows).
+ * Either way only the player link is saved, never the pasted HTML; for embed code it's shown under the box.
+ */
+function IntroVideoField({ value, error, onChange }: { value: string; error?: string; onChange: (link: string) => void }) {
+  const [mode, setMode] = useState<"link" | "embed">("link");
+  const [code, setCode] = useState("");
+  const src = mode === "embed" && code.trim() ? videoSourceFrom(code) : null;
+  // Switching only changes the box; the saved video stays until something new is pasted.
+  const switchTo = (next: "link" | "embed") => {
+    setMode(next);
+    setCode("");
+  };
+
+  return (
+    <div className="stack stack--10">
+      <SegmentedControl
+        label="How you're adding the video"
+        size="sm"
+        variant="soft"
+        value={mode}
+        onChange={switchTo}
+        options={[
+          { value: "link", label: "Video link" },
+          { value: "embed", label: "Embed code" },
+        ]}
+      />
+      {mode === "link" ? (
+        <Field
+          label="Video link"
+          htmlFor="rs-video"
+          error={error}
+          hint="A 1–2 minute hello: who you are, what you’re great at. YouTube, Loom, Vimeo, Google Drive or a video file link."
+        >
+          <Input
+            id="rs-video"
+            aria-invalid={error ? true : undefined}
+            maxLength={1000}
+            inputMode="url"
+            placeholder="https://www.loom.com/share/…"
+            value={value}
+            onChange={(e) => {
+              const v = e.target.value;
+              // Pasted embed code here? Switch to the embed box with it.
+              if (v.includes("<")) {
+                setMode("embed");
+                setCode(v);
+                onChange(videoSourceFrom(v) ?? v);
+              } else onChange(v);
+            }}
+          />
+        </Field>
+      ) : (
+        <Field
+          label="Embed code"
+          htmlFor="rs-video"
+          error={error}
+          hint={
+            src
+              ? `Plays from: ${src}`
+              : "From your video host: Share › Embed › Copy. Any host works (Wistia, Vidyard, Dailymotion, Facebook…)."
+          }
+        >
+          <Textarea
+            id="rs-video"
+            className="resume-embed"
+            aria-invalid={error ? true : undefined}
+            rows={6}
+            maxLength={4000}
+            spellCheck={false}
+            placeholder={'<iframe src="https://…" width="640" height="360" allowfullscreen></iframe>'}
+            value={code}
+            onChange={(e) => {
+              setCode(e.target.value);
+              onChange(videoSourceFrom(e.target.value) ?? e.target.value);
+            }}
+          />
+        </Field>
+      )}
+      {mode === "embed" && !code && value && <span className="text-small">Saved video: {value}. Paste new embed code above to replace it.</span>}
+    </div>
+  );
+}
+
+/** Above the form: which fields to fix, by name (each one is also marked under the field). */
+function ErrorSummary({ paths }: { paths: string[] }) {
+  const names = [...new Set(paths.map(fieldLabel))];
+  const shown = names.slice(0, 6);
+  return (
+    <div className="form-error" role="alert">
+      {names.length === 1 ? "Fix this field to save: " : `Fix these ${names.length} fields to save: `}
+      {shown.join(", ")}
+      {names.length > shown.length ? `, and ${names.length - shown.length} more` : ""}. The problem is shown under each one.
+    </div>
+  );
+}
+
 function Section({
   title,
   icon,
@@ -350,51 +504,6 @@ function AddButton({ onClick }: { onClick: () => void }) {
     <Button size="sm" variant="outline" onClick={onClick}>
       <Icon name="plus" size={12} /> Add
     </Button>
-  );
-}
-
-function JobEditor({ job, onChange, onRemove, onUp }: { job: ResumeJob; onChange: (j: ResumeJob) => void; onRemove: () => void; onUp?: () => void }) {
-  const patch = (p: Partial<ResumeJob>) => onChange({ ...job, ...p });
-  return (
-    <div className="resume-job">
-      <div className="resume-job__tools">
-        {onUp && (
-          <IconButton label="Move up" size="sm" onClick={onUp}>
-            <Icon name="chevronUp" size={13} />
-          </IconButton>
-        )}
-        <IconButton label="Remove role" size="sm" onClick={onRemove}>
-          <Icon name="trash" size={13} />
-        </IconButton>
-      </div>
-      <div className="form-grid">
-        <Input aria-label="Job title" placeholder="Job title" value={job.title} onChange={(e) => patch({ title: e.target.value })} />
-        <Input aria-label="Company" placeholder="Company" value={job.company} onChange={(e) => patch({ company: e.target.value })} />
-        <Input aria-label="Location" placeholder="Location (or Remote)" value={job.location} onChange={(e) => patch({ location: e.target.value })} />
-        <div className="form-grid resume-job__dates">
-          <Input aria-label="Start" placeholder="Start (Jan 2022)" value={job.start} onChange={(e) => patch({ start: e.target.value })} />
-          <Input aria-label="End" placeholder="End (blank = Present)" value={job.end} onChange={(e) => patch({ end: e.target.value })} />
-        </div>
-      </div>
-      <Textarea
-        aria-label="Achievements"
-        rows={3}
-        placeholder={"One achievement per line, e.g.\nCut inbox response time from 24h to 2h."}
-        value={(job.bullets ?? []).join("\n")}
-        onChange={(e) => patch({ bullets: e.target.value.split("\n").slice(0, 12) })}
-      />
-    </div>
-  );
-}
-
-function RowEditor({ children, onRemove }: { children: ReactNode; onRemove: () => void }) {
-  return (
-    <div className="resume-row">
-      {children}
-      <IconButton label="Remove" size="sm" onClick={onRemove}>
-        <Icon name="trash" size={13} />
-      </IconButton>
-    </div>
   );
 }
 
@@ -446,9 +555,6 @@ function TagInput({
   );
 }
 
-function update<T extends ResumeSchool>(list: T[], i: number, patch: Partial<T>): T[] {
-  return list.map((x, k) => (k === i ? { ...x, ...patch } : x));
-}
 function swap<T>(list: T[], a: number, b: number): T[] {
   const next = [...list];
   [next[a], next[b]] = [next[b], next[a]];
@@ -516,97 +622,23 @@ function PageLink({ data }: { data: ResumeOut }) {
   );
 }
 
-const CERT_KINDS: Array<{ value: NonNullable<ResumeCert["kind"]>; label: string; placeholder: string }> = [
-  { value: "certification", label: "Certification", placeholder: "HubSpot CRM" },
-  { value: "personality", label: "Personality test", placeholder: "DISC assessment" },
-  { value: "skills", label: "Skills test", placeholder: "Typing test" },
-  { value: "other", label: "Other", placeholder: "Course or award" },
-];
-
-/** One certification or test: type, name, issuer, date (required), result, and an uploaded result document. */
-function CertEditor({ cert, showErrors, onChange, onRemove }: { cert: ResumeCert; showErrors: boolean; onChange: (c: ResumeCert) => void; onRemove: () => void }) {
-  const upload = useUploadResumeDocument();
-  const [opening, setOpening] = useState(false);
-  const kind = CERT_KINDS.find((k) => k.value === (cert.kind ?? "certification")) ?? CERT_KINDS[0];
-  const id = useId();
-  const patch = (p: Partial<ResumeCert>) => onChange({ ...cert, ...p });
-  const missing = (v?: string) => showErrors && !v?.trim() && "Required.";
-
-  const pick = (file: File | undefined) => {
-    if (!file) return;
-    upload.mutate(file, { onSuccess: (doc) => patch({ documentId: doc.id, documentName: doc.name, documentType: doc.contentType }) });
-  };
-  const view = async () => {
-    if (!cert.documentId) return;
-    setOpening(true);
-    try {
-      await openResumeDocument(cert.documentId);
-    } finally {
-      setOpening(false);
-    }
-  };
-
-  return (
-    <div className="resume-cert">
-      <div className="resume-job__tools">
-        <IconButton label="Remove" size="sm" onClick={onRemove}>
-          <Icon name="trash" size={13} />
-        </IconButton>
-      </div>
-      <div className="form-grid">
-        <Field label="Type" htmlFor={`${id}-kind`} required>
-          <Select
-            id={`${id}-kind`}
-            value={kind.value}
-            options={CERT_KINDS.map((k) => ({ value: k.value, label: k.label }))}
-            onChange={(e) => patch({ kind: e.target.value as ResumeCert["kind"] })}
-          />
-        </Field>
-        <Field label="Name" htmlFor={`${id}-name`} required error={missing(cert.name)}>
-          <Input id={`${id}-name`} maxLength={120} placeholder={kind.placeholder} value={cert.name ?? ""} onChange={(e) => patch({ name: e.target.value })} />
-        </Field>
-        <Field label="Issued by" htmlFor={`${id}-issuer`} required error={missing(cert.issuer)}>
-          <Input id={`${id}-issuer`} maxLength={120} placeholder="Who issued it or ran the test" value={cert.issuer ?? ""} onChange={(e) => patch({ issuer: e.target.value })} />
-        </Field>
-        <Field label="Date" htmlFor={`${id}-year`} required error={missing(cert.year)}>
-          <Input id={`${id}-year`} maxLength={40} placeholder="Oct 2026" value={cert.year ?? ""} onChange={(e) => patch({ year: e.target.value })} />
-        </Field>
-        <Field label="Result or score" htmlFor={`${id}-result`} hint="e.g. ENFJ, High D / I, 92%, 75 WPM" className="form-grid__full">
-          <Input id={`${id}-result`} maxLength={120} value={cert.result ?? ""} onChange={(e) => patch({ result: e.target.value })} />
-        </Field>
-      </div>
-      <div className="resume-cert__doc">
-        {cert.documentId ? (
-          <>
-            <span className="resume-cert__file">
-              <Icon name={cert.documentType?.startsWith("image/") ? "eye" : "invoice"} size={14} />
-              {cert.documentName || "Result document"}
-            </span>
-            <Button size="sm" variant="outline" disabled={opening} onClick={view}>
-              View
-            </Button>
-            <Button size="sm" variant="link" onClick={() => patch({ documentId: null, documentName: "", documentType: "" })}>
-              Remove
-            </Button>
-          </>
-        ) : (
-          <label className="resume-cert__upload">
-            <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp" onChange={(e) => pick(e.target.files?.[0])} />
-            <Icon name="upload" size={14} /> {upload.isPending ? "Uploading…" : "Upload result (PDF or image, up to 10 MB)"}
-          </label>
-        )}
-      </div>
-      <FormError error={upload.error} />
-    </div>
-  );
-}
-
 /** One social profile: network, link (on that network's site), and a name when it's "Other". */
-function SocialRow({ link, showErrors, onChange, onRemove }: { link: SocialLink; showErrors: boolean; onChange: (l: SocialLink) => void; onRemove: () => void }) {
+function SocialRow({
+  link,
+  urlError,
+  labelError,
+  onChange,
+  onRemove,
+}: {
+  link: SocialLink;
+  urlError?: string;
+  labelError?: string;
+  onChange: (l: SocialLink) => void;
+  onRemove: () => void;
+}) {
   const id = useId();
   const net = networkOf(link.network);
   const other = link.network === "other";
-  const bad = (showErrors || !!link.url.trim()) && !socialLinkOk(link.network, link.url);
   return (
     <div className={`resume-social${other ? " is-other" : ""}`}>
       <span className="rp-doc__kind rp-doc__kind--brand" style={{ ["--brand" as string]: brandColor(link.network) }} aria-hidden="true">
@@ -625,12 +657,15 @@ function SocialRow({ link, showErrors, onChange, onRemove }: { link: SocialLink;
           placeholder="Name it (Canva portfolio)"
           value={link.label ?? ""}
           onChange={(e) => onChange({ ...link, label: e.target.value })}
-          className={`resume-social__label${showErrors && !link.label?.trim() ? " is-invalid" : ""}`}
+          aria-invalid={labelError ? true : undefined}
+          title={labelError}
+          className="resume-social__label"
         />
       )}
-      <Field label="" htmlFor={`${id}-url`} error={bad && (other ? (link.url.trim() ? "That doesn't look like a link." : "Paste the link.") : link.url.trim() ? `Use your ${net.label} link (${net.hosts[0]}/…).` : `Paste your ${net.label} link.`)} className="resume-social__url">
+      <Field label="" htmlFor={`${id}-url`} error={[urlError, labelError].filter(Boolean).join(" ") || undefined} className="resume-social__url">
         <Input
           id={`${id}-url`}
+          aria-invalid={urlError ? true : undefined}
           aria-label={`${net.label} link`}
           maxLength={300}
           placeholder={other ? "yoursite.com/page" : `${net.hosts[0]}/yourname`}
@@ -646,8 +681,23 @@ function SocialRow({ link, showErrors, onChange, onRemove }: { link: SocialLink;
 }
 
 /** The headshot: a round preview, upload (PNG, JPG or WebP) and remove. */
-function HeadshotField({ photoUrl, name, hasPhoto, onChange }: { photoUrl: string | null; name: string; hasPhoto: boolean; onChange: (id: string | null) => void }) {
-  const upload = useUploadResumeDocument();
+function HeadshotField({
+  upload,
+  photoUrl,
+  name,
+  hasPhoto,
+  error,
+  onChange,
+}: {
+  /** Owned by the editor, so Save waits for a photo that's still uploading. */
+  upload: ReturnType<typeof useUploadResumeDocument>;
+  photoUrl: string | null;
+  name: string;
+  hasPhoto: boolean;
+  error?: string;
+  onChange: (id: string | null) => void;
+}) {
+  const [fileError, setFileError] = useState<string | null>(null);
   const initials =
     name
       .split(/\s+/)
@@ -675,8 +725,13 @@ function HeadshotField({ photoUrl, name, hasPhoto, onChange }: { photoUrl: strin
               accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) upload.mutate(file, { onSuccess: (doc) => onChange(doc.id) });
                 e.target.value = "";
+                if (!file) return;
+                const problem = uploadProblem(file, "photo");
+                setFileError(problem);
+                if (problem) return;
+                upload.reset();
+                upload.mutate(file, { onSuccess: (doc) => onChange(doc.id) });
               }}
             />
             <Icon name="upload" size={14} /> {upload.isPending ? "Uploading…" : hasPhoto ? "Replace photo" : "Upload photo"}
@@ -687,7 +742,17 @@ function HeadshotField({ photoUrl, name, hasPhoto, onChange }: { photoUrl: strin
             </Button>
           )}
         </span>
+        {fileError && (
+          <span className="field__error" role="alert">
+            {fileError}
+          </span>
+        )}
         <FormError error={upload.error} />
+        {error && (
+          <span className="field__error" role="alert">
+            {error}
+          </span>
+        )}
       </span>
     </div>
   );

@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Avatar, Button, Field, FormError, Input, LoadState, Select, SoonNote, Toggle } from "@/components/ui";
 import { TIME_ZONES } from "@/data/admin";
@@ -8,7 +7,7 @@ import { ALERT_OPTIONS } from "@/data/portal";
 import { avatarTone } from "@/lib/tones";
 import { isEmail } from "@/lib/utils";
 import { fieldErrors } from "@/utils/errors";
-import { useSignOut } from "@/utils/hooks/useAuth";
+import { useSignOutConfirm } from "@/features/auth/components/SignOutConfirm";
 import { useOverview } from "@/utils/hooks/usePortal";
 import {
   useCancelPortalInvitation,
@@ -42,14 +41,13 @@ export function AccountSection() {
 
 // ------------------------------------------------------------------ Profile + alerts
 function ProfileCard({ readOnly }: { readOnly: boolean }) {
-  const router = useRouter();
   const { notify } = usePortal();
   const me = useMe();
   const business = useOverview(30).data?.business ?? "";
   const saveMe = useUpdateMe();
   const prefs = useMyNotifications();
   const savePrefs = useSetMyNotifications();
-  const signOut = useSignOut();
+  const signOut = useSignOutConfirm();
   const [draft, setDraft] = useState<ProfileDraft | null>(null);
   const [alerts, setAlerts] = useState<Record<string, boolean> | null>(null);
 
@@ -152,9 +150,10 @@ function ProfileCard({ readOnly }: { readOnly: boolean }) {
           </div>
           <FormError error={saveMe.error && !Object.keys(api).length ? saveMe.error : savePrefs.error} />
           <div className="cluster cluster--end">
-            <Button variant="danger" onClick={() => signOut.mutate(undefined, { onSettled: () => router.replace("/login") })} disabled={signOut.isPending}>
+            <Button variant="danger" onClick={signOut.ask} disabled={signOut.pending}>
               Sign out
             </Button>
+            {signOut.dialog}
             {!readOnly && (
               <Button variant="primary" onClick={save} disabled={(!draft && !alerts) || saveMe.isPending || savePrefs.isPending}>
                 {saveMe.isPending || savePrefs.isPending ? "Saving…" : "Save changes"}

@@ -9,14 +9,56 @@ export const STATUS: Record<InvoiceStatus, { label: string; tone: "slate" | "sky
   paid: { label: "Paid", tone: "green" },
 };
 
-export const METHOD_KINDS: Array<{ value: MethodKind; label: string; hint: string }> = [
-  { value: "bank", label: "Bank transfer", hint: "Bank name, account number, SWIFT / routing" },
-  { value: "paypal", label: "PayPal", hint: "Your PayPal email" },
-  { value: "wise", label: "Wise", hint: "Your Wise email or account details" },
-  { value: "gcash", label: "GCash", hint: "Your GCash number" },
-  { value: "payoneer", label: "Payoneer", hint: "Your Payoneer email" },
-  { value: "other", label: "Other", hint: "How clients can pay you" },
+/**
+ * Each way to get paid and what it asks for. Bank transfers need the bank name and account number; the others an
+ * account number (or email / phone) or a payment link.
+ */
+export type MethodKindInfo = {
+  value: MethodKind;
+  label: string;
+  /** What "account number" means for it ("PayPal email", "GCash number"). */
+  number: string;
+  numberPlaceholder: string;
+  /** Takes a payment link (Wise, PayPal.me…). */
+  link: boolean;
+  linkPlaceholder?: string;
+  /** What else goes in "Other details". */
+  detailsHint: string;
+};
+
+export const METHOD_KINDS: MethodKindInfo[] = [
+  { value: "bank", label: "Bank transfer", number: "Account number", numberPlaceholder: "0123 4567 89", link: false, detailsHint: "SWIFT / BIC, branch, routing number…" },
+  {
+    value: "wise",
+    label: "Wise",
+    number: "Wise email or account number",
+    numberPlaceholder: "you@email.com",
+    link: true,
+    linkPlaceholder: "https://wise.com/pay/me/yourname",
+    detailsHint: "Anything else the client needs",
+  },
+  {
+    value: "paypal",
+    label: "PayPal",
+    number: "PayPal email",
+    numberPlaceholder: "you@email.com",
+    link: true,
+    linkPlaceholder: "https://paypal.me/yourname",
+    detailsHint: "Anything else the client needs",
+  },
+  { value: "gcash", label: "GCash", number: "GCash number", numberPlaceholder: "0917 123 4567", link: false, detailsHint: "Anything else the client needs" },
+  {
+    value: "payoneer",
+    label: "Payoneer",
+    number: "Payoneer email",
+    numberPlaceholder: "you@email.com",
+    link: true,
+    linkPlaceholder: "https://link.payoneer.com/…",
+    detailsHint: "Anything else the client needs",
+  },
+  { value: "other", label: "Other", number: "Account number or ID", numberPlaceholder: "", link: true, linkPlaceholder: "https://…", detailsHint: "How clients can pay you" },
 ];
+export const kindInfo = (k: string) => METHOD_KINDS.find((m) => m.value === k) ?? METHOD_KINDS[METHOD_KINDS.length - 1];
 export const kindLabel = (k: string) => METHOD_KINDS.find((m) => m.value === k)?.label ?? k;
 
 const md = (iso: string) => {

@@ -1,4 +1,4 @@
-import { apiUrl, del, download, get, patch, post, put } from "./client";
+import { api, apiUrl, del, download, get, patch, post, put } from "./client";
 import type {
   InactiveAskOut,
   JournalEntryIn,
@@ -10,6 +10,7 @@ import type {
   VaTaskOut,
   VaTaskUpdate,
   OpenJobOut,
+  OrgSuggestion,
   PublicResumeOut,
   ResumeDocumentOut,
   ResumeIn,
@@ -27,11 +28,16 @@ export const getMyReferrals = () => get<MyReferralsOut>("/va/referrals");
 export const getResume = () => get<ResumeOut>("/va/resume");
 export const saveResume = (body: ResumeIn) => put<ResumeOut>("/va/resume", body);
 export const newResumeLink = () => post<ResumeOut>("/va/resume/new-link");
+/** Company or school names for what's typed so far (searched online by the API). */
+export type OrgKind = "company" | "school" | "highschool";
+export const lookupOrg = (kind: OrgKind, q: string, country = "") =>
+  get<OrgSuggestion[]>("/va/resume/lookup", { kind, q, country });
 /** A test result or certificate (PDF or image, up to 10 MB). */
 export const uploadResumeDocument = (file: File) => {
   const body = new FormData();
   body.append("file", file);
-  return post<ResumeDocumentOut>("/va/resume/documents", body);
+  // Never sit on "Uploading…" forever: give up after 2 minutes with a clear message.
+  return api<ResumeDocumentOut>("/va/resume/documents", { method: "POST", body, signal: AbortSignal.timeout(120_000) });
 };
 export const deleteResumeDocument = (id: string) => del(`/va/resume/documents/${id}`);
 /** Opens one of your documents in a new tab (it needs your sign-in, so it's fetched first). */

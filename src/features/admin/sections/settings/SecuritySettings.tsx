@@ -1,22 +1,20 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { QRCodeSVG } from "qrcode.react";
 import { useState, type FormEvent } from "react";
 import { Button, Field, FormError, Input, LoadState, Toggle } from "@/components/ui";
 import { copyToClipboard, toTextDataUrl } from "@/lib/utils";
 import type { DeviceSessionOut } from "@/utils/api/models";
+import { useSignOutConfirm } from "@/features/auth/components/SignOutConfirm";
 import { formatRelative } from "@/utils/format/dates";
-import { errorMessage, fieldErrors } from "@/utils/errors";
+import { errorMessage, fieldErrors, hasCode } from "@/utils/errors";
 import {
   useChangePassword,
   useConfirmTotp,
   useDisableTotp,
-  useLogoutAll,
   useMfaStatus,
   useRevokeSession,
   useSessions,
-  useSignOut,
   useStartTotp,
 } from "@/utils/hooks/useAuth";
 
@@ -46,14 +44,18 @@ export function SecuritySettings({ onMessage, promptMfa }: { onMessage: (message
 // ------------------------------------------------------------------ Password
 function PasswordForm({ onMessage }: { onMessage: (message: string) => void }) {
   const [passwords, setPasswords] = useState<Record<PasswordKey, string>>({ current: "", next: "", confirm: "" });
-  const [error, setError] = useState("");
+  // Each problem shows under its own field; anything else under the form.
+  const [errors, setErrors] = useState<Partial<Record<PasswordKey | "form", string>>>({});
   const change = useChangePassword();
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (!passwords.current) return setError("Enter your current password.");
-    if (passwords.next.length < 8) return setError("New password needs at least 8 characters.");
-    if (passwords.next !== passwords.confirm) return setError("The new passwords do not match.");
+    const found: Partial<Record<PasswordKey, string>> = {};
+    if (!passwords.current) found.current = "Enter your current password.";
+    if (passwords.next.length < 8) found.next = "Use at least 8 characters.";
+    if (passwords.confirm !== passwords.next) found.confirm = "This doesn't match the new password.";
+    setErrors(found);
+    if (Object.keys(found).length) return;
     change.mutate(
       { currentPassword: passwords.current, newPassword: passwords.next },
       {
@@ -63,32 +65,35 @@ function PasswordForm({ onMessage }: { onMessage: (message: string) => void }) {
         },
         onError: (err) => {
           const f = fieldErrors(err);
-          setError(f.newPassword || f.currentPassword || errorMessage(err));
+          if (f.currentPassword || hasCode(err, "invalid_password")) setErrors({ current: f.currentPassword || errorMessage(err) });
+          else if (f.newPassword) setErrors({ next: f.newPassword });
+          else setErrors({ form: errorMessage(err) });
         },
       },
     );
   };
 
   return (
-    <form className="stack stack--12 security-form" onSubmit={submit}>
+    <form className="stack stack--12 security-form" onSubmit={submit} noValidate>
       <span className="text-strong">Change password</span>
       {PASSWORD_FIELDS.map((f) => (
-        <Field key={f.key} label={f.label} htmlFor={`pw-${f.key}`}>
+        <Field key={f.key} label={f.label} htmlFor={`pw-${f.key}`} error={errors[f.key]}>
           <Input
             id={`pw-${f.key}`}
             type="password"
             autoComplete={f.autoComplete}
+            aria-invalid={errors[f.key] ? true : undefined}
             value={passwords[f.key]}
             onChange={(e) => {
               setPasswords({ ...passwords, [f.key]: e.target.value });
-              setError("");
+              setErrors((x) => ({ ...x, [f.key]: undefined, form: undefined }));
             }}
           />
         </Field>
       ))}
-      {error && (
+      {errors.form && (
         <p className="text-error" role="alert">
-          {error}
+          {errors.form}
         </p>
       )}
       <Button type="submit" className="u-self-start u-strong" disabled={change.isPending}>
@@ -266,11 +271,9 @@ function deviceName(s: DeviceSessionOut): string {
 }
 
 function Devices({ onMessage }: { onMessage: (message: string) => void }) {
-  const router = useRouter();
   const sessions = useSessions();
   const revoke = useRevokeSession();
-  const logoutAll = useLogoutAll();
-  const signOut = useSignOut();
+  const everywhere = useSignOutConfirm({ everywhere: true });
 
   return (
     <div className="stack stack--6 security-devices">
@@ -279,17 +282,14 @@ function Devices({ onMessage }: { onMessage: (message: string) => void }) {
         <Button
           size="sm"
           variant="danger"
-          disabled={logoutAll.isPending}
-          onClick={() =>
-            logoutAll.mutate(undefined, {
-              onSuccess: () => signOut.mutate(undefined, { onSettled: () => router.replace("/login") }),
-            })
-          }
+          disabled={everywhere.pending}
+          onClick={everywhere.ask}
         >
           Sign out everywhere
         </Button>
+        {everywhere.dialog}
       </div>
-      <FormError error={revoke.error ?? logoutAll.error} />
+      <FormError error={revoke.error} />
       <LoadState query={sessions} isEmpty={!sessions.data?.length} empty="No other devices.">
         {sessions.data?.map((d) => (
           <div className="list-row list-row--nowrap" key={d.id}>

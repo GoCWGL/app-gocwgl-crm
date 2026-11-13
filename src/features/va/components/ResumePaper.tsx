@@ -2,10 +2,11 @@
 
 import { useState, type ReactNode } from "react";
 import { Icon } from "@/components/ui";
-import { videoEmbed } from "@/lib/video";
+import { resumeVideo, type ResumeVideo } from "@/lib/video";
 import type { ResumeCert, ResumeHighlights, ResumeJob, ResumeSchool } from "@/utils/api/models";
 import { formatCentsExact } from "@/utils/format/money";
 import { socialLabel, type SocialLink } from "../lib/socials";
+import { hasSchool, jobDates, schoolDates, schoolTitle } from "../lib/resumeFormat";
 import { ResumePrint } from "./ResumePrint";
 import { SocialIcon, brandColor } from "./SocialIcon";
 
@@ -38,7 +39,6 @@ export type ResumeContent = {
 
 const bare = (url: string) => url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 const href = (url: string) => (/^https?:\/\//.test(url) ? url : `https://${url}`);
-const PROVIDER = { youtube: "YouTube", loom: "Loom", vimeo: "Vimeo" } as const;
 
 const CERT_LABEL: Record<string, string> = { personality: "Personality test", skills: "Skills test", other: "Other" };
 
@@ -102,19 +102,21 @@ export function ResumePaper({
       .map((w) => w[0]?.toUpperCase())
       .join("") || "VA";
   const since = new Date(memberSince).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  // Details: the month in full ("November 2026"); job dates stay short like the others.
+  const sinceLong = new Date(memberSince).toLocaleDateString("en-US", { month: "long", year: "numeric" });
   const gocwgl = d.showGocwgl && !!h;
-  const video = videoEmbed(d.introVideoUrl);
+  const video = resumeVideo(d.introVideoUrl);
   const jobs = d.workHistory.filter((j) => j.title || j.company);
-  const schools = d.education.filter((e) => e.school || e.degree);
+  const schools = d.education.filter(hasSchool);
   const certs = [
     ...d.certifications
       .filter((c) => c.name)
       .map((c) => ({
         name: c.name ?? "", year: c.year ?? "", issuer: c.issuer ?? "", kind: c.kind ?? "certification", result: c.result ?? "",
-        documentId: c.documentId ?? null, documentType: c.documentType ?? "",
+        documentId: c.documentId ?? null, documentType: c.documentType ?? "", url: c.url ?? "", credentialId: c.credentialId ?? "",
       })),
     ...(gocwgl
-      ? h.trainingsPassed.map((t) => ({ name: t, year: "", issuer: "GoCWGL training", kind: "certification", result: "", documentId: null, documentType: "" }))
+      ? h.trainingsPassed.map((t) => ({ name: t, year: "", issuer: "GoCWGL training", kind: "certification", result: "", documentId: null, documentType: "", url: "", credentialId: "" }))
       : []),
   ];
   const badges = gocwgl
@@ -137,7 +139,7 @@ export function ResumePaper({
     ...(d.rateCents != null ? [["Hourly rate", `${formatCentsExact(d.rateCents)} / hr`] as [string, ReactNode]] : []),
     ...(d.languages.length ? [["Languages", d.languages.join(", ")] as [string, ReactNode]] : []),
     ...(gocwgl && h.hoursTracked > 0 ? [["Hours of client work", `${Math.round(h.hoursTracked).toLocaleString()}+`] as [string, ReactNode]] : []),
-    ["Member since", since],
+    ["VA with GoCWGL since", sinceLong],
   ];
   const socials = d.socialLinks.filter((l) => l.url);
   const updated = updatedAt ? new Date(updatedAt).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "";
@@ -237,7 +239,7 @@ export function ResumePaper({
 
           {video && (
             <Card title="Intro video">
-              <IntroVideo src={video.src} provider={PROVIDER[video.provider]} name={d.name} first={first} initials={initials} photoUrl={photoUrl} />
+              <IntroVideo video={video} name={d.name} first={first} initials={initials} photoUrl={photoUrl} />
               {editor && <span className="rp-caption">Shown on your public resume page.</span>}
             </Card>
           )}
@@ -254,7 +256,7 @@ export function ResumePaper({
                     key={i}
                     title={j.title ?? ""}
                     company={[j.company, j.location].filter(Boolean).join(", ")}
-                    dates={[j.start, j.end || (j.start ? "Present" : "")].filter(Boolean).join(" – ")}
+                    dates={jobDates(j)}
                     bullets={(j.bullets ?? []).filter((b) => b.trim())}
                   />
                 ))}
@@ -355,10 +357,10 @@ export function ResumePaper({
                 {schools.map((e, i) => (
                   <div key={i} className="rp-row">
                     <span className="rp-row__text">
-                      <strong>{e.degree || e.school}</strong>
-                      {e.degree && e.school && <span>{e.school}</span>}
+                      <strong>{schoolTitle(e)}</strong>
+                      {e.school && schoolTitle(e) !== e.school && <span>{[e.school, e.country].filter(Boolean).join(", ")}</span>}
                     </span>
-                    {e.year && <span className="rp-row__date">{e.year}</span>}
+                    {schoolDates(e) && <span className="rp-row__date">{schoolDates(e)}</span>}
                   </div>
                 ))}
               </div>
@@ -381,8 +383,9 @@ export function ResumePaper({
                       <span className="rp-cert__meta">
                         {c.kind !== "certification" && <span className="rp-cert__kind">{CERT_LABEL[c.kind] ?? c.kind}</span>}
                         {c.issuer && <span>{c.issuer}</span>}
+                        {c.credentialId && <span>ID {c.credentialId}</span>}
                       </span>
-                      {(c.result || c.documentId) && (
+                      {(c.result || c.documentId || c.url) && (
                         <span className="rp-cert__result">
                           {c.result && (
                             <span>
@@ -393,6 +396,11 @@ export function ResumePaper({
                             <button type="button" className="rp-cert__view" onClick={() => openDocument(c.documentId!)}>
                               <Icon name={c.documentType.startsWith("image/") ? "eye" : "invoice"} size={12} /> View result
                             </button>
+                          )}
+                          {c.url && (
+                            <a className="rp-cert__view" href={href(c.url)} target="_blank" rel="noreferrer">
+                              <Icon name="link" size={12} /> {c.kind === "certification" ? "Verify credential" : "View test"}
+                            </a>
                           )}
                         </span>
                       )}
@@ -411,31 +419,46 @@ export function ResumePaper({
 
 /** A poster with a play button; the player loads only when someone presses play. */
 function IntroVideo({
-  src,
-  provider,
+  video,
   name,
   first,
   initials,
   photoUrl,
 }: {
-  src: string;
-  provider: string;
+  video: ResumeVideo;
   name: string;
   first: string;
   initials: string;
   photoUrl?: string | null;
 }) {
   const [playing, setPlaying] = useState(false);
+  const { src, kind, label } = video;
   if (playing) {
+    const title = `${name || "VA"} intro video`;
     return (
       <div className="rp-video">
-        <iframe
-          src={`${src}${src.includes("?") ? "&" : "?"}autoplay=1`}
-          title={`${name || "VA"} intro video`}
-          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-          allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
-        />
+        {kind === "file" ? (
+          <video src={src} title={title} controls autoPlay playsInline preload="metadata" />
+        ) : kind === "embed" ? (
+          // Any other host's player, from the link or embed code the VA pasted. Sandboxed: it can play,
+          // but can't navigate this page or open dialogs on it.
+          <iframe
+            src={src}
+            title={title}
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            sandbox="allow-scripts allow-same-origin allow-presentation allow-popups allow-popups-to-escape-sandbox"
+          />
+        ) : (
+          <iframe
+            src={`${src}${src.includes("?") ? "&" : "?"}autoplay=1`}
+            title={title}
+            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        )}
       </div>
     );
   }
@@ -449,7 +472,7 @@ function IntroVideo({
         <span className="rp-row__text">
           <strong>Hi, I’m {first} — quick intro</strong>
           <span>
-            {name} · {provider}
+            {name} · {label}
           </span>
         </span>
       </span>

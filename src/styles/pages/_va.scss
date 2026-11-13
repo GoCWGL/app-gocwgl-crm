@@ -4756,7 +4756,8 @@ $tl-colors: (
 .resume-row {
   display: grid;
   grid-template-columns: 1.2fr 1.2fr 90px auto;
-  align-items: center;
+  // Top-aligned so a field's error under it doesn't push its neighbours down.
+  align-items: start;
   gap: 8px;
 
   @include down(md) {
@@ -5215,7 +5216,8 @@ $rp-yellow-deep: #eab308;
   border-radius: 14px;
   background: $rp-ink;
 
-  iframe {
+  iframe,
+  video {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -6001,16 +6003,17 @@ button.rp-doc {
 }
 
 // =============================================================================
-// Resume › PDF (A4). Only used when printing / "Save as PDF"; hidden on screen.
+// Resume › PDF (one A4 page). Only used when printing / "Save as PDF"; hidden on screen.
+// A classic two-column resume: navy and gray with a small orange brand accent.
 // =============================================================================
 
-$pdf-orange: #ff9900;
-$pdf-orange-ink: #8a4500;
-$pdf-peach: #fff4e3;
-$pdf-ink: #1a1f2b;
-$pdf-soft: #4a5263;
-$pdf-muted: #7a8192;
-$pdf-line: #ece3d4;
+$pdf-accent: #f08c00;
+$pdf-navy: #1b2a41;
+$pdf-ink: #1d2433;
+$pdf-soft: #444c5c;
+$pdf-muted: #788094;
+$pdf-line: #e3e6ec;
+$pdf-side: #f5f6f8;
 
 @page resume {
   size: A4;
@@ -6021,153 +6024,224 @@ $pdf-line: #ece3d4;
   display: none;
 }
 
+// Exactly one page; the resume inside is scaled to fit it (ResumePrint › fitOnePage).
+.rpp-sheet {
+  width: 210mm;
+  // A hair under A4 so rounding never spills a blank second page.
+  height: 296.5mm;
+  overflow: hidden;
+  background: $white;
+}
+
 .rpp {
   display: flex;
   flex-direction: column;
   width: 210mm;
   min-height: 297mm;
+  transform-origin: top left;
   background: $white;
   color: $pdf-soft;
   font-family: $font-sans;
-  font-size: 9.5pt;
-  line-height: 1.5;
+  font-size: 9pt;
+  line-height: 1.45;
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
-
-  h2 {
-    margin: 0 0 2.2mm;
-    font-size: 8.5pt;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
 }
 
-// Header: an orange band with the monogram, name, title and contact line.
+// Header: photo, name, title and one contact line; the GoCWGL mark on the right.
 .rpp-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 8mm;
-  padding: 11mm 14mm 9mm;
-  border-bottom: 2.4mm solid $pdf-orange;
-  background: linear-gradient(120deg, #fff8ec, $white 65%);
+  gap: 6mm;
+  padding: 10mm 13mm 7mm;
+  border-top: 2mm solid $pdf-accent;
+  border-bottom: 0.3mm solid $pdf-line;
 
-  &__id {
+  &__text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__brand {
     display: flex;
-    align-items: center;
-    gap: 6mm;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2mm;
   }
 }
 
-.rpp-mono {
+.rpp-photo {
   display: grid;
   flex: none;
   place-items: center;
-  width: 22mm;
-  height: 22mm;
+  width: 24mm;
+  height: 24mm;
+  overflow: hidden;
+  border: 0.6mm solid $white;
   border-radius: 50%;
-  background: $pdf-orange;
+  background: $pdf-navy;
+  box-shadow: 0 0 0 0.35mm $pdf-line;
   color: $white;
-  font-size: 20pt;
-  font-weight: 800;
+  font-size: 15pt;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
 .rpp-name {
   margin: 0;
   color: $pdf-ink;
-  font-size: 24pt;
+  font-size: 22pt;
   font-weight: 800;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   line-height: 1.1;
 }
 
 .rpp-title {
   margin: 1.2mm 0 0;
-  color: $pdf-orange-ink;
-  font-size: 11pt;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  color: $pdf-navy;
+  font-size: 10.5pt;
+  font-weight: 600;
+  line-height: 1.3;
 }
 
 .rpp-contact {
+  display: flex;
+  flex-wrap: wrap;
   margin: 2mm 0 0;
-  color: $pdf-soft;
-  font-size: 9pt;
+  color: $pdf-muted;
+  font-size: 8.5pt;
+
+  span + span::before {
+    margin: 0 2.2mm;
+    color: $pdf-line;
+    content: "|";
+  }
 }
 
 .rpp-logo {
-  width: 32mm;
+  width: 30mm;
   height: auto;
 }
 
-// GoCWGL verified strip.
+.rpp-badge {
+  padding: 0.6mm 2.4mm;
+  border: 0.3mm solid #b8e3c9;
+  border-radius: 999px;
+  background: #effaf3;
+  color: #18794e;
+  font-size: 7.5pt;
+  font-weight: 700;
+}
+
+// "Verified by GoCWGL": hours, rating, clients, trainings in one quiet band.
 .rpp-verified {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 2mm 7mm;
-  padding: 3.5mm 14mm;
-  background: $pdf-ink;
-  color: #d6dbe4;
-  font-size: 8.5pt;
+  gap: 7mm;
+  padding: 3mm 13mm;
+  border-bottom: 0.3mm solid $pdf-line;
+  background: #fbfaf7;
 
   &__label {
-    padding: 0.8mm 3mm;
-    border-radius: 99px;
-    background: $pdf-orange;
-    color: $pdf-ink;
+    color: $pdf-navy;
     font-size: 7.5pt;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
   }
 }
 
-.rpp-stat strong {
-  color: $white;
-  font-size: 10pt;
+.rpp-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 1.4mm;
+  font-size: 8.5pt;
+
+  strong {
+    color: $pdf-ink;
+    font-size: 11pt;
+    font-weight: 800;
+  }
 }
 
-// Body: peach sidebar + main column.
+// Body: a light sidebar and the main column.
 .rpp-body {
   display: grid;
   flex: 1;
-  grid-template-columns: 64mm 1fr;
+  grid-template-columns: 62mm 1fr;
 }
 
 .rpp-side {
   display: flex;
   flex-direction: column;
   gap: 6mm;
-  padding: 8mm 7mm 8mm 14mm;
-  background: $pdf-peach;
+  padding: 7mm 6mm 7mm 13mm;
+  background: $pdf-side;
+}
 
-  h2 {
-    padding-bottom: 1.4mm;
-    border-bottom: 0.4mm solid $pdf-orange;
-    color: $pdf-orange-ink;
-  }
+.rpp-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6mm;
+  padding: 7mm 13mm 7mm 8mm;
+}
+
+.rpp-block h2 {
+  margin: 0 0 2.6mm;
+  padding-bottom: 1.4mm;
+  border-bottom: 0.3mm solid $pdf-line;
+  color: $pdf-navy;
+  font-size: 8pt;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.rpp-side .rpp-block h2 {
+  border-bottom-color: #d9dde5;
 }
 
 .rpp-dl {
   display: flex;
   flex-direction: column;
-  gap: 1.6mm;
+  gap: 2mm;
   margin: 0;
 
   dt {
     color: $pdf-muted;
     font-size: 7.5pt;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
   }
 
   dd {
     margin: 0;
     color: $pdf-ink;
-    font-weight: 700;
+    font-weight: 600;
+  }
+}
+
+.rpp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.4mm;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 0.5mm 2.2mm;
+    border: 0.25mm solid #d9dde5;
+    border-radius: 1mm;
+    background: $white;
+    color: $pdf-ink;
+    font-size: 8pt;
   }
 }
 
@@ -6177,27 +6251,33 @@ $pdf-line: #ece3d4;
   list-style: none;
 
   li {
-    position: relative;
-    margin-bottom: 1mm;
-    padding-left: 3.5mm;
     color: $pdf-ink;
+  }
 
-    &::before {
-      content: "";
-      position: absolute;
-      top: 0.62em;
-      left: 0;
-      width: 1.6mm;
-      height: 1.6mm;
-      border-radius: 50%;
-      background: $pdf-orange;
-    }
+  li + li {
+    margin-top: 0.8mm;
   }
 }
 
-.rpp-tags {
-  margin: 0;
-  color: $pdf-ink;
+.rpp-edu {
+  display: flex;
+  flex-direction: column;
+
+  & + & {
+    margin-top: 2.6mm;
+  }
+
+  strong {
+    color: $pdf-ink;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  em {
+    color: $pdf-muted;
+    font-size: 8pt;
+    font-style: normal;
+  }
 }
 
 .rpp-links {
@@ -6215,94 +6295,44 @@ $pdf-line: #ece3d4;
 
   strong {
     color: $pdf-ink;
-    font-size: 8.5pt;
+    font-size: 8pt;
   }
 
   span {
-    color: $pdf-soft;
-    font-size: 8pt;
-    overflow-wrap: anywhere;
-  }
-}
-
-.rpp-edu {
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 2mm;
-
-  strong {
-    color: $pdf-ink;
-  }
-
-  em {
     color: $pdf-muted;
-    font-size: 8pt;
-    font-style: normal;
-  }
-}
-
-.rpp-main {
-  display: flex;
-  flex-direction: column;
-  gap: 7mm;
-  padding: 8mm 14mm 8mm 9mm;
-
-  h2 {
-    display: flex;
-    align-items: center;
-    gap: 3mm;
-    color: $pdf-ink;
-
-    &::after {
-      content: "";
-      flex: 1;
-      height: 0.4mm;
-      background: $pdf-line;
-    }
+    font-size: 7.5pt;
+    word-break: break-all;
   }
 }
 
 .rpp-text {
   margin: 0;
   color: $pdf-soft;
-  font-size: 10pt;
-  line-height: 1.6;
-  white-space: pre-wrap;
+  white-space: pre-line;
 }
 
 .rpp-jobs {
-  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4.5mm;
+  gap: 3.6mm;
   margin: 0;
-  padding: 0 0 0 5mm;
+  padding: 0;
   list-style: none;
-  border-left: 0.5mm solid $pdf-line;
-
-  > li {
-    position: relative;
-    break-inside: avoid;
-
-    &::before {
-      content: "";
-      position: absolute;
-      top: 1.3mm;
-      left: -6.6mm;
-      width: 2.6mm;
-      height: 2.6mm;
-      border: 0.6mm solid $white;
-      border-radius: 50%;
-      background: $pdf-orange;
-    }
-  }
 
   ul {
     margin: 1.2mm 0 0;
     padding-left: 4mm;
 
     li {
-      margin-bottom: 0.6mm;
+      padding-left: 0.6mm;
+    }
+
+    li::marker {
+      color: $pdf-accent;
+    }
+
+    li + li {
+      margin-top: 0.6mm;
     }
   }
 }
@@ -6315,21 +6345,23 @@ $pdf-line: #ece3d4;
 
   strong {
     color: $pdf-ink;
-    font-size: 10.5pt;
+    font-size: 9.5pt;
+    font-weight: 700;
+    line-height: 1.3;
   }
 
-  span {
+  > span {
     flex: none;
     color: $pdf-muted;
-    font-size: 8.5pt;
-    font-weight: 600;
+    font-size: 8pt;
   }
 }
 
 .rpp-job__co {
-  color: $pdf-orange-ink;
-  font-size: 9pt;
-  font-weight: 700;
+  display: block;
+  color: $pdf-navy;
+  font-size: 8.5pt;
+  font-weight: 600;
 }
 
 .rpp-certs {
@@ -6339,9 +6371,8 @@ $pdf-line: #ece3d4;
 }
 
 .rpp-cert {
-  padding-left: 3mm;
-  border-left: 0.8mm solid $pdf-orange;
-  break-inside: avoid;
+  display: flex;
+  flex-direction: column;
 
   &__meta {
     color: $pdf-soft;
@@ -6351,232 +6382,25 @@ $pdf-line: #ece3d4;
       color: $pdf-ink;
     }
   }
+
+  &__link {
+    color: $pdf-muted;
+    font-size: 7.5pt;
+    word-break: break-all;
+  }
 }
 
 .rpp-foot {
   display: flex;
   justify-content: space-between;
   gap: 6mm;
-  padding: 3.5mm 14mm;
-  border-top: 0.4mm solid $pdf-line;
+  padding: 3.2mm 13mm;
+  border-top: 0.3mm solid $pdf-line;
   color: $pdf-muted;
-  font-size: 8pt;
+  font-size: 7.5pt;
 
   strong {
-    color: $pdf-orange-ink;
-  }
-}
-
-// Resume › PDF › light layer: the portal background (grid paper + soft cyan, violet and peach glows),
-// HUD corners, an angular monogram and mono labels — all on light surfaces.
-$pdf-grid: 6mm;
-$pdf-cyan-line: rgba(8, 145, 178, 0.08);
-$pdf-card: rgba(255, 255, 255, 0.82);
-$pdf-card-line: #e3ebf5;
-
-// The page: portal background color, grid paper and three soft blobs.
-.rpp {
-  position: relative;
-  background-color: $bg;
-  background-image:
-    radial-gradient(48mm 48mm at 100% 0, rgba(165, 243, 252, 0.55), transparent 70%),
-    radial-gradient(44mm 44mm at 0 48%, rgba(221, 214, 254, 0.55), transparent 70%),
-    radial-gradient(52mm 46mm at 78% 100%, rgba(255, 217, 163, 0.6), transparent 70%),
-    linear-gradient($pdf-cyan-line 0.25mm, transparent 0.25mm),
-    linear-gradient(90deg, $pdf-cyan-line 0.25mm, transparent 0.25mm);
-  background-size: auto, auto, auto, $pdf-grid $pdf-grid, $pdf-grid $pdf-grid;
-}
-
-// Header: a light glass card on the grid with HUD corner brackets.
-.rpp-head {
-  position: relative;
-  margin: 9mm 10mm 0;
-  padding: 8mm 10mm;
-  border: 0.3mm solid $pdf-card-line;
-  border-bottom: 0.9mm solid $pdf-orange;
-  border-radius: 3mm;
-  background: linear-gradient(120deg, rgba(255, 244, 227, 0.95), $pdf-card 60%);
-  box-shadow: 0 2mm 6mm rgba(11, 20, 36, 0.06);
-
-  .rpp-name {
-    color: $pdf-ink;
-  }
-
-  .rpp-title {
-    color: $pdf-orange-ink;
-  }
-
-  .rpp-contact {
-    color: $pdf-soft;
-    font-family: $font-mono;
-    font-size: 8.5pt;
-  }
-}
-
-.rpp-kicker {
-  display: block;
-  margin-bottom: 1mm;
-  color: $cyan-700;
-  font-family: $font-mono;
-  font-size: 7pt;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-
-.rpp-corner {
-  position: absolute;
-  width: 6mm;
-  height: 6mm;
-  border-color: $pdf-orange;
-  border-style: solid;
-  border-width: 0;
-
-  &.is-tl {
-    top: 2.5mm;
-    left: 2.5mm;
-    border-top-width: 0.6mm;
-    border-left-width: 0.6mm;
-  }
-
-  &.is-br {
-    right: 2.5mm;
-    bottom: 2.5mm;
-    border-right-width: 0.6mm;
-    border-bottom-width: 0.6mm;
-  }
-}
-
-// Angular monogram (cut corners) with an orange frame.
-.rpp-mono {
-  width: 24mm;
-  height: 24mm;
-  padding: 0.7mm;
-  border-radius: 0;
-  background: linear-gradient(135deg, $pdf-orange, #ffcc66);
-  clip-path: polygon(22% 0, 100% 0, 100% 78%, 78% 100%, 0 100%, 0 22%);
-
-  > span {
-    display: grid;
-    place-items: center;
-    width: 100%;
-    height: 100%;
-    background: $pdf-peach;
-    color: $pdf-orange-ink;
-    font-family: $font-mono;
-    font-size: 19pt;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    clip-path: polygon(22% 0, 100% 0, 100% 78%, 78% 100%, 0 100%, 0 22%);
-  }
-}
-
-// Verified strip: light chips under the header.
-.rpp-verified {
-  margin: 3mm 10mm 0;
-  padding: 2.6mm 5mm;
-  border: 0.3mm solid $pdf-card-line;
-  border-radius: 2mm;
-  background: $pdf-card;
-  color: $pdf-soft;
-  font-family: $font-mono;
-
-  &__label {
-    background: $pdf-orange;
-    color: $white;
-  }
-}
-
-.rpp-stat strong {
-  color: $pdf-ink;
-}
-
-// Body: two light cards side by side.
-.rpp-body {
-  gap: 4mm;
-  padding: 4mm 10mm 0;
-}
-
-.rpp-side,
-.rpp-main {
-  border: 0.3mm solid $pdf-card-line;
-  border-radius: 3mm;
-  background: $pdf-card;
-}
-
-.rpp-side {
-  padding: 6mm 5mm;
-  background: linear-gradient(180deg, rgba(255, 244, 227, 0.9), $pdf-card 40%);
-
-  h2 {
-    color: $pdf-orange-ink;
-    font-family: $font-mono;
-    font-size: 7.5pt;
-    letter-spacing: 0.16em;
-  }
-}
-
-.rpp-main {
-  padding: 6mm 7mm;
-}
-
-.rpp-list li::before {
-  border-radius: 0;
-  transform: rotate(45deg) scale(0.85);
-}
-
-// Main headings: "01 PROFILE ———".
-.rpp-main h2 {
-  font-family: $font-mono;
-  font-size: 8pt;
-  letter-spacing: 0.16em;
-}
-
-.rpp-num {
-  padding: 0.4mm 1.6mm;
-  background: $pdf-orange;
-  color: $white;
-  font-size: 7.5pt;
-  letter-spacing: 0.04em;
-  clip-path: polygon(0 0, 100% 0, 100% 70%, 82% 100%, 0 100%);
-}
-
-.rpp-jobs > li::before {
-  border-radius: 0;
-  transform: rotate(45deg);
-}
-
-.rpp-cert {
-  padding: 1.6mm 3mm;
-  border-left: 0.8mm solid $pdf-orange;
-  background: linear-gradient(90deg, rgba(255, 153, 0, 0.08), transparent 70%);
-}
-
-// Footer: light, mono text with a short orange bar.
-.rpp-foot {
-  position: relative;
-  margin: 4mm 10mm 7mm;
-  padding: 3mm 5mm;
-  border: 0.3mm solid $pdf-card-line;
-  border-radius: 2mm;
-  background: $pdf-card;
-  color: $pdf-muted;
-  font-family: $font-mono;
-  font-size: 7.5pt;
-  letter-spacing: 0.04em;
-  overflow: hidden;
-
-  strong {
-    color: $pdf-orange-ink;
-  }
-
-  &__bar {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 40mm;
-    height: 0.8mm;
-    background: $pdf-orange;
+    color: $pdf-navy;
   }
 }
 
@@ -6592,16 +6416,6 @@ $pdf-card-line: #e3ebf5;
     height: 100%;
     border-radius: 50%;
     object-fit: cover;
-  }
-}
-
-.rpp-mono.has-photo {
-  > img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    clip-path: polygon(22% 0, 100% 0, 100% 78%, 78% 100%, 0 100%, 0 22%);
   }
 }
 
@@ -7418,5 +7232,472 @@ $pdf-card-line: #e3ebf5;
   strong {
     color: $ink;
     font-size: 15px;
+  }
+}
+
+// Resume editor › entry cards (work experience, education, certifications)
+.resume-entry {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid $line-faint;
+  border-radius: $radius-lg;
+  background: $white;
+  box-shadow: $shadow-soft;
+  transition: border-color 0.15s ease;
+
+  &.is-editing {
+    border-color: $line;
+    background: #fbfcfd;
+  }
+
+  &.is-invalid {
+    border-color: $pink-600;
+  }
+
+  &__summary,
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: $bg-soft;
+    color: $ink-soft;
+  }
+
+  &__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    strong {
+      color: $ink;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    > span:not(.field__error) {
+      color: $ink-soft;
+      font-size: 13px;
+    }
+
+    em,
+    small {
+      color: $muted;
+      font-size: 12px;
+      font-style: normal;
+    }
+  }
+
+  &__tools {
+    display: flex;
+    gap: 2px;
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid $line-faint;
+  }
+}
+
+.resume-entry-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  border: 1.5px dashed $line-strong;
+  border-radius: $radius-lg;
+  background: transparent;
+  color: $ink-soft;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: $orange;
+    background: rgba(255, 255, 255, 0.6);
+    color: $ink;
+  }
+}
+
+// Month + year pickers side by side.
+.resume-date {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+// Company / school name with suggestions searched online.
+.org-search {
+  position: relative;
+
+  &__icon {
+    position: absolute;
+    top: 0;
+    left: 12px;
+    display: grid;
+    place-items: center;
+    height: 42px;
+    color: $muted;
+    pointer-events: none;
+  }
+
+  .input {
+    padding-left: 34px;
+  }
+
+  &__list {
+    position: absolute;
+    z-index: 20;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 6px;
+    border: 1px solid $line;
+    border-radius: $radius-md;
+    background: $white;
+    box-shadow: $shadow-raised;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+
+    strong {
+      color: $ink;
+      font-size: 13px;
+    }
+
+    span {
+      overflow: hidden;
+      color: $muted;
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &.is-active {
+      background: $bg-soft;
+    }
+  }
+
+  &__status {
+    padding: 8px 10px;
+    color: $muted;
+    font-size: 12px;
+  }
+}
+
+// Admin › VA profile › roles and schools from the VA's resume
+.vp-jobs {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li + li {
+    padding-top: 14px;
+    border-top: 1px solid $line-faint;
+  }
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+
+    strong {
+      color: $ink;
+      font-size: 14px;
+    }
+
+    span {
+      flex: none;
+      color: $muted;
+      font-size: 12px;
+    }
+  }
+
+  &__co {
+    color: $ink-soft;
+    font-size: 13px;
+  }
+
+  ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    color: $ink-soft;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+.vp-rows {
+  display: flex;
+  flex-direction: column;
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+
+    & + & {
+      border-top: 1px solid $line-faint;
+    }
+
+    strong {
+      color: $ink;
+      font-size: 13.5px;
+    }
+
+    > .text-small {
+      flex: none;
+    }
+  }
+}
+
+// VA portal › Profile & settings
+.va-account {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 880px;
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+
+    h3 {
+      margin: 0;
+      color: $ink;
+      font-size: 15px;
+      font-weight: 800;
+    }
+  }
+}
+
+// Time tracker › Break / Continue (pauses the timer or countdown)
+.tt2-break {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 46px;
+  padding: 0 18px;
+  border: 1.5px solid $amber-500;
+  border-radius: 999px;
+  background: $white;
+  color: $amber-700;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #fff7e6;
+  }
+
+  &.is-on-break {
+    border-color: $green-500;
+    background: $green-500;
+    color: $white;
+
+    &:hover:not(:disabled) {
+      background: $green-700;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+// Time tracker › running: Break and Stop share the side panel evenly (never wider than the card).
+.tt3__side .tt2-actions.is-running {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 2px;
+
+  .tt2-go,
+  .tt2-break {
+    min-width: 0;
+    height: 42px;
+    padding: 0 12px;
+    font-size: 14px;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+}
+
+// Countdown › Add time: a quiet link that opens +30 min / +1 hr / +2 hrs.
+.tt2-addtime {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: $ink-soft;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: $bg-soft;
+    color: $ink;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &__picks {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  &__pick {
+    padding: 5px 11px;
+    border: 1px solid $line;
+    border-radius: 999px;
+    background: $white;
+    color: $ink;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: $orange;
+    }
+  }
+
+  &__close {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: $muted;
+    cursor: pointer;
+
+    &:hover {
+      background: $bg-soft;
+    }
+  }
+}
+
+// Resume › intro video embed code: monospace so the whole code reads clearly.
+.resume-embed {
+  font-family: $font-mono;
+  font-size: 12.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+// Payment details: bank, account name and number, payment link (cards, invoices, the client's invoice).
+.pay-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__rows {
+    display: grid;
+    gap: 4px;
+    margin: 0;
+
+    > div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    dt {
+      color: $muted;
+    }
+
+    dd {
+      margin: 0;
+      color: $ink;
+      font-weight: 700;
+      text-align: right;
+
+      &.is-number {
+        font-family: $font-mono;
+        letter-spacing: 0.02em;
+      }
+    }
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    overflow: hidden;
+    color: $cyan-700;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__now {
+    align-self: flex-start;
+    text-decoration: none;
+  }
+
+  &__details {
+    margin: 0;
+    color: $ink-soft;
+    font-size: 12.5px;
   }
 }

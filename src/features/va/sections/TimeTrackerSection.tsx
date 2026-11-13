@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Button, Dropdown, Field, FormError, Icon, IconButton, Input, LoadState, Modal, SegmentedControl, Select, Toggle } from "@/components/ui";
+import { Button, ConfirmDialog, Dropdown, Field, FormError, Icon, IconButton, Input, LoadState, Modal, SegmentedControl, Select, Toggle } from "@/components/ui";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNow } from "@/lib/duration";
 import { qk } from "@/utils/hooks/keys";
@@ -336,6 +336,8 @@ function TimerBar({
   const onBreak = shift?.state === "on_break";
   const start = useClockIn();
   const stop = useClockOut();
+  // Stopping asks first, so a stray click doesn't end the timer.
+  const [confirmStop, setConfirmStop] = useState(false);
   const pause = useToggleBreak();
   const save = useUpdateEntry();
   const addTag = useAddClientTag();
@@ -511,7 +513,15 @@ function TimerBar({
           <div className="tt3__side" style={{ ["--client" as string]: color }}>
             {shownMode === "countdown" && !running && <DurationPicker value={planned} onChange={setPlanned} />}
             <span className="tt3__clock-label">
-              {shownMode === "countdown" ? (running ? `Left of ${hm(plannedNow)}` : "Countdown") : running ? "Time on this task" : "Timer"}
+              {onBreak
+                ? "Paused · on a break"
+                : shownMode === "countdown"
+                  ? running
+                    ? `Left of ${hm(plannedNow)}`
+                    : "Countdown"
+                  : running
+                    ? "Time on this task"
+                    : "Timer"}
             </span>
             <span className={cn("tt2-clock", shownMode === "countdown" && remaining <= 300 && running && "is-low")} aria-live="off">
               {hms(shownMode === "countdown" ? (running ? remaining : planned) : elapsed)}
@@ -521,19 +531,25 @@ function TimerBar({
                 <span style={{ width: `${progress * 100}%` }} />
               </span>
             )}
-            <div className="tt2-actions">
-              {running && shownMode === "countdown" && (
-                <Button size="sm" variant="outline" onClick={() => change({ plannedSeconds: Math.min(86_400, plannedNow + 1800) })}>
-                  +30 min
-                </Button>
-              )}
+            {running && shownMode === "countdown" && (
+              <AddTime disabled={save.isPending || plannedNow >= 86_400} onAdd={(secs) => change({ plannedSeconds: Math.min(86_400, plannedNow + secs) })} />
+            )}
+            <div className={cn("tt2-actions", running && "is-running")}>
               {running && (
-                <IconButton label={onBreak ? "Back to work" : "Take a break"} size="sm" onClick={() => pause.mutate()} disabled={pause.isPending}>
+                // Break pauses the timer or countdown (paused time isn't counted); Continue picks it up where it was.
+                <button
+                  type="button"
+                  className={cn("tt2-break", onBreak && "is-on-break")}
+                  onClick={() => pause.mutate()}
+                  disabled={pause.isPending}
+                  title={onBreak ? "Continue where you left off" : "Pause for a break. Paused time isn't counted."}
+                >
                   <Icon name={onBreak ? "play" : "pause"} size={15} />
-                </IconButton>
+                  {pause.isPending ? (onBreak ? "Continuing…" : "Pausing…") : onBreak ? "Continue" : "Break"}
+                </button>
               )}
               {running ? (
-                <button type="button" className="tt2-go is-stop" disabled={stop.isPending} onClick={() => stop.mutate()} aria-label="Stop">
+                <button type="button" className="tt2-go is-stop" disabled={stop.isPending} onClick={() => setConfirmStop(true)} aria-label="Stop">
                   <span className="tt2-go__square" aria-hidden="true" />
                   Stop
                 </button>
@@ -548,6 +564,21 @@ function TimerBar({
         </div>
       </fieldset>
       <FormError error={start.error ?? stop.error ?? pause.error ?? save.error} />
+      {confirmStop && running && (
+        <ConfirmDialog
+          title={shownMode === "countdown" ? "Stop the countdown?" : "Stop the timer?"}
+          icon="clock"
+          confirmLabel="Stop"
+          pending={stop.isPending}
+          error={stop.error}
+          onConfirm={() => stop.mutate(undefined, { onSuccess: () => setConfirmStop(false) })}
+          onClose={() => !stop.isPending && setConfirmStop(false)}
+        >
+          Your {hm(Math.floor(elapsed))} so far is saved for {clientName}.
+          {onBreak ? " " : " Stepping away for a bit? Use Break instead and continue later. "}
+          To track more time after stopping, start a new one.
+        </ConfirmDialog>
+      )}
     </form>
   );
 }
@@ -934,6 +965,43 @@ const MODES: Array<{ value: TimerMode; label: string; hint: string; icon: "clock
   { value: "countdown", label: "Countdown", hint: "Project time for today", icon: "bolt" },
 ];
 const DURATIONS = [1800, 3600, 2 * 3600, 4 * 3600, 8 * 3600];
+
+/** A running countdown: give it more time (+30 min, +1 hr, +2 hrs), e.g. when the client asks for another hour. */
+function AddTime({ disabled, onAdd }: { disabled: boolean; onAdd: (secs: number) => void }) {
+  const [open, setOpen] = useState(false);
+  if (!open) {
+    return (
+      <button type="button" className="tt2-addtime" disabled={disabled} onClick={() => setOpen(true)}>
+        <Icon name="plus" size={12} /> Add time
+      </button>
+    );
+  }
+  return (
+    <div className="tt2-addtime__picks" role="group" aria-label="Add time to the countdown">
+      {[
+        [1800, "+30 min"],
+        [3600, "+1 hr"],
+        [7200, "+2 hrs"],
+      ].map(([secs, label]) => (
+        <button
+          key={label}
+          type="button"
+          className="tt2-addtime__pick"
+          disabled={disabled}
+          onClick={() => {
+            onAdd(secs as number);
+            setOpen(false);
+          }}
+        >
+          {label}
+        </button>
+      ))}
+      <button type="button" className="tt2-addtime__close" aria-label="Cancel" onClick={() => setOpen(false)}>
+        <Icon name="close" size={11} />
+      </button>
+    </div>
+  );
+}
 
 /** How long a countdown runs: quick picks, or hours and minutes. */
 function DurationPicker({ value, onChange }: { value: number; onChange: (secs: number) => void }) {

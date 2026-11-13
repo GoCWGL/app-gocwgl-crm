@@ -17,7 +17,9 @@ export type VaTab =
   | "referrals"
   | "sops"
   | "support"
-  | "resume";
+  | "resume"
+  /** Profile & settings: opened from the name at the bottom of the menu (not a menu item). */
+  | "account";
 
 export const VA_PAGES: Record<VaTab, { title: string; subtitle: string; empty: string }> = {
   dashboard: {
@@ -69,6 +71,11 @@ export const VA_PAGES: Record<VaTab, { title: string; subtitle: string; empty: s
     title: "SOP library",
     subtitle: "Step-by-step guides for the work you do.",
     empty: "No SOPs yet. Standard operating procedures shared with you will show up here.",
+  },
+  account: {
+    title: "Profile & settings",
+    subtitle: "Your details, password and security. Sign out from here too.",
+    empty: "",
   },
   resume: {
     title: "Resume",

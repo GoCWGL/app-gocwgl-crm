@@ -1,5 +1,6 @@
 "use client";
 
+import { PaymentLines } from "./PaymentLines";
 import { useState } from "react";
 import { Badge, Button, FormError, Icon, LoadState, Modal } from "@/components/ui";
 import type { VaInvoiceDetail } from "@/utils/api/models";
@@ -144,8 +145,7 @@ function InvoiceDoc({ inv }: { inv: VaInvoiceDetail }) {
         <div className="invoice-doc__pay">
           <span className="invoice-doc__label">How to pay · {kindLabel(inv.payment.kind)}</span>
           <strong>{inv.payment.label}</strong>
-          {inv.payment.accountName && <span>Account name: {inv.payment.accountName}</span>}
-          {inv.payment.details && <span className="va-pre">{inv.payment.details}</span>}
+          <PaymentLines payment={inv.payment} />
         </div>
       )}
       {inv.note && (

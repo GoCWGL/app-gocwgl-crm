@@ -90,7 +90,10 @@ async function send(path: string, opts: RequestOptions, retry: boolean): Promise
   let res: Response;
   try {
     res = await fetch(buildUrl(path, query), { ...init, body: payload, headers, credentials: "include" });
-  } catch {
+  } catch (err) {
+    if (err instanceof DOMException && err.name === "TimeoutError") {
+      throw new ApiError(0, "timeout", "This is taking too long. Check your connection and try again.");
+    }
     throw new ApiError(0, "network", "Can't reach the server. Check your connection and try again.");
   }
   if (res.status === 401 && retry && !NO_REFRESH.test(path) && (await refresh())) return send(path, opts, false);
@@ -99,7 +102,16 @@ async function send(path: string, opts: RequestOptions, retry: boolean): Promise
 
 async function toError(res: Response): Promise<ApiError> {
   const body = (await res.json().catch(() => null)) as ApiErrorBody | null;
-  const e = body?.error ?? { code: "http_error", message: res.statusText || "Request failed." };
+  // No API error body: something in front of the API answered (the hosting firewall or CDN), not GoCWGL itself.
+  const e = body?.error ?? {
+    code: "http_error",
+    message:
+      res.status === 403 || res.status === 413
+        ? "The request was blocked before it reached GoCWGL (often because it was too large). Please tell the GoCWGL team."
+        : res.status >= 500
+          ? "GoCWGL couldn't be reached just now. Please try again in a minute."
+          : res.statusText || "Request failed.",
+  };
   return new ApiError(res.status, e.code, e.message, e.details, Number(res.headers.get("Retry-After")) || undefined);
 }
 

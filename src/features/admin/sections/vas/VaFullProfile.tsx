@@ -13,7 +13,8 @@ import { useContactsPage } from "@/utils/hooks/useContacts";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useInviteVa, useSetVaClientRate, useSetVaClients, useVa } from "@/utils/hooks/useVas";
 import { contactName } from "../../lib/contacts";
-import { LOGIN_STATUS, rateText, VA_STATUS } from "../../lib/vas";
+import { LOGIN_STATUS, rateText, VA_STATUS, vaRate } from "../../lib/vas";
+import { hasSchool, jobDates, schoolDates, schoolTitle } from "../../../va/lib/resumeFormat";
 import { CallInviteModal } from "../../modals/CallInviteModal";
 import { useAdmin } from "../../state/AdminContext";
 
@@ -70,10 +71,33 @@ function Profile({ va }: { va: VaDetailOut }) {
 
   const stats: Array<{ icon: IconName; tone: Tone; label: string; value: string }> = [
     { icon: "users", tone: "cyan", label: "Clients", value: String(va.clients.length) },
-    { icon: "dollar", tone: "green", label: "Hourly rate", value: rateText(va.hourlyRateCents, (c) => formatCentsExact(c)) },
+    {
+      icon: "dollar",
+      tone: "green",
+      // What GoCWGL pays them; until the team sets it, the rate on their resume (marked as asking).
+      label: vaRate(va).asking ? "Asking rate (resume)" : "Hourly rate",
+      value: rateText(vaRate(va).cents, (c) => formatCentsExact(c)),
+    },
     { icon: "calendar", tone: "purple", label: "Started", value: va.startedOn ? formatShort(va.startedOn) : "Not set" },
     { icon: "clock", tone: "slate", label: "Last sign-in", value: va.lastLoginAt ? formatShort(va.lastLoginAt) : "Never" },
   ];
+
+  // What the VA keeps on their resume (they edit it in the VA portal).
+  const resume = va.resume;
+  const jobs = (resume?.workHistory ?? []).filter((j) => j.title || j.company);
+  const schools = (resume?.education ?? []).filter(hasSchool);
+  const certs = (resume?.certifications ?? []).filter((c) => c.name);
+  const resumeFacts: Array<{ icon: IconName; label: string; value: string }> = resume
+    ? [
+        ...(resume.rateCents != null ? [{ icon: "dollar" as const, label: "Asking rate", value: rateText(resume.rateCents, (c) => formatCentsExact(c)) }] : []),
+        ...(resume.yearsExperience ? [{ icon: "briefcase" as const, label: "Experience", value: `${resume.yearsExperience.replace(/\s*years?$/i, "")} years` }] : []),
+        ...(resume.availability ? [{ icon: "calendar" as const, label: "Availability", value: resume.availability }] : []),
+        ...(resume.workingHours ? [{ icon: "clock" as const, label: "Working hours", value: resume.workingHours }] : []),
+        ...(resume.languages?.length ? [{ icon: "globe" as const, label: "Languages", value: (resume.languages ?? []).join(", ") }] : []),
+        ...(resume.tools?.length ? [{ icon: "settings" as const, label: "Tools", value: (resume.tools ?? []).join(", ") }] : []),
+        ...(resume.website ? [{ icon: "link" as const, label: "Website", value: resume.website.replace(/^https?:\/\//, "") }] : []),
+      ]
+    : [];
 
   const details: Array<{ icon: IconName; label: string; value: string }> = [
     { icon: "mail", label: "Email", value: va.email },
@@ -154,8 +178,65 @@ function Profile({ va }: { va: VaDetailOut }) {
       <div className="vp-grid">
         <div className="vp-grid__main">
           <ProfileCard icon="briefcase" title="Experience">
-            <p className="va-pre">{va.experience || <span className="vp-empty">No experience added yet.</span>}</p>
+            {va.experience && <p className="va-pre">{va.experience}</p>}
+            {jobs.length > 0 && (
+              <ol className="vp-jobs">
+                {jobs.map((j, i) => (
+                  <li key={i}>
+                    <div className="vp-jobs__head">
+                      <strong>{j.title || "Role"}</strong>
+                      <span>{jobDates(j)}</span>
+                    </div>
+                    {(j.company || j.location) && <span className="vp-jobs__co">{[j.company, j.location].filter(Boolean).join(" · ")}</span>}
+                    {(j.bullets ?? []).filter((b) => b.trim()).length > 0 && (
+                      <ul>
+                        {(j.bullets ?? [])
+                          .filter((b) => b.trim())
+                          .map((b, k) => (
+                            <li key={k}>{b}</li>
+                          ))}
+                      </ul>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            )}
+            {!va.experience && jobs.length === 0 && <span className="vp-empty">No experience added yet.</span>}
           </ProfileCard>
+          {(schools.length > 0 || certs.length > 0) && (
+            <ProfileCard icon="graduation" title="Education & certifications">
+              <div className="vp-rows">
+                {schools.map((e, i) => (
+                  <div key={`s${i}`} className="vp-rows__row">
+                    <span className="stack stack--2">
+                      <strong>{schoolTitle(e)}</strong>
+                      {e.school && schoolTitle(e) !== e.school && <span className="text-small">{[e.school, e.country].filter(Boolean).join(", ")}</span>}
+                    </span>
+                    <span className="text-small">{schoolDates(e)}</span>
+                  </div>
+                ))}
+                {certs.map((c, i) => (
+                  <div key={`c${i}`} className="vp-rows__row">
+                    <span className="stack stack--2">
+                      <strong>{c.name}</strong>
+                      <span className="text-small">
+                        {[c.issuer, c.result && `Result: ${c.result}`].filter(Boolean).join(" · ")}
+                        {c.url && (
+                          <>
+                            {" · "}
+                            <a href={c.url} target="_blank" rel="noreferrer">
+                              Verify
+                            </a>
+                          </>
+                        )}
+                      </span>
+                    </span>
+                    <span className="text-small">{c.year}</span>
+                  </div>
+                ))}
+              </div>
+            </ProfileCard>
+          )}
           <ProfileCard icon="user" title="About">
             <p className="va-pre">{va.bio || <span className="vp-empty">Nothing here yet.</span>}</p>
           </ProfileCard>
@@ -248,6 +329,22 @@ function Profile({ va }: { va: VaDetailOut }) {
 
         <aside className="vp-grid__side">
           <ResumeLinkCard va={va} />
+          {resumeFacts.length > 0 && (
+            <ProfileCard icon="textLong" title="From their resume">
+              <dl className="vp-details">
+                {resumeFacts.map((d) => (
+                  <div key={d.label} className="vp-details__row">
+                    <dt>
+                      <Icon name={d.icon} size={14} />
+                      {d.label}
+                    </dt>
+                    <dd>{d.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              <span className="text-small">The VA keeps these up to date in their portal. The asking rate doesn’t change what GoCWGL pays them.</span>
+            </ProfileCard>
+          )}
           <ProfileCard icon="user" title="Contact & account">
             <dl className="vp-details">
               {details.map((d) => (

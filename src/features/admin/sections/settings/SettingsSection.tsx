@@ -1,12 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button, FormError, Icon, LoadState } from "@/components/ui";
 import { SETTINGS_TABS, type SettingsTab } from "@/data/admin";
 import type { OrgSettingsOut, OrgSettingsUpdate, ProfileUpdate, User } from "@/utils/api/models";
 import { canUseMenu, isStaffAdmin } from "@/utils/auth/session";
-import { useSignOut } from "@/utils/hooks/useAuth";
+import { useSignOutConfirm } from "@/features/auth/components/SignOutConfirm";
 import { useSettings, useUpdateSettings } from "@/utils/hooks/useSettings";
 import { useMe, useUpdateMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../../state/AdminContext";
@@ -41,8 +40,7 @@ const businessOf = (s: OrgSettingsOut): BusinessDraft => ({
 
 export function SettingsSection() {
   const { state, update } = useAdmin();
-  const router = useRouter();
-  const signOut = useSignOut();
+  const signOut = useSignOutConfirm();
   const me = useMe();
   const settings = useSettings();
   const saveMe = useUpdateMe();
@@ -121,12 +119,13 @@ export function SettingsSection() {
         <button
           type="button"
           className="settings__tab settings__tab--signout"
-          disabled={signOut.isPending}
-          onClick={() => signOut.mutate(undefined, { onSettled: () => router.replace("/login") })}
+          disabled={signOut.pending}
+          onClick={signOut.ask}
         >
           <Icon name="arrowLeft" strokeWidth={1.9} />
-          {signOut.isPending ? "Signing out…" : "Sign out"}
+          {signOut.pending ? "Signing out…" : "Sign out"}
         </button>
+        {signOut.dialog}
       </nav>
 
       <section className="card card--roomy settings__panel">
