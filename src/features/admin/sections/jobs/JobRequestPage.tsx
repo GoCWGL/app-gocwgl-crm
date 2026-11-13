@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import { Avatar, Badge, Button, ConfirmDialog, FormError, Icon, LoadState, Textarea, type IconName } from "@/components/ui";
 import { VaRequestDetails, requestHours, requestLoad } from "@/features/portal/components/VaRequestDetails";
+import { maintenanceFeeOf } from "@/features/portal/lib/vaAgreement";
 import { VaRequestForm } from "@/features/portal/components/VaRequestModal";
 import { avatarTone, toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
@@ -68,6 +69,8 @@ function Page({ r }: { r: VaRequestOut }) {
   const stats: Array<{ icon: IconName; tone: Tone; label: string; value: string }> = [
     { icon: "users", tone: "cyan", label: "Applicants", value: r.jobPostingId ? String(applicants) : "—" },
     { icon: "clock", tone: "purple", label: "Hours", value: requestLoad(r) },
+    // What GoCWGL invoices the client each month for this VA.
+    { icon: "invoice", tone: "brand", label: "Maintenance fee", value: maintenanceFeeOf(r).label },
     { icon: "calendar", tone: "brand", label: "Requested", value: formatShort(r.createdAt) },
     { icon: "radio", tone: "green", label: "In Open jobs", value: posting?.publishedAt && ["live", "interviewing"].includes(posting.status) ? `Since ${formatShort(posting.publishedAt)}` : "No" },
   ];
@@ -144,7 +147,7 @@ function Page({ r }: { r: VaRequestOut }) {
               )
             }
           >
-            <VaRequestDetails r={r} />
+            <VaRequestDetails r={r} staff />
           </Card>
 
           <Card icon="users" title="Applicants" count={r.jobPostingId ? applicants : undefined}>

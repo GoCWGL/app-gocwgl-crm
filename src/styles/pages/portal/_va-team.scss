@@ -1292,6 +1292,168 @@ tr.is-clickable {
   }
 }
 
+// ------------------------------------------------------------------ Request a VA › VA agreement (step 1)
+// Hours a week as cards, each with its monthly maintenance fee.
+.vra-hours {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+
+  @include down(sm) {
+    grid-template-columns: 1fr;
+  }
+
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 14px;
+    border: 1px solid $line;
+    border-radius: $radius-md;
+    background: $white;
+    color: $ink;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+
+    &:hover {
+      border-color: rgba(255, 153, 0, 0.55);
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &.is-on {
+      border-color: $orange;
+      background: rgba(255, 153, 0, 0.08);
+      box-shadow: 0 0 0 1px $orange;
+    }
+  }
+
+  &__label {
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+
+  &__fee {
+    color: $orange-ink;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  button:not(.is-on) &__fee {
+    color: $muted;
+  }
+}
+
+// The agreement text: scrolls on its own so the checkbox stays close.
+.vra-doc {
+  max-height: 280px;
+  padding: 16px 18px;
+  overflow-y: auto;
+  border: 1px solid $line;
+  border-radius: $radius-md;
+  background: $bg-soft;
+  color: $ink-soft;
+  font-size: 13px;
+  line-height: 1.55;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  h4 {
+    margin: 14px 0 4px;
+    color: $ink;
+    font-size: 13.5px;
+    font-weight: 700;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  p {
+    margin: 0;
+  }
+
+  ul {
+    margin: 4px 0 0;
+    padding-left: 18px;
+  }
+
+  li + li {
+    margin-top: 2px;
+  }
+}
+
+.vra-fees {
+  width: 100%;
+  margin: 8px 0 2px;
+  border-collapse: collapse;
+  background: $white;
+  border-radius: $radius-sm;
+  overflow: hidden;
+
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid $line-faint;
+  }
+
+  td:last-child {
+    text-align: right;
+    font-weight: 600;
+    color: $ink;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tr.is-on td {
+    background: rgba(255, 153, 0, 0.1);
+    color: $orange-ink;
+    font-weight: 700;
+  }
+}
+
+// Step 2: the hours picked on the agreement step, with a way back to change them.
+.vra-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 153, 0, 0.4);
+  border-radius: $radius-md;
+  background: rgba(255, 153, 0, 0.06);
+
+  &__icon {
+    flex: none;
+    color: #c2410c;
+  }
+
+  &__text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    font-size: 13px;
+
+    strong {
+      color: $ink;
+      font-size: 13.5px;
+    }
+
+    span {
+      color: $muted;
+    }
+  }
+}
+
 .vrf-half {
   max-width: calc(50% - 6px);
 

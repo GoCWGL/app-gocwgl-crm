@@ -1,5 +1,7 @@
 import { Icon, type IconName } from "@/components/ui";
 import type { VaRequestOut } from "@/utils/api/models";
+import { formatShort } from "@/utils/format/dates";
+import { maintenanceFeeOf } from "../lib/vaAgreement";
 
 export const ENGAGEMENT_LABEL: Record<VaRequestOut["engagement"], string> = { part_time: "Part-time", full_time: "Full-time", project: "Open project" };
 
@@ -26,14 +28,25 @@ export function jobDescriptionFrom(r: VaRequestOut): string {
     .join("\n\n");
 }
 
-/** Every section of a VA request, as the client wrote it (admin and client views). */
-export function VaRequestDetails({ r }: { r: VaRequestOut }) {
+/**
+ * Every section of a VA request, as the client wrote it (admin and client views). Staff always see the monthly
+ * maintenance fee (to invoice it); clients see it once they've accepted the VA agreement.
+ */
+export function VaRequestDetails({ r, staff }: { r: VaRequestOut; staff?: boolean }) {
+  const fee = maintenanceFeeOf(r);
   return (
     <div className="rd">
       <div className="rd-facts">
         <Fact icon="clock" label="Working hours" value={r.schedule || "—"} />
         <Fact icon="globe" label="Time zone" value={r.timezone || "—"} />
         <Fact icon="briefcase" label="Commitment" value={requestLoad(r)} />
+        {(fee.agreed || staff) && (
+          <Fact
+            icon="invoice"
+            label="Maintenance fee"
+            value={`${fee.label} · ${fee.acceptedAt ? `agreed ${formatShort(fee.acceptedAt)}` : "standard rate, agreement not accepted"}`}
+          />
+        )}
       </div>
 
       {r.overview && (

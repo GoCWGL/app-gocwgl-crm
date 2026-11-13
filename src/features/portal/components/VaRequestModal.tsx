@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
-import { Avatar, Button, Field, FormError, Icon, Input, Modal, SearchBox, Select, Textarea, Toggle } from "@/components/ui";
+import { Avatar, Button, Checkbox, Field, FormError, Icon, Input, Modal, SearchBox, Select, Textarea, Toggle } from "@/components/ui";
 import { avatarTone } from "@/lib/tones";
 import { useContactsPage } from "@/utils/hooks/useContacts";
 import type { JobPostingOut, VaRequestIn, VaRequestOut } from "@/utils/api/models";
@@ -9,6 +9,7 @@ import { centsToDollars, dollarsToCents } from "@/utils/format/money";
 import { useUpdateJobPosting } from "@/utils/hooks/useJobPostings";
 import { useRequestVa, useStaffCreateVaRequest, useStaffUpdateVaRequest, useUpdateMyVaRequest } from "@/utils/hooks/useClientWork";
 import { usePortal } from "../state/PortalContext";
+import { VA_MAINTENANCE_FEE_DOLLARS, maintenanceFeeLabel, type VaRequestWithAgreementIn } from "../lib/vaAgreement";
 
 type Engagement = NonNullable<VaRequestIn["engagement"]>;
 
@@ -21,6 +22,9 @@ const LOADS = [
   { value: "40", label: "40 hours a week", engagement: "full_time", hours: 40 },
   { value: "project", label: "Open project", engagement: "project", hours: null },
 ] as const satisfies ReadonlyArray<{ value: string; label: string; engagement: Engagement; hours: Hours | null }>;
+type LoadKey = (typeof LOADS)[number]["value"];
+/** What a client picks on the VA agreement: set weekly hours, each with its maintenance fee (Open project is staff only). */
+const CLIENT_LOADS = LOADS.filter((l): l is Extract<(typeof LOADS)[number], { hours: Hours }> => l.hours !== null);
 const DAYS = ["Mon–Fri", "Mon–Sat", "Every day", "Weekends", "Flexible"];
 /** label shown and stored · IANA zones that map to it (to pre-pick the client's own). */
 const ZONES: Array<{ label: string; iana: string[] }> = [
@@ -113,10 +117,29 @@ export function VaRequestForm({
   const [from, setFrom] = useState(saved?.from ?? "09:00");
   const [to, setTo] = useState(saved?.to ?? "17:00");
   const [zone, setZone] = useState(() => edit?.timezone ?? myZone());
-  const [loadKey, setLoad] = useState<(typeof LOADS)[number]["value"]>(() =>
-    edit ? (edit.engagement === "project" ? "project" : (String(edit.hoursPerWeek ?? 40) as "10" | "20" | "40")) : "40",
-  );
+  const savedLoad: LoadKey = edit ? (edit.engagement === "project" ? "project" : (String(edit.hoursPerWeek ?? 40) as "10" | "20" | "40")) : "40";
+  const [loadKey, setLoad] = useState<LoadKey>(savedLoad);
   const load = LOADS.find((l) => l.value === loadKey)!;
+  // Clients accept the VA agreement (the monthly maintenance fee for the hours) before the form: first thing for a
+  // new request, and again when they change the hours on one. Staff don't.
+  const [step, setStep] = useState<"agreement" | "form">(!staff && !edit ? "agreement" : "form");
+  const [agreed, setAgreed] = useState(false);
+  const [agreeTried, setAgreeTried] = useState(false);
+  // What to go back to if they leave the agreement without accepting it (editing).
+  const [before, setBefore] = useState<{ load: LoadKey; agreed: boolean }>({ load: savedLoad, agreed: false });
+  const openAgreement = () => {
+    setBefore({ load: loadKey, agreed });
+    // Clients choose set hours only (an older Open project request picks them again).
+    if (loadKey === "project") setLoad("40");
+    setAgreed(false);
+    setAgreeTried(false);
+    setStep("agreement");
+  };
+  const acceptAgreement = (e: FormEvent) => {
+    e.preventDefault();
+    setAgreeTried(true);
+    if (agreed) setStep("form");
+  };
   const [overview, setOverview] = useState(edit?.overview ?? "");
   const [duties, setDuties] = useState<string[]>(() => lines(edit?.responsibilities ?? []));
   const [must, setMust] = useState<string[]>(() => lines(edit?.mustHave ?? []));
@@ -147,12 +170,18 @@ export function VaRequestForm({
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    // A client's new request, or new hours on one, needs the agreement first.
+    if (!staff && !agreed && (!edit || loadKey !== savedLoad)) {
+      openAgreement();
+      return;
+    }
     setTried(true);
     if (invalid) {
       document.querySelector(".vrf [aria-invalid='true'], .vrf .field__error")?.scrollIntoView({ block: "center", behavior: "smooth" });
       return;
     }
-    const body = {
+    const body: VaRequestWithAgreementIn = {
+      ...(!staff && agreed && { agreementAccepted: true }),
       role: title.trim(),
       schedule,
       timezone: zone,
@@ -195,6 +224,54 @@ export function VaRequestForm({
     }
   };
 
+  if (step === "agreement") {
+    return (
+      <Modal
+        open
+        width={680}
+        onClose={onClose}
+        onSubmit={acceptAgreement}
+        className="vrf-modal"
+        titleId="request-va"
+        title={edit ? "Change the hours" : "Request a VA"}
+        subtitle={
+          edit
+            ? "The maintenance fee depends on the hours, so accept the VA agreement for the new hours."
+            : "Step 1 of 2 · Choose the hours and accept the VA agreement. Then tell us about the role."
+        }
+        footer={
+          <>
+            <span className="u-spacer" />
+            {edit ? (
+              <Button
+                onClick={() => {
+                  setLoad(before.load);
+                  setAgreed(before.agreed);
+                  setStep("form");
+                }}
+              >
+                Back
+              </Button>
+            ) : (
+              <Button onClick={onClose}>Cancel</Button>
+            )}
+            <Button type="submit" variant="primary">
+              Accept and continue <Icon name="arrowRight" size={14} />
+            </Button>
+          </>
+        }
+      >
+        <VaAgreement
+          loadKey={loadKey}
+          onLoad={setLoad}
+          agreed={agreed}
+          onAgree={setAgreed}
+          error={agreeTried && !agreed ? "Tick the box to accept the VA agreement before you continue." : undefined}
+        />
+      </Modal>
+    );
+  }
+
   return (
     <Modal
       open
@@ -211,7 +288,7 @@ export function VaRequestForm({
           ? `${edit.clientName || "Client"}’s request. Changes show on their VAs page${edit.jobPostingId ? " and in the job post VAs see" : ""}.`
           : staff
           ? "Same form clients use. It’s added to the client’s VA requests, and VAs can apply once it’s live."
-          : "Tell us about the role. We’ll review it and match you with a trained VA."
+          : "Step 2 of 2 · Tell us about the role. We’ll review it and match you with a trained VA."
       }
       footer={
         <>
@@ -296,9 +373,28 @@ export function VaRequestForm({
               />
             </Field>
           </div>
-          <Field label="Expected working hours" htmlFor="vr-load" required className="vrf-half">
-            <Select id="vr-load" value={loadKey} onChange={(e) => setLoad(e.target.value as typeof loadKey)} options={LOADS.map((l) => ({ value: l.value, label: l.label }))} />
-          </Field>
+          {staff ? (
+            <Field label="Expected working hours" htmlFor="vr-load" required className="vrf-half">
+              <Select id="vr-load" value={loadKey} onChange={(e) => setLoad(e.target.value as typeof loadKey)} options={LOADS.map((l) => ({ value: l.value, label: l.label }))} />
+            </Field>
+          ) : (
+            // Set on the agreement step: changing them means accepting the agreement for the new hours.
+            <Field label="Expected working hours" required>
+              <div className="vra-summary">
+                <Icon name="clock" size={16} className="vra-summary__icon" />
+                <span className="vra-summary__text">
+                  <strong>{load.label}</strong>
+                  <span>
+                    Maintenance fee: {maintenanceFeeLabel(load.hours)}
+                    {agreed && " · VA agreement accepted"}
+                  </span>
+                </span>
+                <Button size="sm" variant="outline" onClick={openAgreement}>
+                  Change
+                </Button>
+              </div>
+            </Field>
+          )}
         </Section>
 
         <Section title="Responsibilities & experience" desc="One item per line. Press Enter to add another.">
@@ -333,6 +429,79 @@ export function VaRequestForm({
         )}
       </div>
     </Modal>
+  );
+}
+
+/** Step 1 of Request a VA: pick the hours, read the VA agreement (the monthly maintenance fee) and accept it. */
+function VaAgreement({
+  loadKey,
+  onLoad,
+  agreed,
+  onAgree,
+  error,
+}: {
+  loadKey: LoadKey;
+  onLoad: (key: LoadKey) => void;
+  agreed: boolean;
+  onAgree: (agreed: boolean) => void;
+  error?: string;
+}) {
+  const load = CLIENT_LOADS.find((l) => l.value === loadKey) ?? CLIENT_LOADS[CLIENT_LOADS.length - 1];
+  return (
+    <div className="vrf">
+      <Section title="Hours a week" desc="How much your VA works for you. The monthly maintenance fee depends on it.">
+        <div className="vra-hours" role="radiogroup" aria-label="Hours a week">
+          {CLIENT_LOADS.map((l) => (
+            <button key={l.value} type="button" role="radio" aria-checked={l.value === loadKey} className={l.value === loadKey ? "is-on" : ""} onClick={() => onLoad(l.value)}>
+              <span className="vra-hours__label">{l.label}</span>
+              <span className="vra-hours__fee">${VA_MAINTENANCE_FEE_DOLLARS[l.hours]} / month</span>
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      <Section title="VA agreement" desc="Please read it before you request a VA.">
+        <div className="vra-doc" tabIndex={0} aria-label="VA agreement">
+          <h4>Monthly maintenance fee</h4>
+          <p>Each VA you request comes with a monthly maintenance fee paid to GoCWGL, set by the hours they work for you:</p>
+          <table className="vra-fees">
+            <tbody>
+              {CLIENT_LOADS.map((l) => (
+                <tr key={l.value} className={l.value === loadKey ? "is-on" : undefined}>
+                  <td>{l.label}</td>
+                  <td>${VA_MAINTENANCE_FEE_DOLLARS[l.hours]} a month</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <h4>What the fee is for</h4>
+          <p>The fee includes:</p>
+          <ul>
+            <li>Keeping your VA active with your business.</li>
+            <li>Ongoing training for your VA in the latest technology, including AI tools.</li>
+            <li>Our team’s activity cost in supporting you and your VA.</li>
+          </ul>
+          <h4>Billing</h4>
+          <p>GoCWGL invoices the fee monthly, and you’ll find those invoices in Invoices. It’s separate from your VA’s own invoices for the hours they work.</p>
+          <h4>Changing the hours</h4>
+          <p>If you change the hours on your request, the fee changes with them and you’ll be asked to accept this agreement again.</p>
+        </div>
+        <Field error={error}>
+          <Checkbox
+            brand
+            checked={agreed}
+            aria-invalid={!!error}
+            onChange={(e) => onAgree(e.target.checked)}
+            label={
+              <>
+                I’ve read the VA agreement and agree to the <strong>${VA_MAINTENANCE_FEE_DOLLARS[load.hours]} monthly maintenance fee</strong> for{" "}
+                {load.hours} hours a week.
+              </>
+            }
+          />
+        </Field>
+      </Section>
+    </div>
   );
 }
 

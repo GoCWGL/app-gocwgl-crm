@@ -78,7 +78,7 @@ function RequestItem({ r }: { r: VaRequestOut }) {
           {st.label}
         </Badge>
       </div>
-      <VaRequestDetails r={r} />
+      <VaRequestDetails r={r} staff />
       {r.teamNote && <p className="text-small">Note to client: {r.teamNote}</p>}
       <div className="cluster">
         <span className="u-spacer" />

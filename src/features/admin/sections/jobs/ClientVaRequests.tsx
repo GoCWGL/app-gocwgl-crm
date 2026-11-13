@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Avatar, Badge, Button, ConfirmDialog, Field, FormError, Icon, LoadState, Modal, SearchBox, Textarea } from "@/components/ui";
 import { requestHours, requestLoad } from "@/features/portal/components/VaRequestDetails";
+import { maintenanceFeeOf } from "@/features/portal/lib/vaAgreement";
 import { avatarTone, toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { VaRequestOut } from "@/utils/api/models";
@@ -237,6 +238,9 @@ function RequestCard({
       <span className="job-card__facts">
         <span>
           <Icon name="briefcase" size={13} /> {requestLoad(r)}
+        </span>
+        <span title="Monthly maintenance fee">
+          <Icon name="invoice" size={13} /> {maintenanceFeeOf(r).label}
         </span>
         <span>
           <Icon name="globe" size={13} /> {requestHours(r)}

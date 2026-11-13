@@ -47,3 +47,89 @@
   cursor: pointer;
 }
 
+
+// Client profile › VAs for this client: one more column, the hours and monthly maintenance fee from the request each
+// VA filled, and the month's total under the list (what GoCWGL invoices the client each month).
+.vp-clist__row--vas.vp-clist__row--fee {
+  grid-template-columns: minmax(200px, 2fr) 0.9fr 0.8fr 1fr 0.9fr 1.1fr auto;
+
+  @include down(lg) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.vp-clist__fee {
+  color: $orange-ink;
+  font-weight: 700;
+}
+
+// The card often sits in a narrow column: when the list is narrow, each VA stacks (label on the left, value on the
+// right), the same way the list does on small screens.
+.vp-clist--fee {
+  container-type: inline-size;
+}
+
+@container (max-width: 760px) {
+  .vp-clist__row--vas.vp-clist__row--fee {
+    grid-template-columns: 1fr auto;
+
+    &.vp-clist__row--head {
+      display: none;
+    }
+
+    .vp-clist__cell {
+      display: flex;
+      grid-column: 1 / -1;
+      justify-content: space-between;
+      gap: 12px;
+      text-align: right;
+
+      &::before {
+        content: attr(data-label);
+        margin-right: auto;
+        color: $muted;
+        font-family: $font-sans;
+        font-size: 12px;
+        font-weight: 500;
+        text-align: left;
+      }
+    }
+
+    // Number cells stack their lines in the wide table; here the label and value share a line.
+    .vp-clist__cell {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+    }
+
+    // The small line under a value (e.g. "20 hours a week · standard rate") goes on its own line, right-aligned.
+    .vp-clist__sub {
+      flex-basis: 100%;
+      text-align: right;
+    }
+  }
+}
+
+.client-fee-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 153, 0, 0.35);
+  border-radius: $radius-md;
+  background: rgba(255, 153, 0, 0.06);
+  font-size: 13px;
+  color: $ink-soft;
+
+  strong {
+    color: $orange-ink;
+    font-size: 15px;
+  }
+
+  &__note {
+    color: $muted;
+    font-size: 12px;
+  }
+}
