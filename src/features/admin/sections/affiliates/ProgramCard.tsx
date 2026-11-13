@@ -6,8 +6,8 @@ import { centsToDollars, dollarsToCents, formatCents } from "@/utils/format/mone
 import { useAffiliateProgram, useUpdateAffiliateProgram } from "@/utils/hooks/useAffiliates";
 import { useAdmin } from "../../state/AdminContext";
 
-type Drafts = { simple: string | null; custom: string | null };
-const NO_DRAFTS: Drafts = { simple: null, custom: null };
+type Drafts = { simple: string | null; custom: string | null; va: string | null };
+const NO_DRAFTS: Drafts = { simple: null, custom: null, va: null };
 
 /** The program itself: on or off, and the bonus a client earns when someone they referred pays for a Simple or a Custom CRM. */
 export function ProgramCard({ canManage }: { canManage: boolean }) {
@@ -18,19 +18,23 @@ export function ProgramCard({ canManage }: { canManage: boolean }) {
   const [drafts, setDrafts] = useState<Drafts>(NO_DRAFTS);
   const simple = drafts.simple ?? (program ? centsToDollars(program.simpleBonusCents) : "");
   const custom = drafts.custom ?? (program ? centsToDollars(program.customBonusCents) : "");
+  const va = drafts.va ?? (program ? centsToDollars(program.vaBonusCents) : "");
   const changed =
-    !!program && (dollarsToCents(simple) !== program.simpleBonusCents || dollarsToCents(custom) !== program.customBonusCents);
+    !!program &&
+    (dollarsToCents(simple) !== program.simpleBonusCents ||
+      dollarsToCents(custom) !== program.customBonusCents ||
+      dollarsToCents(va) !== program.vaBonusCents);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!changed) return;
     save.mutate(
-      { simpleBonusCents: dollarsToCents(simple), customBonusCents: dollarsToCents(custom) },
+      { simpleBonusCents: dollarsToCents(simple), customBonusCents: dollarsToCents(custom), vaBonusCents: dollarsToCents(va) },
       {
         onSuccess: (p) => {
           setDrafts(NO_DRAFTS);
           update({
-            toast: `Referral bonus: ${formatCents(p.simpleBonusCents, p.currency)} per Simple CRM, ${formatCents(p.customBonusCents, p.currency)} per Custom CRM.`,
+            toast: `Referral bonus: ${formatCents(p.simpleBonusCents, p.currency)} per Simple CRM, ${formatCents(p.customBonusCents, p.currency)} per Custom CRM, ${formatCents(p.vaBonusCents, p.currency)} per VA.`,
           });
         },
       },
@@ -100,6 +104,17 @@ export function ProgramCard({ canManage }: { canManage: boolean }) {
             onChange={(e) => setDrafts((d) => ({ ...d, custom: e.target.value }))}
           />
         </Field>
+        <Field label={`Bonus per VA (${program?.currency ?? "USD"})`} htmlFor="aff-va">
+          <Input
+            id="aff-va"
+            inputMode="decimal"
+            className="affiliate-program__amount"
+            value={va}
+            readOnly={!canManage}
+            aria-readonly={!canManage}
+            onChange={(e) => setDrafts((d) => ({ ...d, va: e.target.value }))}
+          />
+        </Field>
         {canManage && (
           <div className="cluster cluster--8">
             <Button type="submit" variant="primary" disabled={!changed || save.isPending}>
@@ -109,7 +124,10 @@ export function ProgramCard({ canManage }: { canManage: boolean }) {
           </div>
         )}
       </form>
-      <p className="text-small">Used for every referral without its own amount. Bonuses already paid keep their amount.</p>
+      <p className="text-small">
+        Used for every referral without its own amount. A VA bonus is earned once the referred VA is active. Bonuses already paid keep
+        their amount.
+      </p>
       <FormError error={save.error} />
     </section>
   );

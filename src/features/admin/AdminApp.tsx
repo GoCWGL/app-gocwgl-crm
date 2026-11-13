@@ -2,8 +2,8 @@
 
 import { useEffect, type ComponentType } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
-import { Button, Toast } from "@/components/ui";
-import { ADMIN_PAGES, CONTACT_VIEWS, TAB_MENU, type AdminTab } from "@/data/admin";
+import { Button, Tabs, Toast } from "@/components/ui";
+import { ADMIN_PAGES, CONTACT_VIEWS, TAB_GROUPS, TAB_MENU, type AdminTab } from "@/data/admin";
 import { RequireStaff } from "@/utils/auth/guards";
 import { canUseMenu, canWriteCrm } from "@/utils/auth/session";
 import { useSettings } from "@/utils/hooks/useSettings";
@@ -13,13 +13,21 @@ import { AdminSidebar } from "./components/AdminSidebar";
 import { NotificationBell } from "./components/NotificationBell";
 import { AddClientModal } from "./modals/AddClientModal";
 import { EditContactDrawer } from "./modals/EditContactDrawer";
+import { VaProfileDrawer } from "./modals/VaProfileDrawer";
 import { ViewAsClient } from "./modals/ViewAsClient";
-import { AffiliatesSection } from "./sections/affiliates/AffiliatesSection";
+import { AffiliatesSection, ReferralBonusSection } from "./sections/affiliates/AffiliatesSection";
 import { AutomationSection } from "./sections/automation/AutomationSection";
 import { BugsSection } from "./sections/bugs/BugsSection";
+import { FeedbackSection } from "./sections/engagement/FeedbackSection";
+import { StatusSection } from "./sections/engagement/StatusSection";
+import { SupportSection } from "./sections/engagement/SupportSection";
+import { JobPostingsSection } from "./sections/jobs/JobPostingsSection";
+import { SopsSection } from "./sections/sops/SopsSection";
+import { TrainingsSection } from "./sections/trainings/TrainingsSection";
 import { CalendarSection } from "./sections/calendar/CalendarSection";
 import { ClientsSection } from "./sections/contacts/ClientsSection";
 import { TagsSection } from "./sections/contacts/TagsSection";
+import { VasSection } from "./sections/vas/VasSection";
 import { DashboardSection } from "./sections/dashboard/DashboardSection";
 import { EmailSection } from "./sections/email/EmailSection";
 import { FormsSection } from "./sections/forms/FormsSection";
@@ -36,12 +44,15 @@ import { AdminProvider, useAdmin } from "./state/AdminContext";
 const SECTIONS: Record<AdminTab, ComponentType> = {
   dashboard: DashboardSection,
   clients: ClientsSection,
+  vas: VasSection,
   tags: TagsSection,
   pipeline: PipelineSection,
   calendar: CalendarSection,
+  bonuses: ReferralBonusSection,
   payments: PaymentsSection,
   affiliates: AffiliatesSection,
-  progress: ProgressSection,
+  progress: CrmBuildsSection,
+  funnels: FunnelBuildsSection,
   media: MediaSection,
   email: EmailSection,
   forms: FormsSection,
@@ -49,6 +60,12 @@ const SECTIONS: Record<AdminTab, ComponentType> = {
   automation: AutomationSection,
   reporting: ReportingSection,
   bugs: BugsSection,
+  status: StatusSection,
+  training: TrainingsSection,
+  sops: SopsSection,
+  support: SupportSection,
+  feedback: FeedbackSection,
+  jobs: JobPostingsSection,
   settings: SettingsSection,
 };
 
@@ -94,6 +111,7 @@ function AdminLayout() {
           <AddClientModal />
           <NewBuildModal />
           <EditContactDrawer />
+          <VaProfileDrawer />
           <ViewAsClient />
           <Toast floating message={state.toast} onClose={() => update({ toast: "" })} />
         </>
@@ -108,13 +126,8 @@ function AdminLayout() {
             <NotificationBell />
             {canWrite && (
               <>
-                {tab === "progress" && (
-                  <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => update({ newBuildOpen: true })}>
-                    + New build
-                  </Button>
-                )}
-                {/* Only under Contacts (every contact view, and Tags). */}
-                {(tab === "clients" || tab === "tags") && (
+                {/* Tags only: the Clients page has its own Add client button. */}
+                {tab === "tags" && (
                   <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => update({ addClientOpen: true })}>
                     + Add client
                   </Button>
@@ -124,10 +137,34 @@ function AdminLayout() {
           </>
         }
       />
+      <GroupTabs />
       {/* Keyed by view so filters reset when switching Contacts / Clients / Inactive, and the entrance replays. */}
       <div className="page-enter" key={tab === "clients" ? (contactView === "all" ? "contacts" : "clients") : tab}>
         {allowed ? <Section /> : <div className="empty-state">You don’t have access to this page. Ask a super admin for access.</div>}
       </div>
     </AppShell>
   );
+}
+
+/** Menus that hold several pages (Dashboard, CRM Requests): one tab per page the teammate may use. */
+function GroupTabs() {
+  const { state, goTo } = useAdmin();
+  const me = useMe().data;
+  const group = TAB_GROUPS.find((g) => g.tabs.some((t) => t.tab === state.tab));
+  if (!group) return null;
+  const options = group.tabs
+    .filter((t) => canUseMenu(me, TAB_MENU[t.tab]))
+    .map((t) => ({ value: t.tab, label: t.label, icon: t.icon, tone: t.tone }));
+  if (options.length < 2) return null;
+  return <Tabs label={group.label} value={state.tab} onChange={(t) => goTo(t)} options={options} />;
+}
+
+/** CRM Requests › Build progress: CRM builds and CRM requests. */
+function CrmBuildsSection() {
+  return <ProgressSection kind="crm" />;
+}
+
+/** Funnel Requests: funnel builds and funnel requests (same layout as CRM Requests). */
+function FunnelBuildsSection() {
+  return <ProgressSection kind="funnel" />;
 }

@@ -19,7 +19,8 @@ export type LeadSource =
   | "Lead form"
   | "Survey"
   | "Booking page"
-  | "Google sign-in";
+  | "Google sign-in"
+  | "Client application";
 
 /** Sources a person can pick when adding a contact by hand. */
 export const LEAD_SOURCES: Array<{ value: LeadSource; label: string }> = [
@@ -40,6 +41,7 @@ export const SOURCE_LABELS: Partial<Record<LeadSource, string>> = {
   Survey: "Survey",
   "Booking page": "Booking page",
   "Google sign-in": "Google sign-in",
+  "Client application": "Client application",
 };
 
 // --------------------------------------------------------------------- Tags

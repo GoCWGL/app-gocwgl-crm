@@ -1,0 +1,126 @@
+@use "../abstracts" as *;
+
+// Page tabs (<Tabs>): underlined, each with an optional icon, hint and count in the tab's tone.
+.tabs {
+  display: flex;
+  // Full width in a column, so the hairline runs under the whole row.
+  align-self: stretch;
+  gap: 4px;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  // The hairline the open tab's underline sits on.
+  box-shadow: inset 0 -1px 0 $line-soft;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  &__tab {
+    position: relative;
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px 14px;
+    border: 0;
+    border-radius: $radius-md $radius-md 0 0;
+    background: transparent;
+    color: $muted;
+    text-align: left;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    // The underline that marks the open tab, in the tab's color.
+    &::after {
+      content: "";
+      position: absolute;
+      right: 10px;
+      bottom: 0;
+      left: 10px;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: var(--tone-solid);
+      transform: scaleX(0);
+      transition: transform 0.2s ease;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.8);
+      color: $ink-soft;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $line-strong;
+      outline-offset: -2px;
+    }
+
+    &[aria-selected="true"] {
+      color: $ink;
+
+      &::after {
+        transform: scaleX(1);
+      }
+
+      .tabs__icon,
+      .tabs__count {
+        background: var(--tone-solid);
+        color: $white;
+      }
+    }
+
+    &--compact {
+      padding-top: 8px;
+      padding-bottom: 12px;
+    }
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: $radius-md;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  &__tab--compact &__icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  &__label {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__hint {
+    font-size: 11.5px;
+    font-weight: 500;
+    color: $muted-light;
+  }
+
+  &__count {
+    min-width: 26px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+}

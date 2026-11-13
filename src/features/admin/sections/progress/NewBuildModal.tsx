@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Button, Field, FormError, Icon, IconTile, Input, Modal, Select } from "@/components/ui";
+import { Button, ConfirmDialog, Field, FormError, Icon, IconTile, Input, Modal, Select } from "@/components/ui";
 import { useAllContacts } from "@/utils/hooks/useContacts";
-import { useProjects, useStartProject } from "@/utils/hooks/useDelivery";
+import { useProjects, useProjectTemplates, useStartProject } from "@/utils/hooks/useDelivery";
 import { contactName } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
-import { ChecklistOptions, type TemplateKey } from "./ChecklistPicker";
+import { BUILD_TEMPLATES, ChecklistOptions, kindOfTab, type TemplateKey } from "./ChecklistPicker";
 
 export function NewBuildModal() {
   const { state, update } = useAdmin();
@@ -17,12 +17,15 @@ export function NewBuildModal() {
 /** Start a build by hand for any client (not only paid ones), picking the checklist and dates.
  * A client can have several builds at once (e.g. a second funnel, or a CRM). */
 function NewBuildForm({ initialContactId, onClose }: { initialContactId: string; onClose: () => void }) {
-  const { update } = useAdmin();
+  const { state, update } = useAdmin();
+  // CRM Requests starts Custom CRM builds; Funnel Requests starts funnels.
+  const kind = kindOfTab(state.tab);
+  const choices = BUILD_TEMPLATES[kind];
   const contacts = useAllContacts();
   const projects = useProjects();
   const start = useStartProject();
   const [contactId, setContactId] = useState(initialContactId);
-  const [template, setTemplate] = useState<TemplateKey>("foundation");
+  const [template, setTemplate] = useState<TemplateKey>(choices[0]);
   const [pkg, setPkg] = useState("");
   const [startDate, setStartDate] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -42,9 +45,17 @@ function NewBuildForm({ initialContactId, onClose }: { initialContactId: string;
   const others = available.filter((c) => !c.paid);
   const name = available.find((c) => c.value === contactId)?.name ?? "";
 
+  const [confirming, setConfirming] = useState(false);
+  const templates = useProjectTemplates().data ?? [];
+  const templateName = templates.find((t) => t.key === template)?.name ?? "this build";
+
+  // Ask first: starting a build sets up its whole checklist for the client.
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!contactId) return setTried(true);
+    setConfirming(true);
+  };
+  const startBuild = () => {
     start.mutate(
       { contactId, template, package: pkg.trim() || null, startDate: startDate || null, dueDate: dueDate || null },
       {
@@ -60,8 +71,8 @@ function NewBuildForm({ initialContactId, onClose }: { initialContactId: string;
       onClose={onClose}
       onSubmit={submit}
       titleId="nb-title"
-      kicker="BUILD PROGRESS"
-      title="New build"
+      kicker={kind === "crm" ? "CRM REQUESTS" : "FUNNEL REQUESTS"}
+      title={kind === "crm" ? "New CRM build" : "New funnel build"}
       width={640}
       media={
         <IconTile brand size="lg">
@@ -124,11 +135,11 @@ function NewBuildForm({ initialContactId, onClose }: { initialContactId: string;
       <FormError error={contacts.error} />
 
       <span className="kicker">02 · CHECKLIST</span>
-      <ChecklistOptions value={template} onChange={setTemplate} />
+      <ChecklistOptions value={template} onChange={setTemplate} only={choices} />
 
       <span className="kicker">03 · DETAILS</span>
       <Field label="Build name" htmlFor="nb-package" hint="Leave blank to use the checklist's name. Name it so you can tell their builds apart (e.g. Webinar funnel).">
-        <Input id="nb-package" maxLength={120} placeholder="e.g. Full Bundle funnel" value={pkg} onChange={(e) => setPkg(e.target.value)} />
+        <Input id="nb-package" maxLength={120} placeholder={kind === "crm" ? "e.g. Custom CRM" : "e.g. Webinar funnel"} value={pkg} onChange={(e) => setPkg(e.target.value)} />
       </Field>
       <div className="form-grid">
         <Field label="Start date" htmlFor="nb-start" hint="Defaults to today.">
@@ -145,6 +156,20 @@ function NewBuildForm({ initialContactId, onClose }: { initialContactId: string;
         </p>
       )}
       <FormError error={start.error} />
+      {confirming && (
+        <ConfirmDialog
+          title="Start this build?"
+          confirmLabel="Yes, start build"
+          pending={start.isPending}
+          error={start.error}
+          onConfirm={startBuild}
+          onClose={() => setConfirming(false)}
+        >
+          <p>
+            This starts a <b>{pkg.trim() || templateName}</b> for <b>{name}</b> with the {templateName} checklist. {name} sees it in their portal’s Build progress.
+          </p>
+        </ConfirmDialog>
+      )}
     </Modal>
   );
 }

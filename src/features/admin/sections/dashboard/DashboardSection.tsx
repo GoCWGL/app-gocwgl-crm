@@ -16,7 +16,7 @@ import { useAdmin } from "../../state/AdminContext";
 const deltaText = (d: number | null | undefined) => (d === null || d === undefined ? "no earlier data" : `${d >= 0 ? "+" : ""}${d}% vs previous 30 days`);
 
 export function DashboardSection() {
-  const { goTo, openContacts } = useAdmin();
+  const { goTo, update, openContacts } = useAdmin();
   const dashboard = useDashboard(30);
   const board = useSalesBoard();
   const stages = getSalesStages(usePipelines().data);
@@ -103,11 +103,11 @@ export function DashboardSection() {
     { label: "Paid subscription", pct: d.conversion.lead_to_paid_pct, color: "#1F9D57" },
   ];
 
-  const attention: Array<{ label: string; n: number; warn: boolean; tab: AdminTab }> = [
+  const attention: Array<{ label: string; n: number; warn: boolean; tab: AdminTab; billingView?: "inv" }> = [
     { label: "Leads waiting 2+ days for a call", n: staleLeads, warn: true, tab: "pipeline" },
     { label: "Booked calls with no time set", n: unscheduled, warn: true, tab: "calendar" },
     { label: "Calls scheduled today", n: callsToday, warn: false, tab: "calendar" },
-    { label: "Overdue invoices", n: d.overdue_invoices.count, warn: true, tab: "payments" },
+    { label: "Overdue invoices", n: d.overdue_invoices.count, warn: true, tab: "payments", billingView: "inv" },
     { label: "Open bug reports", n: openTickets, warn: true, tab: "bugs" },
   ];
 
@@ -235,7 +235,7 @@ export function DashboardSection() {
             {attention.map((a) => {
               const tone: Tone = a.n > 0 && a.warn ? "amber" : a.n > 0 ? "cyan" : "green";
               return (
-                <button type="button" className="attention-row" key={a.label} onClick={() => goTo(a.tab)}>
+                <button type="button" className="attention-row" key={a.label} onClick={() => (a.billingView ? update({ tab: a.tab, billingView: a.billingView }) : goTo(a.tab))}>
                   <span className={cn("attention-row__count", toneClass(tone))}>{a.n}</span>
                   <span className="u-grow u-semibold">{a.label}</span>
                   <Icon name="chevronRight" size={14} className="u-muted" />

@@ -28,6 +28,8 @@ import { PaymentOptionsTable } from "./PaymentOptionsTable";
 export type BillingView = "subs" | "inv" | "opts";
 
 type BillingTablesProps = {
+  /** The views this page shows (Finance › Billing: subscriptions and products; Finance › Invoices: invoices). */
+  views: BillingView[];
   view: BillingView;
   onView: (view: BillingView) => void;
   message: string;
@@ -36,7 +38,7 @@ type BillingTablesProps = {
 };
 
 /** Subscriptions, invoices and products, with their row actions. */
-export function BillingTables({ view, onView, message, onMessage, onNew }: BillingTablesProps) {
+export function BillingTables({ views, view, onView, message, onMessage, onNew }: BillingTablesProps) {
   const me = useMe().data;
   const canWrite = canWriteCrm(me);
   // Deleting a subscription or invoice is for super admins only (the API enforces it too).
@@ -79,22 +81,26 @@ export function BillingTables({ view, onView, message, onMessage, onNew }: Billi
           label="Billing views"
           value={view}
           onChange={onView}
-          options={[
-            { value: "subs", label: "Subscriptions", count: subscriptions.length },
-            { value: "inv", label: "Invoices", count: invoices.length },
-            { value: "opts", label: "Products", count: options.length },
-          ]}
+          options={(
+            [
+              { value: "subs", label: "Subscriptions", hint: "Recurring plans", icon: "card", count: subscriptions.length },
+              { value: "inv", label: "Invoices", hint: "One-time bills", icon: "invoice", tone: "sky", count: invoices.length },
+              { value: "opts", label: "Products", hint: "Prices & payment links", icon: "tag", tone: "purple", count: options.length },
+            ] as const
+          ).filter((o) => views.includes(o.value))}
         />
         {canWrite && view === "opts" && (
           <Button variant="primary" onClick={() => setEditing(null)}>
             + Add product
           </Button>
         )}
-        {canWrite && view !== "opts" && (
+        {canWrite && view === "subs" && (
+          <Button variant="accent" onClick={() => onNew("sub")}>
+            + New subscription
+          </Button>
+        )}
+        {canWrite && view === "inv" && (
           <div className="cluster cluster--8">
-            <Button variant="accent" onClick={() => onNew("sub")}>
-              + New subscription
-            </Button>
             <Button variant="outline" onClick={() => onNew("custom")}>
               + Custom invoice
             </Button>

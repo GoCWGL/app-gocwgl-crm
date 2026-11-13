@@ -36,10 +36,16 @@ const MESSAGE_CLASS: Record<string, string> = {
 const isClosed = (t: TicketOut) => t.status === "Done";
 const typeLabel = (t: TicketOut) => TICKET_TYPES.find((x) => x.value === t.type)?.label ?? t.type;
 
-/** Where a ticket came from: the admin CRM, the client portal, or one of the clients' own CRMs. */
-const SOURCE_TONES: Record<TicketOut["source"], Tone> = { portal: "cyan", crm: "purple", team: "slate" };
+/** Where a ticket came from: the admin CRM, the client portal, the VA portal, or one of the clients' own CRMs. */
+const SOURCE_TONES: Record<TicketOut["source"], Tone> = { portal: "cyan", crm: "purple", team: "slate", va: "sky" };
 const sourceLabel = (t: TicketOut) =>
-  t.source === "crm" ? t.sourceName || "Client CRM" : t.source === "portal" ? "Client portal" : "Added by team";
+  t.source === "crm"
+    ? t.sourceName || "Client CRM"
+    : t.source === "portal"
+      ? "Client portal"
+      : t.source === "va"
+        ? "VA portal"
+        : "Added by team";
 /** Filter values: a source ("portal", "team", "crm") or one CRM ("crm:<name>"). */
 const matchesSource = (t: TicketOut, filter: string) =>
   !filter || (filter.startsWith("crm:") ? t.source === "crm" && t.sourceName === filter.slice(4) : t.source === filter);

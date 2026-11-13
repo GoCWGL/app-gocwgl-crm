@@ -5,6 +5,7 @@ import {
   Avatar,
   Badge,
   Button,
+  ConfirmDialog,
   Field,
   FormError,
   Icon,
@@ -15,6 +16,7 @@ import {
   SegmentedControl,
   Select,
   StatGrid,
+  Tabs,
   Textarea,
   Timeline,
   TimelineItem,
@@ -32,19 +34,20 @@ import {
   useProject,
   useCrmRequests,
   useProjects,
+  useProjectTemplates,
   useSetProjectPhases,
   useStartProject,
   useToggleProjectTask,
   useUpdateProject,
 } from "@/utils/hooks/useDelivery";
-import { useAdminFunnels } from "@/utils/hooks/usePortal";
 import { useMe } from "@/utils/hooks/useUsers";
 import { contactName } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
-import { AddChecklist, ChecklistOptions, type TemplateKey } from "./ChecklistPicker";
+import { AddChecklist, BUILD_TEMPLATES, ChecklistOptions, type BuildKind, type TemplateKey } from "./ChecklistPicker";
+import { FunnelRequestsPanel, openFunnelRequests } from "./FunnelRequestsPanel";
+import { useAdminFunnels } from "@/utils/hooks/usePortal";
 import { DeleteBuildModal } from "./DeleteBuildModal";
 import { CrmRequestsPanel } from "./CrmRequestsPanel";
-import { FunnelRequestsPanel, openFunnelRequests } from "./FunnelRequestsPanel";
 
 const statusTone = (status: string) => PROJECT_STATUS_TONES[status as ProjectStatus] ?? "neutral";
 
@@ -57,18 +60,24 @@ type Row = {
   build?: ProjectSummary;
 };
 
-/** Builds for clients (a client can have several), with an editable phase/task timeline. */
-export function ProgressSection() {
+/**
+ * Builds for clients (a client can have several), with an editable phase/task timeline.
+ * CRM Requests shows the CRM builds and CRM requests; Funnel Requests shows the funnel builds and funnel requests.
+ */
+export function ProgressSection({ kind }: { kind: BuildKind }) {
   const { state, update } = useAdmin();
   const canWrite = canWriteCrm(useMe().data);
   const projects = useProjects();
   const paid = useAllContacts({ stage: "paid" });
   const start = useStartProject();
-  const newRequests = (useCrmRequests().data ?? []).filter((r) => r.status === "new").length;
+  const newCrm = (useCrmRequests().data ?? []).filter((r) => r.status === "new").length;
+  const newFunnels = openFunnelRequests(useAdminFunnels(undefined, kind === "funnel").data ?? []).filter((f) => !f.projectId).length;
+  const newRequests = kind === "crm" ? newCrm : newFunnels;
   // Funnel requests waiting on you: paid and not built yet, or still awaiting payment or a quote.
-  const funnelRequests = openFunnelRequests(useAdminFunnels().data ?? []).filter((f) => !f.projectId).length;
-  const [template, setTemplate] = useState<TemplateKey>("foundation");
-  const summaries = projects.data ?? [];
+  const [template, setTemplate] = useState<TemplateKey>(BUILD_TEMPLATES[kind][0]);
+  const [confirmStart, setConfirmStart] = useState(false);
+  const templateName = (useProjectTemplates().data ?? []).find((t) => t.key === template)?.name ?? "this build";
+  const summaries = (projects.data ?? []).filter((p) => p.kind === kind);
   const paidClients = paid.data ?? [];
   const emailOf = (id: string) => paidClients.find((c) => c.id === id)?.email ?? "";
   // Every build (oldest first per client), plus paid clients who have none yet.
@@ -80,8 +89,9 @@ export function ProgressSection() {
       email: emailOf(p.contactId),
       build: p,
     })),
+    // Paid clients with no build of any kind yet (on both pages, so either kind can be started).
     ...paidClients
-      .filter((c) => !summaries.some((p) => p.contactId === c.id))
+      .filter((c) => !(projects.data ?? []).some((p) => p.contactId === c.id))
       .map((c): Row => ({
         key: c.id,
         clientId: c.id,
@@ -114,22 +124,32 @@ export function ProgressSection() {
         ]}
       />
 
-      <SegmentedControl
-        kind="tabs"
-        label="Build progress"
-        value={state.progressView}
-        onChange={(progressView) => update({ progressView })}
-        options={[
-          { value: "builds", label: `Builds · ${summaries.length}` },
-          { value: "funnels", label: funnelRequests ? `Funnel requests · ${funnelRequests}` : "Funnel requests" },
-          { value: "requests", label: newRequests ? `CRM requests · ${newRequests} new` : "CRM requests" },
-        ]}
-      />
+      {/* Same white tab bar as People › Clients and VAs; New build sits on its right. */}
+      <div className="card card--flat board board--bar-only">
+        <div className="board__bar">
+          <Tabs<typeof state.progressView>
+            label={kind === "crm" ? "Build progress" : "Funnel builds"}
+            value={state.progressView}
+            onChange={(progressView) => update({ progressView })}
+            options={[
+              { value: "builds", label: "Builds", hint: kind === "crm" ? "CRMs you're building" : "Funnels you're building", icon: "rocket", count: summaries.length },
+              kind === "crm"
+                ? { value: "requests", label: "CRM requests", hint: "New ones to review", icon: "users", tone: "sky", count: newRequests }
+                : { value: "requests", label: "Funnel requests", hint: "From client portals", icon: "funnel", tone: "purple", count: newRequests },
+            ]}
+          />
+          {canWrite && (
+            <div className="board__actions">
+              <Button variant="primary" aria-haspopup="dialog" onClick={() => update({ newBuildOpen: true })}>
+                <Icon name="plus" size={14} /> New build
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
 
-      {state.progressView === "funnels" ? (
-        <FunnelRequestsPanel canWrite={canWrite} />
-      ) : state.progressView === "requests" ? (
-        <CrmRequestsPanel canWrite={canWrite} />
+      {state.progressView === "requests" ? (
+        kind === "crm" ? <CrmRequestsPanel canWrite={canWrite} /> : <FunnelRequestsPanel canWrite={canWrite} />
       ) : (
         <LoadState query={paid} isEmpty={!rows.length} empty="No builds yet. They show up here once a client pays, or start one with New build.">
           <div className="split">
@@ -170,14 +190,14 @@ export function ProgressSection() {
                 <p className="text-muted">
                   Pick what you are building. Each checklist lists everything to check; you can rename phases and add tasks after.
                 </p>
-                {canWrite && <ChecklistOptions value={template} onChange={setTemplate} />}
+                {canWrite && <ChecklistOptions value={template} onChange={setTemplate} only={BUILD_TEMPLATES[kind]} />}
                 <FormError error={start.error} />
                 {canWrite && (
                   <Button
                     variant="primary"
                     size="lg"
                     disabled={start.isPending}
-                    onClick={() => start.mutate({ contactId: selected.clientId, template }, { onSuccess: (p) => update({ projectId: p.id }) })}
+                    onClick={() => setConfirmStart(true)}
                   >
                     {start.isPending ? "Starting…" : "Start build"}
                   </Button>
@@ -202,6 +222,25 @@ export function ProgressSection() {
             )}
           </div>
         </LoadState>
+      )}
+      {confirmStart && selected && (
+        <ConfirmDialog
+          title="Start this build?"
+          confirmLabel="Yes, start build"
+          pending={start.isPending}
+          error={start.error}
+          onConfirm={() =>
+            start.mutate(
+              { contactId: selected.clientId, template },
+              { onSuccess: (p) => (setConfirmStart(false), update({ projectId: p.id, toast: `${p.package} started for ${selected.name}.` })) },
+            )
+          }
+          onClose={() => setConfirmStart(false)}
+        >
+          <p>
+            This starts a <b>{templateName}</b> for <b>{selected.name}</b>. They see it in their portal’s Build progress.
+          </p>
+        </ConfirmDialog>
       )}
     </div>
   );

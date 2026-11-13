@@ -749,6 +749,802 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/va/trainings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Trainings
+         * @description Published VA trainings, with the quiz (no answers) and this VA's best result.
+         */
+        get: operations["my_trainings_api_va_trainings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/trainings/{training_id}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Take Quiz
+         * @description Graded on the server against the passing rate.
+         */
+        post: operations["take_quiz_api_va_trainings__training_id__attempts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/support": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Va Requests
+         * @description The VA's own requests (team notes hidden).
+         */
+        get: operations["my_va_requests_api_va_support_get"];
+        put?: never;
+        /** Open Va Request */
+        post: operations["open_va_request_api_va_support_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/support/{ticket_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Va Request */
+        get: operations["get_va_request_api_va_support__ticket_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/support/{ticket_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reply Va Request */
+        post: operations["reply_va_request_api_va_support__ticket_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/support/{ticket_id}/close": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Close Va Request */
+        post: operations["close_va_request_api_va_support__ticket_id__close_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/shift": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Shift */
+        get: operations["my_shift_api_va_shift_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/shift/clock-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clock In */
+        post: operations["clock_in_api_va_shift_clock_in_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/shift/break": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Toggle Break
+         * @description Start a break, or end the one in progress.
+         */
+        post: operations["toggle_break_api_va_shift_break_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/shift/clock-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clock Out */
+        post: operations["clock_out_api_va_shift_clock_out_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/time/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Entries
+         * @description Your entries that overlap the range, newest first (the running one included).
+         */
+        get: operations["list_entries_api_va_time_entries_get"];
+        put?: never;
+        /** Add Entry */
+        post: operations["add_entry_api_va_time_entries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/time/entries/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Entry */
+        delete: operations["delete_entry_api_va_time_entries__entry_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Entry */
+        patch: operations["update_entry_api_va_time_entries__entry_id__patch"];
+        trace?: never;
+    };
+    "/api/va/time/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Reports */
+        get: operations["list_reports_api_va_time_reports_get"];
+        put?: never;
+        /**
+         * Submit Report
+         * @description Send today's (or a recent day's) report. Sending again replaces it.
+         */
+        post: operations["submit_report_api_va_time_reports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/clients/{contact_id}/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Client Tag
+         * @description Add a tag to a client's list (one you work with now). They see it, and who added it, in their VA tracker.
+         */
+        post: operations["add_client_tag_api_va_clients__contact_id__tags_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/clients/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set My Client Rate
+         * @description Ask to set your hourly rate for one client, once (e.g. they agreed to $9 instead of your usual $8). The client
+         *     approves it in their portal; from then on new time uses it. After this, ask for a raise instead.
+         */
+        patch: operations["set_my_client_rate_api_va_clients__contact_id__patch"];
+        trace?: never;
+    };
+    "/api/va/clients/{contact_id}/accept-rate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept My Client Rate
+         * @description You're okay with your current rate for this client: it stays until you can ask for a raise, 6 months from now.
+         */
+        post: operations["accept_my_client_rate_api_va_clients__contact_id__accept_rate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/clients/{contact_id}/raise": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Raise
+         * @description Ask this client for $1/h more (every 6 months at most). They approve or decline it in their portal.
+         */
+        post: operations["request_raise_api_va_clients__contact_id__raise_post"];
+        /** Withdraw Raise */
+        delete: operations["withdraw_raise_api_va_clients__contact_id__raise_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List My Clients
+         * @description Clients you support now (active) and used to (inactive), with your hours and earnings for each.
+         */
+        get: operations["list_my_clients_api_va_clients_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Journal */
+        get: operations["list_journal_api_va_journal_get"];
+        put?: never;
+        /** Add Journal Entry */
+        post: operations["add_journal_entry_api_va_journal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/journal/{entry_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Journal Entry */
+        delete: operations["delete_journal_entry_api_va_journal__entry_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Journal Entry */
+        patch: operations["update_journal_entry_api_va_journal__entry_id__patch"];
+        trace?: never;
+    };
+    "/api/va/sops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Va Sop Library
+         * @description Published SOPs for VAs.
+         */
+        get: operations["va_sop_library_api_va_sops_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Open Jobs
+         * @description Jobs that are open right now (live or interviewing), newest first.
+         */
+        get: operations["open_jobs_api_va_jobs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/jobs/{posting_id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply For Job
+         * @description Apply for an open job. GoCWGL reviews applicants and matches one to the client.
+         */
+        post: operations["apply_for_job_api_va_jobs__posting_id__apply_post"];
+        /** Withdraw Application */
+        delete: operations["withdraw_application_api_va_jobs__posting_id__apply_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Ratings
+         * @description Your star ratings from clients. Their written comments go to the GoCWGL team, who share them with you.
+         */
+        get: operations["my_ratings_api_va_feedback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/referrals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List My Referrals
+         * @description VAs you referred to GoCWGL and your bonus for each.
+         */
+        get: operations["list_my_referrals_api_va_referrals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Resume Get
+         * @description Your resume: your VA profile details plus the resume's own sections.
+         */
+        get: operations["my_resume_get_api_va_resume_get"];
+        /**
+         * My Resume Save
+         * @description Save your resume. Name, phone, title, summary, skills and location update your VA profile too.
+         */
+        put: operations["my_resume_save_api_va_resume_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/resume/new-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * My Resume New Link
+         * @description Make a new page link; anyone with the old one can't open it any more.
+         */
+        post: operations["my_resume_new_link_api_va_resume_new_link_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/resume/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Resume Documents */
+        get: operations["list_resume_documents_api_va_resume_documents_get"];
+        put?: never;
+        /**
+         * Upload Resume Document
+         * @description Upload a test result or certificate (PDF, PNG, JPG or WebP, up to 10 MB). Attach it to a certification to show it.
+         */
+        post: operations["upload_resume_document_api_va_resume_documents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/resume/documents/{doc_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Resume Document */
+        get: operations["get_resume_document_api_va_resume_documents__doc_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Resume Document */
+        delete: operations["delete_resume_document_api_va_resume_documents__doc_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Tasks
+         * @description Tasks your clients asked for and that are assigned to you.
+         */
+        get: operations["my_tasks_api_va_tasks_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/tasks/{task_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update My Task
+         * @description Move your task along: In progress → In review → Done. The client and GoCWGL see the new status.
+         *     Starting a task (Requested → In progress) also starts your time tracker for that client, noted with the task title.
+         */
+        patch: operations["update_my_task_api_va_tasks__task_id__patch"];
+        trace?: never;
+    };
+    "/api/va/inactive-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Inactive Asks
+         * @description Clients GoCWGL wants to move to inactive. Talk with them first, then approve.
+         */
+        get: operations["my_inactive_asks_api_va_inactive_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/inactive-requests/{request_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Inactive */
+        post: operations["approve_inactive_api_va_inactive_requests__request_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/menu-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Va Counts */
+        get: operations["va_counts_api_va_menu_counts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/menu-counts/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Va Seen */
+        post: operations["va_seen_api_va_menu_counts_seen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Invoices Overview
+         * @description Totals, earnings by client, time ready to invoice, and every invoice (newest first).
+         */
+        get: operations["invoices_overview_api_va_invoices_get"];
+        put?: never;
+        /** Create Invoice */
+        post: operations["create_invoice_api_va_invoices_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/invoices/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Invoice
+         * @description What an invoice for this client and these dates would hold (billable time not invoiced yet).
+         */
+        post: operations["preview_invoice_api_va_invoices_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/invoices/{invoice_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Invoice */
+        get: operations["get_invoice_api_va_invoices__invoice_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Invoice
+         * @description Drafts only; their time can be invoiced again.
+         */
+        delete: operations["delete_invoice_api_va_invoices__invoice_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Invoice */
+        patch: operations["update_invoice_api_va_invoices__invoice_id__patch"];
+        trace?: never;
+    };
+    "/api/va/invoices/{invoice_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Invoice Status
+         * @description Mark it sent, paid, or back (paid → sent, sent → draft).
+         */
+        post: operations["set_invoice_status_api_va_invoices__invoice_id__status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/payment-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Payment Methods */
+        get: operations["list_payment_methods_api_va_payment_methods_get"];
+        put?: never;
+        /** Add Payment Method */
+        post: operations["add_payment_method_api_va_payment_methods_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/payment-methods/{method_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Payment Method */
+        delete: operations["delete_payment_method_api_va_payment_methods__method_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Payment Method */
+        patch: operations["update_payment_method_api_va_payment_methods__method_id__patch"];
+        trace?: never;
+    };
     "/api/admin/contacts": {
         parameters: {
             query?: never;
@@ -1221,6 +2017,46 @@ export interface paths {
         head?: never;
         /** Update Connection */
         patch: operations["update_connection_api_admin_calendar_connections__connection_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/call-invites/clients/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite Client To Call
+         * @description Email an onboarding client a link to book a discovery call (and note it on their profile).
+         */
+        post: operations["invite_client_to_call_api_admin_call_invites_clients__contact_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/call-invites/vas/{va_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite Va To Interview
+         * @description Email an applicant VA a link to book an interview.
+         */
+        post: operations["invite_va_to_interview_api_admin_call_invites_vas__va_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/admin/subscriptions": {
@@ -2496,6 +3332,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/reports/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Team Report
+         * @description Team hours and billing per day and per month, and VA meeting attendance (late, no-shows).
+         */
+        get: operations["team_report_api_admin_reports_team_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/automations/{automation_id}/runs": {
         parameters: {
             query?: never;
@@ -2906,6 +3762,719 @@ export interface paths {
         get: operations["payout_details_api_admin_affiliates_payouts__contact_id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/vas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Vas */
+        get: operations["list_vas_api_admin_vas_get"];
+        put?: never;
+        /**
+         * Add Va
+         * @description Add a VA with their profile; then email an invite, set a password (owners and admins), or leave it for later.
+         */
+        post: operations["add_va_api_admin_vas_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/vas/{va_id}/invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Invite Va
+         * @description Email a VA without a login the link to set up their VA portal password.
+         */
+        post: operations["invite_va_api_admin_vas__va_id__invite_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/vas/invitations/{invitation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Revoke Va Invitation */
+        delete: operations["revoke_va_invitation_api_admin_vas_invitations__invitation_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/vas/{va_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Va */
+        get: operations["get_va_api_admin_vas__va_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Va */
+        patch: operations["update_va_api_admin_vas__va_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/vas/{va_id}/clients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Va Clients */
+        put: operations["set_va_clients_api_admin_vas__va_id__clients_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/vas/{va_id}/clients/{contact_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Set Va Client Rate
+         * @description The VA's pay per billable hour for one client (null = their hourly rate).
+         */
+        patch: operations["set_va_client_rate_api_admin_vas__va_id__clients__contact_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/va-referrals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Va Referrals */
+        get: operations["list_va_referrals_api_admin_va_referrals_get"];
+        put?: never;
+        /**
+         * Add Va Referral
+         * @description Record who referred a VA (owners and admins). The bonus follows the program unless `bonusCents` is set.
+         */
+        post: operations["add_va_referral_api_admin_va_referrals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-referrals/{referral_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Va Referral */
+        delete: operations["delete_va_referral_api_admin_va_referrals__referral_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Va Referral */
+        patch: operations["update_va_referral_api_admin_va_referrals__referral_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/va-referrals/{referral_id}/bonus-paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Va Bonus Paid */
+        post: operations["mark_va_bonus_paid_api_admin_va_referrals__referral_id__bonus_paid_post"];
+        /** Undo Va Bonus Paid */
+        delete: operations["undo_va_bonus_paid_api_admin_va_referrals__referral_id__bonus_paid_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/job-postings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Job Postings */
+        get: operations["list_job_postings_api_admin_job_postings_get"];
+        put?: never;
+        /** Create Job Posting */
+        post: operations["create_job_posting_api_admin_job_postings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/job-postings/{posting_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Job Posting */
+        get: operations["get_job_posting_api_admin_job_postings__posting_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Job Posting */
+        delete: operations["delete_job_posting_api_admin_job_postings__posting_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Job Posting */
+        patch: operations["update_job_posting_api_admin_job_postings__posting_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/job-postings/{posting_id}/filled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Job Posting Filled
+         * @description Mark the posting a success: the role is filled.
+         */
+        post: operations["mark_job_posting_filled_api_admin_job_postings__posting_id__filled_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/job-postings/{posting_id}/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job Applicants
+         * @description The VAs who applied, first come first.
+         */
+        get: operations["job_applicants_api_admin_job_postings__posting_id__applications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/sops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Sops */
+        get: operations["list_sops_api_admin_sops_get"];
+        put?: never;
+        /** Create Sop */
+        post: operations["create_sop_api_admin_sops_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/sops/{sop_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Sop */
+        get: operations["get_sop_api_admin_sops__sop_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Sop */
+        delete: operations["delete_sop_api_admin_sops__sop_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Sop */
+        patch: operations["update_sop_api_admin_sops__sop_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/trainings/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Training Stats */
+        get: operations["training_stats_api_admin_trainings_stats_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/trainings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Trainings */
+        get: operations["list_trainings_api_admin_trainings_get"];
+        put?: never;
+        /** Create Training */
+        post: operations["create_training_api_admin_trainings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/trainings/{training_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Training */
+        get: operations["get_training_api_admin_trainings__training_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Training */
+        delete: operations["delete_training_api_admin_trainings__training_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Training */
+        patch: operations["update_training_api_admin_trainings__training_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/trainings/{training_id}/results": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Training Results
+         * @description Each VA's best score, whether they passed, and how many tries.
+         */
+        get: operations["training_results_api_admin_trainings__training_id__results_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Feedback */
+        get: operations["list_feedback_api_admin_feedback_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/feedback/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Feedback Summary */
+        get: operations["feedback_summary_api_admin_feedback_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/feedback/{feedback_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Feedback
+         * @description Owners and admins (e.g. spam or a mistake).
+         */
+        delete: operations["delete_feedback_api_admin_feedback__feedback_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Va Status Board
+         * @description Who's working right now, on a break, or offline — and hours on the clock today.
+         */
+        get: operations["va_status_board_api_admin_va_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/reports/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Attendance */
+        get: operations["list_attendance_api_admin_reports_attendance_get"];
+        put?: never;
+        /** Log Meeting */
+        post: operations["log_meeting_api_admin_reports_attendance_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/reports/attendance/{meeting_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Meeting */
+        delete: operations["delete_meeting_api_admin_reports_attendance__meeting_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Meeting */
+        patch: operations["update_meeting_api_admin_reports_attendance__meeting_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/client-projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Client Projects */
+        get: operations["list_client_projects_api_admin_client_projects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/client-projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Client Project */
+        patch: operations["update_client_project_api_admin_client_projects__project_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/va-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Va Requests */
+        get: operations["list_va_requests_api_admin_va_requests_get"];
+        put?: never;
+        /**
+         * Create Va Request For Client
+         * @description Add a VA request to a client's account (it shows on their Team page). Published to Open jobs unless publish is false.
+         */
+        post: operations["create_va_request_for_client_api_admin_va_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Va Request
+         * @description Delete a request for good (it leaves the client's portal). An unfilled job post made from it is deleted too.
+         */
+        delete: operations["delete_va_request_api_admin_va_requests__request_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Va Request */
+        patch: operations["update_va_request_api_admin_va_requests__request_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/va-requests/{request_id}/review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Va Request Review
+         * @description Mark the request "In review": the client sees GoCWGL is reviewing it.
+         */
+        post: operations["start_va_request_review_api_admin_va_requests__request_id__review_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-requests/{request_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve Va Request */
+        post: operations["approve_va_request_api_admin_va_requests__request_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-requests/{request_id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline Va Request */
+        post: operations["decline_va_request_api_admin_va_requests__request_id__decline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-requests/{request_id}/post": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Post Va Request
+         * @description Publish an approved request as a live job posting: every VA sees it in Open jobs (the client stays private).
+         */
+        post: operations["post_va_request_api_admin_va_requests__request_id__post_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-requests/{request_id}/match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Match Va Request
+         * @description Match a VA to the request: the client can review their profile and resume. A linked job posting is marked filled.
+         */
+        post: operations["match_va_request_api_admin_va_requests__request_id__match_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-requests/{request_id}/stage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set Va Request Stage
+         * @description Move the request to any status: New · In review · Live (in every VA's Open jobs) · Interviewing · Filled (with the VA)
+         *     · Declined · Closed. Reopens declined, closed or cancelled requests too.
+         */
+        post: operations["set_va_request_stage_api_admin_va_requests__request_id__stage_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/contacts/{contact_id}/vas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Client Vas
+         * @description Every VA this client has, now and before (client profile › VAs).
+         */
+        get: operations["client_vas_api_admin_contacts__contact_id__vas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/menu-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Admin Counts */
+        get: operations["admin_counts_api_admin_menu_counts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/menu-counts/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Admin Seen */
+        post: operations["admin_seen_api_admin_menu_counts_seen_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3533,6 +5102,510 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/vas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Vas
+         * @description The VAs who work with this business.
+         */
+        get: operations["my_vas_api_portal_vas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Feedback */
+        get: operations["my_feedback_api_portal_feedback_get"];
+        put?: never;
+        /** Give Feedback */
+        post: operations["give_feedback_api_portal_feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Live Work
+         * @description Your VAs right now: who's working on your account, on what, and hours today and this week.
+         */
+        get: operations["live_work_api_portal_live_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/work-journal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Work Journal
+         * @description What your VAs did for you, entry by entry (newest first), between two days (up to three months).
+         */
+        get: operations["work_journal_api_portal_work_journal_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Team
+         * @description The VAs working with you.
+         */
+        get: operations["team_api_portal_va_team_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Projects */
+        get: operations["my_projects_api_portal_projects_get"];
+        put?: never;
+        /**
+         * Request Project
+         * @description Ask for a project and (optionally) pick the VA from your team.
+         */
+        post: operations["request_project_api_portal_projects_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{project_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update My Project */
+        patch: operations["update_my_project_api_portal_projects__project_id__patch"];
+        trace?: never;
+    };
+    "/api/portal/va-invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Va Invoices
+         * @description Invoices your VAs sent you (drafts stay with them).
+         */
+        get: operations["my_va_invoices_api_portal_va_invoices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-invoices/{invoice_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Va Invoice */
+        get: operations["my_va_invoice_api_portal_va_invoices__invoice_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Va Requests */
+        get: operations["my_va_requests_api_portal_va_requests_get"];
+        put?: never;
+        /**
+         * Request Va
+         * @description Ask GoCWGL for a VA (another one, or your first). The team is emailed.
+         */
+        post: operations["request_va_api_portal_va_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-requests/{request_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Update My Va Request
+         * @description Edit your request while GoCWGL hasn't approved it yet (New or In review).
+         */
+        put: operations["update_my_va_request_api_portal_va_requests__request_id__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-requests/{request_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Va Request */
+        post: operations["cancel_va_request_api_portal_va_requests__request_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-requests/{request_id}/applicants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Request Applicants
+         * @description The VAs who applied for your request. Review each one's profile at GET /portal/va-resumes/{va_id}.
+         */
+        get: operations["my_request_applicants_api_portal_va_requests__request_id__applicants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-requests/{request_id}/hire": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hire Applicant
+         * @description Pick the applicant you want, with a note to GoCWGL on why. The job is filled, and GoCWGL is told so they can set up your VA.
+         */
+        post: operations["hire_applicant_api_portal_va_requests__request_id__hire_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/trainings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Client Trainings
+         * @description Published client trainings, with the quiz (no answers) and this person's best result.
+         */
+        get: operations["client_trainings_api_portal_trainings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/trainings/{training_id}/attempts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Client Take Quiz */
+        post: operations["client_take_quiz_api_portal_trainings__training_id__attempts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/sops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Client Sop Library
+         * @description Published SOPs for clients.
+         */
+        get: operations["client_sop_library_api_portal_sops_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-resumes/{va_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Client Va Resume
+         * @description A VA's resume, for a client reviewing a VA matched to their request (or on their team). No email or phone.
+         */
+        get: operations["client_va_resume_api_portal_va_resumes__va_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-resumes/{va_id}/documents/{doc_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Client Va Resume Document
+         * @description The headshot or a result document on that resume.
+         */
+        get: operations["client_va_resume_document_api_portal_va_resumes__va_id__documents__doc_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/time-tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Time Tags
+         * @description Your tags for your VAs' time. They pick from these on their time entries.
+         */
+        get: operations["list_time_tags_api_portal_time_tags_get"];
+        put?: never;
+        /** Add Time Tag */
+        post: operations["add_time_tag_api_portal_time_tags_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/time-tags/{tag_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Time Tag
+         * @description VAs can't pick it any more; time already tagged keeps the label.
+         */
+        delete: operations["delete_time_tag_api_portal_time_tags__tag_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Time Tag
+         * @description Renaming also renames it on time already tagged.
+         */
+        patch: operations["update_time_tag_api_portal_time_tags__tag_id__patch"];
+        trace?: never;
+    };
+    "/api/portal/raise-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Raise Requests
+         * @description Your VAs' rate change and raise requests, newest first.
+         */
+        get: operations["list_raise_requests_api_portal_raise_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/raise-requests/{request_id}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve Raise
+         * @description The new rate applies to time your VA logs from now on.
+         */
+        post: operations["approve_raise_api_portal_raise_requests__request_id__approve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/raise-requests/{request_id}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline Raise */
+        post: operations["decline_raise_api_portal_raise_requests__request_id__decline_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/menu-counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Portal Counts */
+        get: operations["portal_counts_api_portal_menu_counts_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/menu-counts/seen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Portal Seen */
+        post: operations["portal_seen_api_portal_menu_counts_seen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/booking/invite/{token}": {
         parameters: {
             query?: never;
@@ -3730,6 +5803,86 @@ export interface paths {
          * @description Called from a client CRM's **server** (never the browser, which would expose the key).
          */
         post: operations["report_bug_api_intake_bugs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/apply/client": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply As Client
+         * @description "Become a client": they land in Clients › Onboarding with what they wrote as a team note.
+         */
+        post: operations["apply_as_client_api_public_apply_client_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/apply/va": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply As Va
+         * @description "Apply as a VA": they land in People › VAs › Onboarding, without a login until the team invites them.
+         */
+        post: operations["apply_as_va_api_public_apply_va_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/resumes/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Public Resume Page
+         * @description A VA's resume page, opened from the link they share. Nothing shows when they turn it off.
+         */
+        get: operations["public_resume_page_api_public_resumes__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/resumes/{slug}/documents/{doc_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Public Resume Document
+         * @description A result document attached to a certification on a live resume page.
+         */
+        get: operations["public_resume_document_api_public_resumes__slug__documents__doc_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4011,6 +6164,8 @@ export interface components {
             simpleBonusCents: number;
             /** Custombonuscents */
             customBonusCents: number;
+            /** Vabonuscents */
+            vaBonusCents: number;
             /** Currency */
             currency: string;
         };
@@ -4022,6 +6177,8 @@ export interface components {
             simpleBonusCents?: number | null;
             /** Custombonuscents */
             customBonusCents?: number | null;
+            /** Vabonuscents */
+            vaBonusCents?: number | null;
         };
         /** AnswerOut */
         AnswerOut: {
@@ -4031,6 +6188,153 @@ export interface components {
             label: string;
             /** Value */
             value: string | boolean | number | null;
+        };
+        /** ApplicantOut */
+        ApplicantOut: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Headline */
+            headline: string;
+            /** Skills */
+            skills: string[];
+            /** Country */
+            country: string;
+            /** Note */
+            note: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "applied" | "hired" | "not_selected";
+            /**
+             * Appliedat
+             * Format: date-time
+             */
+            appliedAt: string;
+        };
+        /** ApplyAnswer */
+        ApplyAnswer: {
+            /** Message */
+            message: string;
+        };
+        /** ApplyIn */
+        ApplyIn: {
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** AttemptIn */
+        AttemptIn: {
+            /** Answers */
+            answers: (number | null)[];
+        };
+        /** AttemptOut */
+        AttemptOut: {
+            /** Score */
+            score: number;
+            /** Passed */
+            passed: boolean;
+            /** Correct */
+            correct: number;
+            /** Total */
+            total: number;
+            /** Passingrate */
+            passingRate: number;
+            /** Results */
+            results: boolean[];
+        };
+        /** AttendanceIn */
+        AttendanceIn: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Title */
+            title: string;
+            /**
+             * Scheduledat
+             * Format: date-time
+             */
+            scheduledAt: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "on_time" | "late" | "no_show";
+            /**
+             * Minuteslate
+             * @default 0
+             */
+            minutesLate?: number;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** AttendanceOut */
+        AttendanceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Scheduledat
+             * Format: date-time
+             */
+            scheduledAt: string;
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "on_time" | "late" | "no_show";
+            /** Minuteslate */
+            minutesLate: number;
+            /** Note */
+            note: string;
+            /** Loggedbyname */
+            loggedByName: string;
+            va: components["schemas"]["AttendanceVa"];
+        };
+        /** AttendanceUpdate */
+        AttendanceUpdate: {
+            /** Vaid */
+            vaId?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Scheduledat */
+            scheduledAt?: string | null;
+            /** Outcome */
+            outcome?: ("on_time" | "late" | "no_show") | null;
+            /** Minuteslate */
+            minutesLate?: number | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** AttendanceVa */
+        AttendanceVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
         };
         /** AuditOut */
         AuditOut: {
@@ -4119,6 +6423,11 @@ export interface components {
             /** File */
             file: string;
             category?: components["schemas"]["FileCategory"] | null;
+        };
+        /** Body_upload_resume_document_api_va_resume_documents_post */
+        Body_upload_resume_document_api_va_resume_documents_post: {
+            /** File */
+            file: string;
         };
         /**
          * BonusStatus
@@ -4421,6 +6730,28 @@ export interface components {
             /** Hours */
             hours?: components["schemas"]["DayHours"][] | null;
         };
+        /** CallInviteIn */
+        CallInviteIn: {
+            /**
+             * Calendarid
+             * Format: uuid
+             */
+            calendarId: string;
+            /**
+             * Message
+             * @default
+             */
+            message?: string;
+        };
+        /** CallInviteOut */
+        CallInviteOut: {
+            /** Sentto */
+            sentTo: string;
+            /** Calendarname */
+            calendarName: string;
+            /** Bookingurl */
+            bookingUrl: string;
+        };
         /** ChangePasswordRequest */
         ChangePasswordRequest: {
             /** Currentpassword */
@@ -4474,6 +6805,58 @@ export interface components {
             kind: string;
             /** Summary */
             summary: string;
+        };
+        /** ClientApplicationIn */
+        ClientApplicationIn: {
+            /** Firstname */
+            firstName: string;
+            /**
+             * Lastname
+             * @default
+             */
+            lastName?: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone?: string;
+            /**
+             * Company
+             * @default
+             */
+            company?: string;
+            /**
+             * Businesswebsite
+             * @default
+             */
+            businessWebsite?: string;
+            /**
+             * Interest
+             * @default
+             */
+            interest?: string;
+            /**
+             * Heardfrom
+             * @default
+             */
+            heardFrom?: string;
+            /**
+             * Message
+             * @default
+             */
+            message?: string;
+            /** Captchatoken */
+            captchaToken?: string | null;
+            /**
+             * Website
+             * @default
+             */
+            website?: string;
         };
         /** ClientBillingOut */
         ClientBillingOut: {
@@ -4529,10 +6912,84 @@ export interface components {
             createdAt: string;
             invoice: components["schemas"]["ClientCrmRequestInvoiceOut"] | null;
         };
+        /** ClientEarnings */
+        ClientEarnings: {
+            client: components["schemas"]["InvoiceClient"];
+            /** Invoices */
+            invoices: number;
+            /** Seconds */
+            seconds: number;
+            /** Ratecents */
+            rateCents: number | null;
+            /** Paidcents */
+            paidCents: number;
+            /** Outstandingcents */
+            outstandingCents: number;
+            /** Sharepct */
+            sharePct: number;
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /**
+             * Periodend
+             * Format: date
+             */
+            periodEnd: string;
+        };
         /** ClientMessageIn */
         ClientMessageIn: {
             /** Text */
             text: string;
+        };
+        /** ClientProjectOut */
+        ClientProjectOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Title */
+            title: string;
+            /** Details */
+            details: string;
+            /** Links */
+            links: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "in_progress" | "review" | "done" | "cancelled";
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "normal" | "high";
+            /** Duedate */
+            dueDate: string | null;
+            /** Requestedbyname */
+            requestedByName: string;
+            /** Teamnote */
+            teamNote: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Completedat */
+            completedAt: string | null;
+            va: components["schemas"]["ProjectVa"] | null;
         };
         /** ClientTicketIn */
         ClientTicketIn: {
@@ -4556,6 +7013,181 @@ export interface components {
              * @default
              */
             device?: string;
+        };
+        /** ClientVaInvoice */
+        ClientVaInvoice: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "sent" | "paid";
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /**
+             * Periodend
+             * Format: date
+             */
+            periodEnd: string;
+            /** Seconds */
+            seconds: number;
+            /** Amountcents */
+            amountCents: number;
+            /** Duedate */
+            dueDate: string | null;
+            /** Sentat */
+            sentAt: string | null;
+            /** Paidat */
+            paidAt: string | null;
+            va: components["schemas"]["ProjectVa"];
+        };
+        /** ClientVaInvoiceDetail */
+        ClientVaInvoiceDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "sent" | "paid";
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /**
+             * Periodend
+             * Format: date
+             */
+            periodEnd: string;
+            /** Seconds */
+            seconds: number;
+            /** Amountcents */
+            amountCents: number;
+            /** Duedate */
+            dueDate: string | null;
+            /** Sentat */
+            sentAt: string | null;
+            /** Paidat */
+            paidAt: string | null;
+            va: components["schemas"]["ProjectVa"];
+            /** Lines */
+            lines: components["schemas"]["ClientVaInvoiceLine"][];
+            payment: components["schemas"]["ClientVaInvoicePayment"] | null;
+            /** Note */
+            note: string;
+        };
+        /** ClientVaInvoiceLine */
+        ClientVaInvoiceLine: {
+            /** Category */
+            category: string;
+            /** Seconds */
+            seconds: number;
+            /** Ratecents */
+            rateCents: number;
+            /** Amountcents */
+            amountCents: number;
+        };
+        /** ClientVaInvoicePayment */
+        ClientVaInvoicePayment: {
+            /** Label */
+            label: string;
+            /** Kind */
+            kind: string;
+            /** Accountname */
+            accountName: string;
+            /** Details */
+            details: string;
+        };
+        /** ClientVaOut */
+        ClientVaOut: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Headline */
+            headline: string;
+            /** Vastatus */
+            vaStatus: string;
+            /** Active */
+            active: boolean;
+            /**
+             * Since
+             * Format: date-time
+             */
+            since: string;
+            /** Endedat */
+            endedAt: string | null;
+            /** Ratecents */
+            rateCents: number | null;
+            /** Customrate */
+            customRate: boolean;
+            /** Workingnow */
+            workingNow: boolean;
+            /** Monthseconds */
+            monthSeconds: number;
+            /** Totalseconds */
+            totalSeconds: number;
+            /** Lastworkedat */
+            lastWorkedAt: string | null;
+        };
+        /** ClockInIn */
+        ClockInIn: {
+            /** Contactid */
+            contactId?: string | null;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+            /**
+             * Category
+             * @default
+             */
+            category?: string;
+            /** Tags */
+            tags?: string[];
+            /**
+             * Projectcode
+             * @default
+             */
+            projectCode?: string;
+            /**
+             * Kind
+             * @default timer
+             * @enum {string}
+             */
+            kind?: "timer" | "countdown";
+            /** Plannedseconds */
+            plannedSeconds?: number | null;
+            /** Tasksdone */
+            tasksDone?: string[];
+            /** Billable */
+            billable?: boolean | null;
+            /**
+             * Stoprunning
+             * @default false
+             */
+            stopRunning?: boolean;
         };
         /** CommentIn */
         CommentIn: {
@@ -4781,6 +7413,8 @@ export interface components {
             callAt: string | null;
             /** Paidon */
             paidOn: string | null;
+            /** Onboardedat */
+            onboardedAt: string | null;
             /** Notes */
             notes: string;
             /**
@@ -4868,6 +7502,8 @@ export interface components {
             notes?: string | null;
             /** Tagids */
             tagIds?: string[] | null;
+            /** Onboarded */
+            onboarded?: boolean | null;
         };
         /**
          * CrmPackage
@@ -4960,6 +7596,45 @@ export interface components {
             label: string;
             /** Url */
             url: string;
+        };
+        /** DailyReportIn */
+        DailyReportIn: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary?: string;
+        };
+        /** DailyReportOut */
+        DailyReportOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Summary */
+            summary: string;
+            /** Workedseconds */
+            workedSeconds: number;
+            /** Billableseconds */
+            billableSeconds: number;
+            /** Earningscents */
+            earningsCents: number;
+            /**
+             * Submittedat
+             * Format: date-time
+             */
+            submittedAt: string;
         };
         /** DayHours */
         DayHours: {
@@ -5141,6 +7816,159 @@ export interface components {
             label?: string | null;
             /** Code */
             code?: string | null;
+        };
+        /**
+         * EmploymentType
+         * @enum {string}
+         */
+        EmploymentType: "part_time" | "full_time" | "project";
+        /**
+         * EntryIn
+         * @description Time added by hand.
+         */
+        EntryIn: {
+            /** Contactid */
+            contactId?: string | null;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+            /**
+             * Category
+             * @default
+             */
+            category?: string;
+            /** Tags */
+            tags?: string[];
+            /**
+             * Projectcode
+             * @default
+             */
+            projectCode?: string;
+            /**
+             * Kind
+             * @default timer
+             * @enum {string}
+             */
+            kind?: "timer" | "countdown";
+            /** Plannedseconds */
+            plannedSeconds?: number | null;
+            /** Tasksdone */
+            tasksDone?: string[];
+            /** Billable */
+            billable?: boolean | null;
+            /**
+             * Startedat
+             * Format: date-time
+             */
+            startedAt: string;
+            /**
+             * Endedat
+             * Format: date-time
+             */
+            endedAt: string;
+        };
+        /** EntryUpdate */
+        EntryUpdate: {
+            /** Contactid */
+            contactId?: string | null;
+            /** Note */
+            note?: string | null;
+            /** Category */
+            category?: string | null;
+            /** Tags */
+            tags?: string[] | null;
+            /** Projectcode */
+            projectCode?: string | null;
+            /** Plannedseconds */
+            plannedSeconds?: number | null;
+            /** Tasksdone */
+            tasksDone?: string[] | null;
+            /** Billable */
+            billable?: boolean | null;
+            /** Startedat */
+            startedAt?: string | null;
+            /** Endedat */
+            endedAt?: string | null;
+        };
+        /** FeedbackClient */
+        FeedbackClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+        };
+        /** FeedbackIn */
+        FeedbackIn: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Rating */
+            rating?: number | null;
+            /**
+             * Comment
+             * @default
+             */
+            comment?: string;
+        };
+        /** FeedbackOut */
+        FeedbackOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Rating */
+            rating: number | null;
+            /** Comment */
+            comment: string;
+            /** Authorname */
+            authorName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            va: components["schemas"]["FeedbackVa"];
+            client: components["schemas"]["FeedbackClient"];
+        };
+        /** FeedbackSummaryOut */
+        FeedbackSummaryOut: {
+            /** Count */
+            count: number;
+            /** Average */
+            average: number | null;
+            /**
+             * Written
+             * @default 0
+             */
+            written?: number;
+            /** Distribution */
+            distribution: {
+                [key: string]: number;
+            };
+            /** Vas */
+            vas: components["schemas"]["VaRatingOut"][];
+        };
+        /** FeedbackVa */
+        FeedbackVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
         };
         /**
          * FileCategory
@@ -5488,6 +8316,45 @@ export interface components {
          * @enum {string}
          */
         HealthState: "ok" | "warning" | "down";
+        /** HireIn */
+        HireIn: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** InactiveAskOut */
+        InactiveAskOut: {
+            /**
+             * Requestid
+             * Format: uuid
+             */
+            requestId: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Clientname */
+            clientName: string;
+            /** Role */
+            role: string;
+            /**
+             * Requestedat
+             * Format: date-time
+             */
+            requestedAt: string;
+            /** Requestedby */
+            requestedBy: string;
+            /** Approvedat */
+            approvedAt: string | null;
+        };
         /** InboxOut */
         InboxOut: {
             /** Items */
@@ -5669,6 +8536,20 @@ export interface components {
             /** Token */
             token: string;
         };
+        /** InvoiceClient */
+        InvoiceClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+            /** Email */
+            email: string;
+        };
         /** InvoiceCreate */
         InvoiceCreate: {
             /**
@@ -5723,6 +8604,17 @@ export interface components {
             /** Unitpricecents */
             unitPriceCents: number;
         };
+        /** InvoiceLine */
+        InvoiceLine: {
+            /** Category */
+            category: string;
+            /** Seconds */
+            seconds: number;
+            /** Ratecents */
+            rateCents: number;
+            /** Amountcents */
+            amountCents: number;
+        };
         /** InvoiceOut */
         InvoiceOut: {
             /**
@@ -5772,11 +8664,76 @@ export interface components {
             /** Subscriptionid */
             subscriptionId?: string | null;
         };
+        /** InvoicePayment */
+        InvoicePayment: {
+            /** Label */
+            label: string;
+            /** Kind */
+            kind: string;
+            /** Accountname */
+            accountName: string;
+            /** Details */
+            details: string;
+        };
+        /** InvoicePreview */
+        InvoicePreview: {
+            /** Entries */
+            entries: number;
+            /** Seconds */
+            seconds: number;
+            /** Amountcents */
+            amountCents: number;
+            /** Lines */
+            lines: components["schemas"]["InvoiceLine"][];
+        };
+        /** InvoicePreviewIn */
+        InvoicePreviewIn: {
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /**
+             * Periodend
+             * Format: date
+             */
+            periodEnd: string;
+        };
         /**
          * InvoiceStatus
          * @enum {string}
          */
         InvoiceStatus: "Draft" | "Sent" | "Paid" | "Overdue" | "Void" | "Refunded";
+        /** InvoiceStatusIn */
+        InvoiceStatusIn: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "sent" | "paid";
+        };
+        /** InvoiceSummary */
+        InvoiceSummary: {
+            /** Paidcents */
+            paidCents: number;
+            /** Outstandingcents */
+            outstandingCents: number;
+            /** Outstandingcount */
+            outstandingCount: number;
+            /** Draftcents */
+            draftCents: number;
+            /** Draftcount */
+            draftCount: number;
+            /** Readycents */
+            readyCents: number;
+            /** Readyseconds */
+            readySeconds: number;
+        };
         /** InvoiceUpdate */
         InvoiceUpdate: {
             /** Items */
@@ -5785,6 +8742,16 @@ export interface components {
             dueDate?: string | null;
             /** Note */
             note?: string | null;
+        };
+        /** InvoicesOverview */
+        InvoicesOverview: {
+            summary: components["schemas"]["InvoiceSummary"];
+            /** Byclient */
+            byClient: components["schemas"]["ClientEarnings"][];
+            /** Ready */
+            ready: components["schemas"]["ReadyToInvoice"][];
+            /** Invoices */
+            invoices: components["schemas"]["VaInvoiceRow"][];
         };
         /** JobOut */
         JobOut: {
@@ -5816,16 +8783,249 @@ export interface components {
             /** Finishedat */
             finishedAt: string | null;
         };
+        /** JobPostingIn */
+        JobPostingIn: {
+            /** Title */
+            title: string;
+            /** Clientcontactid */
+            clientContactId?: string | null;
+            /** @default review */
+            status?: components["schemas"]["PostingStatus"];
+            /** @default part_time */
+            employmentType?: components["schemas"]["EmploymentType"];
+            /** Hoursperweek */
+            hoursPerWeek?: number | null;
+            /** Ratemincents */
+            rateMinCents?: number | null;
+            /** Ratemaxcents */
+            rateMaxCents?: number | null;
+            /**
+             * Schedule
+             * @default
+             */
+            schedule?: string;
+            /** Skills */
+            skills?: string[];
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+        };
+        /** JobPostingOut */
+        JobPostingOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            status: components["schemas"]["PostingStatus"];
+            employmentType: components["schemas"]["EmploymentType"];
+            /** Hoursperweek */
+            hoursPerWeek: number | null;
+            /** Ratemincents */
+            rateMinCents: number | null;
+            /** Ratemaxcents */
+            rateMaxCents: number | null;
+            /** Schedule */
+            schedule: string;
+            /** Skills */
+            skills: string[];
+            /** Description */
+            description: string;
+            client: components["schemas"]["PostingClient"] | null;
+            filledVa: components["schemas"]["PostingVa"] | null;
+            /** Publishedat */
+            publishedAt: string | null;
+            /** Filledat */
+            filledAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /**
+             * Applicationcount
+             * @default 0
+             */
+            applicationCount?: number;
+        };
+        /** JobPostingUpdate */
+        JobPostingUpdate: {
+            /** Title */
+            title?: string | null;
+            /** Clientcontactid */
+            clientContactId?: string | null;
+            status?: components["schemas"]["PostingStatus"] | null;
+            employmentType?: components["schemas"]["EmploymentType"] | null;
+            /** Hoursperweek */
+            hoursPerWeek?: number | null;
+            /** Ratemincents */
+            rateMinCents?: number | null;
+            /** Ratemaxcents */
+            rateMaxCents?: number | null;
+            /** Schedule */
+            schedule?: string | null;
+            /** Skills */
+            skills?: string[] | null;
+            /** Description */
+            description?: string | null;
+        };
         /**
          * JobStatus
          * @enum {string}
          */
         JobStatus: "pending" | "running" | "done" | "failed";
+        /** JournalEntry */
+        JournalEntry: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Vaname */
+            vaName: string;
+            /**
+             * Startedat
+             * Format: date-time
+             */
+            startedAt: string;
+            /** Endedat */
+            endedAt: string | null;
+            /** Seconds */
+            seconds: number;
+            /** Category */
+            category: string;
+            /** Note */
+            note: string;
+            /** Billable */
+            billable: boolean;
+            /** Tags */
+            tags: string[];
+            /** Projectcode */
+            projectCode: string;
+            /** Ratecents */
+            rateCents: number | null;
+            /** Valuecents */
+            valueCents: number;
+            /**
+             * Kind
+             * @default timer
+             */
+            kind?: string;
+            /** Tasksdone */
+            tasksDone?: string[];
+        };
+        /** JournalEntryIn */
+        JournalEntryIn: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Title
+             * @default
+             */
+            title?: string;
+            /**
+             * Body
+             * @default
+             */
+            body?: string;
+            /**
+             * Mood
+             * @default
+             * @enum {string}
+             */
+            mood?: "" | "great" | "good" | "okay" | "tough";
+        };
+        /** JournalEntryOut */
+        JournalEntryOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /**
+             * Mood
+             * @enum {string}
+             */
+            mood: "" | "great" | "good" | "okay" | "tough";
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /** JournalEntryUpdate */
+        JournalEntryUpdate: {
+            /** Day */
+            day?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Body */
+            body?: string | null;
+            /** Mood */
+            mood?: ("" | "great" | "good" | "okay" | "tough") | null;
+        };
         /**
          * LeadSource
          * @enum {string}
          */
-        LeadSource: "Manual entry" | "Landing page" | "Landing page · FB ad" | "Landing page · Referral" | "Portal sign-up" | "Lead form" | "Survey" | "Booking page" | "Google sign-in";
+        LeadSource: "Manual entry" | "Landing page" | "Landing page · FB ad" | "Landing page · Referral" | "Portal sign-up" | "Lead form" | "Survey" | "Booking page" | "Google sign-in" | "Client application";
+        /** LessonIn */
+        LessonIn: {
+            /**
+             * Id
+             * @default
+             */
+            id?: string;
+            /**
+             * Title
+             * @default
+             */
+            title?: string;
+            /** Videourl */
+            videoUrl: string;
+        };
+        /** LessonOut */
+        LessonOut: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Videourl */
+            videoUrl: string;
+            /** Videoid */
+            videoId: string;
+        };
         /** LinksIn */
         LinksIn: {
             /** Socials */
@@ -5848,6 +9048,57 @@ export interface components {
             /** Updatedat */
             updatedAt?: string | null;
         };
+        /** LiveCurrent */
+        LiveCurrent: {
+            /** Note */
+            note: string;
+            /** Category */
+            category: string;
+            /**
+             * Startedat
+             * Format: date-time
+             */
+            startedAt: string;
+            /** Onbreaksince */
+            onBreakSince: string | null;
+            /** Workedseconds */
+            workedSeconds: number;
+        };
+        /** LiveOut */
+        LiveOut: {
+            /** Working */
+            working: number;
+            /** Todayseconds */
+            todaySeconds: number;
+            /** Weekseconds */
+            weekSeconds: number;
+            /** Vas */
+            vas: components["schemas"]["LiveVa"][];
+        };
+        /** LiveVa */
+        LiveVa: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Headline */
+            headline: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "working" | "on_break" | "offline";
+            current: components["schemas"]["LiveCurrent"] | null;
+            /** Todayseconds */
+            todaySeconds: number;
+            /** Weekseconds */
+            weekSeconds: number;
+            /** Lastworkedat */
+            lastWorkedAt: string | null;
+        };
         /** LoginRequest */
         LoginRequest: {
             /**
@@ -5869,6 +9120,34 @@ export interface components {
              * @default
              */
             website?: string;
+        };
+        /** MarkFilledIn */
+        MarkFilledIn: {
+            /** Vaid */
+            vaId?: string | null;
+        };
+        /**
+         * MatchedVa
+         * @description The VA GoCWGL matched to a request (no contact details or pay).
+         */
+        MatchedVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Headline */
+            headline: string;
+            /** Location */
+            location: string;
+            /** Skills */
+            skills: string[];
+            /** Yearsexperience */
+            yearsExperience: string;
+            /** Resumeslug */
+            resumeSlug: string | null;
         };
         /** MemberOut */
         MemberOut: {
@@ -5947,6 +9226,171 @@ export interface components {
             /** Recoverycodesleft */
             recoveryCodesLeft: number;
         };
+        /** MyApplication */
+        MyApplication: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "applied" | "hired" | "not_selected";
+            /** Note */
+            note: string;
+            /**
+             * Appliedat
+             * Format: date-time
+             */
+            appliedAt: string;
+        };
+        /** MyClientOut */
+        MyClientOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone: string;
+            /** Website */
+            website: string;
+            /** Active */
+            active: boolean;
+            /**
+             * Since
+             * Format: date-time
+             */
+            since: string;
+            /** Endedat */
+            endedAt: string | null;
+            /** Ratecents */
+            rateCents: number | null;
+            /** Customrate */
+            customRate: boolean;
+            /** Ratelocked */
+            rateLocked: boolean;
+            /**
+             * Raiseavailableat
+             * Format: date-time
+             */
+            raiseAvailableAt: string;
+            /** Ratesince */
+            rateSince?: string | null;
+            raiseRequest?: components["schemas"]["RaiseRequestOut"] | null;
+            /** Totalseconds */
+            totalSeconds: number;
+            /** Monthseconds */
+            monthSeconds: number;
+            /** Monthearningscents */
+            monthEarningsCents: number;
+            /** Lastworkedat */
+            lastWorkedAt: string | null;
+            /** Tags */
+            tags: components["schemas"]["TimeTagOut"][];
+        };
+        /** MyClientsOut */
+        MyClientsOut: {
+            /** Defaultratecents */
+            defaultRateCents: number | null;
+            /** Clients */
+            clients: components["schemas"]["MyClientOut"][];
+        };
+        /** MyFeedbackOut */
+        MyFeedbackOut: {
+            /** Count */
+            count: number;
+            /** Average */
+            average: number | null;
+            /** Distribution */
+            distribution: {
+                [key: string]: number;
+            };
+            /** Ratings */
+            ratings: components["schemas"]["MyRatingOut"][];
+        };
+        /** MyRateIn */
+        MyRateIn: {
+            /** Ratecents */
+            rateCents?: number | null;
+        };
+        /** MyRatingOut */
+        MyRatingOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Rating */
+            rating: number;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Client */
+            client: string;
+        };
+        /** MyReferralOut */
+        MyReferralOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            status: components["schemas"]["VaStatus"];
+            /** Bonuscents */
+            bonusCents: number;
+            bonusStatus: components["schemas"]["VaReferralBonus"];
+            /** Bonuspaidat */
+            bonusPaidAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /** MyReferralsOut */
+        MyReferralsOut: {
+            /** Programbonuscents */
+            programBonusCents: number;
+            /** Referrals */
+            referrals: components["schemas"]["MyReferralOut"][];
+        };
+        /** MyShiftOut */
+        MyShiftOut: {
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "working" | "on_break" | "offline";
+            shift: components["schemas"]["ShiftOut"] | null;
+            /** Workedtodayseconds */
+            workedTodaySeconds: number;
+            /** Today */
+            today: components["schemas"]["ShiftOut"][];
+        };
+        /** MyVaOut */
+        MyVaOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Mylastrating */
+            myLastRating: number | null;
+            /** Myfeedbackcount */
+            myFeedbackCount: number;
+        };
         /** NoteMentionOut */
         NoteMentionOut: {
             /**
@@ -5993,6 +9437,35 @@ export interface components {
             start: string;
             /** End */
             end: string;
+        };
+        /**
+         * OpenJobOut
+         * @description A live job, as VAs see it (the client stays private).
+         */
+        OpenJobOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            employmentType: components["schemas"]["EmploymentType"];
+            /** Hoursperweek */
+            hoursPerWeek: number | null;
+            /** Ratemincents */
+            rateMinCents: number | null;
+            /** Ratemaxcents */
+            rateMaxCents: number | null;
+            /** Schedule */
+            schedule: string;
+            /** Skills */
+            skills: string[];
+            /** Description */
+            description: string;
+            /** Publishedat */
+            publishedAt: string | null;
+            myApplication: components["schemas"]["MyApplication"] | null;
         };
         /** OrgSettingsOut */
         OrgSettingsOut: {
@@ -6136,6 +9609,70 @@ export interface components {
              * Format: date-time
              */
             updatedAt: string;
+        };
+        /** PaymentMethodIn */
+        PaymentMethodIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "bank" | "paypal" | "wise" | "gcash" | "payoneer" | "other";
+            /** Label */
+            label: string;
+            /**
+             * Accountname
+             * @default
+             */
+            accountName?: string;
+            /**
+             * Details
+             * @default
+             */
+            details?: string;
+            /**
+             * Isdefault
+             * @default false
+             */
+            isDefault?: boolean;
+        };
+        /** PaymentMethodOut */
+        PaymentMethodOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "bank" | "paypal" | "wise" | "gcash" | "payoneer" | "other";
+            /** Label */
+            label: string;
+            /** Accountname */
+            accountName: string;
+            /** Details */
+            details: string;
+            /** Isdefault */
+            isDefault: boolean;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /** PaymentMethodUpdate */
+        PaymentMethodUpdate: {
+            /** Kind */
+            kind?: ("bank" | "paypal" | "wise" | "gcash" | "payoneer" | "other") | null;
+            /** Label */
+            label?: string | null;
+            /** Accountname */
+            accountName?: string | null;
+            /** Details */
+            details?: string | null;
+            /** Isdefault */
+            isDefault?: boolean | null;
         };
         /**
          * PaymentOptionIn
@@ -6339,6 +9876,8 @@ export interface components {
             simpleBonusCents: number;
             /** Custombonuscents */
             customBonusCents: number;
+            /** Vabonuscents */
+            vaBonusCents: number;
             /** Currency */
             currency: string;
             /** Unlocked */
@@ -6429,6 +9968,36 @@ export interface components {
             /** Bonuspaidat */
             bonusPaidAt: string | null;
         };
+        /** PostingClient */
+        PostingClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+        };
+        /**
+         * PostingStatus
+         * @description Review → Live → Interviewing → Filled (the success).
+         * @enum {string}
+         */
+        PostingStatus: "review" | "live" | "interviewing" | "filled";
+        /** PostingVa */
+        PostingVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+        };
         /**
          * Priority
          * @enum {string}
@@ -6444,6 +10013,44 @@ export interface components {
             title?: string | null;
             /** Timezone */
             timezone?: string | null;
+        };
+        /** ProjectClientUpdate */
+        ProjectClientUpdate: {
+            /** Vaid */
+            vaId?: string | null;
+            /** Links */
+            links?: string[] | null;
+            /** Priority */
+            priority?: ("low" | "normal" | "high") | null;
+            /** Duedate */
+            dueDate?: string | null;
+            /**
+             * Cancel
+             * @default false
+             */
+            cancel?: boolean;
+        };
+        /** ProjectIn */
+        ProjectIn: {
+            /** Title */
+            title: string;
+            /**
+             * Details
+             * @default
+             */
+            details?: string;
+            /** Links */
+            links?: string[];
+            /** Vaid */
+            vaId?: string | null;
+            /**
+             * Priority
+             * @default normal
+             * @enum {string}
+             */
+            priority?: "low" | "normal" | "high";
+            /** Duedate */
+            dueDate?: string | null;
         };
         /**
          * ProjectKind
@@ -6488,6 +10095,19 @@ export interface components {
             /** Duedate */
             dueDate?: string | null;
             status?: components["schemas"]["ProjectStatus"] | null;
+        };
+        /** ProjectStaffUpdate */
+        ProjectStaffUpdate: {
+            /** Status */
+            status?: ("requested" | "in_progress" | "review" | "done" | "cancelled") | null;
+            /** Vaid */
+            vaId?: string | null;
+            /** Priority */
+            priority?: ("low" | "normal" | "high") | null;
+            /** Duedate */
+            dueDate?: string | null;
+            /** Teamnote */
+            teamNote?: string | null;
         };
         /**
          * ProjectStart
@@ -6560,6 +10180,16 @@ export interface components {
             name: string;
             /** Tasks */
             tasks: string[];
+        };
+        /** ProjectVa */
+        ProjectVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
         };
         /** PublicAnswers */
         PublicAnswers: {
@@ -6656,6 +10286,65 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /**
+         * PublicResumeOut
+         * @description The resume as clients see it on its page.
+         */
+        PublicResumeOut: {
+            /** Name */
+            name: string;
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone: string;
+            /** Location */
+            location: string;
+            /** Website */
+            website: string;
+            /** Sociallinks */
+            socialLinks: components["schemas"]["ResumeSocialLink"][];
+            /** Photoid */
+            photoId?: string | null;
+            /** Introvideourl */
+            introVideoUrl: string;
+            /** Workinghours */
+            workingHours: string;
+            /** Availability */
+            availability: string;
+            /** Yearsexperience */
+            yearsExperience: string;
+            /** Ratecents */
+            rateCents: number | null;
+            /** Skills */
+            skills: string[];
+            /** Tools */
+            tools: string[];
+            /** Languages */
+            languages: string[];
+            /** Workhistory */
+            workHistory: components["schemas"]["ResumeJob"][];
+            /** Education */
+            education: components["schemas"]["ResumeSchool"][];
+            /** Certifications */
+            certifications: components["schemas"]["ResumeCert"][];
+            /** Showgocwgl */
+            showGocwgl: boolean;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /**
+             * Membersince
+             * Format: date
+             */
+            memberSince: string;
+            highlights: components["schemas"]["ResumeHighlights"] | null;
+        };
         /** PublicSubmission */
         PublicSubmission: {
             /** Answers */
@@ -6735,6 +10424,97 @@ export interface components {
             highLabel?: string;
             /** Key */
             key?: string | null;
+        };
+        /** QuestionIn */
+        QuestionIn: {
+            /**
+             * Id
+             * @default
+             */
+            id?: string;
+            /** Text */
+            text: string;
+            /** Options */
+            options: string[];
+            /** Correct */
+            correct: number;
+        };
+        /** QuestionOut */
+        QuestionOut: {
+            /** Id */
+            id: string;
+            /** Text */
+            text: string;
+            /** Options */
+            options: string[];
+            /** Correct */
+            correct: number;
+        };
+        /** RaiseIn */
+        RaiseIn: {
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** RaiseRequestOut */
+        RaiseRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "rate" | "raise";
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Vaname */
+            vaName: string;
+            /** Fromcents */
+            fromCents: number;
+            /** Tocents */
+            toCents: number;
+            /** Note */
+            note: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "declined" | "withdrawn";
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Decidedat */
+            decidedAt: string | null;
+        };
+        /** ReadyToInvoice */
+        ReadyToInvoice: {
+            client: components["schemas"]["InvoiceClient"];
+            /** Seconds */
+            seconds: number;
+            /** Amountcents */
+            amountCents: number;
+            /** Ratecents */
+            rateCents: number | null;
+            /**
+             * Firstday
+             * Format: date
+             */
+            firstDay: string;
+            /**
+             * Lastday
+             * Format: date
+             */
+            lastDay: string;
         };
         /** RecoveryCodesOut */
         RecoveryCodesOut: {
@@ -6941,6 +10721,41 @@ export interface components {
             /** Notes */
             notes: string[];
         };
+        /**
+         * RequestApplicant
+         * @description A VA who applied for the client's request: profile basics only (no contact details or pay).
+         */
+        RequestApplicant: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Headline */
+            headline: string;
+            /** Location */
+            location: string;
+            /** Skills */
+            skills: string[];
+            /** Yearsexperience */
+            yearsExperience: string;
+            /** Note */
+            note: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "applied" | "hired" | "not_selected";
+            /**
+             * Appliedat
+             * Format: date-time
+             */
+            appliedAt: string;
+            /** Resumeslug */
+            resumeSlug: string | null;
+        };
         /** ResetPasswordRequest */
         ResetPasswordRequest: {
             /** Token */
@@ -6968,11 +10783,297 @@ export interface components {
             createdAt: string;
         };
         /**
+         * ResumeCert
+         * @description A certification or test result as stored (older entries may miss the newer fields).
+         */
+        ResumeCert: {
+            /**
+             * Kind
+             * @default certification
+             * @enum {string}
+             */
+            kind?: "certification" | "personality" | "skills" | "other";
+            /**
+             * Name
+             * @default
+             */
+            name?: string;
+            /**
+             * Issuer
+             * @default
+             */
+            issuer?: string;
+            /**
+             * Year
+             * @default
+             */
+            year?: string;
+            /**
+             * Result
+             * @default
+             */
+            result?: string;
+            /** Documentid */
+            documentId?: string | null;
+            /**
+             * Documentname
+             * @default
+             */
+            documentName?: string;
+            /**
+             * Documenttype
+             * @default
+             */
+            documentType?: string;
+        };
+        /**
+         * ResumeCertIn
+         * @description Name, type, issuer and date are required; a result and a document are optional.
+         */
+        ResumeCertIn: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "certification" | "personality" | "skills" | "other";
+            /** Name */
+            name: string;
+            /** Issuer */
+            issuer: string;
+            /** Year */
+            year: string;
+            /**
+             * Result
+             * @default
+             */
+            result?: string;
+            /** Documentid */
+            documentId?: string | null;
+        };
+        /** ResumeDocumentOut */
+        ResumeDocumentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Contenttype */
+            contentType: string;
+            /** Size */
+            size: number;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /** ResumeHighlights */
+        ResumeHighlights: {
+            /** Activeclients */
+            activeClients: number;
+            /** Hourstracked */
+            hoursTracked: number;
+            /** Trainingspassed */
+            trainingsPassed: string[];
+            /** Ratingaverage */
+            ratingAverage: number | null;
+            /** Ratingcount */
+            ratingCount: number;
+        };
+        /**
+         * ResumeIn
+         * @description Name, phone, title, summary, skills and location are saved to the VA profile; the rest to the resume.
+         */
+        ResumeIn: {
+            /** Name */
+            name?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Location */
+            location?: string | null;
+            /** Website */
+            website?: string | null;
+            /** Sociallinks */
+            socialLinks?: components["schemas"]["ResumeSocialLinkIn"][] | null;
+            /** Photoid */
+            photoId?: string | null;
+            /** Introvideourl */
+            introVideoUrl?: string | null;
+            /** Workinghours */
+            workingHours?: string | null;
+            /** Availability */
+            availability?: string | null;
+            /** Yearsexperience */
+            yearsExperience?: string | null;
+            /** Ratecents */
+            rateCents?: number | null;
+            /** Skills */
+            skills?: string[] | null;
+            /** Tools */
+            tools?: string[] | null;
+            /** Languages */
+            languages?: string[] | null;
+            /** Workhistory */
+            workHistory?: components["schemas"]["ResumeJob"][] | null;
+            /** Education */
+            education?: components["schemas"]["ResumeSchool"][] | null;
+            /** Certifications */
+            certifications?: components["schemas"]["ResumeCertIn"][] | null;
+            /** Showgocwgl */
+            showGocwgl?: boolean | null;
+            /** Ispublic */
+            isPublic?: boolean | null;
+        };
+        /** ResumeJob */
+        ResumeJob: {
+            /**
+             * Title
+             * @default
+             */
+            title?: string;
+            /**
+             * Company
+             * @default
+             */
+            company?: string;
+            /**
+             * Location
+             * @default
+             */
+            location?: string;
+            /**
+             * Start
+             * @default
+             */
+            start?: string;
+            /**
+             * End
+             * @default
+             */
+            end?: string;
+            /** Bullets */
+            bullets?: string[];
+        };
+        /** ResumeOut */
+        ResumeOut: {
+            /** Name */
+            name: string;
+            /** Title */
+            title: string;
+            /** Summary */
+            summary: string;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone: string;
+            /** Location */
+            location: string;
+            /** Website */
+            website: string;
+            /** Sociallinks */
+            socialLinks: components["schemas"]["ResumeSocialLink"][];
+            /** Photoid */
+            photoId?: string | null;
+            /** Introvideourl */
+            introVideoUrl: string;
+            /** Workinghours */
+            workingHours: string;
+            /** Availability */
+            availability: string;
+            /** Yearsexperience */
+            yearsExperience: string;
+            /** Ratecents */
+            rateCents: number | null;
+            /** Skills */
+            skills: string[];
+            /** Tools */
+            tools: string[];
+            /** Languages */
+            languages: string[];
+            /** Workhistory */
+            workHistory: components["schemas"]["ResumeJob"][];
+            /** Education */
+            education: components["schemas"]["ResumeSchool"][];
+            /** Certifications */
+            certifications: components["schemas"]["ResumeCert"][];
+            /** Showgocwgl */
+            showGocwgl: boolean;
+            /** Shareslug */
+            shareSlug: string | null;
+            /** Ispublic */
+            isPublic: boolean;
+            /** Savedat */
+            savedAt: string | null;
+            /**
+             * Membersince
+             * Format: date
+             */
+            memberSince: string;
+            highlights: components["schemas"]["ResumeHighlights"];
+        };
+        /** ResumeSchool */
+        ResumeSchool: {
+            /**
+             * School
+             * @default
+             */
+            school?: string;
+            /**
+             * Degree
+             * @default
+             */
+            degree?: string;
+            /**
+             * Year
+             * @default
+             */
+            year?: string;
+        };
+        /** ResumeSocialLink */
+        ResumeSocialLink: {
+            /**
+             * Network
+             * @enum {string}
+             */
+            network: "linkedin" | "facebook" | "instagram" | "x" | "tiktok" | "youtube" | "threads" | "pinterest" | "github" | "behance" | "dribbble" | "upwork" | "onlinejobs" | "fiverr" | "other";
+            /** Url */
+            url: string;
+            /**
+             * Label
+             * @default
+             */
+            label?: string;
+        };
+        /**
+         * ResumeSocialLinkIn
+         * @description A link on that network's own site (https); "other" takes any https link and needs a label.
+         */
+        ResumeSocialLinkIn: {
+            /**
+             * Network
+             * @enum {string}
+             */
+            network: "linkedin" | "facebook" | "instagram" | "x" | "tiktok" | "youtube" | "threads" | "pinterest" | "github" | "behance" | "dribbble" | "upwork" | "onlinejobs" | "fiverr" | "other";
+            /** Url */
+            url: string;
+            /**
+             * Label
+             * @default
+             */
+            label?: string;
+        };
+        /**
          * Role
-         * @description Account type. Staff roles mirror the CRM team roles; everyone else is a portal client.
+         * @description Account type. Staff roles mirror the CRM team roles; VAs use the VA portal; everyone else is a portal client.
          * @enum {string}
          */
-        Role: "super_admin" | "admin" | "sales" | "viewer" | "client";
+        Role: "super_admin" | "admin" | "sales" | "viewer" | "client" | "va";
         /** RoleChange */
         RoleChange: {
             /**
@@ -7028,6 +11129,11 @@ export interface components {
             stage: components["schemas"]["Stage"];
             /** Beforeid */
             beforeId?: string | null;
+        };
+        /** SeenIn */
+        SeenIn: {
+            /** Menu */
+            menu: string;
         };
         /** SendEmailIn */
         SendEmailIn: {
@@ -7105,12 +11211,163 @@ export interface components {
              */
             notify?: boolean;
         };
+        /** ShiftClient */
+        ShiftClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+        };
+        /** ShiftOut */
+        ShiftOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Startedat
+             * Format: date-time
+             */
+            startedAt: string;
+            /** Endedat */
+            endedAt: string | null;
+            /** Onbreaksince */
+            onBreakSince: string | null;
+            /** Note */
+            note: string;
+            /** Category */
+            category: string;
+            /** Tags */
+            tags: string[];
+            /** Projectcode */
+            projectCode: string;
+            /**
+             * Kind
+             * @default timer
+             * @enum {string}
+             */
+            kind?: "timer" | "countdown";
+            /** Plannedseconds */
+            plannedSeconds?: number | null;
+            /** Tasksdone */
+            tasksDone?: string[];
+            /** Billable */
+            billable: boolean;
+            /** Ratecents */
+            rateCents: number | null;
+            /** Workedseconds */
+            workedSeconds: number;
+            /** Earningscents */
+            earningsCents: number;
+            /** Invoiceid */
+            invoiceId?: string | null;
+            client: components["schemas"]["ShiftClient"] | null;
+        };
         /** SlotsOut */
         SlotsOut: {
             /** Timezone */
             timezone: string;
             /** Slots */
             slots: string[];
+        };
+        /**
+         * SopAudience
+         * @enum {string}
+         */
+        SopAudience: "client" | "va";
+        /** SopIn */
+        SopIn: {
+            /** Title */
+            title: string;
+            audience: components["schemas"]["SopAudience"];
+            /** @default draft */
+            status?: components["schemas"]["SopStatus"];
+            /**
+             * Category
+             * @default
+             */
+            category?: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary?: string;
+            /** Steps */
+            steps?: string[];
+            /**
+             * Body
+             * @default
+             */
+            body?: string;
+            /**
+             * Videourl
+             * @default
+             */
+            videoUrl?: string;
+        };
+        /** SopOut */
+        SopOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            audience: components["schemas"]["SopAudience"];
+            status: components["schemas"]["SopStatus"];
+            /** Category */
+            category: string;
+            /** Summary */
+            summary: string;
+            /** Steps */
+            steps: string[];
+            /** Body */
+            body: string;
+            /** Videourl */
+            videoUrl: string;
+            /** Publishedat */
+            publishedAt: string | null;
+            /** Updatedbyname */
+            updatedByName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /**
+         * SopStatus
+         * @enum {string}
+         */
+        SopStatus: "draft" | "published";
+        /** SopUpdate */
+        SopUpdate: {
+            /** Title */
+            title?: string | null;
+            audience?: components["schemas"]["SopAudience"] | null;
+            status?: components["schemas"]["SopStatus"] | null;
+            /** Category */
+            category?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /** Steps */
+            steps?: string[] | null;
+            /** Body */
+            body?: string | null;
+            /** Videourl */
+            videoUrl?: string | null;
         };
         /** StaffInvite */
         StaffInvite: {
@@ -7180,6 +11437,51 @@ export interface components {
              * @default
              */
             reporterEmail?: string | "";
+        };
+        /**
+         * StaffVaRequestIn
+         * @description A request made by GoCWGL on a client's behalf (Job postings › New job posting).
+         */
+        StaffVaRequestIn: {
+            /** Role */
+            role: string;
+            /**
+             * Engagement
+             * @default part_time
+             * @enum {string}
+             */
+            engagement?: "part_time" | "full_time" | "project";
+            /** Hoursperweek */
+            hoursPerWeek?: (10 | 20 | 40) | null;
+            /** Schedule */
+            schedule: string;
+            /** Timezone */
+            timezone: string;
+            /** Startdate */
+            startDate?: string | null;
+            /** Overview */
+            overview: string;
+            /** Responsibilities */
+            responsibilities: string[];
+            /** Musthave */
+            mustHave: string[];
+            /** Nicetohave */
+            niceToHave?: string[];
+            /**
+             * Important
+             * @default
+             */
+            important?: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /**
+             * Publish
+             * @default true
+             */
+            publish?: boolean;
         };
         /**
          * Stage
@@ -7499,12 +11801,163 @@ export interface components {
             /** Done */
             done: boolean;
         };
+        /** TeamAttendance */
+        TeamAttendance: {
+            /** Meetings */
+            meetings: number;
+            /** Ontime */
+            onTime: number;
+            /** Late */
+            late: number;
+            /** Noshow */
+            noShow: number;
+            /** Ontimepct */
+            onTimePct: number | null;
+            /** Avgminuteslate */
+            avgMinutesLate: number;
+            /** Byva */
+            byVa: components["schemas"]["VaAttendanceStats"][];
+        };
+        /** TeamBilling */
+        TeamBilling: {
+            /** Monthcents */
+            monthCents: number;
+            /** Prevmonthcents */
+            prevMonthCents: number;
+            /** Delta */
+            delta: number | null;
+            /** Todaycents */
+            todayCents: number;
+            /** Collectedmonthcents */
+            collectedMonthCents: number;
+            /** Days */
+            days: components["schemas"]["TeamDayBilling"][];
+            /** Months */
+            months: components["schemas"]["TeamMonthBilling"][];
+        };
+        /** TeamDayBilling */
+        TeamDayBilling: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Billedcents */
+            billedCents: number;
+            /** Collectedcents */
+            collectedCents: number;
+        };
+        /** TeamDayHours */
+        TeamDayHours: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Seconds */
+            seconds: number;
+        };
+        /** TeamHours */
+        TeamHours: {
+            /** Monthseconds */
+            monthSeconds: number;
+            /** Prevmonthseconds */
+            prevMonthSeconds: number;
+            /** Delta */
+            delta: number | null;
+            /** Todayseconds */
+            todaySeconds: number;
+            /** Days */
+            days: components["schemas"]["TeamDayHours"][];
+            /** Months */
+            months: components["schemas"]["TeamMonthHours"][];
+            /** Byva */
+            byVa: components["schemas"]["TeamVaHours"][];
+        };
+        /** TeamMonthBilling */
+        TeamMonthBilling: {
+            /** Month */
+            month: string;
+            /** Billedcents */
+            billedCents: number;
+            /** Collectedcents */
+            collectedCents: number;
+        };
+        /** TeamMonthHours */
+        TeamMonthHours: {
+            /** Month */
+            month: string;
+            /** Seconds */
+            seconds: number;
+        };
         /** TeamOut */
         TeamOut: {
             /** Members */
             members: components["schemas"]["MemberOut"][];
             /** Invitations */
             invitations: components["schemas"]["InvitationOut"][];
+        };
+        /** TeamReport */
+        TeamReport: {
+            /** Month */
+            month: string;
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Timezone */
+            timezone: string;
+            hours: components["schemas"]["TeamHours"];
+            billing: components["schemas"]["TeamBilling"];
+            attendance: components["schemas"]["TeamAttendance"];
+        };
+        /** TeamVa */
+        TeamVa: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Headline */
+            headline: string;
+            /** Location */
+            location: string;
+            /** Skills */
+            skills: string[];
+            /**
+             * Since
+             * Format: date-time
+             */
+            since: string;
+            /** Workingnow */
+            workingNow: boolean;
+            /** Monthseconds */
+            monthSeconds: number;
+            /** Totalseconds */
+            totalSeconds: number;
+            /** Myrating */
+            myRating: number | null;
+            /** Myratingcount */
+            myRatingCount: number;
+            /** Resumeslug */
+            resumeSlug: string | null;
+        };
+        /** TeamVaHours */
+        TeamVaHours: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Seconds */
+            seconds: number;
+            /** Daysworked */
+            daysWorked: number;
         };
         /** TemplateIn */
         TemplateIn: {
@@ -7561,6 +12014,8 @@ export interface components {
             code: string;
             /** Contactid */
             contactId: string | null;
+            /** Vaid */
+            vaId?: string | null;
             /** Type */
             type: string;
             /** Title */
@@ -7612,7 +12067,7 @@ export interface components {
          * @description Where a ticket came from, so Report Bugs can show every platform side by side.
          * @enum {string}
          */
-        TicketSource: "team" | "portal" | "crm";
+        TicketSource: "team" | "portal" | "crm" | "va";
         /**
          * TicketStatus
          * @enum {string}
@@ -7623,6 +12078,41 @@ export interface components {
          * @enum {string}
          */
         TicketType: "change" | "feature" | "bug" | "question";
+        /** TimeTagIn */
+        TimeTagIn: {
+            /** Name */
+            name: string;
+            /**
+             * Color
+             * @default blue
+             * @enum {string}
+             */
+            color?: "blue" | "green" | "amber" | "red" | "purple" | "pink" | "teal" | "gray";
+        };
+        /** TimeTagOut */
+        TimeTagOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Color
+             * @enum {string}
+             */
+            color: "blue" | "green" | "amber" | "red" | "purple" | "pink" | "teal" | "gray";
+            /** Addedby */
+            addedBy?: string | null;
+        };
+        /** TimeTagUpdate */
+        TimeTagUpdate: {
+            /** Name */
+            name?: string | null;
+            /** Color */
+            color?: ("blue" | "green" | "amber" | "red" | "purple" | "pink" | "teal" | "gray") | null;
+        };
         /** TodoCommentOut */
         TodoCommentOut: {
             /**
@@ -7749,6 +12239,140 @@ export interface components {
             /** Otpauthuri */
             otpauthUri: string;
         };
+        /**
+         * TrainingAudience
+         * @enum {string}
+         */
+        TrainingAudience: "client" | "va";
+        /** TrainingIn */
+        TrainingIn: {
+            /** Title */
+            title: string;
+            audience: components["schemas"]["TrainingAudience"];
+            /** @default draft */
+            status?: components["schemas"]["TrainingStatus"];
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+            /**
+             * Category
+             * @default
+             */
+            category?: string;
+            /** Lessons */
+            lessons?: components["schemas"]["LessonIn"][];
+            /**
+             * Passingrate
+             * @default 80
+             */
+            passingRate?: number;
+            /** Questions */
+            questions?: components["schemas"]["QuestionIn"][];
+        };
+        /** TrainingOut */
+        TrainingOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            audience: components["schemas"]["TrainingAudience"];
+            status: components["schemas"]["TrainingStatus"];
+            /** Description */
+            description: string;
+            /** Category */
+            category: string;
+            /** Lessons */
+            lessons: components["schemas"]["LessonOut"][];
+            /** Passingrate */
+            passingRate: number;
+            /** Questions */
+            questions: components["schemas"]["QuestionOut"][];
+            /** Publishedat */
+            publishedAt: string | null;
+            /** Updatedbyname */
+            updatedByName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Peopletried */
+            peopleTried: number;
+            /** Peoplepassed */
+            peoplePassed: number;
+            /** Attempts */
+            attempts: number;
+        };
+        /** TrainingResultOut */
+        TrainingResultOut: {
+            /**
+             * Userid
+             * Format: uuid
+             */
+            userId: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Bestscore */
+            bestScore: number;
+            /** Passed */
+            passed: boolean;
+            /** Tries */
+            tries: number;
+            /**
+             * Lastattemptat
+             * Format: date-time
+             */
+            lastAttemptAt: string;
+        };
+        /** TrainingStatsOut */
+        TrainingStatsOut: {
+            /** Published */
+            published: number;
+            /** Drafts */
+            drafts: number;
+            /** Lessons */
+            lessons: number;
+            /** Lessonsinpublished */
+            lessonsInPublished: number;
+            /** Learners */
+            learners: number;
+            /** Avgcompletion */
+            avgCompletion: number | null;
+        };
+        /**
+         * TrainingStatus
+         * @enum {string}
+         */
+        TrainingStatus: "draft" | "published";
+        /** TrainingUpdate */
+        TrainingUpdate: {
+            /** Title */
+            title?: string | null;
+            audience?: components["schemas"]["TrainingAudience"] | null;
+            status?: components["schemas"]["TrainingStatus"] | null;
+            /** Description */
+            description?: string | null;
+            /** Category */
+            category?: string | null;
+            /** Lessons */
+            lessons?: components["schemas"]["LessonIn"][] | null;
+            /** Passingrate */
+            passingRate?: number | null;
+            /** Questions */
+            questions?: components["schemas"]["QuestionIn"][] | null;
+        };
         /** Trigger */
         Trigger: {
             /**
@@ -7818,6 +12442,961 @@ export interface components {
             isStaff?: boolean;
             /** Menuaccess */
             menuAccess?: string[] | null;
+        };
+        /** VaApplicationIn */
+        VaApplicationIn: {
+            /** Firstname */
+            firstName: string;
+            /**
+             * Lastname
+             * @default
+             */
+            lastName?: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone?: string;
+            /**
+             * Country
+             * @default
+             */
+            country?: string;
+            /** Timezone */
+            timezone?: string | null;
+            /**
+             * Headline
+             * @default
+             */
+            headline?: string;
+            /**
+             * Experience
+             * @default
+             */
+            experience?: string;
+            /** Skills */
+            skills?: string[];
+            /** Hourlyratecents */
+            hourlyRateCents?: number | null;
+            /**
+             * Portfoliourl
+             * @default
+             */
+            portfolioUrl?: string;
+            /**
+             * Heardfrom
+             * @default
+             */
+            heardFrom?: string;
+            /**
+             * About
+             * @default
+             */
+            about?: string;
+            /** Captchatoken */
+            captchaToken?: string | null;
+            /**
+             * Website
+             * @default
+             */
+            website?: string;
+        };
+        /** VaAttendanceStats */
+        VaAttendanceStats: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Meetings */
+            meetings: number;
+            /** Late */
+            late: number;
+            /** Noshow */
+            noShow: number;
+            /** Minuteslate */
+            minutesLate: number;
+        };
+        /** VaClientOut */
+        VaClientOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Firstname */
+            firstName: string;
+            /** Lastname */
+            lastName: string;
+            /** Email */
+            email: string;
+            /** Company */
+            company: string;
+            /** Stage */
+            stage: string;
+            /** Ratecents */
+            rateCents?: number | null;
+            /** Since */
+            since?: string | null;
+            /**
+             * Monthseconds
+             * @default 0
+             */
+            monthSeconds?: number;
+            /**
+             * Totalseconds
+             * @default 0
+             */
+            totalSeconds?: number;
+            /** Lastworkedat */
+            lastWorkedAt?: string | null;
+        };
+        /** VaClientRateIn */
+        VaClientRateIn: {
+            /** Ratecents */
+            rateCents?: number | null;
+        };
+        /** VaClientsIn */
+        VaClientsIn: {
+            /** Contactids */
+            contactIds: string[];
+        };
+        /**
+         * VaCreate
+         * @description People › VAs › Add a VA: who they are, their experience, and how they get into the VA portal.
+         */
+        VaCreate: {
+            /** Firstname */
+            firstName: string;
+            /**
+             * Lastname
+             * @default
+             */
+            lastName?: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone?: string;
+            /**
+             * Country
+             * @default
+             */
+            country?: string;
+            /** Timezone */
+            timezone?: string | null;
+            /** @default onboarding */
+            status?: components["schemas"]["VaStatus"];
+            /**
+             * Headline
+             * @default
+             */
+            headline?: string;
+            /**
+             * Experience
+             * @default
+             */
+            experience?: string;
+            /** Skills */
+            skills?: string[];
+            /** Hourlyratecents */
+            hourlyRateCents?: number | null;
+            /** Startedon */
+            startedOn?: string | null;
+            /**
+             * Bio
+             * @default
+             */
+            bio?: string;
+            /**
+             * Notes
+             * @default
+             */
+            notes?: string;
+            /**
+             * Access
+             * @default invite
+             * @enum {string}
+             */
+            access?: "invite" | "password" | "none";
+            /** Password */
+            password?: string | null;
+            /**
+             * Notify
+             * @default true
+             */
+            notify?: boolean;
+        };
+        /**
+         * VaDetailOut
+         * @description The full profile.
+         */
+        VaDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Fullname */
+            fullName: string;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone: string;
+            /** Timezone */
+            timezone: string;
+            /** Isactive */
+            isActive: boolean;
+            /** Lastloginat */
+            lastLoginAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            status: components["schemas"]["VaStatus"];
+            /** Headline */
+            headline: string;
+            /** Skills */
+            skills: string[];
+            /** Country */
+            country: string;
+            /** Hourlyratecents */
+            hourlyRateCents: number | null;
+            /** Clientcount */
+            clientCount: number;
+            /** Loginstatus */
+            loginStatus: string;
+            /** Bio */
+            bio: string;
+            /** Experience */
+            experience: string;
+            /** Startedon */
+            startedOn: string | null;
+            /** Notes */
+            notes: string;
+            /** Clients */
+            clients: components["schemas"]["VaClientOut"][];
+            /** Resumeslug */
+            resumeSlug?: string | null;
+            /**
+             * Resumepublic
+             * @default false
+             */
+            resumePublic?: boolean;
+        };
+        /** VaInvitationOut */
+        VaInvitationOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Email */
+            email: string;
+            /** Fullname */
+            fullName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Expiresat
+             * Format: date-time
+             */
+            expiresAt: string;
+        };
+        /** VaInvoiceDetail */
+        VaInvoiceDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "sent" | "paid";
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /**
+             * Periodend
+             * Format: date
+             */
+            periodEnd: string;
+            /** Seconds */
+            seconds: number;
+            /** Amountcents */
+            amountCents: number;
+            /** Ratecents */
+            rateCents: number;
+            /** Duedate */
+            dueDate: string | null;
+            /** Sentat */
+            sentAt: string | null;
+            /** Paidat */
+            paidAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Note */
+            note: string;
+            /** Paymentlabel */
+            paymentLabel: string;
+            client: components["schemas"]["InvoiceClient"] | null;
+            /** Lines */
+            lines: components["schemas"]["InvoiceLine"][];
+            /** Fromname */
+            fromName: string;
+            /** Fromemail */
+            fromEmail: string;
+            payment: components["schemas"]["InvoicePayment"] | null;
+        };
+        /** VaInvoiceIn */
+        VaInvoiceIn: {
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /**
+             * Periodend
+             * Format: date
+             */
+            periodEnd: string;
+            /** Paymentmethodid */
+            paymentMethodId?: string | null;
+            /** Duedate */
+            dueDate?: string | null;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+            /**
+             * Send
+             * @default false
+             */
+            send?: boolean;
+        };
+        /** VaInvoiceRow */
+        VaInvoiceRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "sent" | "paid";
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /**
+             * Periodend
+             * Format: date
+             */
+            periodEnd: string;
+            /** Seconds */
+            seconds: number;
+            /** Amountcents */
+            amountCents: number;
+            /** Ratecents */
+            rateCents: number;
+            /** Duedate */
+            dueDate: string | null;
+            /** Sentat */
+            sentAt: string | null;
+            /** Paidat */
+            paidAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Note */
+            note: string;
+            /** Paymentlabel */
+            paymentLabel: string;
+            client: components["schemas"]["InvoiceClient"] | null;
+        };
+        /** VaInvoiceUpdate */
+        VaInvoiceUpdate: {
+            /** Paymentmethodid */
+            paymentMethodId?: string | null;
+            /** Duedate */
+            dueDate?: string | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** VaLessonOut */
+        VaLessonOut: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string;
+            /** Videoid */
+            videoId: string;
+        };
+        /** VaListOut */
+        VaListOut: {
+            /** Vas */
+            vas: components["schemas"]["VaSummary"][];
+            /** Invitations */
+            invitations: components["schemas"]["VaInvitationOut"][];
+        };
+        /** VaQuestionOut */
+        VaQuestionOut: {
+            /** Id */
+            id: string;
+            /** Text */
+            text: string;
+            /** Options */
+            options: string[];
+        };
+        /** VaRatingOut */
+        VaRatingOut: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Count */
+            count: number;
+            /** Average */
+            average: number;
+        };
+        /**
+         * VaReferralBonus
+         * @enum {string}
+         */
+        VaReferralBonus: "pending" | "earned" | "paid";
+        /** VaReferralIn */
+        VaReferralIn: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Referrervaid */
+            referrerVaId?: string | null;
+            /** Referrercontactid */
+            referrerContactId?: string | null;
+            /**
+             * Referrername
+             * @default
+             */
+            referrerName?: string;
+            /** Bonuscents */
+            bonusCents?: number | null;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** VaReferralOut */
+        VaReferralOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            va: components["schemas"]["VaReferralVa"];
+            referrer: components["schemas"]["VaReferrer"];
+            /** Referrername */
+            referrerName: string;
+            /** Bonuscents */
+            bonusCents: number;
+            /** Custombonus */
+            customBonus: boolean;
+            /**
+             * Bonusstatus
+             * @enum {string}
+             */
+            bonusStatus: "pending" | "earned" | "paid";
+            /** Bonuspaidat */
+            bonusPaidAt: string | null;
+            /** Note */
+            note: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /** VaReferralUpdate */
+        VaReferralUpdate: {
+            /** Referrervaid */
+            referrerVaId?: string | null;
+            /** Referrercontactid */
+            referrerContactId?: string | null;
+            /** Referrername */
+            referrerName?: string | null;
+            /** Bonuscents */
+            bonusCents?: number | null;
+            /** Note */
+            note?: string | null;
+        };
+        /** VaReferralVa */
+        VaReferralVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            status: components["schemas"]["VaStatus"];
+        };
+        /** VaReferrer */
+        VaReferrer: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "va" | "client" | "name";
+            /** Id */
+            id: string | null;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+        };
+        /** VaRequestIn */
+        VaRequestIn: {
+            /** Role */
+            role: string;
+            /**
+             * Engagement
+             * @default part_time
+             * @enum {string}
+             */
+            engagement?: "part_time" | "full_time" | "project";
+            /** Hoursperweek */
+            hoursPerWeek?: (10 | 20 | 40) | null;
+            /** Schedule */
+            schedule: string;
+            /** Timezone */
+            timezone: string;
+            /** Startdate */
+            startDate?: string | null;
+            /** Overview */
+            overview: string;
+            /** Responsibilities */
+            responsibilities: string[];
+            /** Musthave */
+            mustHave: string[];
+            /** Nicetohave */
+            niceToHave?: string[];
+            /**
+             * Important
+             * @default
+             */
+            important?: string;
+        };
+        /** VaRequestMatch */
+        VaRequestMatch: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+        };
+        /** VaRequestOut */
+        VaRequestOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Clientname */
+            clientName: string;
+            /** Role */
+            role: string;
+            /**
+             * Engagement
+             * @enum {string}
+             */
+            engagement: "part_time" | "full_time" | "project";
+            /** Hoursperweek */
+            hoursPerWeek: number | null;
+            /** Schedule */
+            schedule: string;
+            /** Timezone */
+            timezone: string;
+            /** Startdate */
+            startDate: string | null;
+            /** Overview */
+            overview: string;
+            /** Responsibilities */
+            responsibilities: string[];
+            /** Musthave */
+            mustHave: string[];
+            /** Nicetohave */
+            niceToHave: string[];
+            /** Important */
+            important: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "reviewing" | "approved" | "declined" | "posted" | "interviewing" | "matched" | "inactive" | "closed" | "cancelled";
+            /** Requestedbyname */
+            requestedByName: string;
+            /** Teamnote */
+            teamNote: string;
+            /** Jobpostingid */
+            jobPostingId: string | null;
+            /** Reviewedat */
+            reviewedAt: string | null;
+            /** Reviewedbyname */
+            reviewedByName: string;
+            matchedVa: components["schemas"]["MatchedVa"] | null;
+            /** Matchedat */
+            matchedAt: string | null;
+            /** Hirenote */
+            hireNote: string;
+            /**
+             * Applicantcount
+             * @default 0
+             */
+            applicantCount?: number;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Inactiverequestedat */
+            inactiveRequestedAt?: string | null;
+            /** Inactiveapprovedat */
+            inactiveApprovedAt?: string | null;
+        };
+        /**
+         * VaRequestPost
+         * @description The job posting to create. Anything left out comes from the client's request.
+         */
+        VaRequestPost: {
+            /** Title */
+            title?: string | null;
+            /** Employmenttype */
+            employmentType?: ("part_time" | "full_time" | "project") | null;
+            /** Hoursperweek */
+            hoursPerWeek?: number | null;
+            /** Ratemincents */
+            rateMinCents?: number | null;
+            /** Ratemaxcents */
+            rateMaxCents?: number | null;
+            /** Schedule */
+            schedule?: string | null;
+            /** Skills */
+            skills?: string[] | null;
+            /** Description */
+            description?: string | null;
+        };
+        /** VaRequestReview */
+        VaRequestReview: {
+            /** Note */
+            note?: string | null;
+        };
+        /**
+         * VaRequestStaffUpdate
+         * @description Staff edits to a request: the note to the client, and any of the request's own fields.
+         *     A linked job post is updated to match (its pay range is left alone).
+         */
+        VaRequestStaffUpdate: {
+            /** Status */
+            status?: "closed" | null;
+            /** Teamnote */
+            teamNote?: string | null;
+            /** Role */
+            role?: string | null;
+            /** Engagement */
+            engagement?: ("part_time" | "full_time" | "project") | null;
+            /** Hoursperweek */
+            hoursPerWeek?: (10 | 20 | 40) | null;
+            /** Schedule */
+            schedule?: string | null;
+            /** Timezone */
+            timezone?: string | null;
+            /** Overview */
+            overview?: string | null;
+            /** Responsibilities */
+            responsibilities?: string[] | null;
+            /** Musthave */
+            mustHave?: string[] | null;
+            /** Nicetohave */
+            niceToHave?: string[] | null;
+            /** Important */
+            important?: string | null;
+        };
+        /** VaRequestStage */
+        VaRequestStage: {
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "new" | "reviewing" | "live" | "interviewing" | "filled" | "declined" | "inactive" | "closed";
+            /** Vaid */
+            vaId?: string | null;
+        };
+        /**
+         * VaStatus
+         * @description Where a VA is with GoCWGL (set by staff).
+         * @enum {string}
+         */
+        VaStatus: "onboarding" | "active" | "inactive";
+        /** VaStatusBoard */
+        VaStatusBoard: {
+            /** Working */
+            working: number;
+            /** Onbreak */
+            onBreak: number;
+            /** Offline */
+            offline: number;
+            /** Workedtodayseconds */
+            workedTodaySeconds: number;
+            /** Vas */
+            vas: components["schemas"]["VaStatusRow"][];
+        };
+        /** VaStatusRow */
+        VaStatusRow: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /** Timezone */
+            timezone: string;
+            /** Headline */
+            headline: string;
+            /** Vastatus */
+            vaStatus: string;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "working" | "on_break" | "offline";
+            /** Since */
+            since: string | null;
+            shift: components["schemas"]["ShiftOut"] | null;
+            /** Workedtodayseconds */
+            workedTodaySeconds: number;
+            /** Lastseenat */
+            lastSeenAt: string | null;
+        };
+        /**
+         * VaSummary
+         * @description One row in People › VAs.
+         */
+        VaSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Fullname */
+            fullName: string;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone: string;
+            /** Timezone */
+            timezone: string;
+            /** Isactive */
+            isActive: boolean;
+            /** Lastloginat */
+            lastLoginAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            status: components["schemas"]["VaStatus"];
+            /** Headline */
+            headline: string;
+            /** Skills */
+            skills: string[];
+            /** Country */
+            country: string;
+            /** Hourlyratecents */
+            hourlyRateCents: number | null;
+            /** Clientcount */
+            clientCount: number;
+            /** Loginstatus */
+            loginStatus: string;
+        };
+        /**
+         * VaTaskOut
+         * @description A client's task assigned to the VA.
+         */
+        VaTaskOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Title */
+            title: string;
+            /** Details */
+            details: string;
+            /** Links */
+            links: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "requested" | "in_progress" | "review" | "done" | "cancelled";
+            /**
+             * Priority
+             * @enum {string}
+             */
+            priority: "low" | "normal" | "high";
+            /** Duedate */
+            dueDate: string | null;
+            /** Requestedbyname */
+            requestedByName: string;
+            /** Teamnote */
+            teamNote: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Completedat */
+            completedAt: string | null;
+            va: components["schemas"]["ProjectVa"] | null;
+            /** Clientname */
+            clientName: string;
+            /**
+             * Timerstarted
+             * @default false
+             */
+            timerStarted?: boolean;
+        };
+        /** VaTaskUpdate */
+        VaTaskUpdate: {
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "in_progress" | "review" | "done";
+        };
+        /** VaTrainingOut */
+        VaTrainingOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Description */
+            description: string;
+            /** Category */
+            category: string;
+            /** Lessons */
+            lessons: components["schemas"]["VaLessonOut"][];
+            /** Passingrate */
+            passingRate: number;
+            /** Questions */
+            questions: components["schemas"]["VaQuestionOut"][];
+            /** Publishedat */
+            publishedAt: string | null;
+            /** Mybestscore */
+            myBestScore: number | null;
+            /** Mypassed */
+            myPassed: boolean;
+            /** Mytries */
+            myTries: number;
+        };
+        /** VaUpdate */
+        VaUpdate: {
+            /** Fullname */
+            fullName?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Timezone */
+            timezone?: string | null;
+            status?: components["schemas"]["VaStatus"] | null;
+            /** Headline */
+            headline?: string | null;
+            /** Bio */
+            bio?: string | null;
+            /** Experience */
+            experience?: string | null;
+            /** Skills */
+            skills?: string[] | null;
+            /** Country */
+            country?: string | null;
+            /** Hourlyratecents */
+            hourlyRateCents?: number | null;
+            /** Startedon */
+            startedOn?: string | null;
+            /** Notes */
+            notes?: string | null;
         };
         /** VerifyEmailRequest */
         VerifyEmailRequest: {
@@ -9570,6 +15149,2252 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_trainings_api_va_trainings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Trainings Api Va Trainings Get */
+                        data: components["schemas"]["VaTrainingOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    take_quiz_api_va_trainings__training_id__attempts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttemptIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AttemptOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_va_requests_api_va_support_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Va Requests Api Va Support Get */
+                        data: components["schemas"]["TicketOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    open_va_request_api_va_support_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientTicketIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_va_request_api_va_support__ticket_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reply_va_request_api_va_support__ticket_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientMessageIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    close_va_request_api_va_support__ticket_id__close_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                ticket_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TicketOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_shift_api_va_shift_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyShiftOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    clock_in_api_va_shift_clock_in_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClockInIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyShiftOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    toggle_break_api_va_shift_break_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyShiftOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    clock_out_api_va_shift_clock_out_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyShiftOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_entries_api_va_time_entries_get: {
+        parameters: {
+            query: {
+                /** @description From (inclusive). */
+                start: string;
+                /** @description To (exclusive). Up to three months after `start`. */
+                end: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Entries Api Va Time Entries Get */
+                        data: components["schemas"]["ShiftOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_entry_api_va_time_entries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ShiftOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_entry_api_va_time_entries__entry_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_entry_api_va_time_entries__entry_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EntryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ShiftOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_reports_api_va_time_reports_get: {
+        parameters: {
+            query: {
+                start: string;
+                end: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Reports Api Va Time Reports Get */
+                        data: components["schemas"]["DailyReportOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    submit_report_api_va_time_reports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DailyReportIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DailyReportOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_client_tag_api_va_clients__contact_id__tags_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimeTagIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TimeTagOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_my_client_rate_api_va_clients__contact_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MyRateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyClientsOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    accept_my_client_rate_api_va_clients__contact_id__accept_rate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyClientsOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    request_raise_api_va_clients__contact_id__raise_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RaiseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyClientsOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    withdraw_raise_api_va_clients__contact_id__raise_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyClientsOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_my_clients_api_va_clients_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyClientsOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_journal_api_va_journal_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Journal Api Va Journal Get */
+                        data: components["schemas"]["JournalEntryOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_journal_entry_api_va_journal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalEntryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JournalEntryOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_journal_entry_api_va_journal__entry_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_journal_entry_api_va_journal__entry_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                entry_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JournalEntryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JournalEntryOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    va_sop_library_api_va_sops_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Va Sop Library Api Va Sops Get */
+                        data: components["schemas"]["SopOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    open_jobs_api_va_jobs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Open Jobs Api Va Jobs Get */
+                        data: components["schemas"]["OpenJobOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    apply_for_job_api_va_jobs__posting_id__apply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                posting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyApplication"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    withdraw_application_api_va_jobs__posting_id__apply_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                posting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_ratings_api_va_feedback_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyFeedbackOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_my_referrals_api_va_referrals_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyReferralsOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_resume_get_api_va_resume_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResumeOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_resume_save_api_va_resume_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResumeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResumeOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_resume_new_link_api_va_resume_new_link_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResumeOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_resume_documents_api_va_resume_documents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Resume Documents Api Va Resume Documents Get */
+                        data: components["schemas"]["ResumeDocumentOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    upload_resume_document_api_va_resume_documents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_resume_document_api_va_resume_documents_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ResumeDocumentOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_resume_document_api_va_resume_documents__doc_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_resume_document_api_va_resume_documents__doc_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_tasks_api_va_tasks_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Tasks Api Va Tasks Get */
+                        data: components["schemas"]["VaTaskOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_my_task_api_va_tasks__task_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaTaskUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaTaskOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_inactive_asks_api_va_inactive_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Inactive Asks Api Va Inactive Requests Get */
+                        data: components["schemas"]["InactiveAskOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    approve_inactive_api_va_inactive_requests__request_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Approve Inactive Api Va Inactive Requests  Request Id  Approve Post */
+                        data: components["schemas"]["InactiveAskOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    va_counts_api_va_menu_counts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Va Counts Api Va Menu Counts Get */
+                        data: {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    va_seen_api_va_menu_counts_seen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    invoices_overview_api_va_invoices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvoicesOverview"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_invoice_api_va_invoices_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaInvoiceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaInvoiceDetail"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    preview_invoice_api_va_invoices_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoicePreviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvoicePreview"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_invoice_api_va_invoices__invoice_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaInvoiceDetail"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_invoice_api_va_invoices__invoice_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_invoice_api_va_invoices__invoice_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaInvoiceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaInvoiceDetail"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_invoice_status_api_va_invoices__invoice_id__status_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvoiceStatusIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaInvoiceDetail"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_payment_methods_api_va_payment_methods_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Payment Methods Api Va Payment Methods Get */
+                        data: components["schemas"]["PaymentMethodOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_payment_method_api_va_payment_methods_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentMethodIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PaymentMethodOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_payment_method_api_va_payment_methods__method_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                method_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_payment_method_api_va_payment_methods__method_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                method_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentMethodUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PaymentMethodOut"];
+                    };
+                };
             };
             /** @description Validation Error */
             422: {
@@ -11378,6 +19203,98 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["ConnectionOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    invite_client_to_call_api_admin_call_invites_clients__contact_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallInviteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CallInviteOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    invite_va_to_interview_api_admin_call_invites_vas__va_id__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CallInviteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CallInviteOut"];
                     };
                 };
             };
@@ -16185,6 +24102,49 @@ export interface operations {
             };
         };
     };
+    team_report_api_admin_reports_team_get: {
+        parameters: {
+            query?: {
+                /** @description Any day in the month; defaults to this month (business time zone). */
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TeamReport"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     automation_runs_api_admin_automations__automation_id__runs_get: {
         parameters: {
             query?: {
@@ -17358,6 +25318,2341 @@ export interface operations {
                         data: components["schemas"]["AdminPayoutOut"];
                     };
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_vas_api_admin_vas_get: {
+        parameters: {
+            query?: {
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaListOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_va_api_admin_vas_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    invite_va_api_admin_vas__va_id__invite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    revoke_va_invitation_api_admin_vas_invitations__invitation_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_va_api_admin_vas__va_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_va_api_admin_vas__va_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_va_clients_api_admin_vas__va_id__clients_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaClientsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_va_client_rate_api_admin_vas__va_id__clients__contact_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaClientRateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_va_referrals_api_admin_va_referrals_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Va Referrals Api Admin Va Referrals Get */
+                        data: components["schemas"]["VaReferralOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_va_referral_api_admin_va_referrals_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaReferralIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaReferralOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_va_referral_api_admin_va_referrals__referral_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referral_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_va_referral_api_admin_va_referrals__referral_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referral_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaReferralUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaReferralOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    mark_va_bonus_paid_api_admin_va_referrals__referral_id__bonus_paid_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referral_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaReferralOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    undo_va_bonus_paid_api_admin_va_referrals__referral_id__bonus_paid_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referral_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaReferralOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_job_postings_api_admin_job_postings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Job Postings Api Admin Job Postings Get */
+                        data: components["schemas"]["JobPostingOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_job_posting_api_admin_job_postings_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobPostingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobPostingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_job_posting_api_admin_job_postings__posting_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                posting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobPostingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_job_posting_api_admin_job_postings__posting_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                posting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_job_posting_api_admin_job_postings__posting_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                posting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobPostingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobPostingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    mark_job_posting_filled_api_admin_job_postings__posting_id__filled_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                posting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MarkFilledIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["JobPostingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    job_applicants_api_admin_job_postings__posting_id__applications_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                posting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Job Applicants Api Admin Job Postings  Posting Id  Applications Get */
+                        data: components["schemas"]["ApplicantOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_sops_api_admin_sops_get: {
+        parameters: {
+            query?: {
+                audience?: components["schemas"]["SopAudience"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Sops Api Admin Sops Get */
+                        data: components["schemas"]["SopOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_sop_api_admin_sops_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SopIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SopOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_sop_api_admin_sops__sop_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SopOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_sop_api_admin_sops__sop_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_sop_api_admin_sops__sop_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SopUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SopOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    training_stats_api_admin_trainings_stats_get: {
+        parameters: {
+            query?: {
+                audience?: components["schemas"]["TrainingAudience"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TrainingStatsOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_trainings_api_admin_trainings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Trainings Api Admin Trainings Get */
+                        data: components["schemas"]["TrainingOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_training_api_admin_trainings_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrainingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TrainingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_training_api_admin_trainings__training_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TrainingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_training_api_admin_trainings__training_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_training_api_admin_trainings__training_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrainingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TrainingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    training_results_api_admin_trainings__training_id__results_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Training Results Api Admin Trainings  Training Id  Results Get */
+                        data: components["schemas"]["TrainingResultOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_feedback_api_admin_feedback_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Feedback Api Admin Feedback Get */
+                        data: components["schemas"]["FeedbackOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    feedback_summary_api_admin_feedback_summary_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FeedbackSummaryOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_feedback_api_admin_feedback__feedback_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                feedback_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    va_status_board_api_admin_va_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaStatusBoard"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_attendance_api_admin_reports_attendance_get: {
+        parameters: {
+            query: {
+                /** @description Any day in the month (business time zone). */
+                month: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Attendance Api Admin Reports Attendance Get */
+                        data: components["schemas"]["AttendanceOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    log_meeting_api_admin_reports_attendance_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AttendanceOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_meeting_api_admin_reports_attendance__meeting_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_meeting_api_admin_reports_attendance__meeting_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                meeting_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttendanceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AttendanceOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_client_projects_api_admin_client_projects_get: {
+        parameters: {
+            query?: {
+                contact_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Client Projects Api Admin Client Projects Get */
+                        data: components["schemas"]["ClientProjectOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_client_project_api_admin_client_projects__project_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectStaffUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientProjectOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_va_requests_api_admin_va_requests_get: {
+        parameters: {
+            query?: {
+                contact_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Va Requests Api Admin Va Requests Get */
+                        data: components["schemas"]["VaRequestOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_va_request_for_client_api_admin_va_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StaffVaRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_va_request_api_admin_va_requests__request_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_va_request_api_admin_va_requests__request_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaRequestStaffUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    start_va_request_review_api_admin_va_requests__request_id__review_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    approve_va_request_api_admin_va_requests__request_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaRequestReview"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    decline_va_request_api_admin_va_requests__request_id__decline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaRequestReview"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    post_va_request_api_admin_va_requests__request_id__post_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaRequestPost"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    match_va_request_api_admin_va_requests__request_id__match_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaRequestMatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_va_request_stage_api_admin_va_requests__request_id__stage_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaRequestStage"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_vas_api_admin_contacts__contact_id__vas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Client Vas Api Admin Contacts  Contact Id  Vas Get */
+                        data: components["schemas"]["ClientVaOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    admin_counts_api_admin_menu_counts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Admin Counts Api Admin Menu Counts Get */
+                        data: {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    admin_seen_api_admin_menu_counts_seen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -19172,6 +29467,1215 @@ export interface operations {
             };
         };
     };
+    my_vas_api_portal_vas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Vas Api Portal Vas Get */
+                        data: components["schemas"]["MyVaOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_feedback_api_portal_feedback_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Feedback Api Portal Feedback Get */
+                        data: components["schemas"]["FeedbackOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    give_feedback_api_portal_feedback_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FeedbackIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FeedbackOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    live_work_api_portal_live_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LiveOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    work_journal_api_portal_work_journal_get: {
+        parameters: {
+            query: {
+                start: string;
+                end: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Work Journal Api Portal Work Journal Get */
+                        data: components["schemas"]["JournalEntry"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    team_api_portal_va_team_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Team Api Portal Va Team Get */
+                        data: components["schemas"]["TeamVa"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_projects_api_portal_projects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Projects Api Portal Projects Get */
+                        data: components["schemas"]["ClientProjectOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    request_project_api_portal_projects_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientProjectOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_my_project_api_portal_projects__project_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectClientUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientProjectOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_va_invoices_api_portal_va_invoices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Va Invoices Api Portal Va Invoices Get */
+                        data: components["schemas"]["ClientVaInvoice"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_va_invoice_api_portal_va_invoices__invoice_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientVaInvoiceDetail"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_va_requests_api_portal_va_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Va Requests Api Portal Va Requests Get */
+                        data: components["schemas"]["VaRequestOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    request_va_api_portal_va_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_my_va_request_api_portal_va_requests__request_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_va_request_api_portal_va_requests__request_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_request_applicants_api_portal_va_requests__request_id__applicants_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Request Applicants Api Portal Va Requests  Request Id  Applicants Get */
+                        data: components["schemas"]["RequestApplicant"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    hire_applicant_api_portal_va_requests__request_id__hire_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HireIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_trainings_api_portal_trainings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Client Trainings Api Portal Trainings Get */
+                        data: components["schemas"]["VaTrainingOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_take_quiz_api_portal_trainings__training_id__attempts_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AttemptIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AttemptOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_sop_library_api_portal_sops_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Client Sop Library Api Portal Sops Get */
+                        data: components["schemas"]["SopOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_va_resume_api_portal_va_resumes__va_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PublicResumeOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_va_resume_document_api_portal_va_resumes__va_id__documents__doc_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_time_tags_api_portal_time_tags_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Time Tags Api Portal Time Tags Get */
+                        data: components["schemas"]["TimeTagOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_time_tag_api_portal_time_tags_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimeTagIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TimeTagOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_time_tag_api_portal_time_tags__tag_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_time_tag_api_portal_time_tags__tag_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tag_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimeTagUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TimeTagOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_raise_requests_api_portal_raise_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Raise Requests Api Portal Raise Requests Get */
+                        data: components["schemas"]["RaiseRequestOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    approve_raise_api_portal_raise_requests__request_id__approve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RaiseRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    decline_raise_api_portal_raise_requests__request_id__decline_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RaiseRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    portal_counts_api_portal_menu_counts_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Portal Counts Api Portal Menu Counts Get */
+                        data: {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    portal_seen_api_portal_menu_counts_seen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeenIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     guest_invite_api_public_booking_invite__token__get: {
         parameters: {
             query?: never;
@@ -19668,6 +31172,179 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["BugReportOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    apply_as_client_api_public_apply_client_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientApplicationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApplyAnswer"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    apply_as_va_api_public_apply_va_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaApplicationIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ApplyAnswer"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    public_resume_page_api_public_resumes__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PublicResumeOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    public_resume_document_api_public_resumes__slug__documents__doc_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+                doc_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
                     };
                 };
             };

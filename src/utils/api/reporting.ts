@@ -1,5 +1,5 @@
-import { get, post } from "./client";
-import type { ActivityOut, ClientActivityOut, InboxOut } from "./models";
+import { del, get, patch, post } from "./client";
+import type { ActivityOut, AttendanceIn, AttendanceOut, AttendanceUpdate, ClientActivityOut, InboxOut, TeamReport } from "./models";
 
 /**
  * GET /admin/reports/dashboard. The OpenAPI spec types this as a plain object, so the shape is
@@ -26,6 +26,10 @@ export type DashboardNumbers = {
   /** Open tickets per status. */
   open_tickets: Record<string, number>;
   leads_per_day: Array<{ date: string; leads: number }>;
+  /** VA accounts added in the period: applications from the sign-in page and VAs the team added. */
+  va_signups: number;
+  va_signups_delta: number | null;
+  vas_per_day: Array<{ date: string; vas: number }>;
 };
 
 export type DashboardRange = 7 | 30 | 90;
@@ -46,3 +50,10 @@ export const markInboxSeen = () => post<void>("/admin/activity/inbox/seen");
 
 export const listPortalActivity = (opts: { before?: string; limit?: number } = {}) =>
   get<ClientActivityOut[]>("/portal/activity", opts);
+
+// Reports › Team: hours and billing per day / month, and VA meeting attendance. `month` is any day in it ("2026-11-01").
+export const getTeamReport = (month: string) => get<TeamReport>("/admin/reports/team", { month });
+export const listAttendance = (month: string) => get<AttendanceOut[]>("/admin/reports/attendance", { month });
+export const logAttendance = (body: AttendanceIn) => post<AttendanceOut>("/admin/reports/attendance", body);
+export const updateAttendance = (id: string, body: AttendanceUpdate) => patch<AttendanceOut>(`/admin/reports/attendance/${id}`, body);
+export const deleteAttendance = (id: string) => del(`/admin/reports/attendance/${id}`);

@@ -43,8 +43,8 @@ export function SupportSection() {
         value={draft.view}
         onChange={(view) => setDraft({ view })}
         options={[
-          { value: "requests", label: "Requests & bugs" },
-          { value: "messages", label: "Messages" },
+          { value: "requests", label: "Requests & bugs", hint: "Changes and problems", icon: "lifebuoy" },
+          { value: "messages", label: "Messages", hint: "Chat with your team", icon: "message", tone: "sky" },
         ]}
       />
       {draft.view === "requests" ? (

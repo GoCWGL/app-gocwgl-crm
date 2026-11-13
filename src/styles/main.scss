@@ -26,6 +26,10 @@
 @use "components/badge";
 @use "components/chip";
 @use "components/segmented";
+@use "components/tabs";
+@use "components/search-box";
+@use "components/board";
+@use "components/gpicker";
 @use "components/toggle";
 @use "components/progress";
 @use "components/avatar";
@@ -35,6 +39,8 @@
 @use "components/bell";
 @use "components/stat";
 @use "components/charts";
+@use "components/column-chart";
+@use "components/dropdown";
 @use "components/timeline";
 @use "components/file-card";
 @use "components/embed-thread";
@@ -47,6 +53,7 @@
 @use "pages/public";
 @use "pages/portal";
 @use "pages/admin";
+@use "pages/va";
 
 // Utilities
 @use "utilities/tones";

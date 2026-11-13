@@ -554,7 +554,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
             {client ? contactName(client) : "The client"} gets a {formatCents(dollarsToCents(amount))} invoice
             {Number(trial) ? "" : " now"} and then every {interval.toLowerCase()} until it’s cancelled
             {subLink ? `, with ${subLink}` : ""}. Nothing is charged automatically; the client pays each invoice. Unpaid invoices get a
-            follow-up every 2 days. You or the client can cancel anytime from Transactions.
+            follow-up every 2 days. You or the client can cancel anytime from Invoices.
           </div>
         </>
       )}

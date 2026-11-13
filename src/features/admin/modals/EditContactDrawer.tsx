@@ -33,8 +33,25 @@ import { ContactOverviewCard } from "../components/ContactOverviewCard";
 import { PortalLoginCard } from "../components/PortalLoginCard";
 import { ReferredByContactCard } from "../components/ReferredByContactCard";
 import { TagPicker } from "../components/TagPicker";
-import { CONTACT_STATUS, contactName, contactStatus, getSalesStages, salesPipeline, subscriptionOf, type ContactStatus } from "../lib/contacts";
+import {
+  CONTACT_STATUS,
+  contactName,
+  contactStatus,
+  getSalesStages,
+  isOnboardingClient,
+  salesPipeline,
+  subscriptionOf,
+  type ContactStatus,
+} from "../lib/contacts";
+import { CallInviteModal } from "./CallInviteModal";
 import { useAdmin } from "../state/AdminContext";
+
+/** The Clients tab each status lives under. */
+const STATUS_TAB: Record<Exclude<ContactStatus, "lead">, string> = {
+  onboarding: "Onboarding",
+  active: "Active clients",
+  inactive: "Inactive clients",
+};
 
 type Draft = {
   first: string;
@@ -45,6 +62,8 @@ type Draft = {
   source: string;
   stage: CoreStage;
   paused: boolean;
+  /** Paid clients: moved from Onboarding to Active. */
+  onboarded: boolean;
   tags: string[];
   /** Stage id in each custom pipeline ("" = not in it). */
   other: Record<string, string>;
@@ -97,11 +116,13 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
     source: c.source,
     stage: (CORE_STAGES.includes(c.stage as CoreStage) ? c.stage : "lead") as CoreStage,
     paused: sub?.status === "Paused",
+    onboarded: !!c.onboardedAt,
     tags: c.tags.map((t) => t.id),
     other: Object.fromEntries(pipelines.map((p) => [p.id, stageInPipeline(p, c.id)])),
   });
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [inviting, setInviting] = useState(false);
   const [linksCopied, setLinksCopied] = useState(false);
 
   // One save = the contact itself, then the subscription pause and custom pipeline moves that changed.
@@ -115,6 +136,7 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
         company: d.company.trim(),
         source: d.source as LeadSource,
         stage: d.stage,
+        ...(d.stage === "paid" && { onboarded: d.onboarded }),
         tagIds: d.tags,
       });
       const wasPaused = sub?.status === "Paused";
@@ -138,18 +160,22 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
   };
 
   const name = `${draft.first} ${draft.last}`.trim() || contactName(c);
-  const status = contactStatus(draft.stage, draft.paused, !!c.archivedAt);
+  const status = contactStatus(draft.stage, draft.paused, !!c.archivedAt, draft.onboarded);
+  const statusBefore = contactStatus(c.stage, sub?.status === "Paused", !!c.archivedAt, !!c.onboardedAt);
 
   const pickStatus = (next: ContactStatus) => {
-    if (next === "active") set({ stage: "paid", paused: false });
+    if (next === "onboarding") set({ stage: "paid", paused: false, onboarded: false });
+    else if (next === "active") set({ stage: "paid", paused: false, onboarded: true });
     else if (next === "inactive") set(sub && draft.stage === "paid" ? { paused: true } : { stage: "lost", paused: false });
     else set({ stage: draft.stage === "paid" || draft.stage === "lost" ? "lead" : draft.stage, paused: false });
   };
 
   const statusHint = c.archivedAt
     ? "Archived: hidden from lists and the sales board. Their history is kept."
-    : status === "active"
-      ? "Active clients are paying. They count toward MRR and appear under Contacts › Clients."
+    : status === "onboarding"
+      ? "Onboarding clients have paid and are getting set up. They appear under Clients › Onboarding until you mark them Active."
+      : status === "active"
+      ? "Active clients are up and running. They count toward MRR and appear under Clients › Active clients."
       : status === "inactive"
         ? draft.paused
           ? "Their subscription will be paused. They appear under Contacts › Inactive."
@@ -160,7 +186,12 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
     e.preventDefault();
     if (!draft.first.trim() || !isEmail(draft.email)) return setError("Add a first name and a valid email.");
     save.mutate(draft, {
-      onSuccess: () => update({ editContactId: "", toast: `${name}’s profile was updated.` }),
+      // A new status moves them to that tab of the Clients page; say where they went.
+      onSuccess: () =>
+        update({
+          editContactId: "",
+          toast: status !== statusBefore && status !== "lead" ? `${name} moved to ${STATUS_TAB[status]}.` : `${name}’s profile was updated.`,
+        }),
       onError: (err) => {
         const f = fieldErrors(err);
         setError(Object.values(f)[0] || errorMessage(err));
@@ -280,11 +311,30 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
 
       <ContactOverviewCard contact={c} />
 
+      {/* Onboarding clients: email them a link to book a discovery call. */}
+      {canWrite && !c.archivedAt && isOnboardingClient(c, subs) && (
+        <div className="inset inset--soft call-invite-box">
+          <span className="call-invite-box__icon" aria-hidden="true">
+            <Icon name="calendarCheck" size={16} />
+          </span>
+          <span className="stack stack--2 u-grow">
+            <span className="text-strong">Discovery call</span>
+            <span className="text-small">Send {draft.first || "them"} a link to book a call with your team.</span>
+          </span>
+          <Button size="sm" variant="primary" onClick={() => setInviting(true)}>
+            Invite to a discovery call
+          </Button>
+        </div>
+      )}
+      {inviting && (
+        <CallInviteModal kind="discovery" id={c.id} name={contactName(c)} email={c.email} onClose={() => setInviting(false)} />
+      )}
+
       <div className="inset inset--brand status-box">
         <span className="kicker kicker--brand">STATUS &amp; STAGE</span>
         <Field label="Status">
           <div className="cluster cluster--6" role="radiogroup" aria-label="Status">
-            {(["lead", "active", "inactive"] as const).map((k) => (
+            {(["lead", "onboarding", "active", "inactive"] as const).map((k) => (
               <button
                 key={k}
                 type="button"

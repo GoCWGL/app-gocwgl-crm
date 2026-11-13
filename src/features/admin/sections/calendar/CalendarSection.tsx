@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, SegmentedControl } from "@/components/ui";
+import { Button, SegmentedControl, type SegmentOption } from "@/components/ui";
 import { canWriteCrm } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
 import { Availability } from "./Availability";
@@ -12,11 +12,11 @@ import { ScheduledCalls } from "./ScheduledCalls";
 
 type CalendarView = "types" | "scheduled" | "availability" | "integrations";
 
-const VIEWS: Array<{ value: CalendarView; label: string }> = [
-  { value: "types", label: "Calendars" },
-  { value: "scheduled", label: "Scheduled calls" },
-  { value: "availability", label: "Availability" },
-  { value: "integrations", label: "Integrations" },
+const VIEWS: Array<SegmentOption<CalendarView>> = [
+  { value: "types", label: "Calendars", hint: "Your booking pages", icon: "calendar" },
+  { value: "scheduled", label: "Scheduled calls", hint: "What leads booked", icon: "calendarCheck", tone: "green" },
+  { value: "availability", label: "Availability", hint: "When you take calls", icon: "clock", tone: "sky" },
+  { value: "integrations", label: "Integrations", hint: "Connected apps", icon: "link", tone: "purple" },
 ];
 
 export function CalendarSection() {

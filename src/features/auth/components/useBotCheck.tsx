@@ -41,7 +41,7 @@ function loadTurnstile(): Promise<TurnstileApi> {
  * always true, no token) when NEXT_PUBLIC_TURNSTILE_SITE_KEY is unset, e.g. in local development.
  * Tokens are single-use: call `reset()` after every attempt the API rejected.
  */
-export function useBotCheck(action: "login" | "register") {
+export function useBotCheck(action: "login" | "register" | "apply_client" | "apply_va") {
   const enabled = !!SITE_KEY;
   const [token, setToken] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);

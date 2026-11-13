@@ -3,14 +3,16 @@
 import { useEffect, useRef } from "react";
 import { Icon } from "@/components/ui";
 import { refresh } from "@/utils/api/client";
-import { getSession } from "@/utils/auth/session";
+import { getSession, isStaffAdmin } from "@/utils/auth/session";
+import { useMe } from "@/utils/hooks/useUsers";
 import { useContact } from "@/utils/hooks/useContacts";
 import { VIEW_AS_TOKEN, VIEW_AS_TOKEN_REQUEST, type ViewAsTokenMessage } from "@/utils/providers";
 import { contactName } from "../lib/contacts";
 import { useAdmin } from "../state/AdminContext";
 
 /**
- * Full-screen, read-only preview of a client's portal in an iframe.
+ * Full-screen view of a client's portal in an iframe. Owners and admins can use it as the client would;
+ * other staff get it read-only.
  * The iframe never refreshes the session itself (two windows refreshing at once would trip the
  * stolen-token protection): it asks this window for the access token with postMessage, and the
  * portal sends `X-Client-Id: <contactId>` on every /portal/* call. The token never goes in the URL.
@@ -19,6 +21,8 @@ export function ViewAsClient() {
   const { state, update } = useAdmin();
   const client = useContact(state.viewAsId).data;
   const frame = useRef<HTMLIFrameElement>(null);
+  // Owners and admins can act in the portal; other staff only look (the API enforces the same).
+  const canAct = isStaffAdmin(useMe().data);
 
   useEffect(() => {
     if (!state.viewAsId) return;
@@ -45,12 +49,12 @@ export function ViewAsClient() {
           <Icon name="eye" strokeWidth={2.2} />
         </span>
         <span className="stack stack--2 u-grow">
-          <span className="kicker view-as__kicker">VIEWING AS CLIENT · READ-ONLY</span>
+          <span className="kicker view-as__kicker">{canAct ? "ACTING AS CLIENT · CHANGES ARE REAL" : "VIEWING AS CLIENT · READ-ONLY"}</span>
           <span className="text-strong">
             {name} {client && <span className="u-semibold">· {client.email}</span>}
           </span>
         </span>
-        {client && client.stage !== "paid" && <span className="view-as__note">Not a paid client yet · preview only</span>}
+        {client && client.stage !== "paid" && <span className="view-as__note">Not a paid client yet</span>}
         <button type="button" className="view-as__back" onClick={() => update({ viewAsId: "" })}>
           Back to profile
         </button>

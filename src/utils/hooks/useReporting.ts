@@ -15,6 +15,18 @@ export const useDashboard = (range: api.DashboardRange = 30, custom?: api.Custom
     enabled: useCanUseMenu("dashboard", "reporting", "pipeline"),
   });
 
+// Reports › Team
+export const useTeamReport = (month: string) =>
+  useQuery({ queryKey: [...qk.teamReport, month], queryFn: () => api.getTeamReport(month), placeholderData: keepPreviousData });
+export const useAttendance = (month: string) =>
+  useQuery({ queryKey: [...qk.teamReport, "attendance", month], queryFn: () => api.listAttendance(month), placeholderData: keepPreviousData });
+export const useLogAttendance = () => useApiMutation(api.logAttendance, { invalidate: [qk.teamReport] });
+export const useUpdateAttendance = () =>
+  useApiMutation((v: { id: string; body: Parameters<typeof api.updateAttendance>[1] }) => api.updateAttendance(v.id, v.body), {
+    invalidate: [qk.teamReport],
+  });
+export const useDeleteAttendance = () => useApiMutation(api.deleteAttendance, { invalidate: [qk.teamReport] });
+
 export const useActivity = (opts: { contact_id?: string; limit?: number } = {}) =>
   useQuery({ queryKey: [...qk.activity, opts], queryFn: () => api.listActivity(opts) });
 

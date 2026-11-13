@@ -28,11 +28,13 @@ type ProfileDraft = { fullName: string; phone: string; title: string; timezone: 
 
 export function AccountSection() {
   const { readOnly } = usePortal();
+  // Who can use the portal is managed by the client (the API's /portal/team is theirs only).
+  const isStaff = !!useMe().data?.isStaff;
   return (
     <div className="card-row">
       <ReferredByCard />
       <ProfileCard readOnly={readOnly} />
-      <TeamCard />
+      {!isStaff && <TeamCard />}
       <SocialLinksCard />
     </div>
   );

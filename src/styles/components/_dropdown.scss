@@ -1,0 +1,120 @@
+@use "../abstracts" as *;
+
+.dropdown {
+  position: relative;
+  display: inline-flex;
+
+  &__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 40px;
+    padding: 6px 12px;
+    border: 1px solid $line-soft;
+    border-radius: $radius-lg;
+    background: $white;
+    color: $ink;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover:not(:disabled) {
+      border-color: $line;
+    }
+
+    &[aria-expanded="true"] {
+      border-color: $line-strong;
+      box-shadow: 0 0 0 3px rgba(11, 20, 36, 0.05);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+  }
+
+  &__chev {
+    flex: none;
+    color: $muted;
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 40;
+    min-width: 100%;
+    width: max-content;
+    max-width: 340px;
+    max-height: 340px;
+    margin: 0;
+    padding: 6px;
+    overflow-y: auto;
+    list-style: none;
+    border: 1px solid $line-soft;
+    border-radius: $radius-lg;
+    background: $white;
+    box-shadow: 0 16px 40px rgba(11, 20, 36, 0.14);
+
+    &.is-right {
+      right: 0;
+      left: auto;
+    }
+  }
+
+  &__section {
+    display: block;
+    padding: 8px 10px 4px;
+    color: $muted;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-width: 200px;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: $ink;
+    font: inherit;
+    font-size: 13.5px;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: $bg-soft;
+      outline: none;
+    }
+
+    &[aria-selected="true"] {
+      font-weight: 700;
+    }
+  }
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__meta {
+    color: $muted;
+    font-family: $font-mono;
+    font-size: 12px;
+  }
+
+  &__tick {
+    color: #047857;
+  }
+}

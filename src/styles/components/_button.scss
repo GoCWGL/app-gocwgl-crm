@@ -79,7 +79,9 @@
     background: $ink;
     color: $white;
 
+    // Also wins over --secondary's light hover when both are set (e.g. an open "Filters" toggle).
     &:hover {
+      background: $ink-soft;
       color: $white;
     }
   }

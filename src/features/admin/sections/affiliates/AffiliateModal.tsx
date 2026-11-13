@@ -102,7 +102,7 @@ export function AffiliateModal({ contactId, canManage, onClose }: { contactId: s
                 </Button>
               )}
               <span className="u-spacer" />
-              <Button onClick={() => update({ editContactId: a.id })}>Edit contact</Button>
+              <Button onClick={() => update({ tab: "clients", clientFullId: a.id, editContactId: "" })}>View client</Button>
               <Button variant="primary" onClick={() => setEditing(true)}>
                 Edit affiliate details
               </Button>

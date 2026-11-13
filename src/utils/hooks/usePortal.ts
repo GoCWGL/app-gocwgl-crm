@@ -99,8 +99,8 @@ export const useDeleteIncident = () =>
     invalidate: (_, v) => healthKeys(v.contactId),
   });
 
-export const useAdminFunnels = (contactId?: string) =>
-  useQuery({ queryKey: [...qk.adminFunnels, contactId ?? "all"], queryFn: () => api.listAdminFunnels(contactId) });
+export const useAdminFunnels = (contactId?: string, enabled = true) =>
+  useQuery({ queryKey: [...qk.adminFunnels, contactId ?? "all"], queryFn: () => api.listAdminFunnels(contactId), enabled });
 export const useCreateAdminFunnel = () => useApiMutation((v: AdminFunnelCreate) => api.createAdminFunnel(v), { invalidate: [qk.adminFunnels] });
 /** A quote on a custom request sends the client an invoice. */
 export const useUpdateAdminFunnel = () =>

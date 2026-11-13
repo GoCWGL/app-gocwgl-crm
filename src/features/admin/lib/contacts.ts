@@ -72,17 +72,30 @@ export function isInactiveClient(contact: ContactOut, subs: SubscriptionOut[] | 
   return contact.stage === "lost" || sub?.status === "Paused" || (contact.stage === "paid" && !isActiveClient(contact, subs));
 }
 
-export type ContactStatus = "lead" | "active" | "inactive";
+/** Applied with "Become a client" on the sign-in page and not paid (or lost) yet. */
+export function isClientApplicant(contact: ContactOut): boolean {
+  return contact.source === "Client application" && (contact.stage === "lead" || contact.stage === "booked") && !contact.archivedAt;
+}
+
+/** Clients › Onboarding: client applicants, and current paid clients the team hasn't moved to Active yet. */
+export function isOnboardingClient(contact: ContactOut, subs: SubscriptionOut[] | undefined): boolean {
+  return isClientApplicant(contact) || (isActiveClient(contact, subs) && !contact.onboardedAt);
+}
+
+export type ContactStatus = "lead" | "onboarding" | "active" | "inactive";
 
 export const CONTACT_STATUS: Record<ContactStatus, { label: string; tone: Tone }> = {
+  onboarding: { label: "Onboarding", tone: "amber" },
   active: { label: "Active client", tone: "green" },
   inactive: { label: "Inactive", tone: "slate" },
   lead: { label: "Lead", tone: "cyan" },
 };
 
-export function contactStatus(stage: string, paused: boolean, archived = false): ContactStatus {
+/** `onboarded`: for paid clients, whether the team moved them from Onboarding to Active. */
+export function contactStatus(stage: string, paused: boolean, archived = false, onboarded = true): ContactStatus {
   if (archived || paused || stage === "lost") return "inactive";
-  return stage === "paid" ? "active" : "lead";
+  if (stage !== "paid") return "lead";
+  return onboarded ? "active" : "onboarding";
 }
 
 /** Display name of a contact (the API's read-only `name`, else first + last, else email). */

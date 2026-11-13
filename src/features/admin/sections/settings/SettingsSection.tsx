@@ -10,8 +10,10 @@ import { useSignOut } from "@/utils/hooks/useAuth";
 import { useSettings, useUpdateSettings } from "@/utils/hooks/useSettings";
 import { useMe, useUpdateMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../../state/AdminContext";
+import { CalendarSection } from "../calendar/CalendarSection";
 import { TagsSection } from "../contacts/TagsSection";
 import { DomainSettings } from "./DomainSettings";
+import { PortalLinks } from "./PortalLinks";
 import { BusinessSettings, NotificationSettings, ProfileSettings, type BusinessDraft, type ProfileDraft } from "./GeneralSettings";
 import { SecuritySettings } from "./SecuritySettings";
 import { TeamSettings } from "./TeamSettings";
@@ -98,8 +100,10 @@ export function SettingsSection() {
   return (
     <div className="split settings">
       <nav className="card card--tight settings__nav" aria-label="Settings sections">
-        {/* Tags belong to the Contacts menu: hidden for teammates without it. */}
-        {SETTINGS_TABS.filter((t) => t.id !== "tags" || canUseMenu(user, "contacts")).map((t) => (
+        {/* Tags belong to the Contacts menu and Calendar to its own: hidden for teammates without them. */}
+        {SETTINGS_TABS.filter(
+          (t) => (t.id !== "tags" || canUseMenu(user, "contacts")) && (t.id !== "calendar" || canUseMenu(user, "calendar")),
+        ).map((t) => (
           <button
             key={t.id}
             type="button"
@@ -169,6 +173,8 @@ export function SettingsSection() {
         {tab === "team" && <TeamSettings onMessage={setMessage} />}
         {tab === "domains" && <DomainSettings />}
         {tab === "tags" && <TagsSection />}
+        {tab === "calendar" && <CalendarSection />}
+        {tab === "portals" && <PortalLinks />}
         {tab === "security" && <SecuritySettings onMessage={setMessage} promptMfa={state.mfaPrompt && !user?.mfaEnabled} />}
 
         {DRAFT_TABS.includes(tab) && (

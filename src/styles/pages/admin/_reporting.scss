@@ -1,28 +1,56 @@
 @use "../../abstracts" as *;
 
-.report-filter {
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 16px 18px;
+// =============================================================================
+// Reports: period bar, headline numbers, then a grid of report cards.
+// =============================================================================
 
-  &__summary {
-    flex: 1 1 100%;
+.report-bar {
+  gap: 14px;
+  padding: 14px 18px;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 20px;
+    flex-wrap: wrap;
   }
 
-  // From / To and the quick picks, under the presets.
+  &__range {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: $radius-md;
+    background: $bg-tint;
+    color: $ink-soft;
+  }
+
+  &__dates {
+    font-size: 15px;
+    color: $ink;
+  }
+
+  &__updating {
+    font-size: 12px;
+    color: $muted-light;
+  }
+
   &__custom {
     @include cluster(12px);
-    flex: 1 1 100%;
     align-items: flex-end;
+    padding-top: 14px;
+    border-top: 1px solid $line-faint;
 
     .field {
       flex: 0 1 180px;
     }
-  }
-
-  &__shortcuts {
-    padding-bottom: 2px;
   }
 
   &__error {
@@ -30,17 +58,434 @@
   }
 }
 
-.report-metric-card {
-  gap: 6px;
-  padding: 18px 20px;
-}
-
-.report-weekly {
-  flex: 3 1 420px;
-  gap: 16px;
-}
-
-.report-sources {
-  flex: 2 1 300px;
+// Headline numbers.
+.report-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
+}
+
+.report-kpi {
+  gap: 10px;
+  padding: 18px 20px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: $muted;
+  }
+
+  &__value {
+    font-size: 30px;
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: $ink;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+}
+
+.report-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: $bg-tint;
+  color: $muted;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+
+  &--up {
+    background: #e6f6ec;
+    color: #157347;
+  }
+
+  &--down {
+    background: #fdecec;
+    color: #b42318;
+
+    .report-delta__arrow {
+      transform: scaleY(-1);
+    }
+  }
+}
+
+// Report cards: the weekly chart spans two columns on wide screens.
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-auto-flow: row dense;
+  gap: 16px;
+
+  &__wide {
+    grid-column: span 2;
+
+    @include down(md) {
+      grid-column: auto;
+    }
+  }
+}
+
+.report-card {
+  gap: 16px;
+  min-width: 0;
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .card-title {
+      margin: 0;
+    }
+  }
+}
+
+.report-empty {
+  margin: 0;
+  padding: 24px 0;
+  color: $muted;
+  font-size: 13px;
+  text-align: center;
+}
+
+// Conversion funnel.
+.report-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+
+  &__index {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: $bg-tint;
+    color: $ink-soft;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  &__value {
+    margin-left: auto;
+    font-weight: 700;
+    color: $ink;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__track {
+    height: 10px;
+    border-radius: 999px;
+    background: $bg-tint;
+    overflow: hidden;
+  }
+
+  &__fill {
+    height: 100%;
+    border-radius: 999px;
+    background: #0891b2;
+    transition: width 0.4s ease;
+  }
+}
+
+// Pipeline: one bar split by stage, with a legend.
+.report-stack {
+  display: flex;
+  gap: 2px;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+
+  &__seg {
+    flex-basis: 0;
+    min-width: 4px;
+    background: var(--tone-solid);
+  }
+}
+
+.report-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  &__swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--tone-solid);
+  }
+
+  &__pct {
+    min-width: 40px;
+    text-align: right;
+  }
+}
+
+// Needs attention: rows that open the page that fixes them.
+.report-attention {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid $line-faint;
+    border-radius: $radius-lg;
+    background: $white;
+    color: $ink;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      border-color: $line-strong;
+      background: $bg-soft;
+    }
+  }
+
+  &__value {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// =============================================================================
+// Reports › Team: month stepper, chart cards, no-shows.
+// =============================================================================
+
+.report-grid__full {
+  grid-column: 1 / -1;
+}
+
+.report-card__head--row {
+  align-items: flex-start;
+}
+
+.month-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.report-billing-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  padding-top: 12px;
+  border-top: 1px solid $line-faint;
+
+  strong {
+    margin-left: 4px;
+    color: $ink;
+    font-family: $font-mono;
+  }
+}
+
+.attend-strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border: 1px solid $line-faint;
+  border-radius: $radius-lg;
+  background: linear-gradient(180deg, $bg-soft, $white);
+
+  @include down(md) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+
+    & + & {
+      border-left: 1px solid $line-faint;
+    }
+
+    strong {
+      color: $ink;
+      font-family: $font-mono;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+  }
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: $muted;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--tone-solid);
+  }
+}
+
+.attend-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr);
+  gap: 24px;
+
+  @include down(md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.attend-vas,
+.attend-log {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid $line-faint;
+  border-radius: $radius-lg;
+  overflow: hidden;
+}
+
+.attend-va,
+.attend-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: $white;
+
+  & + & {
+    border-top: 1px solid $line-faint;
+  }
+}
+
+.attend-row {
+  &.is-no_show {
+    background: linear-gradient(90deg, rgba(217, 45, 32, 0.05), $white 40%);
+  }
+
+  &.is-late {
+    background: linear-gradient(90deg, rgba(245, 158, 11, 0.07), $white 40%);
+  }
+
+  &__mark {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+  }
+
+  &__tools {
+    display: inline-flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  &:hover &__tools,
+  &:focus-within &__tools {
+    opacity: 1;
+  }
+}
+
+.attend-empty {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px;
+  border: 1px dashed $line;
+  border-radius: $radius-lg;
+}
+
+.attend-outcomes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.attend-outcome {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 12px;
+  border: 1px solid $line-soft;
+  border-radius: $radius-lg;
+  background: $white;
+  color: $muted;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: $line;
+  }
+
+  &[aria-checked="true"] {
+    border-color: var(--tone-solid);
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+    box-shadow: 0 0 0 1px var(--tone-solid);
+  }
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 16px;
+
+  @include down(lg) {
+    grid-template-columns: 1fr;
+  }
 }

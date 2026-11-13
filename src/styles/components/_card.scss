@@ -223,3 +223,70 @@
     font-weight: 800;
   }
 }
+
+// <YouTubeEmbed>: a 16:9 video frame.
+.youtube-embed {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: $radius-xl;
+  background: #0b1424;
+
+  iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+}
+
+// <Stars> and <StarInput>.
+.stars {
+  display: inline-flex;
+  gap: 2px;
+  vertical-align: middle;
+}
+
+.star-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+
+  &__stars {
+    display: inline-flex;
+    gap: 4px;
+  }
+
+  &__star {
+    padding: 2px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+
+    path {
+      fill: #e3e8ef;
+      transition: fill 0.1s ease;
+    }
+
+    &.is-on path {
+      fill: #f5a524;
+    }
+
+    &:hover {
+      transform: scale(1.12);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $line-strong;
+    }
+  }
+
+  &__word {
+    color: $ink-soft;
+    font-size: 14px;
+    font-weight: 700;
+  }
+}

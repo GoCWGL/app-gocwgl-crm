@@ -159,8 +159,8 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
             funnelRequestOpen: false,
             toast:
               draft.pay === "now" && f.payUrl
-                ? "Request sent. Your browser blocked the payment tab: use Pay now on the funnel or in Transactions."
-                : `Request sent. We emailed your invoice for ${formatCents(f.priceCents)} with a Wise payment link; it’s also in Transactions.`,
+                ? "Request sent. Your browser blocked the payment tab: use Pay now on the funnel or in Invoices."
+                : `Request sent. We emailed your invoice for ${formatCents(f.priceCents)} with a Wise payment link; it’s also in Invoices.`,
           });
         },
         onError: (err) => {
@@ -383,7 +383,7 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
                 : editing.status === "quote" && !editing.priceCents
                   ? "Your team will send a quote, or choose a package above to get an invoice now."
                   : "The price has not changed. Your open invoice stays the same."
-              : `A one-time payment for the build, added to Transactions as its own invoice. No monthly fees: the only recurring cost is ${formatCents(catalog.monitoringPriceCents)}/year monitoring, billed separately.`}
+              : `A one-time payment for the build, added to Invoices as its own invoice. No monthly fees: the only recurring cost is ${formatCents(catalog.monitoringPriceCents)}/year monitoring, billed separately.`}
           </span>
           {!editing && (
             <div className="cluster cluster--6" role="radiogroup" aria-label="How to pay">

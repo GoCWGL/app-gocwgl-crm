@@ -1,13 +1,16 @@
 "use client";
 
-import { useState, type KeyboardEvent } from "react";
-import { Badge, Button, Field, Icon, Input, LoadState, Select, type IconName } from "@/components/ui";
+import { useState } from "react";
+import { Badge, Button, Field, Icon, LoadState, SearchBox, Select, Tabs, type TabOption } from "@/components/ui";
 import { SOURCE_LABELS, type CoreStage, type LeadSource } from "@/data/admin";
+import { toneClass } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { ContactOut } from "@/utils/api/models";
 import { formatShort, getTimeZone, isoDateIn, addDaysIso, todayIso } from "@/utils/format/dates";
 import { useSubscriptions } from "@/utils/hooks/useBilling";
+import { canWriteCrm } from "@/utils/auth/session";
 import { useAllContacts, usePipelines, useTags } from "@/utils/hooks/useContacts";
+import { useMe } from "@/utils/hooks/useUsers";
 import {
   CONTACT_STATUS,
   callText,
@@ -16,11 +19,13 @@ import {
   getSalesStages,
   isActiveClient,
   isInactiveClient,
+  isOnboardingClient,
   stageOf,
   subscriptionOf,
   subscriptionText,
 } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
+import { ClientFullProfile } from "./ClientFullProfile";
 
 type StageFilter = "all" | Exclude<CoreStage, "lost">;
 type DateFilter = "any" | "7" | "30" | "month";
@@ -30,65 +35,25 @@ type CallFilter = "any" | "scheduled" | "needs" | "none";
 const DATE_LABELS: Record<Exclude<DateFilter, "any">, string> = { "7": "Last 7 days", "30": "Last 30 days", month: "This month" };
 const CALL_LABELS: Record<Exclude<CallFilter, "any">, string> = { scheduled: "Call scheduled", needs: "Needs a time", none: "No call" };
 
-type ClientTab = "active" | "inactive";
+type ClientTab = "onboarding" | "active" | "inactive";
 
-const CLIENT_TABS: Array<{ value: ClientTab; label: string; hint: string; icon: IconName }> = [
-  { value: "active", label: "Active clients", hint: "Paying now", icon: "circleCheck" },
-  { value: "inactive", label: "Inactive clients", hint: "Lost, paused or stopped paying", icon: "clock" },
+const CLIENT_TABS: Array<TabOption<ClientTab>> = [
+  { value: "onboarding", label: "Onboarding", hint: "New applications & setup", icon: "rocket", tone: "amber" },
+  { value: "active", label: "Active clients", hint: "Live and paying", icon: "circleCheck", tone: "green" },
+  { value: "inactive", label: "Inactive clients", hint: "Lost or paused", icon: "clock", tone: "slate" },
 ];
 
-/** The Clients page's two tabs, as cards with an icon, a short description and a count. Arrow keys move between them. */
-function ClientTabs({
-  value,
-  onChange,
-  counts,
-  loading,
-}: {
-  value: ClientTab;
-  onChange: (v: ClientTab) => void;
-  counts: Record<ClientTab, number>;
-  loading: boolean;
-}) {
-  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    e.preventDefault();
-    const next = value === "active" ? "inactive" : "active";
-    onChange(next);
-    e.currentTarget.querySelector<HTMLButtonElement>(`[data-tab="${next}"]`)?.focus();
-  };
-  return (
-    <div className="client-tabs" role="tablist" aria-label="Clients" onKeyDown={onKeyDown}>
-      {CLIENT_TABS.map((t) => {
-        const on = t.value === value;
-        return (
-          <button
-            key={t.value}
-            type="button"
-            role="tab"
-            data-tab={t.value}
-            aria-selected={on}
-            tabIndex={on ? 0 : -1}
-            className={cn("client-tab", `client-tab--${t.value}`)}
-            onClick={() => onChange(t.value)}
-          >
-            <span className="client-tab__icon" aria-hidden="true">
-              <Icon name={t.icon} size={18} strokeWidth={2} />
-            </span>
-            <span className="client-tab__text">
-              <span className="client-tab__label">{t.label}</span>
-              <span className="client-tab__hint">{t.hint}</span>
-            </span>
-            <span className="client-tab__count">{loading ? "–" : counts[t.value]}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
+/** People › Clients: the tabs and list, or one client's full profile when opened. */
+export function ClientsSection() {
+  const { state } = useAdmin();
+  if (state.clientFullId) return <ClientFullProfile key={state.clientFullId} id={state.clientFullId} />;
+  return <ClientList />;
 }
 
-export function ClientsSection() {
+function ClientList() {
   const { state, update } = useAdmin();
   const { contactView } = state;
+  const canWrite = canWriteCrm(useMe().data);
 
   const [stage, setStage] = useState<StageFilter>("all");
   const [query, setQuery] = useState("");
@@ -110,14 +75,21 @@ export function ClientsSection() {
   const stages = getSalesStages(usePipelines().data);
   const contacts: ContactOut[] = [...(active.data ?? []), ...(contactView === "inactive" ? (archived.data ?? []) : [])];
 
-  const activeCount = (active.data ?? []).filter((c) => isActiveClient(c, subscriptions)).length;
+  // Onboarding: paid, current clients the team hasn't moved to Active yet.
+  const onboarding = (c: ContactOut) => isOnboardingClient(c, subscriptions);
+  const live = (c: ContactOut) => isActiveClient(c, subscriptions) && !onboarding(c);
+
+  const onboardingCount = (active.data ?? []).filter(onboarding).length;
+  const activeCount = (active.data ?? []).filter(live).length;
   const inactiveCount = (active.data ?? []).filter((c) => isInactiveClient(c, subscriptions)).length + (archived.data?.length ?? 0);
 
   const count = (s: CoreStage) => contacts.filter((c) => c.stage === s && inView(c)).length;
 
   function inView(c: ContactOut) {
     if (c.archivedAt) return contactView === "inactive";
-    return contactView === "active" ? isActiveClient(c, subscriptions) : contactView === "inactive" ? isInactiveClient(c, subscriptions) : true;
+    if (contactView === "onboarding") return onboarding(c);
+    if (contactView === "active") return live(c);
+    return contactView === "inactive" ? isInactiveClient(c, subscriptions) : true;
   }
 
   const today = todayIso();
@@ -130,7 +102,7 @@ export function ClientsSection() {
 
   const viewRows = contacts.filter(inView);
   const rows = viewRows.filter((c) => {
-    if (stage !== "all" && c.stage !== stage) return false;
+    if (contactView === "all" && stage !== "all" && c.stage !== stage) return false;
     if (!signedInRange(c)) return false;
     const hasSub = !!subscriptionOf(subscriptions, c.id);
     if (sub === "active" && !hasSub) return false;
@@ -164,66 +136,81 @@ export function ClientsSection() {
     { value: "paid", label: `Paid (${count("paid")})` },
   ];
 
+  const loadingCounts = active.isPending || subsQuery.isPending;
+  const tabMeta = contactView !== "all" ? CLIENT_TABS.find((t) => t.value === contactView) : undefined;
+
   return (
-    <div className="stack stack--16">
-      {contactView !== "all" && (
-        <ClientTabs
-          value={contactView}
-          onChange={(v) => update({ contactView: v })}
-          counts={{ active: activeCount, inactive: inactiveCount }}
-          loading={active.isPending || subsQuery.isPending}
-        />
-      )}
-      <div className="section-head section-head--end">
-        <div className="cluster cluster--8" role="group" aria-label="Filter by stage">
-          {pills.map((p) => (
-            <button
-              key={p.value}
-              type="button"
-              className="chip chip--dark chip--lg"
-              aria-pressed={stage === p.value}
-              onClick={() => setStage(p.value)}
-            >
-              {p.label}
-            </button>
-          ))}
+    <div className="card card--flat board">
+      <div className="board__bar">
+        {contactView !== "all" ? (
+          <Tabs<ClientTab>
+            label="Clients"
+            value={contactView}
+            onChange={(v) => update({ contactView: v })}
+            options={CLIENT_TABS.map((t) => {
+              const n = { onboarding: onboardingCount, active: activeCount, inactive: inactiveCount }[t.value];
+              return { ...t, count: loadingCounts ? "–" : n };
+            })}
+          />
+        ) : (
+          // Stage buttons only on All Contacts: the Clients tabs already split clients by status.
+          <div className="board__filters" role="group" aria-label="Filter by stage">
+            {pills.map((p) => (
+              <button
+                key={p.value}
+                type="button"
+                className="chip chip--dark chip--lg"
+                aria-pressed={stage === p.value}
+                onClick={() => setStage(p.value)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="board__actions">
+          <SearchBox id="client-search" label="Search clients" value={query} onChange={setQuery} />
+          <button
+            type="button"
+            className={cn("btn btn--secondary", filtersOpen && "btn--dark")}
+            aria-expanded={filtersOpen}
+            onClick={() => setFiltersOpen(!filtersOpen)}
+          >
+            <Icon name="funnel" size={15} />
+            Filters
+            {chips.length > 0 && <span className="filter-count">{chips.length}</span>}
+          </button>
+          {canWrite && (
+            <Button variant="primary" aria-haspopup="dialog" onClick={() => update({ addClientOpen: true })}>
+              <Icon name="userPlus" size={14} /> Add client
+            </Button>
+          )}
         </div>
-        <Field label="Search clients" htmlFor="client-search" className="clients-search">
-          <Input id="client-search" type="search" placeholder="Name or email" value={query} onChange={(e) => setQuery(e.target.value)} />
-        </Field>
       </div>
 
-      <div className="cluster cluster--8">
-        <button
-          type="button"
-          className={cn("btn btn--secondary", filtersOpen && "btn--dark")}
-          aria-expanded={filtersOpen}
-          onClick={() => setFiltersOpen(!filtersOpen)}
-        >
-          <Icon name="funnel" size={15} />
-          Filters
-          {chips.length > 0 && <span className="filter-count">{chips.length}</span>}
-        </button>
-        {chips.map((chip) => (
-          <span className="filter-chip filter-chip--cyan" key={chip.label}>
-            {chip.label}
-            <button type="button" onClick={chip.clear} aria-label={`Remove filter ${chip.label}`}>
-              ×
+      {(chips.length > 0 || rows.length !== viewRows.length) && (
+        <div className="board__sub">
+          {chips.map((chip) => (
+            <span className="filter-chip filter-chip--cyan" key={chip.label}>
+              {chip.label}
+              <button type="button" onClick={chip.clear} aria-label={`Remove filter ${chip.label}`}>
+                ×
+              </button>
+            </span>
+          ))}
+          {chips.length > 0 && (
+            <button type="button" className="btn btn--link u-muted" onClick={clearAll}>
+              Clear all
             </button>
+          )}
+          <span className="text-muted u-push-right">
+            Showing {rows.length} of {viewRows.length} clients
           </span>
-        ))}
-        {chips.length > 0 && (
-          <button type="button" className="btn btn--link u-muted" onClick={clearAll}>
-            Clear all
-          </button>
-        )}
-        <span className="text-muted u-push-right">
-          Showing {rows.length} of {viewRows.length} clients
-        </span>
-      </div>
+        </div>
+      )}
 
       {filtersOpen && (
-        <div className="card card--tight filter-panel">
+        <div className="board__panel">
           <Field label="Tag" htmlFor="cf-tag">
             <Select id="cf-tag" value={tag} placeholder="Any tag" options={tags.map((t) => ({ value: t.id, label: t.name }))} onChange={(e) => setTag(e.target.value)} />
           </Field>
@@ -263,7 +250,7 @@ export function ClientsSection() {
       )}
 
       <LoadState query={active} loadingText="Loading contacts…">
-      <div className="card card--table card--flat">
+      <div className="table-scroll">
         <table className="data-table data-table--roomy data-table--plain">
           <thead>
             <tr>
@@ -283,10 +270,10 @@ export function ClientsSection() {
           <tbody>
             {rows.map((c) => {
               const subscription = subscriptionOf(subscriptions, c.id);
-              const status = CONTACT_STATUS[contactStatus(c.stage, subscription?.status === "Paused", !!c.archivedAt)];
+              const status = CONTACT_STATUS[onboarding(c) ? "onboarding" : contactStatus(c.stage, subscription?.status === "Paused", !!c.archivedAt)];
               const stageInfo = stageOf(stages, c.stage);
               const name = contactName(c);
-              const edit = () => update({ editContactId: c.id });
+              const edit = () => update({ clientFullId: c.id });
               return (
                 <tr key={c.id}>
                   <td>
@@ -311,9 +298,8 @@ export function ClientsSection() {
                     </Badge>
                   </td>
                   <td className="data-table__actions">
-                    <Button variant="outline" size="sm" onClick={edit} aria-label={`Edit ${name}`}>
-                      <Icon name="edit" size={13} />
-                      Edit
+                    <Button variant="outline" size="sm" onClick={edit} aria-label={`View ${name}`}>
+                      View
                     </Button>
                   </td>
                 </tr>
@@ -321,7 +307,23 @@ export function ClientsSection() {
             })}
           </tbody>
         </table>
-        {rows.length === 0 && <p className="table-empty">{contacts.length ? "No clients match this filter." : "No contacts yet."}</p>}
+        {rows.length === 0 && (
+          <div className="board__empty">
+            <span className={cn("board__empty-icon", toneClass(tabMeta?.tone ?? "cyan"))} aria-hidden="true">
+              <Icon name={tabMeta?.icon ?? "users"} size={18} />
+            </span>
+            <span className="text-strong">
+              {q || chips.length
+                ? "No clients match"
+                : tabMeta
+                  ? `No ${tabMeta.value} clients yet`
+                  : "No contacts yet"}
+            </span>
+            <span className="text-small">
+              {q || chips.length ? "Try another search or clear the filters." : tabMeta ? tabMeta.hint : "Add a client to get started."}
+            </span>
+          </div>
+        )}
       </div>
       </LoadState>
     </div>

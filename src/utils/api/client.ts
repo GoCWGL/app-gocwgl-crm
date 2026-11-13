@@ -71,8 +71,9 @@ function buildUrl(path: string, query?: RequestOptions["query"]): string {
 function authHeaders(path: string, headers: Headers) {
   const token = getAccessToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  const { viewAsClientId } = getSession();
+  const { viewAsClientId, viewAsVaId } = getSession();
   if (viewAsClientId && path.startsWith("/portal/")) headers.set("X-Client-Id", viewAsClientId);
+  if (viewAsVaId && path.startsWith("/va/")) headers.set("X-Va-Id", viewAsVaId);
 }
 
 async function send(path: string, opts: RequestOptions, retry: boolean): Promise<Response> {
@@ -139,6 +140,13 @@ export async function download(path: string, filename?: string): Promise<void> {
     window.open(url, "_blank", "noopener");
   }
   setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+/** Fetch a signed-in file (e.g. a photo) and return a blob: URL for an <img>. Revoke it when done. */
+export async function blobUrl(path: string): Promise<string> {
+  const res = await send(path, { method: "GET" }, true);
+  if (!res.ok) throw await toError(res);
+  return URL.createObjectURL(await res.blob());
 }
 
 /** Full-page navigation into the API (OAuth starts here; it must not be a fetch). */

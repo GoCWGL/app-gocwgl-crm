@@ -40,3 +40,10 @@ export const usePortalIntakeKeys = () => useQuery({ queryKey: qk.portalIntakeKey
 export const useCreatePortalIntakeKey = () =>
   useApiMutation((v: PortalIntakeKeyIn) => api.createPortalIntakeKey(v), { invalidate: [qk.portalIntakeKeys] });
 export const useRevokePortalIntakeKey = () => useApiMutation(api.revokePortalIntakeKey, { invalidate: [qk.portalIntakeKeys] });
+
+// VA portal
+export const useVaRequests = (enabled = true) => useQuery({ queryKey: qk.vaRequests, queryFn: api.listVaRequests, enabled });
+export const useCreateVaRequest = () => useApiMutation((v: ClientTicketIn) => api.createVaRequest(v), { invalidate: [qk.vaRequests] });
+export const useReplyVaRequest = () =>
+  useApiMutation((v: { id: string; text: string }) => api.replyVaRequest(v.id, v.text), { invalidate: [qk.vaRequests] });
+export const useCloseVaRequest = () => useApiMutation(api.closeVaRequest, { invalidate: [qk.vaRequests] });

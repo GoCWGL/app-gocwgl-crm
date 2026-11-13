@@ -1,6 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import type { BillingView } from "../sections/payments/BillingTables";
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { HIDDEN_TABS, type AdminTab, type ContactView, type SettingsTab } from "@/data/admin";
 
@@ -40,29 +41,42 @@ export type AdminState = {
   newBuildContactId: string;
   /** Contact shown in the edit drawer. */
   editContactId: string;
+  /** Client whose full profile fills the Clients page ("" = the list). */
+  clientFullId: string;
   /** Scroll the edit drawer to its team notes when it opens (from a "mentioned you" notification). */
   editContactFocusNotes?: boolean;
+  /** Finance › Billing: the tab it opens on (subscriptions, invoices or products). */
+  billingView: BillingView;
   /** Contact whose portal is open in "View as client". */
   viewAsId: string;
+  /** VA shown in the profile drawer ("" = closed). */
+  vaId: string;
+  /** VA whose full profile fills People › VAs ("" = the list). */
+  vaFullId: string;
+  /** Job postings › the client VA request shown full page ("" = the board). */
+  jobRequestId: string;
   /** Open media folder ("" = folder list). */
   mediaFolderId: string;
   /** Build Progress tab: the builds, clients' funnel requests, or their CRM requests. */
+  /** CRM Requests / Funnel Requests: the builds, or that page's requests ("funnels" is an old link to funnel requests). */
   progressView: "builds" | "funnels" | "requests";
   /** Selected card on the Build Progress page: a build id, or a client id for a paid client with no build yet. */
   projectId: string;
 };
 
 const TABS: AdminTab[] = [
-  "dashboard", "clients", "tags", "pipeline", "calendar", "payments", "progress", "media",
-  "email", "forms", "surveys", "automation", "reporting", "bugs", "settings",
+  "dashboard", "clients", "vas", "tags", "pipeline", "calendar", "bonuses", "payments", "progress", "funnels", "media",
+  "email", "forms", "surveys", "automation", "reporting", "bugs", "status", "training", "sops", "support", "feedback", "jobs",
+  "settings",
 ];
 
 /** Deep links from sign-in: /admin?tab=settings&section=security&enroll=mfa */
 function initialState(params: URLSearchParams | null): AdminState {
   const asked = params?.get("tab") as AdminTab | null;
-  // Tags now live in Settings: an old ?tab=tags link opens Settings › Tags.
-  const tab: AdminTab | null = asked === "tags" ? "settings" : asked;
-  const section = asked === "tags" ? "tags" : (params?.get("section") as SettingsTab | null);
+  // Tags and Calendar now live in Settings: an old ?tab=tags or ?tab=calendar link opens that Settings tab.
+  const inSettings = asked === "tags" || asked === "calendar";
+  const tab: AdminTab | null = inSettings ? "settings" : asked;
+  const section = inSettings ? asked : (params?.get("section") as SettingsTab | null);
   return {
     tab: tab && TABS.includes(tab) && !HIDDEN_TABS.has(tab) ? tab : "dashboard",
     contactView: "all",
@@ -76,7 +90,13 @@ function initialState(params: URLSearchParams | null): AdminState {
     newBuildOpen: false,
     newBuildContactId: "",
     editContactId: "",
+    clientFullId: "",
+    billingView: "subs",
     viewAsId: "",
+    vaId: "",
+    // /admin?tab=vas&va=<id> opens that VA's full profile (linked from the VA portal's "Viewing as" bar).
+    vaFullId: tab === "vas" ? (params?.get("va") ?? "") : "",
+    jobRequestId: "",
     mediaFolderId: "",
     progressView: "builds",
     projectId: "",
@@ -93,6 +113,8 @@ export type AdminStore = {
   /** Show the floating toast in the bottom-right corner. */
   notify: (message: string) => void;
   openContacts: (view: ContactView) => void;
+  /** A client's full profile page. */
+  openClient: (contactId: string) => void;
   /** Open the email composer addressed to one contact, optionally prefilled. */
   emailContact: (contactId: string, prefill?: Partial<Pick<ComposerDraft, "subject" | "body">>) => void;
   openMediaFolder: (contactId: string) => void;
@@ -106,7 +128,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AdminState>(() => initialState(params));
 
   const update = useCallback((patch: Patch) => {
-    setState((s) => ({ ...s, ...(typeof patch === "function" ? patch(s) : patch) }));
+    setState((s) => {
+      const next = { ...s, ...(typeof patch === "function" ? patch(s) : patch) };
+      // Calendar lives in Settings now: every link to it (Dashboard, notifications) opens Settings › Calendar.
+      if (next.tab === "calendar") return { ...next, tab: "settings", settingsTab: "calendar" };
+      // Funnel requests moved from Build Progress to their own menu.
+      if (next.tab === "progress" && next.progressView === "funnels") return { ...next, tab: "funnels", progressView: "requests" };
+      return next;
+    });
   }, []);
 
   const store = useMemo<AdminStore>(
@@ -115,7 +144,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       update,
       goTo: (tab) => update({ tab }),
       notify: (toast) => update({ toast }),
-      openContacts: (contactView) => update({ tab: "clients", contactView }),
+      openContacts: (contactView) => update({ tab: "clients", contactView, clientFullId: "" }),
+      openClient: (contactId) => update({ tab: "clients", clientFullId: contactId, editContactId: "", vaId: "" }),
       emailContact: (contactId, prefill) =>
         update((s) => ({
           tab: "email",

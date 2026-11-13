@@ -4,16 +4,32 @@ import type { IconName } from "@/components/ui";
 // Account settings, team and domains.
 // =============================================================================
 
-export type SettingsTab = "profile" | "tags" | "business" | "team" | "domains" | "notif" | "security";
+export type SettingsTab = "profile" | "tags" | "calendar" | "business" | "team" | "domains" | "notif" | "security" | "portals";
 
 export const SETTINGS_TABS: Array<{ id: SettingsTab; label: string; icon: IconName; kicker: string; heading: string; blurb: string }> = [
   { id: "profile", label: "Profile", icon: "user", kicker: "YOUR PROFILE", heading: "Profile", blurb: "How you appear to your team and clients." },
   { id: "tags", label: "Tags", icon: "tag", kicker: "TAGS", heading: "Tags", blurb: "Labels you put on contacts to sort and filter them." },
+  {
+    id: "calendar",
+    label: "Calendar",
+    icon: "calendar",
+    kicker: "CALENDAR",
+    heading: "Calendar",
+    blurb: "Your booking calendars, availability and the discovery calls your leads book.",
+  },
   { id: "business", label: "Business", icon: "building", kicker: "BUSINESS", heading: "Business details", blurb: "Used on invoices, emails, forms and booking pages." },
   { id: "team", label: "Team", icon: "users", kicker: "TEAM", heading: "Team members", blurb: "Invite people who help you run the CRM and choose what they can do." },
   { id: "domains", label: "Domains", icon: "globe", kicker: "DOMAINS", heading: "Domains & subdomains", blurb: "Put your forms, booking pages and client pages on your own web address." },
   { id: "notif", label: "Notifications", icon: "bell", kicker: "NOTIFICATIONS", heading: "Notifications", blurb: "Choose what the CRM tells you about." },
   { id: "security", label: "Security", icon: "shield", kicker: "SECURITY", heading: "Security", blurb: "Keep your account safe." },
+  {
+    id: "portals",
+    label: "Portals",
+    icon: "eye",
+    kicker: "PORTALS",
+    heading: "Portals",
+    blurb: "Open the VA portal or a client's portal and see it as they do. Owners and admins can also act there.",
+  },
 ];
 
 /** Time zones the pickers offer (IANA names, which the API requires). */

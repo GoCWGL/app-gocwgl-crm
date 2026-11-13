@@ -14,6 +14,9 @@ import type {
   ReferralOut,
   ReferralPatch,
   ReferredByOut,
+  VaReferralIn,
+  VaReferralOut,
+  VaReferralUpdate,
 } from "./models";
 
 // ------------------------------------------------------------------ Portal: the client's referral ID and referrals
@@ -54,3 +57,11 @@ export const undoBonusPaid = (id: string) => del<ReferralOut>(`/admin/referrals/
 /** Full payout details for sending a bonus (owners and admins; audited). */
 export const getPayoutDetails = (contactId: string) => get<AdminPayoutOut>(`/admin/affiliates/payouts/${contactId}`);
 export const deleteReferral = (id: string) => del(`/admin/referrals/${id}`);
+
+// ------------------------------------------------------------------ VA referrals (Finance › Referral bonus › VA referrals)
+export const listVaReferrals = () => get<VaReferralOut[]>("/admin/va-referrals");
+export const createVaReferral = (body: VaReferralIn) => post<VaReferralOut>("/admin/va-referrals", body);
+export const updateVaReferral = (id: string, body: VaReferralUpdate) => patch<VaReferralOut>(`/admin/va-referrals/${id}`, body);
+export const markVaBonusPaid = (id: string) => post<VaReferralOut>(`/admin/va-referrals/${id}/bonus-paid`);
+export const undoVaBonusPaid = (id: string) => del<VaReferralOut>(`/admin/va-referrals/${id}/bonus-paid`);
+export const deleteVaReferral = (id: string) => del(`/admin/va-referrals/${id}`);

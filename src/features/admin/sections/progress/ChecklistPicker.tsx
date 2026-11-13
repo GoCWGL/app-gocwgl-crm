@@ -4,8 +4,21 @@ import { useState } from "react";
 import { Button, ErrorState, FormError, Loading } from "@/components/ui";
 import type { ChecklistAdd, ProjectTemplateOut } from "@/utils/api/models";
 import { useAddProjectChecklist, useProjectTemplates } from "@/utils/hooks/useDelivery";
+import { useAdmin } from "../../state/AdminContext";
 
 export type TemplateKey = ChecklistAdd["template"];
+export type BuildKind = "crm" | "funnel";
+
+/** The checklists each page offers: CRM Requests builds Custom CRMs; Funnel Requests builds funnels. */
+export const BUILD_TEMPLATES: Record<BuildKind, TemplateKey[]> = {
+  crm: ["crm_custom"],
+  funnel: ["foundation", "bundle", "vip"],
+};
+/** What can be added to an existing build on each page. */
+const ADD_TEMPLATES: Record<BuildKind, TemplateKey[]> = { crm: ["crm_custom"], funnel: ["vip"] };
+
+/** CRM Requests (tab "progress") or Funnel Requests (tab "funnels"). */
+export const kindOfTab = (tab: string): BuildKind => (tab === "funnels" ? "funnel" : "crm");
 
 const taskCount = (t: ProjectTemplateOut) => t.phases.reduce((n, p) => n + p.tasks.length, 0);
 
@@ -62,13 +75,14 @@ export function ChecklistOptions({
 /** On an existing build: add a checklist after the phases already there (a funnel client who buys a CRM or a VIP repeat funnel). */
 export function AddChecklist({ projectId }: { projectId: string }) {
   const add = useAddProjectChecklist();
+  const kind = kindOfTab(useAdmin().state.tab);
   const [open, setOpen] = useState(false);
-  const [template, setTemplate] = useState<TemplateKey>("crm_simple");
+  const [template, setTemplate] = useState<TemplateKey>(ADD_TEMPLATES[kind][0]);
 
   if (!open) {
     return (
       <Button variant="outline" size="sm" className="u-self-start" onClick={() => setOpen(true)}>
-        + Add a checklist (CRM or VIP funnel)
+        + Add a checklist ({kind === "crm" ? "Custom CRM" : "VIP funnel"})
       </Button>
     );
   }
@@ -76,7 +90,7 @@ export function AddChecklist({ projectId }: { projectId: string }) {
     <div className="card stack stack--10">
       <span className="kicker">ADD A CHECKLIST</span>
       <span className="text-small">Its phases are added after the ones above, named “CRM · …” or “VIP funnel · …”. You can rename or remove them after.</span>
-      <ChecklistOptions value={template} onChange={setTemplate} only={["vip", "crm_simple", "crm_custom"]} />
+      <ChecklistOptions value={template} onChange={setTemplate} only={ADD_TEMPLATES[kind]} />
       <FormError error={add.error} />
       <div className="cluster cluster--8">
         <Button

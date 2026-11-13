@@ -10,6 +10,11 @@ type Policy = Record<string, string[]>;
 const csp = (policy: Policy) => Object.entries(policy).map(([name, sources]) => [name, ...sources].join(" ")).join("; ");
 
 const TURNSTILE = "https://challenges.cloudflare.com";
+// Training videos play from YouTube's privacy-enhanced embed (no cookies until the viewer presses play).
+const YOUTUBE = "https://www.youtube-nocookie.com";
+// VA resume intro videos can also be Loom or Vimeo recordings.
+const LOOM = "https://www.loom.com";
+const VIMEO = "https://player.vimeo.com";
 
 const APP: Policy = {
   "default-src": ["'self'"],
@@ -18,7 +23,7 @@ const APP: Policy = {
   "img-src": ["'self'", "data:", "blob:", "https:"],
   "font-src": ["'self'", "data:"],
   "connect-src": ["'self'"],
-  "frame-src": ["'self'", TURNSTILE],
+  "frame-src": ["'self'", TURNSTILE, YOUTUBE, LOOM, VIMEO],
   "object-src": ["'none'"],
   "base-uri": ["'self'"],
   "form-action": ["'self'"],

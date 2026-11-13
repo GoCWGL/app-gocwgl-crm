@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Avatar, Badge, Button, FormError, LoadState, Select } from "@/components/ui";
+import { Avatar, Badge, Button, FormError, LoadState, Select, ConfirmDialog } from "@/components/ui";
 import { CRM_PACKAGES, type CrmPackageKey } from "@/data/portal";
 import { avatarTone, type Tone } from "@/lib/tones";
 import type { AdminCrmRequestOut, CrmRequestStatus } from "@/utils/api/models";
@@ -26,7 +26,7 @@ const STATUSES: Array<{ value: CrmRequestStatus; label: string; tone: Tone }> = 
 ];
 const statusOf = (s: string) => STATUSES.find((x) => x.value === s) ?? STATUSES[0];
 
-/** Build Progress › CRM requests: what each client asked for in "Request a CRM", so you can prepare for the call. */
+/** CRM Requests › CRM requests: what each client asked for in "Request a CRM", so you can prepare for the call. */
 export function CrmRequestsPanel({ canWrite }: { canWrite: boolean }) {
   const { update } = useAdmin();
   const query = useCrmRequests();
@@ -36,6 +36,8 @@ export function CrmRequestsPanel({ canWrite }: { canWrite: boolean }) {
   const invoice = useSendCrmRequestInvoice();
   const markPaid = useMarkCrmRequestPaid();
   const requests = query.data ?? [];
+  // Starting a build is asked first, so it can't happen by accident.
+  const [confirming, setConfirming] = useState<(typeof requests)[number] | null>(null);
 
   return (
     <LoadState
@@ -59,16 +61,30 @@ export function CrmRequestsPanel({ canWrite }: { canWrite: boolean }) {
               })
             }
             onStatus={(status) => updateRequest.mutate({ id: r.id, status })}
-            onStart={() =>
-              start.mutate(r.id, {
-                // Jump to the new build on the Builds tab.
-                onSuccess: (build) => update({ progressView: "builds", projectId: build.id, toast: `${build.package} build started.` }),
-              })
-            }
+            onStart={() => setConfirming(r)}
             onDelete={() => remove.mutate(r.id)}
           />
         ))}
       </div>
+      {confirming && (
+        <ConfirmDialog
+          title="Start this CRM build?"
+          confirmLabel="Yes, start build"
+          pending={start.isPending}
+          error={start.error}
+          onConfirm={() =>
+            start.mutate(confirming.id, {
+              // Jump to the new build on the Builds tab.
+              onSuccess: (build) => (setConfirming(null), update({ progressView: "builds", projectId: build.id, toast: `${build.package} build started.` })),
+            })
+          }
+          onClose={() => setConfirming(null)}
+        >
+          <p>
+            This starts the build for <b>{confirming.name}</b> ({confirming.clientName}) with its CRM checklist. The client sees it in their portal’s Build progress.
+          </p>
+        </ConfirmDialog>
+      )}
     </LoadState>
   );
 }

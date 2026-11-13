@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import * as api from "@/utils/api/affiliates";
-import type { AffiliatePatch, AffiliateProgramUpdate, PayoutIn, ReferralIn, ReferralPatch } from "@/utils/api/models";
+import type { AffiliatePatch, AffiliateProgramUpdate, PayoutIn, ReferralIn, ReferralPatch, VaReferralUpdate } from "@/utils/api/models";
 import { qk } from "./keys";
 import { useCanUseMenu } from "./useUsers";
 import { useApiMutation } from "./mutation";
@@ -16,7 +16,7 @@ export const useRemoveMyPayout = () => useApiMutation(api.removeMyPayout, { inva
 
 // ------------------------------------------------------------------ Admin
 /** The program's bonus shows on every referral that has no amount of its own, so both refresh together. */
-const ALL = [qk.referrals, qk.affiliateProgram, qk.affiliates];
+const ALL = [qk.referrals, qk.affiliateProgram, qk.affiliates, qk.vaReferrals];
 
 // Affiliates data: not requested for teammates without the Affiliates menu.
 export const useAffiliateProgram = () =>
@@ -53,3 +53,14 @@ export const usePayoutDetails = (contactId: string) =>
 export const useMarkBonusPaid = () => useApiMutation(api.markBonusPaid, { invalidate: ALL });
 export const useUndoBonusPaid = () => useApiMutation(api.undoBonusPaid, { invalidate: ALL });
 export const useDeleteReferral = () => useApiMutation(api.deleteReferral, { invalidate: ALL });
+
+// ------------------------------------------------------------------ VA referrals
+const VA_REFERRALS = [qk.vaReferrals];
+export const useVaReferrals = () =>
+  useQuery({ queryKey: qk.vaReferrals, queryFn: api.listVaReferrals, enabled: useCanUseMenu("affiliates") });
+export const useCreateVaReferral = () => useApiMutation(api.createVaReferral, { invalidate: VA_REFERRALS });
+export const useUpdateVaReferral = () =>
+  useApiMutation((v: { id: string; body: VaReferralUpdate }) => api.updateVaReferral(v.id, v.body), { invalidate: VA_REFERRALS });
+export const useMarkVaBonusPaid = () => useApiMutation(api.markVaBonusPaid, { invalidate: VA_REFERRALS });
+export const useUndoVaBonusPaid = () => useApiMutation(api.undoVaBonusPaid, { invalidate: VA_REFERRALS });
+export const useDeleteVaReferral = () => useApiMutation(api.deleteVaReferral, { invalidate: VA_REFERRALS });

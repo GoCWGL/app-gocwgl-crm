@@ -102,3 +102,23 @@
     }
   }
 }
+
+// "Are you sure?" pop-up (ConfirmDialog).
+.confirm-dialog {
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #fff4e3;
+    color: #c76a00;
+  }
+
+  &__body p {
+    margin: 0;
+    color: $ink-soft;
+    line-height: 1.55;
+  }
+}

@@ -186,7 +186,7 @@ function ClientFolder({
             {files.length} files{email && ` · ${email}`}
           </span>
         </div>
-        <Button variant="outline" onClick={() => update({ tab: "clients", editContactId: id })}>
+        <Button variant="outline" onClick={() => update({ tab: "clients", clientFullId: id, editContactId: "" })}>
           Open profile
         </Button>
         {canWrite && (

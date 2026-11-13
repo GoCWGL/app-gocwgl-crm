@@ -6,9 +6,10 @@ import { Icon } from "@/components/ui";
 import { roleLabel } from "@/data/admin";
 import { refresh } from "@/utils/api/client";
 import type { SessionResponse, User } from "@/utils/api/models";
-import { getSession, useSession } from "@/utils/auth/session";
+import { getSession, isVa, useSession } from "@/utils/auth/session";
 import { acceptSession } from "@/utils/hooks/useAuth";
 import { AcceptInviteForm } from "./components/AcceptInviteForm";
+import { ApplyOptions } from "./components/ApplyOptions";
 import { AuthBrandPanel } from "./components/AuthBrandPanel";
 import { AuthNotice } from "./components/AuthNotice";
 import { ForgotForm } from "./components/ForgotForm";
@@ -29,11 +30,12 @@ const OAUTH_NOTICES: Record<string, Notice> = {
 
 /**
  * Where a signed-in user goes, straight after sign-in:
- * team roles (owner = Super Admin, admin, sales, viewer) → the CRM dashboard; clients → their portal.
+ * team roles (owner = Super Admin, admin, sales, viewer) → the CRM dashboard; VAs → the VA portal; clients → their portal.
  * The API sets `isStaff`; staff without 2-step get a reminder in the CRM (`?enroll=mfa`) instead of a detour.
  */
 function homeFor(user: User | null | undefined, enrollMfa = false): string {
   if (!user) return "/login";
+  if (isVa(user)) return "/va";
   if (!user.isStaff) return "/portal";
   return enrollMfa ? "/admin?enroll=mfa" : "/admin";
 }
@@ -117,7 +119,7 @@ export function SignInPage() {
     if (user) router.replace(homeFor(user));
   }, [status, mode, router, fromLink]);
 
-  const head = getHeading(mode, { verifyReason, doneAfterSignup, isStaff: !!session?.user.isStaff, email: verifyEmail });
+  const head = getHeading(mode, { verifyReason, doneAfterSignup, isStaff: !!session?.user.isStaff, isVa: isVa(session?.user), email: verifyEmail });
 
   return (
     <div className="auth">
@@ -151,6 +153,7 @@ export function SignInPage() {
               onForgot={() => go("forgot")}
             />
           )}
+          {mode === "login" && <ApplyOptions />}
 
 
           {mode === "forgot" && (
@@ -204,7 +207,10 @@ export function SignInPage() {
 }
 
 // ----------------------------------------------------------------- Copy
-function getHeading(mode: AuthMode, ctx: { verifyReason: VerifyReason; doneAfterSignup: boolean; isStaff: boolean; email: string }) {
+function getHeading(
+  mode: AuthMode,
+  ctx: { verifyReason: VerifyReason; doneAfterSignup: boolean; isStaff: boolean; isVa: boolean; email: string },
+) {
   switch (mode) {
     case "forgot":
       return {
@@ -246,7 +252,7 @@ function getHeading(mode: AuthMode, ctx: { verifyReason: VerifyReason; doneAfter
         : {
             kicker: "SIGNED IN",
             title: "You are in",
-            sub: ctx.isStaff ? "Taking you to the CRM dashboard." : "Taking you to your client portal.",
+            sub: ctx.isStaff ? "Taking you to the CRM dashboard." : ctx.isVa ? "Taking you to your VA portal." : "Taking you to your client portal.",
           };
     default:
       return { kicker: "SECURE ACCESS", title: "Welcome back", sub: "Sign in to your GoCWGL account." };
@@ -254,10 +260,16 @@ function getHeading(mode: AuthMode, ctx: { verifyReason: VerifyReason; doneAfter
 }
 
 function getSignedInSummary(user: User, ctx: { doneAfterSignup: boolean; enrollMfa: boolean }) {
-  const role = user.isStaff ? `${roleLabel(user.role)} · GoCWGL team` : user.portalRole === "viewer" ? "Portal viewer" : "Client";
+  const role = user.isStaff
+    ? `${roleLabel(user.role)} · GoCWGL team`
+    : isVa(user)
+      ? "VA · GoCWGL"
+      : user.portalRole === "viewer"
+        ? "Portal viewer"
+        : "Client";
   const steps = ctx.doneAfterSignup
     ? ["Email verified", user.isStaff ? "Team account ready" : "Portal ready"]
-    : ["Password checked", user.mfaEnabled ? "Two-step check passed" : user.isStaff ? "Team account" : "Client account"];
+    : ["Password checked", user.mfaEnabled ? "Two-step check passed" : user.isStaff ? "Team account" : isVa(user) ? "VA account" : "Client account"];
   steps.push(user.isStaff ? "Opening the CRM…" : "Opening your portal…");
   return {
     who: `${user.fullName || user.email} · ${role}`,

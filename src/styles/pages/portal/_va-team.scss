@@ -1,0 +1,3475 @@
+@use "../../abstracts" as *;
+
+// Client portal › My VA team (Live work, Work journal, Team, Projects, Feedback), VA invoices, and the staff client switcher.
+
+.cp-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: $cyan-700;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.cp-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+
+  &__range {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: $muted;
+    font-family: $font-mono;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  .select {
+    width: auto;
+    min-width: 160px;
+  }
+}
+
+// ------------------------------------------------------------------ Live work
+.cp-live {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.cp-live-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 3px solid #cbd5e1;
+
+  &.is-working {
+    border-top-color: $green-500;
+  }
+
+  &.is-on_break {
+    border-top-color: #f59e0b;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__name {
+    color: $ink;
+    font-size: 16px;
+  }
+
+  &__now {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 14px;
+    border: 1px solid $line-faint;
+    border-radius: $radius-md;
+    background: $bg-soft;
+
+    > strong {
+      color: $ink;
+      font-size: 15px;
+    }
+
+    .is-working & {
+      border-color: rgba(16, 185, 129, 0.25);
+      background: linear-gradient(120deg, rgba(16, 185, 129, 0.08), $white 70%);
+    }
+
+    &.is-idle {
+      background: transparent;
+      border-style: dashed;
+    }
+  }
+
+  &__timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+    color: $ink-soft;
+    font-family: $font-mono;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+
+  &__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+    color: $muted;
+    font-size: 13px;
+
+    b {
+      color: $ink;
+      font-family: $font-mono;
+    }
+
+    .cp-link {
+      margin-left: auto;
+      font-size: 13px;
+    }
+  }
+}
+
+// ------------------------------------------------------------------ Work journal
+.cp-days {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cp-day {
+  padding: 0;
+  overflow: hidden;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    border-bottom: 1px solid $line-faint;
+    background: $bg-soft;
+    color: $ink;
+  }
+
+  &__total {
+    color: $cyan-700;
+    font-family: $font-mono;
+    font-weight: 800;
+  }
+}
+
+.cp-entries {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cp-entry {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+
+  & + & {
+    border-top: 1px solid $line-faint;
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    strong {
+      color: $ink;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__time {
+    color: $muted;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  &__dur {
+    min-width: 64px;
+    color: $ink;
+    font-family: $font-mono;
+    font-weight: 800;
+    text-align: right;
+  }
+
+  &__value {
+    min-width: 76px;
+    color: #0f7a4a;
+    font-family: $font-mono;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: right;
+  }
+
+  .tl-chips {
+    margin-top: 4px;
+  }
+
+  @include down(md) {
+    grid-template-columns: auto 1fr auto auto;
+
+    &__time {
+      grid-column: 2;
+      grid-row: 2;
+    }
+  }
+}
+
+// ------------------------------------------------------------------ Team
+.cp-team {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 18px;
+
+  @include down(md) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cp-team-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  &__name {
+    margin: 0;
+    color: $ink;
+    font-size: 19px;
+  }
+
+  &__title {
+    color: $cyan-700;
+    font-weight: 700;
+  }
+
+  &__where {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0;
+    border: 1px solid $line-faint;
+    border-radius: $radius-md;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 10px 12px;
+
+      & + div {
+        border-left: 1px solid $line-faint;
+      }
+    }
+
+    dt {
+      color: $muted;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    dd {
+      margin: 0;
+      color: $ink;
+      font-family: $font-mono;
+      font-size: 15px;
+      font-weight: 800;
+    }
+  }
+
+  &__rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+  }
+}
+
+.cp-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: $bg-tint;
+    color: $ink-soft;
+    font-size: 12px;
+    font-weight: 600;
+  }
+}
+
+// ------------------------------------------------------------------ Projects
+.cp-projects {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cp-project {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-left: 4px solid var(--tone-solid, #{$cyan-600});
+
+  &.is-requested {
+    border-left-color: #0ea5e9;
+  }
+
+  &.is-in_progress {
+    border-left-color: $orange;
+  }
+
+  &.is-review {
+    border-left-color: #8b5cf6;
+  }
+
+  &.is-done {
+    border-left-color: $green-500;
+  }
+
+  &.is-cancelled {
+    border-left-color: #cbd5e1;
+    opacity: 0.8;
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px 18px;
+  }
+
+  &__title {
+    margin: 0;
+    color: $ink;
+    font-size: 17px;
+  }
+
+  &__va {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px 6px 6px;
+    border: 1px solid $line-faint;
+    border-radius: 999px;
+    color: $ink;
+    font-size: 13px;
+    font-weight: 700;
+
+    > .text-small {
+      padding-left: 6px;
+    }
+  }
+
+  &__details {
+    margin: 0;
+    color: $ink-soft;
+    white-space: pre-wrap;
+  }
+
+  &__note {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: $radius-md;
+    background: #fff7ea;
+    color: $ink-soft;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid $line-faint;
+
+    .select {
+      width: auto;
+      min-width: 200px;
+    }
+  }
+}
+
+.cp-overdue {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+// Requested → In progress → In review → Done
+.cp-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: $muted;
+    font-size: 12px;
+    font-weight: 700;
+
+    // The line to the next step.
+    &::after {
+      content: "";
+      position: absolute;
+      top: 5px;
+      right: 0;
+      left: 14px;
+      height: 2px;
+      background: #e2e8f0;
+    }
+
+    &:last-child::after {
+      display: none;
+    }
+
+    &.is-done::after {
+      background: $orange;
+    }
+
+    &.is-done,
+    &.is-now {
+      color: $ink;
+    }
+  }
+
+  &__dot {
+    position: relative;
+    z-index: 1;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+    background: $white;
+
+    .is-done & {
+      border-color: $orange;
+      background: $orange;
+    }
+
+    .is-now & {
+      border-color: $orange;
+      box-shadow: 0 0 0 4px rgba(255, 153, 0, 0.18);
+    }
+  }
+}
+
+.cp-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+
+  @include down(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// ------------------------------------------------------------------ Feedback
+.cp-feedback {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+
+  @include down(lg) {
+    grid-template-columns: 1fr;
+  }
+
+  &__form,
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+.cp-notes {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__item {
+    display: flex;
+    gap: 10px;
+    padding: 12px 0;
+
+    & + & {
+      border-top: 1px solid $line-faint;
+    }
+  }
+
+  &__text {
+    margin: 0;
+    color: $ink-soft;
+    white-space: pre-wrap;
+  }
+}
+
+// ------------------------------------------------------------------ VA invoices
+.cp-invoice__total {
+  color: $ink;
+  font-family: $font-mono;
+  font-size: 22px;
+}
+
+.cp-pay {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid $line-faint;
+  border-radius: $radius-md;
+  background: $bg-soft;
+  color: $ink-soft;
+
+  strong {
+    color: $ink;
+  }
+
+  &__details {
+    font-family: $font-mono;
+    font-size: 13px;
+    white-space: pre-wrap;
+  }
+}
+
+tr.is-clickable {
+  cursor: pointer;
+
+  &:hover td {
+    background: $bg-soft;
+  }
+}
+
+// ------------------------------------------------------------------ Staff client switcher
+.cp-switch {
+  position: relative;
+
+  &__trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 4px 10px 4px 6px;
+    border: 1px solid $line;
+    border-radius: $radius-md;
+    background: $white;
+    color: $ink;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $cyan-600;
+    }
+  }
+
+  &__menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 40;
+    width: min(420px, 90vw);
+    padding: 8px;
+    border: 1px solid $line;
+    border-radius: $radius-lg;
+    background: $white;
+    box-shadow: 0 18px 40px rgba(11, 20, 36, 0.16);
+
+    ul {
+      max-height: 340px;
+      margin: 6px 0 0;
+      padding: 0;
+      overflow-y: auto;
+      list-style: none;
+    }
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid $line-faint;
+    border-radius: $radius-md;
+    background: $bg-soft;
+    color: $muted;
+
+    input {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      outline: none;
+      font: inherit;
+    }
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px;
+    border: 0;
+    border-radius: $radius-md;
+    background: transparent;
+    color: $ink;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &.is-current {
+      background: $bg-tint;
+    }
+
+    .text-tiny {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__stage {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: $bg-soft;
+    color: $muted;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  &__empty {
+    padding: 12px;
+    color: $muted;
+    font-size: 13px;
+  }
+}
+
+// ------------------------------------------------------------------ Team › hero + Request a VA
+.cp-team-hero {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 16px;
+  background: linear-gradient(120deg, #fff4e3, $white 55%);
+  border-color: rgba(255, 153, 0, 0.3);
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background: $orange;
+    color: $white;
+  }
+
+  &__title {
+    color: $ink;
+    font-size: 17px;
+  }
+}
+
+.cp-request-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #fff4e3;
+  color: #c76a00;
+}
+
+.cp-requests {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cp-request {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+
+  & + & {
+    border-top: 1px solid $line-faint;
+  }
+
+  strong {
+    color: $ink;
+  }
+}
+
+.cp-engage {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+
+  @include down(sm) {
+    grid-template-columns: 1fr;
+  }
+
+  &__opt {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 10px 12px;
+    border: 1px solid $line;
+    border-radius: $radius-md;
+    background: $white;
+    color: $ink;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    span {
+      color: $muted;
+      font-size: 12px;
+    }
+
+    &:hover {
+      border-color: $cyan-600;
+    }
+
+    &.is-on {
+      border-color: $orange;
+      background: #fff7ea;
+      box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.15);
+    }
+  }
+}
+
+.cp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 6px 8px;
+  border: 1px solid $line;
+  border-radius: $radius-md;
+  background: $white;
+
+  &:focus-within {
+    border-color: $cyan-600;
+  }
+
+  &__input {
+    flex: 1;
+    min-width: 140px;
+    border: 0;
+    outline: none;
+    background: transparent;
+    font: inherit;
+  }
+}
+
+.cp-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px 3px 10px;
+  border-radius: 999px;
+  background: $bg-tint;
+  color: $ink;
+  font-size: 12.5px;
+  font-weight: 600;
+
+  button {
+    display: grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: $muted;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(8, 145, 178, 0.12);
+    }
+  }
+}
+
+.cp-suggest {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border: 1px dashed $line;
+    border-radius: 999px;
+    background: transparent;
+    color: $ink-soft;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    &:hover {
+      border-color: $orange;
+      color: $ink;
+    }
+  }
+}
+
+// ------------------------------------------------------------------ Admin › client profile › VA requests & projects
+.cw-card:not(:has(.inset)) {
+  display: none;
+}
+
+.cw-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid $line-faint;
+  border-radius: $radius-md;
+  background: $white;
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+
+    strong {
+      color: $ink;
+    }
+  }
+
+  &__details {
+    margin: 0;
+    color: $ink-soft;
+    font-size: 13.5px;
+    white-space: pre-wrap;
+  }
+
+  &__staff {
+    padding-top: 8px;
+    border-top: 1px dashed $line-faint;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 160px 1fr auto;
+    align-items: center;
+    gap: 8px;
+
+    textarea {
+      min-height: 34px;
+      resize: vertical;
+    }
+
+    @include down(md) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+// ------------------------------------------------------------------ Dashboard
+.cp-dash-hero {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(120deg, #ecf8fb, $white 55%, #fff7ea);
+
+  &__title {
+    margin: 0;
+    color: $ink;
+    font-size: 24px;
+    letter-spacing: -0.01em;
+  }
+
+  &__live {
+    display: flex;
+
+    > .presence + .presence {
+      margin-left: -10px;
+    }
+  }
+}
+
+.cp-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+
+  @include down(lg) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.cp-kpi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px 18px;
+  overflow: hidden;
+  border: 1px solid $line-faint;
+  border-radius: $radius-lg;
+  background: $white;
+  box-shadow: $shadow-card;
+  color: $ink;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--tone-solid, #{$cyan-600});
+  }
+
+  &:hover {
+    box-shadow: 0 10px 26px rgba(8, 145, 178, 0.14);
+    transform: translateY(-1px);
+  }
+
+  &__icon {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: var(--tone-bg, #{$bg-soft});
+    color: var(--tone-fg, #{$cyan-700});
+  }
+
+  &__label {
+    color: $muted;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  &__value {
+    font-family: $font-mono;
+    font-size: 24px;
+  }
+
+  &__hint {
+    color: $muted;
+    font-size: 12.5px;
+  }
+}
+
+.cp-dash-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 18px;
+
+  @include down(lg) {
+    grid-template-columns: 1fr;
+  }
+
+  &__main,
+  &__side {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+}
+
+.cp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .cp-link {
+      margin-left: auto;
+      font-size: 13px;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    color: $ink;
+    font-size: 15px;
+  }
+}
+
+.cp-dash-vas,
+.cp-dash-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  > li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+
+    & + li {
+      border-top: 1px solid $line-faint;
+    }
+
+    strong {
+      color: $ink;
+    }
+  }
+}
+
+.cp-dash-vas {
+  &__hours {
+    color: $ink-soft;
+    font-family: $font-mono;
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+
+    @include down(sm) {
+      display: none;
+    }
+  }
+
+  .text-small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+}
+
+.cp-dash-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px dashed rgba(255, 153, 0, 0.45);
+  border-radius: $radius-md;
+  background: #fff9ef;
+  color: $ink-soft;
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+
+  > :last-child {
+    margin-left: auto;
+  }
+}
+
+.cp-dash-build {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__pct {
+    color: $ink;
+    font-family: $font-mono;
+    font-size: 22px;
+  }
+}
+
+.cp-dash-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: $font-mono;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.cp-dash-quote {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 0;
+  border-left: 3px solid #f472b6;
+  border-radius: 0 $radius-md $radius-md 0;
+  background: $bg-soft;
+  color: $ink-soft;
+  font: inherit;
+  font-size: 13.5px;
+  font-style: italic;
+  text-align: left;
+  cursor: pointer;
+
+  .text-tiny {
+    font-style: normal;
+  }
+}
+
+.cp-dash-aff {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+
+    span {
+      display: flex;
+      flex-direction: column;
+      padding: 8px 10px;
+      border-radius: $radius-md;
+      background: $bg-soft;
+      color: $muted;
+      font-size: 12px;
+    }
+
+    b {
+      color: $ink;
+      font-family: $font-mono;
+      font-size: 15px;
+    }
+  }
+
+  code {
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: $bg-tint;
+    color: $ink;
+    font-family: $font-mono;
+  }
+}
+
+.cp-dash-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px;
+  border: 1px dashed $line;
+  border-radius: $radius-md;
+  color: $muted;
+  font-size: 13.5px;
+}
+
+// ------------------------------------------------------------------ Request a VA form
+// One clean column: plain section headings, hairline dividers, an even field grid.
+.vrf-foot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: $muted;
+  font-size: 12.5px;
+
+  @include down(sm) {
+    display: none;
+  }
+}
+
+.vrf {
+  display: flex;
+  flex-direction: column;
+}
+
+.vrf-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 0;
+
+  &:first-of-type {
+    padding-top: 4px;
+  }
+
+  & + & {
+    border-top: 1px solid $line-faint;
+  }
+
+  &__head {
+    h3 {
+      margin: 0;
+      color: $ink;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    p {
+      margin: 2px 0 0;
+      color: $muted;
+      font-size: 12.5px;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+}
+
+.vrf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 12px;
+
+  &--1 {
+    grid-template-columns: 1fr;
+  }
+
+  @include down(sm) {
+    grid-template-columns: 1fr 1fr;
+
+    &__wide {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+.vrf-half {
+  max-width: calc(50% - 6px);
+
+  @include down(sm) {
+    max-width: none;
+  }
+}
+
+.vrf-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid $line-faint;
+  border-radius: 10px;
+  background: $bg-soft;
+
+  button {
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: $muted;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      color: $ink;
+    }
+
+    &.is-on {
+      background: $white;
+      box-shadow: 0 1px 2px rgba(11, 20, 36, 0.08), 0 0 0 1px $line-faint;
+      color: $ink;
+    }
+  }
+}
+
+.bullet-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .input {
+      flex: 1;
+    }
+  }
+
+  &__dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #cbd5e1;
+  }
+
+  &__remove {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: $muted;
+    cursor: pointer;
+
+    &:hover {
+      background: $bg-tint;
+      color: $ink;
+    }
+  }
+
+  &__add {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: 5px;
+    margin-left: 14px;
+    padding: 4px 6px;
+    border: 0;
+    background: transparent;
+    color: $cyan-700;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// ------------------------------------------------------------------ VA request details (admin card, client profile, Team)
+.vr-clamp {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.vr-toggle {
+  align-self: flex-start;
+  font-size: 12.5px;
+}
+
+// ------------------------------------------------------------------ Team › Active VA cards
+.tc-grid,
+.rq-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+
+  @include down(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tc-card,
+.rq-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid #e6edf5;
+  border-radius: 16px;
+  background: $white;
+  box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04), 0 8px 24px rgba(11, 20, 36, 0.04);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    border-color: #d6e2ee;
+    box-shadow: 0 1px 2px rgba(11, 20, 36, 0.05), 0 14px 32px rgba(11, 20, 36, 0.08);
+  }
+}
+
+.tc-card {
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  &__name {
+    margin: 0;
+    color: $ink;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  &__role {
+    color: $muted;
+    font-size: 13px;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    color: $muted;
+    font-size: 12.5px;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0;
+    padding: 12px 0;
+    border-top: 1px solid #eef2f7;
+    border-bottom: 1px solid #eef2f7;
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+
+      & + div {
+        padding-left: 14px;
+        border-left: 1px solid #eef2f7;
+      }
+    }
+
+    dt {
+      color: $muted;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+
+    dd {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin: 0;
+      color: $ink;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+  }
+
+  &__star {
+    color: #f59e0b;
+    fill: #f59e0b;
+  }
+
+  &__muted {
+    color: #b6c2d1;
+  }
+
+  &__skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      padding: 3px 9px;
+      border: 1px solid #e6edf5;
+      border-radius: 6px;
+      background: #f8fafc;
+      color: $ink-soft;
+      font-size: 12px;
+      font-weight: 600;
+
+      &.is-more {
+        color: $muted;
+      }
+    }
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: auto;
+  }
+
+  &__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+  }
+}
+
+.rq-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: $ink-soft;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    color: $cyan-700;
+    text-decoration: none;
+  }
+
+  &--danger:hover {
+    color: #b91c1c;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+// ------------------------------------------------------------------ Team › Pending request cards
+.rq-card {
+  &.is-ended {
+    background: #fbfcfe;
+    box-shadow: none;
+  }
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__title {
+    margin: 0;
+    color: $ink;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  &__meta {
+    color: $muted;
+    font-size: 12.5px;
+  }
+
+  &__note {
+    display: flex;
+    gap: 8px;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f1f8fb;
+    color: $ink-soft;
+    font-size: 13px;
+
+    > svg {
+      flex: none;
+      margin-top: 2px;
+      color: $cyan-700;
+    }
+  }
+
+  &__details {
+    padding-top: 14px;
+    border-top: 1px solid #eef2f7;
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #eef2f7;
+  }
+}
+
+// Sent → In review → Approved → Finding your VA → Matched
+.rq-steps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    // The line to the next step.
+    &::after {
+      content: "";
+      position: absolute;
+      top: 7px;
+      right: 0;
+      left: 16px;
+      height: 2px;
+      border-radius: 2px;
+      background: #e6edf5;
+    }
+
+    &:last-child::after {
+      display: none;
+    }
+
+    &.is-done::after {
+      background: $green-500;
+    }
+  }
+
+  &__dot {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 16px;
+    height: 16px;
+    border: 2px solid #d6e2ee;
+    border-radius: 50%;
+    background: $white;
+    color: $white;
+
+    .is-done & {
+      border-color: $green-500;
+      background: $green-500;
+    }
+
+    .is-now & {
+      border-color: $orange;
+      box-shadow: 0 0 0 4px rgba(255, 153, 0, 0.18);
+    }
+  }
+
+  &__label {
+    padding-right: 4px;
+    color: #9aa8b9;
+    font-size: 11.5px;
+    font-weight: 600;
+    line-height: 1.25;
+
+    .is-done &,
+    .is-now & {
+      color: $ink;
+    }
+  }
+}
+
+.rq-card__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: $ink;
+  font-size: 13px;
+  font-weight: 600;
+
+  &.is-declined {
+    color: #b91c1c;
+  }
+}
+
+.rq-card__status-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94a3b8;
+
+  .is-reviewing &,
+  .is-posted &,
+  .is-interviewing & {
+    background: $orange;
+    animation: status-pulse 2s infinite;
+  }
+
+  .is-approved &,
+  .is-matched & {
+    background: $green-500;
+  }
+
+  .is-declined & {
+    background: #ef4444;
+  }
+}
+
+.rq-card__when {
+  color: $muted;
+  font-weight: 500;
+}
+
+// ------------------------------------------------------------------ Admin › match a VA
+.mv-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 10px;
+  background: rgba(16, 185, 129, 0.06);
+
+  strong {
+    color: $ink;
+    font-size: 13.5px;
+  }
+}
+
+.mv-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 360px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: $ink;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: $bg-soft;
+    }
+
+    &.is-on {
+      border-color: rgba(255, 153, 0, 0.5);
+      background: #fff8ec;
+    }
+  }
+
+  &__meta {
+    color: $muted;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
+
+// ------------------------------------------------------------------ Client › VA profile pop-up (their resume)
+.vp-modal {
+  .modal__body {
+    padding: 0;
+    background: $bg;
+  }
+
+  &__paper {
+    padding: 20px;
+  }
+
+  &__note {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: $muted;
+    font-size: 12.5px;
+
+    @include down(md) {
+      display: none;
+    }
+  }
+}
+
+.rq-match {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 12px;
+  background: linear-gradient(120deg, rgba(16, 185, 129, 0.07), $white 70%);
+
+  &__kicker {
+    color: #047857;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__name {
+    color: $ink;
+    font-size: 15px;
+  }
+
+  &__meta {
+    color: $muted;
+    font-size: 12.5px;
+  }
+
+  .tc-card__skills {
+    margin-top: 6px;
+  }
+
+  @include down(sm) {
+    flex-wrap: wrap;
+  }
+}
+
+// ------------------------------------------------------------------ Admin › job applicants
+.ap-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border: 1px solid rgba(8, 145, 178, 0.25);
+  border-radius: 999px;
+  background: #f0f9fb;
+  color: $cyan-700;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    background: #e2f4f8;
+  }
+}
+
+.ap-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ap-item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #e6edf5;
+  border-radius: 12px;
+  background: $white;
+
+  &.is-hired {
+    border-color: rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.05);
+  }
+
+  &.is-not_selected {
+    opacity: 0.7;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    strong {
+      color: $ink;
+    }
+  }
+
+  &__note {
+    margin: 0;
+    padding: 8px 10px;
+    border-left: 3px solid #cbd5e1;
+    background: #f8fafc;
+    color: $ink-soft;
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+// ------------------------------------------------------------------ Admin › client request card + details panel
+.rq-admin-card {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover .rq-admin-card__open {
+    color: $cyan-700;
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid #eef2f7;
+  }
+
+  &__va {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: $ink;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__open {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: $muted;
+    font-size: 12.5px;
+    font-weight: 700;
+  }
+}
+
+.rq-drawer {
+  &__empty {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px dashed $line;
+    border-radius: 10px;
+  }
+
+  &__declined {
+    color: #b91c1c;
+  }
+}
+
+.rq-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  & + & {
+    padding-top: 18px;
+    border-top: 1px solid #eef2f7;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    h3 {
+      margin: 0;
+      color: $ink;
+      font-size: 14px;
+      font-weight: 700;
+    }
+  }
+}
+
+.rq-stages {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+
+  @include down(sm) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  &__opt {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 12px;
+    border: 1px solid #e6edf5;
+    border-radius: 10px;
+    background: $white;
+    color: $muted;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    strong {
+      color: $ink;
+      font-size: 13.5px;
+    }
+
+    span {
+      font-size: 11.5px;
+      line-height: 1.3;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: $line;
+    }
+
+    &.is-on {
+      border-color: $orange;
+      background: #fff8ec;
+      box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.14);
+      color: #c76a00;
+    }
+
+    &:disabled {
+      cursor: default;
+    }
+  }
+}
+
+// Admin › New job posting: client picker + publish switch.
+.vrf-publish {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: $ink-soft;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vrf-client {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &.is-picked {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid $line-faint;
+    border-radius: 10px;
+    background: $bg-soft;
+
+    strong {
+      color: $ink;
+    }
+
+    .bullet-field__add {
+      margin: 0;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: $ink;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+
+      &:hover {
+        background: $bg-soft;
+      }
+    }
+  }
+
+  &__empty {
+    padding: 8px;
+    color: $muted;
+    font-size: 13px;
+  }
+}
+
+.rq-admin-card .job-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+}
+
+.rq-status-select {
+  appearance: none;
+  padding: 4px 26px 4px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--tone-bg, #{$bg-soft})
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%234f6280' stroke-width='2.5'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")
+    no-repeat right 9px center;
+  color: var(--tone-fg, #{$ink});
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $line;
+  }
+}
+
+.rq-stages {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.rq-client {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  strong {
+    color: $ink;
+  }
+}
+
+// ------------------------------------------------------------------ Client › request applicants
+.rq-applicants {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 153, 0, 0.35);
+  border-radius: 12px;
+  background: linear-gradient(120deg, #fff8ec, $white 70%);
+  color: $ink;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $orange;
+  }
+
+  &__count {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: $orange;
+    color: $white;
+    font-family: $font-mono;
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  &__go {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #c76a00;
+    font-size: 13px;
+    font-weight: 700;
+  }
+}
+
+.ca-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ca-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e6edf5;
+  border-radius: 14px;
+  background: $white;
+
+  &.is-hired {
+    border-color: rgba(16, 185, 129, 0.45);
+    background: rgba(16, 185, 129, 0.04);
+  }
+
+  &.is-not_selected {
+    opacity: 0.65;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__name {
+    color: $ink;
+    font-size: 15px;
+  }
+
+  &__meta {
+    color: $muted;
+    font-size: 12.5px;
+  }
+
+  &__note {
+    margin: 0;
+    padding: 8px 10px;
+    border-left: 3px solid #e2e8f0;
+    background: #f8fafc;
+    color: $ink-soft;
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+  }
+}
+
+// ------------------------------------------------------------------ Admin › job request full page
+.jr-hero__icon {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 84px;
+  height: 84px;
+  border: 4px solid $white;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #ffb340, $orange);
+  box-shadow: 0 10px 24px rgba(255, 153, 0, 0.3);
+  color: $white;
+}
+
+.jr-stages {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__opt {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: $muted;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    strong {
+      color: $ink;
+      font-size: 13.5px;
+    }
+
+    span span,
+    .stack > span {
+      font-size: 11.5px;
+    }
+
+    &:hover:not(:disabled) {
+      background: $bg-soft;
+    }
+
+    &.is-on {
+      border-color: rgba(255, 153, 0, 0.45);
+      background: #fff8ec;
+      color: #c76a00;
+    }
+
+    &:disabled {
+      cursor: default;
+    }
+  }
+
+  &__dot {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border: 2px solid #cbd5e1;
+    border-radius: 50%;
+
+    .is-on & {
+      border-color: $orange;
+      background: $orange;
+    }
+  }
+}
+
+.jr-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0 0 0 14px;
+  border-left: 2px solid #eef2f7;
+  list-style: none;
+  color: $muted;
+  font-size: 13px;
+
+  b {
+    display: block;
+    color: $ink;
+    font-weight: 600;
+  }
+}
+
+.jr-danger {
+  border-color: rgba(239, 68, 68, 0.25);
+
+  .vp-card__icon {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+}
+
+// ------------------------------------------------------------------ Request details (admin + client), modern
+.rd {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  color: $ink-soft;
+  font-size: 14px;
+}
+
+.rd-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.rd-fact {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #e6edf5;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fbfdff, $white);
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: rgba(8, 145, 178, 0.08);
+    color: $cyan-700;
+  }
+
+  &__label {
+    color: $muted;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  &__value {
+    color: $ink;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+}
+
+.rd-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    color: $ink;
+    font-size: 13px;
+    font-weight: 700;
+
+    svg {
+      color: $muted;
+    }
+  }
+
+  &__text {
+    margin: 0;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  &--must,
+  &--nice {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  &--must {
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.05);
+
+    .rd-block__title svg,
+    .rd-checks svg {
+      color: #059669;
+    }
+  }
+
+  &--nice {
+    border: 1px solid #e6edf5;
+    background: #f8fafc;
+
+    .rd-block__title svg,
+    .rd-checks svg {
+      color: #8b5cf6;
+    }
+  }
+}
+
+.rd-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: $bg-soft;
+    color: $ink;
+    line-height: 1.45;
+  }
+
+  &__num {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    background: $white;
+    box-shadow: 0 0 0 1px #e6edf5;
+    color: $cyan-700;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+  }
+}
+
+.rd-split {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.rd-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    color: $ink;
+    line-height: 1.45;
+
+    svg {
+      flex: none;
+      margin-top: 3px;
+    }
+  }
+}
+
+.rd-important {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 153, 0, 0.35);
+  border-radius: 12px;
+  background: #fff8ec;
+  color: $ink-soft;
+
+  strong {
+    color: #9a5200;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: $orange;
+    color: $white;
+  }
+}
+
+.vrf-grid--2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.jr-hire-note {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-left: 3px solid $orange;
+  border-radius: 0 10px 10px 0;
+  background: #fff8ec;
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #9a5200;
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: $ink-soft;
+    font-size: 13.5px;
+    white-space: pre-wrap;
+  }
+}
+
+.cp-toolbar__dates {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: $muted;
+
+  .input {
+    width: 150px;
+  }
+}
+
+// ------------------------------------------------------------------ Tasks (client) — modern cards
+.tk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 16px;
+
+  @include down(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.tk-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 18px 14px;
+  overflow: hidden;
+  border: 1px solid #e6edf5;
+  border-radius: 16px;
+  background: $white;
+  box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04), 0 8px 24px rgba(11, 20, 36, 0.04);
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+
+  // A thin colored edge by status.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: #cbd5e1;
+  }
+
+  &.is-requested::before {
+    background: #0ea5e9;
+  }
+
+  &.is-in_progress::before {
+    background: $orange;
+  }
+
+  &.is-review::before {
+    background: #8b5cf6;
+  }
+
+  &.is-done::before {
+    background: $green-500;
+  }
+
+  &.is-cancelled {
+    opacity: 0.7;
+  }
+
+  &:hover {
+    border-color: #d6e2ee;
+    box-shadow: 0 1px 2px rgba(11, 20, 36, 0.05), 0 14px 32px rgba(11, 20, 36, 0.08);
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__title {
+    margin: 0;
+    color: $ink;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+
+  &__meta {
+    margin-top: -6px;
+    color: $muted;
+    font-size: 12.5px;
+  }
+
+  &__steps {
+    padding: 4px 0;
+  }
+
+  &__details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+
+    p {
+      margin: 0;
+      color: $ink-soft;
+      font-size: 13.5px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+  }
+
+  &__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid #eef2f7;
+
+    .select {
+      width: auto;
+      min-width: 170px;
+    }
+  }
+
+  &__va {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
+    strong {
+      color: $ink;
+      font-size: 13px;
+    }
+  }
+
+  &__va-label {
+    color: $muted;
+    font-size: 11.5px;
+  }
+}
+
+.tk-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--tone-bg, #{$bg-soft});
+  color: var(--tone-fg, #{$ink});
+  font-size: 12px;
+  font-weight: 700;
+
+  &__dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--tone-solid, #{$muted});
+  }
+}
+
+.tk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--tone-bg, #{$bg-soft});
+  color: var(--tone-fg, #{$ink});
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.tk-due {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: $muted;
+  font-size: 12px;
+  font-weight: 600;
+
+  &.is-late {
+    color: #dc2626;
+  }
+}
+
+.tk-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 260px;
+    padding: 4px 10px;
+    border: 1px solid #dbe7f1;
+    border-radius: 8px;
+    background: #f5fafd;
+    color: $cyan-700;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-decoration: none;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    &:hover {
+      border-color: $cyan-600;
+      background: #eaf6fa;
+    }
+  }
+
+  &__more {
+    align-self: center;
+    color: $muted;
+    font-size: 12px;
+  }
+}
+
+.tk-link-input__icon {
+  flex: none;
+  color: $muted;
+}
+
+// ------------------------------------------------------------------ VA Tasks — filters, dates, drawer
+.tk-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+  }
+
+  &__field {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: $muted;
+    font-size: 12.5px;
+    font-weight: 600;
+
+    .select {
+      width: auto;
+    }
+  }
+}
+
+.tk-client {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 50%;
+  overflow: hidden;
+  color: $ink-soft;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tk-dates {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 10px 0;
+  border-top: 1px solid #eef2f7;
+  border-bottom: 1px solid #eef2f7;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    & + div {
+      padding-left: 12px;
+      border-left: 1px solid #eef2f7;
+    }
+
+    &.is-late dd,
+    &.is-late dt {
+      color: #dc2626;
+    }
+  }
+
+  dt {
+    color: $muted;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 0;
+    color: $ink;
+    font-size: 13.5px;
+    font-weight: 700;
+  }
+}
+
+.tk-card__desc {
+  margin: 0;
+  color: $ink-soft;
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.tk-drawer__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tk-timer-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 14px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 12px;
+  background: rgba(16, 185, 129, 0.08);
+  color: $ink;
+  font-size: 13.5px;
+  font-weight: 600;
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: $green-500;
+    color: $white;
+  }
+}
+
+// VA tracker: the filter row, and the client's tag manager.
+.cp-toolbar--filters .select {
+  min-width: 170px;
+}
+
+.tt-tags-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+
+  .input {
+    flex: 1 1 200px;
+  }
+}
+
+.tt-tags-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  border: 1px solid $line-faint;
+  border-radius: 12px;
+  list-style: none;
+}
+
+.tt-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+
+  & + & {
+    border-top: 1px solid $line-faint;
+  }
+
+  &__by {
+    color: $muted;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  &__name {
+    flex: 1 1 140px;
+    min-width: 0;
+    height: 34px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: $ink;
+    font: inherit;
+    font-weight: 700;
+
+    &:hover {
+      border-color: $line-soft;
+    }
+
+    &:focus {
+      border-color: $ink;
+      outline: none;
+      background: $white;
+    }
+  }
+}
+
+.tt-swatches {
+  display: inline-flex;
+  gap: 6px;
+
+  &--sm .tt-swatch {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.tt-swatch {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 2px solid $white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px $line-soft;
+  cursor: pointer;
+
+  &.is-on {
+    box-shadow: 0 0 0 2px $ink;
+  }
+}
+
+// VAs › raise requests waiting for the client.
+.rr-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-color: #cfe9dc;
+  background: linear-gradient(180deg, #f3fbf7, $white 70%);
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #dcf5e7;
+    color: #047857;
+  }
+}
+
+.rr-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  border: 1px solid $line-faint;
+  border-radius: 12px;
+  background: $white;
+  list-style: none;
+}
+
+.rr-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+
+  & + & {
+    border-top: 1px solid $line-faint;
+  }
+
+  &__rates {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    color: $muted;
+    font-family: $font-mono;
+    font-size: 13px;
+
+    strong {
+      color: #047857;
+    }
+
+    .text-small {
+      font-family: $font-sans;
+    }
+  }
+
+  &__note {
+    color: $ink-soft;
+    font-size: 13px;
+    font-style: italic;
+  }
+
+  &__kind {
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #dcf5e7;
+    color: #047857;
+    font-size: 11px;
+    font-weight: 800;
+    vertical-align: 1px;
+  }
+}
+
+// VAs › requests as a list (each row opens the request's pop-up).
+.rq-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid $line-soft;
+  border-radius: 16px;
+  background: $white;
+  box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04);
+  list-style: none;
+
+  > li + li {
+    border-top: 1px solid $line-faint;
+  }
+}
+
+.rq-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  background: none;
+  color: $ink;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background: $bg-soft;
+  }
+
+  &.is-ended {
+    opacity: 0.65;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--tone-bg, #{$bg-soft});
+    color: var(--tone-fg, #{$ink-soft});
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__title {
+    overflow: hidden;
+    font-size: 15px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__meta,
+  &__date {
+    overflow: hidden;
+    color: $muted;
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__va {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__chev {
+    color: $muted;
+  }
+
+  @include down(md) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+
+    &__extra,
+    &__date {
+      display: none;
+    }
+
+    &__chev {
+      display: none;
+    }
+  }
+}
+
+.rq-popup__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+
+  .rq-card__status {
+    margin: 0;
+  }
+}
+
+// Admin › Job request page › Status: now, the path (click a step to move), and the ways to end it.
+.jr-status {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  &__now {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--tone-bg, #{$line-soft});
+    border-radius: 12px;
+    background: var(--tone-bg, #{$bg-soft});
+
+    strong {
+      color: var(--tone-fg, #{$ink});
+      font-size: 15px;
+    }
+
+    span span {
+      color: $ink-soft;
+      font-size: 12.5px;
+    }
+  }
+
+  &__now-dot {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--tone-solid, #{$ink});
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.7);
+  }
+
+  &__by {
+    margin-top: -6px;
+    color: $muted;
+    font-size: 12px;
+  }
+
+  &__end {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid $line-faint;
+  }
+
+  &__end-label {
+    color: $muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+.jr-flow {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__step {
+    position: relative;
+
+    // The line joining the dots.
+    &:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: calc(50% + 11px);
+      bottom: calc(-50% + 11px);
+      left: 19px;
+      width: 2px;
+      border-radius: 2px;
+      background: $line-soft;
+    }
+
+    &.is-done:not(:last-child)::after {
+      background: #10b981;
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 10px;
+      background: none;
+      color: $ink;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+
+      strong {
+        font-size: 13.5px;
+      }
+
+      .stack > span {
+        color: $muted;
+        font-size: 12px;
+      }
+
+      &:hover:not(:disabled) {
+        background: $bg-soft;
+
+        .jr-flow__go {
+          opacity: 1;
+        }
+      }
+
+      &:focus-visible {
+        outline: 2px solid $ink;
+        outline-offset: 1px;
+      }
+
+      &:disabled {
+        cursor: default;
+      }
+    }
+
+    &.is-now button {
+      background: #fff8ec;
+
+      strong {
+        color: #b45309;
+      }
+    }
+
+    &:not(.is-done):not(.is-now) strong {
+      color: $ink-soft;
+    }
+  }
+
+  &__dot {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 2px solid $line-strong;
+    border-radius: 50%;
+    background: $white;
+    color: $white;
+
+    .is-done & {
+      border-color: #10b981;
+      background: #10b981;
+    }
+
+    .is-now & {
+      border-color: #f59e0b;
+      box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18);
+
+      &::after {
+        content: "";
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #f59e0b;
+      }
+    }
+  }
+
+  &__go {
+    flex: none;
+    color: #1d4ed8;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0;
+    transition: opacity 0.12s;
+  }
+}
+
+// Moving a filled request to Inactive: waiting for the VA, or approved.
+.rq-inactive-chip,
+.jr-status__ask {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+
+  &.is-waiting {
+    background: #fff8eb;
+    color: #b45309;
+  }
+
+  &.is-ready {
+    background: #effaf4;
+    color: #047857;
+  }
+}
+
+.jr-status__ask {
+  flex-wrap: wrap;
+  padding: 10px 12px;
+}

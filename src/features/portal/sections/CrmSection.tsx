@@ -2,22 +2,24 @@
 
 import { useState } from "react";
 import { Badge, Button, Icon, IconTile, LoadState, SegmentedControl } from "@/components/ui";
-import { CRM_ADDONS, CRM_FAQ, CRM_PACKAGES, CRM_STEPS, type CrmPackageKey } from "@/data/portal";
+import { CRM_ADDONS, CRM_FAQ, CRM_PACKAGES, CRM_STEPS, OFFERED_CRM_PACKAGES, type CrmPackageKey } from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
 import type { Tone } from "@/lib/tones";
 import type { ClientCrmRequestOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { usePortalBuilds, usePortalCrmRequests } from "@/utils/hooks/useDelivery";
+import { usePortalTodos } from "@/utils/hooks/usePortal";
+import { BuildSection } from "./BuildSection";
 import { BuildCards } from "../components/BuildCards";
 import { CrmRequestModal } from "../components/CrmRequestModal";
 import { PayConfirmModal } from "../components/PayConfirmModal";
 import { usePortal } from "../state/PortalContext";
 
-const PACKAGE_KEYS = Object.keys(CRM_PACKAGES) as CrmPackageKey[];
+const PACKAGE_KEYS = OFFERED_CRM_PACKAGES;
 
-type CrmTab = "builds" | "packages";
+type CrmTab = "builds" | "packages" | "progress";
 
-/** CRM page: the client's CRM builds in one tab, the packages to start a new one in the other. */
+/** CRM page: the client's CRM builds, the packages to start a new one, and Build progress (every build's timeline). */
 export function CrmSection() {
   const query = usePortalBuilds();
   const builds = (query.data ?? []).filter((b) => b.kind === "crm");
@@ -26,10 +28,11 @@ export function CrmSection() {
   const requests = (usePortalCrmRequests().data ?? []).filter(
     (r) => r.status !== "declined" && (!r.projectId || (!!r.invoice && r.invoice.status !== "Paid")),
   );
-  const { update, readOnly } = usePortal();
-  const [picked, setPicked] = useState<CrmTab | "">("");
+  const { state, update, readOnly } = usePortal();
+  const openTodos = (usePortalTodos().data ?? []).filter((t) => !t.done).length;
   // Open on their builds or requests when they have some, otherwise on the packages.
-  const tab: CrmTab = picked || (builds.length || requests.length ? "builds" : "packages");
+  const tab: CrmTab = state.crmView || (builds.length || requests.length ? "builds" : "packages");
+  const setPicked = (crmView: CrmTab) => update({ crmView });
 
   return (
     <div className="page-stack">
@@ -39,11 +42,14 @@ export function CrmSection() {
         value={tab}
         onChange={setPicked}
         options={[
-          { value: "builds", label: `Your CRM builds · ${builds.length}` },
-          { value: "packages", label: "Get a CRM" },
+          { value: "builds", label: "Your CRM builds", hint: "In progress and live", icon: "rocket", count: builds.length },
+          { value: "packages", label: "Get a CRM", hint: "Packages and pricing", icon: "sparkle", tone: "purple" },
+          { value: "progress", label: "Build progress", hint: "Timelines and your to-dos", icon: "gauge", tone: "brand", count: openTodos || undefined },
         ]}
       />
-      {tab === "builds" ? (
+      {tab === "progress" ? (
+        <BuildSection />
+      ) : tab === "builds" ? (
         <LoadState
           query={query}
           loadingText="Loading your CRM builds…"

@@ -19,6 +19,8 @@ type SessionState = {
   viewAsClientId: string | null;
   /** True inside the "View as client" iframe: the parent window owns the session and refreshes it. */
   embedded: boolean;
+  /** "View as VA": the VA whose portal a staff member is using (sent as X-Va-Id on /va/* calls). */
+  viewAsVaId: string | null;
 };
 
 let state: SessionState = {
@@ -27,6 +29,7 @@ let state: SessionState = {
   user: null,
   viewAsClientId: null,
   embedded: false,
+  viewAsVaId: null,
 };
 
 const listeners = new Set<() => void>();
@@ -66,6 +69,10 @@ export function setViewAs(contactId: string | null, embedded: boolean) {
   set({ viewAsClientId: contactId, embedded });
 }
 
+export function setViewAsVa(vaId: string | null) {
+  set({ viewAsVaId: vaId });
+}
+
 const SERVER_STATE: SessionState = { ...state };
 
 /** React hook: the current session (re-renders on sign-in, refresh and sign-out). */
@@ -76,6 +83,11 @@ export function useSession(): SessionState {
 // ------------------------------------------------------------------ Role helpers (UX only; the API enforces access)
 export function isStaff(user: User | null | undefined): boolean {
   return !!user?.isStaff;
+}
+
+/** Virtual assistants: they use the VA portal (/va). */
+export function isVa(user: { role: string } | null | undefined): boolean {
+  return user?.role === "va";
 }
 
 /** Staff who can change CRM data (everyone but "viewer"). */

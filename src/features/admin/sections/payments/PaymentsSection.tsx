@@ -2,16 +2,23 @@
 
 import { useState } from "react";
 import { BillingModal, type BillingKind } from "../../modals/BillingModal";
+import { useAdmin } from "../../state/AdminContext";
 import { BillingTables, type BillingView } from "./BillingTables";
 
+const VIEWS: BillingView[] = ["subs", "inv", "opts"];
+
+/** Finance › Billing: subscriptions, invoices and products, one tab each. */
 export function PaymentsSection() {
+  const { state, update } = useAdmin();
   const [billingKind, setBillingKind] = useState<BillingKind | null>(null);
-  const [view, setView] = useState<BillingView>("subs");
+  const view = state.billingView;
+  const setView = (billingView: BillingView) => update({ billingView });
   const [message, setMessage] = useState("");
 
   return (
     <div className="page-stack">
       <BillingTables
+        views={VIEWS}
         view={view}
         onView={setView}
         message={message}

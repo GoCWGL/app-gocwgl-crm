@@ -8,14 +8,24 @@ import type { Tone } from "@/lib/tones";
 
 // ------------------------------------------------------------------ Types
 export type PortalTab =
+  | "dashboard"
   | "funnels"
   | "crm"
+  | "live"
+  | "journal"
+  | "team"
+  | "projects"
+  | "ratings"
   | "build"
-  | "assets"
   | "support"
   | "billing"
+  | "training"
+  | "sops"
   | "affiliate"
   | "account";
+
+/** Old ?tab= links that point at a page with a new name. */
+export const PORTAL_TAB_ALIASES: Record<string, PortalTab> = { va: "team", invoices: "billing", overview: "dashboard", feedback: "ratings" };
 
 export type FunnelStatus = "live" | "build" | "pay" | "queued" | "quote";
 export type FunnelTypeKey = "lead" | "booking" | "webinar" | "sales" | "membership" | "custom";
@@ -35,42 +45,68 @@ export type FunnelRequestDetails = {
 export type SocialKey = "facebook" | "instagram" | "tiktok" | "linkedin" | "youtube" | "x" | "google";
 export type CustomLink = { id: string; label: string; url: string; touched: boolean };
 
-export type AssetCategory = "logos" | "photos" | "videos" | "docs" | "other";
-
 // ------------------------------------------------------------- Navigation
 export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }> = {
+  dashboard: { title: "Dashboard", subtitle: "Your VA team right now, and everything that needs a look." },
   funnels: { title: "Funnels", subtitle: "The funnels built for you, how they perform, and requests for new ones." },
-  crm: { title: "CRM", subtitle: "Have GoCWGL build a CRM around how your business sells." },
+  crm: { title: "CRM", subtitle: "Your CRM builds, the packages to get one, and the progress on everything GoCWGL is building for you." },
+  live: { title: "Live work", subtitle: "Who on your VA team is working for you right now, and on what." },
+  journal: { title: "VA tracker", subtitle: "Everything your VAs logged for your business, day by day." },
+  team: { title: "VAs", subtitle: "The virtual assistants who work with your business, and your requests for more." },
+  projects: { title: "Tasks", subtitle: "Request a task, pick the VA for it, and follow its status." },
+  ratings: { title: "VA ratings", subtitle: "Rate each VA on your team. Ratings go to GoCWGL and help us support them." },
   build: { title: "Build progress", subtitle: "Follow along as we build your system." },
-  assets: { title: "Assets", subtitle: "Upload your logos, photos and brand files for your GoCWGL team." },
-  support: { title: "Support", subtitle: "Ask for changes, report a problem, or message your team." },
-  billing: { title: "Transaction history", subtitle: "Your invoices and payments to GoCWGL." },
+  support: { title: "Request support", subtitle: "Ask for changes, report a problem, or message your team." },
+  billing: { title: "Invoices", subtitle: "Invoices from your VAs and from GoCWGL." },
+  training: { title: "Training", subtitle: "Short lessons from GoCWGL on getting the most from your VA team." },
+  sops: { title: "SOPs", subtitle: "Step-by-step guides from GoCWGL." },
   affiliate: { title: "Affiliate", subtitle: "Your referral ID, the businesses you referred, and your bonuses." },
   account: { title: "Account", subtitle: "Your profile, alerts and who can see this portal." },
 };
 
+/** The client portal menu, grouped by what the client is doing. */
 export const PORTAL_NAV: Array<{ group: string; items: Array<{ tab: PortalTab; label: string; icon: IconName; tone: Tone }> }> = [
   {
-    group: "My system",
+    group: "Overview",
     items: [
+      { tab: "dashboard", label: "Dashboard", icon: "grid", tone: "cyan" },
       { tab: "funnels", label: "Funnels", icon: "funnel", tone: "brand" },
       { tab: "crm", label: "CRM", icon: "users", tone: "purple" },
+      { tab: "team", label: "VAs", icon: "briefcase", tone: "indigo" },
     ],
   },
   {
-    group: "Working with GoCWGL",
+    // Who works for them and what they're doing.
+    group: "My VA team",
     items: [
-      { tab: "build", label: "Build progress", icon: "rocket", tone: "brand" },
-      { tab: "assets", label: "Assets", icon: "folderUpload", tone: "indigo" },
-      { tab: "support", label: "Support", icon: "message", tone: "sky" },
-      { tab: "billing", label: "Transactions", icon: "invoice", tone: "pink" },
+      { tab: "live", label: "Live work", icon: "pulse", tone: "green" },
+      { tab: "journal", label: "VA tracker", icon: "journal", tone: "cyan" },
+      { tab: "projects", label: "Tasks", icon: "clipboard", tone: "brand" },
+      { tab: "ratings", label: "VA ratings", icon: "star", tone: "amber" },
     ],
+  },
+  {
+    group: "Learn & support",
+    items: [
+      { tab: "training", label: "Training", icon: "graduation", tone: "purple" },
+      { tab: "sops", label: "SOPs", icon: "form", tone: "teal" },
+      { tab: "support", label: "Request support", icon: "lifebuoy", tone: "sky" },
+    ],
+  },
+  {
+    group: "Billing",
+    items: [{ tab: "billing", label: "Invoices", icon: "invoice", tone: "pink" }],
   },
   {
     group: "Refer & earn",
     items: [{ tab: "affiliate", label: "Affiliate", icon: "gift", tone: "amber" }],
   },
 ];
+
+/** The menu group a page belongs to ("My VA team"), for the page kicker. */
+export const PORTAL_GROUP_OF: Partial<Record<PortalTab, string>> = Object.fromEntries(
+  PORTAL_NAV.flatMap((g) => g.items.map((i) => [i.tab, g.group])),
+);
 
 export const ALERT_OPTIONS = [
   { key: "report", label: "Daily report email", desc: "Your numbers every morning at 7:00 AM" },
@@ -94,14 +130,6 @@ export const SOCIAL_NETWORKS: Array<{
   { key: "youtube", label: "YouTube", short: "Yt", tone: "red", placeholder: "youtube.com/@yourchannel", hosts: ["youtube.com", "youtu.be"] },
   { key: "x", label: "X (Twitter)", short: "X", tone: "ink", placeholder: "x.com/yourhandle", hosts: ["x.com", "twitter.com"] },
   { key: "google", label: "Google Business Profile", short: "G", tone: "green", placeholder: "g.page/yourbusiness", hosts: ["g.page", "google.com", "maps.app.goo.gl", "goo.gl"] },
-];
-
-export const ASSET_CATEGORIES: Array<{ value: AssetCategory; label: string }> = [
-  { value: "logos", label: "Logos" },
-  { value: "photos", label: "Photos" },
-  { value: "videos", label: "Videos" },
-  { value: "docs", label: "Documents" },
-  { value: "other", label: "Other" },
 ];
 
 // ----------------------------------------------------------------- Support
@@ -159,6 +187,9 @@ export const FUNNEL_PACKAGE_COPY: Record<FunnelPackageKey, { tagline: string; ta
 /** Where "Book a call" sends clients for a CRM build: the CRM discovery call calendar (gets ?package=simple|custom). Invoiced by the team with a Wise payment link. */
 export const CRM_BOOKING_URL = "https://app.gocwgl.com/book/gocwgl-crm-discovery-call";
 
+/** The CRM packages clients can request (Simple CRM is no longer offered; older Simple requests keep their label). */
+export const OFFERED_CRM_PACKAGES: CrmPackageKey[] = ["custom"];
+
 export const CRM_PACKAGES: Record<
   CrmPackageKey,
   {
@@ -198,7 +229,8 @@ export const CRM_PACKAGES: Record<
     tagline: "Built around exactly how your business runs, with room to grow.",
     timeline: "About 12–15 weeks",
     includes: [
-      "Everything in Simple CRM",
+      "Contacts, companies and sales pipelines, with tags and notes",
+      "Automations, email campaigns, calendar booking and forms",
       "Custom records for your business (jobs, properties, cases, orders…)",
       "Invoicing and online payments",
       "A client portal for your own customers",
@@ -233,12 +265,12 @@ export const CRM_STEPS = [
 export const CRM_FAQ = [
   { q: "Do I own my CRM and my data?", a: "Yes. Everything we build and every record in it is yours, and you can export your data at any time." },
   { q: "Are there monthly fees?", a: "The build is a one-time price. Hosting and ongoing changes can be covered by an optional care plan." },
-  { q: "Can you move my data from my current CRM?", a: "Yes. Spreadsheet imports are included in both packages, and the Custom CRM also moves data over from your current CRM." },
-  { q: "Not sure which package fits?", a: "Book a call for either one. We confirm the right package on the call, before you pay anything." },
+  { q: "Can you move my data from my current CRM?", a: "Yes. We import your spreadsheets and move your data over from your current CRM." },
+  { q: "Not sure it’s the right fit?", a: "Book a call. We go through what you need on the call, before you pay anything." },
   {
     q: "Can I add features after my CRM is built?",
     a: "Yes. Once your Custom CRM is live, each new feature or menu starts at $500, depending on how complex it is. We quote it before any work starts.",
   },
-  { q: "How do I pay?", a: "After the call we send you an invoice for the agreed package. It shows up in Transactions." },
+  { q: "How do I pay?", a: "After the call we send you an invoice for the agreed package. It shows up in Invoices." },
 ];
 

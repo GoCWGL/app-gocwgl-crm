@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Avatar, Badge, Button, FormError, LoadState } from "@/components/ui";
+import { Avatar, Badge, Button, FormError, LoadState, ConfirmDialog } from "@/components/ui";
 import { avatarTone, type Tone } from "@/lib/tones";
 import type { ContactOut, FunnelOut, InvoiceOut } from "@/utils/api/models";
 import { formatCents } from "@/utils/format/money";
@@ -31,7 +31,7 @@ type Request = { typeKey?: string; offer?: string; audience?: string; notes?: st
 /** Funnel requests that aren't live yet: waiting on a quote or payment, paid and ready, or in build. */
 export const openFunnelRequests = (funnels: FunnelOut[]) => funnels.filter((f) => f.request && f.status in STATUSES);
 
-/** Build Progress › Funnel requests: what each client asked for, whether it's paid, and a way to start the build. */
+/** Delivery › Funnel Requests: what each client asked for, whether it's paid, and a way to start the build. */
 export function FunnelRequestsPanel({ canWrite }: { canWrite: boolean }) {
   const { update } = useAdmin();
   const query = useAdminFunnels();
@@ -44,6 +44,8 @@ export function FunnelRequestsPanel({ canWrite }: { canWrite: boolean }) {
   // Waiting on you first: paid and ready, then awaiting payment, then quotes, then those already in build.
   const order = ["queued", "pay", "quote", "build"];
   const requests = openFunnelRequests(query.data ?? []).sort((a, b) => order.indexOf(a.status) - order.indexOf(b.status));
+  // Starting a build is asked first, so it can't happen by accident.
+  const [confirming, setConfirming] = useState<(typeof requests)[number] | null>(null);
 
   return (
     <LoadState
@@ -68,17 +70,32 @@ export function FunnelRequestsPanel({ canWrite }: { canWrite: boolean }) {
             onMarkPaid={() =>
               f.invoiceId && markPaid.mutate(f.invoiceId, { onSuccess: () => update({ toast: `${f.name} is paid and ready to build.` }) })
             }
-            onStart={() =>
-              start.mutate(f.id, {
-                // Jump to the new build on the Builds tab.
-                onSuccess: (build) => update({ progressView: "builds", projectId: build.id, toast: `${build.package} build started.` }),
-              })
-            }
-            onOpen={() => update({ progressView: "builds", projectId: f.projectId ?? "" })}
+            onStart={() => setConfirming(f)}
+            onOpen={() => update({ tab: "funnels", progressView: "builds", projectId: f.projectId ?? "" })}
             onDelete={() => remove.mutate(f.id, { onSuccess: () => update({ toast: `${f.name} request deleted.` }) })}
           />
         ))}
       </div>
+      {confirming && (
+        <ConfirmDialog
+          title="Start this funnel build?"
+          confirmLabel="Yes, start build"
+          pending={start.isPending}
+          error={start.error}
+          onConfirm={() =>
+            start.mutate(confirming.id, {
+              // Jump to the new build on the Builds tab.
+              onSuccess: (build) =>
+                (setConfirming(null), update({ tab: "funnels", progressView: "builds", projectId: build.id, toast: `${build.package} build started.` })),
+            })
+          }
+          onClose={() => setConfirming(null)}
+        >
+          <p>
+            This starts the build for <b>{confirming.name}</b> with its funnel checklist. The client sees it in their portal’s Build progress.
+          </p>
+        </ConfirmDialog>
+      )}
     </LoadState>
   );
 }

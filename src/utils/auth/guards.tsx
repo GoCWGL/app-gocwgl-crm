@@ -3,16 +3,33 @@
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { BrandLoader } from "@/components/ui/BrandLoader";
-import { useSession } from "./session";
+import { isVa, useSession } from "./session";
 
 /**
  * Route guards for the UI only: they send people to the right app.
  * The API enforces access on every request, whatever these do.
  */
-function Gate({ allow, redirectTo, children }: { allow: "staff" | "client"; redirectTo: string; children: ReactNode }) {
+type Audience = "staff" | "client" | "va";
+
+/** Where each kind of account lives. */
+function homeOf(user: { isStaff?: boolean; role: string }): string {
+  if (user.isStaff) return "/admin";
+  return isVa(user) ? "/va" : "/portal";
+}
+
+function allowed(allow: Audience, user: { isStaff?: boolean; role: string }, embedded: boolean): boolean {
+  if (allow === "staff") return !!user.isStaff;
+  // Staff may open the VA portal too, to see what VAs see.
+  if (allow === "va") return isVa(user) || !!user.isStaff;
+  // Staff open the client portal too: they pick a client there ("View as client").
+  return !isVa(user) || embedded;
+}
+
+function Gate({ allow, children }: { allow: Audience; children: ReactNode }) {
   const router = useRouter();
   const { status, user, embedded } = useSession();
-  const ok = status === "authenticated" && !!user && (allow === "staff" ? user.isStaff : !user.isStaff || embedded);
+  const ok = status === "authenticated" && !!user && allowed(allow, user, embedded);
+  const redirectTo = user ? homeOf(user) : "/login";
 
   useEffect(() => {
     if (status === "anonymous" && !embedded) router.replace("/login");
@@ -25,19 +42,24 @@ function Gate({ allow, redirectTo, children }: { allow: "staff" | "client"; redi
 
 export function RequireStaff({ children }: { children: ReactNode }) {
   return (
-    <Gate allow="staff" redirectTo="/portal">
+    <Gate allow="staff">
       {children}
     </Gate>
   );
 }
 
-/** Clients, or staff inside the "View as client" iframe. */
+/** Clients, and staff viewing a client's portal (in the "View as client" iframe or at /portal?as=<id>). */
 export function RequireClient({ children }: { children: ReactNode }) {
   return (
-    <Gate allow="client" redirectTo="/admin">
+    <Gate allow="client">
       {children}
     </Gate>
   );
+}
+
+/** Virtual assistants (and staff, to preview it). */
+export function RequireVa({ children }: { children: ReactNode }) {
+  return <Gate allow="va">{children}</Gate>;
 }
 
 const SPLASH_STEPS = ["Restoring your session", "Checking your access"] as const;

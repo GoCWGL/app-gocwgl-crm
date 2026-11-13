@@ -11,7 +11,7 @@ import { useAdmin, type AdminState } from "../state/AdminContext";
 
 /** Where each kind of request is handled, and its icon. */
 const KINDS: Record<string, { label: string; icon: IconName; open: Partial<AdminState> }> = {
-  "funnel.requested": { label: "Funnel request", icon: "funnel", open: { tab: "progress", progressView: "funnels" } },
+  "funnel.requested": { label: "Funnel request", icon: "funnel", open: { tab: "funnels", progressView: "requests" } },
   "crm.requested": { label: "CRM request", icon: "users", open: { tab: "progress", progressView: "requests" } },
   "ticket.created": { label: "Support request", icon: "message", open: { tab: "bugs" } },
   "booking.created": { label: "Call booked", icon: "calendar", open: { tab: "calendar" } },
@@ -135,7 +135,7 @@ export function NotificationBell() {
           )}
           <footer className="bell__foot">
             <span className="kicker kicker--sm kicker--muted">SEE ALL</span>
-            <Button variant="link" size="sm" onClick={() => go({ tab: "progress", progressView: "funnels" })}>
+            <Button variant="link" size="sm" onClick={() => go({ tab: "funnels", progressView: "requests" })}>
               Funnel requests
             </Button>
             <Button variant="link" size="sm" onClick={() => go({ tab: "progress", progressView: "requests" })}>

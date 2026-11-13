@@ -36,3 +36,10 @@ export const listPortalIntakeKeys = () => get<IntakeKeyOut[]>("/portal/intake-ke
 export const createPortalIntakeKey = (body: PortalIntakeKeyIn) => post<IntakeKeyCreated>("/portal/intake-keys", body);
 export const revokePortalIntakeKey = (id: string) => del(`/portal/intake-keys/${id}`);
 export const sendPortalMessage = (text: string) => post<ChatOut>("/portal/messages", { text });
+
+// ------------------------------------------------------------------ VA portal (Request Support)
+export const listVaRequests = () => get<TicketOut[]>("/va/support");
+export const createVaRequest = (body: ClientTicketIn) => post<TicketOut>("/va/support", body);
+/** Replying reopens a closed request. */
+export const replyVaRequest = (id: string, text: string) => post<TicketOut>(`/va/support/${id}/messages`, { text });
+export const closeVaRequest = (id: string) => post<TicketOut>(`/va/support/${id}/close`);

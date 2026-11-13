@@ -1,0 +1,117 @@
+@use "../abstracts" as *;
+
+// A list page in one panel (People › Clients, People › VAs):
+//   .board__bar    tabs on the left; search, filters and the main action on the right
+//   .board__sub    an optional slim row (filter chips, "Showing 3 of 9")
+//   .board__panel  an optional filter panel
+//   then the table, and .board__empty when there's nothing to show.
+.board {
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+
+  &__bar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 16px;
+    padding: 8px 18px 0;
+
+    // One row on desktop (the tabs give way and scroll); stacked on small screens.
+    @include down(md) {
+      flex-wrap: wrap;
+    }
+    border-bottom: 1px solid $line-soft;
+    background: linear-gradient(180deg, $white, $bg-soft);
+
+    // The tabs sit on the bar's border, so the open tab's underline replaces it.
+    > .tabs {
+      flex: 0 1 auto;
+      min-width: 0;
+      align-self: flex-end;
+      margin-bottom: -1px;
+      box-shadow: none;
+    }
+  }
+
+  // Stage buttons in the bar (All Contacts) instead of tabs.
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 0 14px;
+  }
+
+  &__actions {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 12px;
+
+    .search-box input {
+      width: 180px;
+    }
+  }
+
+  &__sub {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 10px 18px;
+    border-bottom: 1px solid $line-faint;
+    font-size: 13px;
+  }
+
+  &__panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+    padding: 16px 18px;
+    border-bottom: 1px solid $line-faint;
+    background: $bg-soft;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 40px 18px;
+    text-align: center;
+  }
+
+  &__empty-icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 4px;
+    border-radius: 50%;
+    background: var(--tone-bg);
+    color: var(--tone-fg);
+  }
+}
+
+// Just the tab bar (Build Progress), with the page's own panels below it.
+// Many tabs (Job Postings): search and the main action get their own row above the tabs.
+.board__bar--stacked {
+  flex-wrap: wrap;
+  padding-top: 14px;
+
+  > .board__actions {
+    order: -1;
+    justify-content: flex-end;
+    width: 100%;
+    padding-bottom: 4px;
+  }
+
+  > .tabs {
+    flex-basis: 100%;
+  }
+}
+
+.board--bar-only .board__bar {
+  border-bottom: 0;
+}

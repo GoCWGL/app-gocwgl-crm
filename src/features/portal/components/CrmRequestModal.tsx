@@ -2,12 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { Button, Field, FormError, Icon, IconTile, Input, Modal, Textarea, buttonClass } from "@/components/ui";
-import { CRM_BOOKING_URL, CRM_PACKAGES, type CrmPackageKey } from "@/data/portal";
+import { CRM_BOOKING_URL, CRM_PACKAGES, OFFERED_CRM_PACKAGES, type CrmPackageKey } from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
 import { useCreateCrmRequest } from "@/utils/hooks/useDelivery";
 import { PaymentNotes } from "./PayConfirmModal";
 
-const PACKAGE_KEYS = Object.keys(CRM_PACKAGES) as CrmPackageKey[];
+const PACKAGE_KEYS = OFFERED_CRM_PACKAGES;
 
 /** Fill in → check it over → saved (the booking page opens in a new tab, or a link to it if the browser blocked that). */
 type Step = "edit" | "review" | "saved";
@@ -20,7 +20,7 @@ type Step = "edit" | "review" | "saved";
 export function CrmRequestModal({ onClose, onRequested }: { onClose: () => void; onRequested: () => void }) {
   const create = useCreateCrmRequest();
   const [step, setStep] = useState<Step>("edit");
-  const [pkg, setPkg] = useState<CrmPackageKey>("simple");
+  const [pkg, setPkg] = useState<CrmPackageKey>(OFFERED_CRM_PACKAGES[0]);
   const [name, setName] = useState("");
   const [goal, setGoal] = useState("");
   const [tried, setTried] = useState(false);

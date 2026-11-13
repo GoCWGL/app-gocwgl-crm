@@ -33,8 +33,8 @@ export function EmailSection() {
         value={emailView}
         onChange={(view) => update({ emailView: view })}
         options={[
-          { value: "compose", label: "Compose" },
-          { value: "templates", label: "Templates" },
+          { value: "compose", label: "Compose", hint: "Write and send", icon: "send" },
+          { value: "templates", label: "Templates", hint: "Saved emails", icon: "form", tone: "purple" },
         ]}
       />
 

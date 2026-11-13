@@ -1,6 +1,8 @@
 import { del, get, patch, post } from "./client";
 import type {
   AdminBookingIn,
+  CallInviteIn,
+  CallInviteOut,
   BookingOut,
   BookingPatch,
   BookingRequest,
@@ -54,3 +56,9 @@ export const getPublicCalendar = (slug: string) => get<PublicCalendarOut>(`/publ
 export const getPublicSlots = (slug: string, day: string) => get<SlotsOut>(`/public/booking/${slug}/slots`, { day });
 /** The booking and its "Add to calendar" links, for the confirmation screen. */
 export const bookPublic = (slug: string, body: BookingRequest) => post<PublicBookingOut>(`/public/booking/${slug}`, body);
+
+// ------------------------------------------------------------------ Call invites (Onboarding profiles)
+/** Email an onboarding client a link to book a discovery call. */
+export const inviteClientToCall = (contactId: string, body: CallInviteIn) => post<CallInviteOut>(`/admin/call-invites/clients/${contactId}`, body);
+/** Email an applicant VA a link to book an interview. */
+export const inviteVaToInterview = (vaId: string, body: CallInviteIn) => post<CallInviteOut>(`/admin/call-invites/vas/${vaId}`, body);

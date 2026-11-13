@@ -1,11 +1,18 @@
 import type { ReactNode } from "react";
+import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
+import type { IconName } from "./Icon";
+import { Tabs } from "./Tabs";
 
 export type SegmentOption<T extends string> = {
   value: T;
   label: ReactNode;
   /** Small monospace count after the label. */
   count?: number | string;
+  /** kind="tabs" only: icon, a short line under the label, and the tab's color. */
+  icon?: IconName;
+  hint?: ReactNode;
+  tone?: Tone;
 };
 
 type SegmentedControlProps<T extends string> = {
@@ -13,7 +20,7 @@ type SegmentedControlProps<T extends string> = {
   value: T;
   onChange: (value: T) => void;
   label: string;
-  /** "tabs" uses role=tablist; "radio" uses role=radiogroup; default is a pressed-button group. */
+  /** "tabs" renders the app's page tabs (<Tabs>); "radio" uses role=radiogroup; default is a pressed-button group. */
   kind?: "group" | "tabs" | "radio";
   /** "dark" = white track with a dark selected button; "soft" = tinted track, white selected. */
   variant?: "dark" | "soft";
@@ -31,7 +38,9 @@ export function SegmentedControl<T extends string>({
   size = "md",
   className,
 }: SegmentedControlProps<T>) {
-  const role = kind === "tabs" ? "tablist" : kind === "radio" ? "radiogroup" : "group";
+  // Page tabs share one look across the app (see Tabs).
+  if (kind === "tabs") return <Tabs options={options} value={value} onChange={onChange} label={label} className={className} />;
+  const role = kind === "radio" ? "radiogroup" : "group";
 
   return (
     <div
@@ -41,12 +50,7 @@ export function SegmentedControl<T extends string>({
     >
       {options.map((opt) => {
         const on = opt.value === value;
-        const stateProps =
-          kind === "tabs"
-            ? { role: "tab", "aria-selected": on }
-            : kind === "radio"
-              ? { role: "radio", "aria-checked": on }
-              : { "aria-pressed": on };
+        const stateProps = kind === "radio" ? { role: "radio", "aria-checked": on } : { "aria-pressed": on };
         return (
           <button
             key={opt.value}
