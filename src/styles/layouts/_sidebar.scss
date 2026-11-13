@@ -374,3 +374,359 @@
     transform: translateX(0);
   }
 }
+
+// ------------------------------------------------------------ Admin second sidebar
+// Clicking VAs, Finance or Marketing opens that menu's own sidebar right next to the main one; the main menu
+// shrinks to its icons (and can be expanded again). Both sit in the page flow, so the page moves over.
+.dual-nav {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex: 0 0 auto;
+  height: 100vh;
+  align-self: flex-start;
+
+  > .sidebar {
+    position: static;
+    flex: none;
+    width: 232px;
+    height: 100%;
+    transition: width 0.32s cubic-bezier(0.22, 0.8, 0.24, 1), padding 0.32s cubic-bezier(0.22, 0.8, 0.24, 1);
+  }
+
+  @include down(md) {
+    position: static;
+    flex: 1 1 100%;
+    flex-direction: column;
+    height: auto;
+    align-self: stretch;
+
+    > .sidebar {
+      width: 100%;
+    }
+  }
+}
+
+.sidebar--admin {
+  .sidebar__brand {
+    @include row(8px);
+    justify-content: space-between;
+  }
+
+  .sidebar__mark {
+    display: none;
+    width: 36px;
+    height: 36px;
+  }
+
+  // Shrink / expand the main menu while a second sidebar is open.
+  .sidebar__toggle {
+    @include center;
+    flex: none;
+    width: 26px;
+    height: 26px;
+    border: 1px solid $line;
+    border-radius: 999px;
+    background: $white;
+    color: $muted;
+    cursor: pointer;
+
+    &:hover {
+      background: $bg-tint;
+      color: $ink;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  // A menu with its own sidebar points right whether or not it's open.
+  .nav-item__chevron--open {
+    transform: none;
+  }
+}
+
+// Main menu as icons only (desktop).
+@include up(md) {
+  .dual-nav > .sidebar--compact {
+    width: 76px;
+    padding-inline: 10px;
+
+    .sidebar__brand {
+      flex-direction: column;
+      gap: 10px;
+      padding: 0;
+    }
+
+    .sidebar__wordmark {
+      display: none;
+    }
+
+    .sidebar__mark {
+      display: block;
+    }
+
+    // Group headings become thin dividers.
+    .sidebar__label {
+      display: block;
+      height: 1px;
+      margin: 0 10px 6px;
+      padding: 0;
+      overflow: hidden;
+      color: transparent;
+      background: $line-faint;
+    }
+
+    .nav-item {
+      justify-content: center;
+      padding: 0;
+      min-height: 42px;
+    }
+
+    .nav-item__label,
+    .nav-item__chevron {
+      display: none;
+    }
+
+    // Counts become a small bubble on the icon.
+    .count-chip {
+      position: absolute;
+      top: 3px;
+      right: 4px;
+      min-width: 16px;
+      height: 16px;
+      padding: 0 4px;
+      font-size: 9.5px;
+      line-height: 16px;
+    }
+
+    .profile-button {
+      justify-content: center;
+      padding: 4px;
+      border-color: transparent;
+      background: transparent;
+    }
+
+    .profile-button__text,
+    .profile-button__icon {
+      display: none;
+    }
+  }
+}
+
+.nav-panel {
+  flex: none;
+  width: 240px;
+  height: 100%;
+  border-right: 1px solid $line;
+  background: $white;
+  box-shadow: $shadow-sidebar;
+  overflow: hidden;
+  // Slides open from the edge of the main menu, which shrinks to icons at the same time.
+  animation: nav-panel-open 0.32s cubic-bezier(0.22, 0.8, 0.24, 1);
+
+  @include down(md) {
+    width: 100%;
+    height: auto;
+    border-right: 0;
+    border-bottom: 1px solid $line;
+    animation: nav-panel-drop 0.28s cubic-bezier(0.22, 0.8, 0.24, 1);
+  }
+
+  // Fixed width inside, so the content is revealed (not squashed) while the panel opens.
+  &__inner {
+    @include stack(16px);
+    width: 240px;
+    height: 100%;
+    padding: 18px 12px;
+    overflow-y: auto;
+    animation: nav-panel-content 0.36s cubic-bezier(0.22, 0.8, 0.24, 1) 0.06s backwards;
+
+    @include down(md) {
+      width: 100%;
+      height: auto;
+    }
+  }
+
+  // Items follow one after another.
+  .sidebar__group > * {
+    animation: nav-panel-item 0.3s cubic-bezier(0.22, 0.8, 0.24, 1) backwards;
+  }
+
+  @for $i from 1 through 8 {
+    .sidebar__group > :nth-child(#{$i}) {
+      animation-delay: #{100 + ($i - 1) * 35}ms;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &,
+    &__inner,
+    .sidebar__group > * {
+      animation: none;
+    }
+  }
+
+  &__head {
+    @include row(10px);
+    align-items: flex-start;
+    min-height: 36px;
+    padding: 0 4px 14px 12px;
+    border-bottom: 1px solid $line-faint;
+
+    .nav-panel__icon {
+      margin-top: 1px;
+    }
+  }
+
+  // Title icon in the brand orange.
+  &__icon {
+    flex: none;
+    color: $orange;
+  }
+
+  &__heading {
+    @include stack(1px);
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 17px;
+    font-weight: 800;
+    line-height: 1.2;
+    color: $ink;
+  }
+
+  &__desc {
+    font-size: 11.5px;
+    font-weight: 500;
+    line-height: 1.35;
+    color: $muted-light;
+  }
+
+  &__close {
+    @include center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border: 1px solid $line;
+    border-radius: $radius-sm;
+    background: $white;
+    color: $muted;
+    cursor: pointer;
+
+    &:hover {
+      background: $bg-tint;
+      color: $ink;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  &__nav {
+    @include stack(18px);
+  }
+
+  // Same look as the main admin menu.
+  .sidebar__group {
+    gap: 1px;
+  }
+
+  .sidebar__label {
+    padding: 0 12px 6px;
+    font-family: $font-sans;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: $muted-light;
+  }
+
+  .nav-item {
+    position: relative;
+    gap: 12px;
+    min-height: 38px;
+    padding: 0 12px;
+    color: $ink-soft;
+
+    &:hover {
+      background: $bg-tint;
+      color: $ink;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &[aria-current="page"] {
+      background: rgba(255, 153, 0, 0.1);
+      color: $ink;
+      font-weight: 700;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        border-radius: 0 3px 3px 0;
+        background: $orange;
+      }
+
+      .nav-item__icon {
+        color: #c2410c;
+      }
+    }
+  }
+
+  .nav-item__icon {
+    flex: none;
+    color: $muted-light;
+  }
+}
+
+@keyframes nav-panel-open {
+  from {
+    width: 0;
+  }
+  to {
+    width: 240px;
+  }
+}
+
+@keyframes nav-panel-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nav-panel-content {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes nav-panel-item {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
