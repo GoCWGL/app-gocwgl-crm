@@ -24,4 +24,5 @@ export { Toggle } from "./Toggle";
 export { YouTubeEmbed } from "./YouTubeEmbed";
 export { BrandLoader } from "./BrandLoader";
 export { LessonPlayer } from "./LessonPlayer";
+export { LessonVideo } from "./LessonVideo";
 export { ErrorState, FormError, Loading, LoadState, SoonNote } from "./LoadState";

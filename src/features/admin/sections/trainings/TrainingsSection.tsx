@@ -23,7 +23,8 @@ import {
 import { customCategories, TRAINING_CATEGORIES } from "@/data/trainingCategories";
 import { toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
-import { youtubeId, youtubeThumb } from "@/lib/youtube";
+import { lessonThumb, videoEmbed } from "@/lib/video";
+import { youtubeId } from "@/lib/youtube";
 import type { QuestionIn, TrainingAudience, TrainingOut, TrainingStatus } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
 import { formatShort } from "@/utils/format/dates";
@@ -52,10 +53,10 @@ const STATUS: Record<TrainingStatus, { label: string; tone: "green" | "slate" }>
 type StatusFilter = "all" | TrainingStatus;
 type View = "grid" | "list";
 
-/** First lesson's video, for thumbnails. */
-const coverId = (t: TrainingOut) => t.lessons[0]?.videoId ?? "";
+/** First lesson's poster (YouTube only), for thumbnails. */
+const cover = (t: TrainingOut) => (t.lessons[0] ? lessonThumb(t.lessons[0]) : null);
 
-/** Engagement › Training: courses of YouTube lessons for VAs and clients; VAs pass a quiz at your passing rate. */
+/** Engagement › Training: courses of YouTube, Loom or Vimeo lessons for VAs and clients; VAs pass a quiz at your passing rate. */
 export function TrainingsSection() {
   const canWrite = canWriteCrm(useMe().data);
   const query = useTrainings();
@@ -183,7 +184,7 @@ export function TrainingsSection() {
                 {inTab.length ? "No courses match these filters" : `No ${meta.noun} courses yet`}
               </span>
               <span className="text-small">
-                {inTab.length ? "Try another search or filter." : "Add YouTube lessons, a few quiz questions and the score needed to pass."}
+                {inTab.length ? "Try another search or filter." : "Add YouTube, Loom or Vimeo lessons, a few quiz questions and the score needed to pass."}
               </span>
               {canWrite && !inTab.length && (
                 <Button variant="outline" size="sm" onClick={() => setEditing("new")}>
@@ -196,9 +197,9 @@ export function TrainingsSection() {
               {shown.map((t) => (
                 <button key={t.id} type="button" className="training-card" onClick={() => setOpenId(t.id)}>
                   <span className="training-card__thumb">
-                    {coverId(t) ? (
+                    {cover(t) ? (
                       // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail, no optimisation needed
-                      <img src={youtubeThumb(coverId(t))} alt="" loading="lazy" />
+                      <img src={cover(t)!} alt="" loading="lazy" />
                     ) : (
                       <Icon name="graduation" size={28} />
                     )}
@@ -258,9 +259,9 @@ export function TrainingsSection() {
                     <tr key={t.id}>
                       <td>
                         <button type="button" className="cell-button course-table__course" onClick={() => setOpenId(t.id)}>
-                          {coverId(t) ? (
+                          {cover(t) ? (
                             // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail
-                            <img src={youtubeThumb(coverId(t))} alt="" loading="lazy" />
+                            <img src={cover(t)!} alt="" loading="lazy" />
                           ) : (
                             <span className="course-table__ph">
                               <Icon name="graduation" size={16} />
@@ -516,8 +517,10 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
 
 // ------------------------------------------------------------------ Editor
 
-type DraftLesson = { key: string; id: string; title: string; videoUrl: string };
-const blankLesson = (): DraftLesson => ({ key: crypto.randomUUID(), id: "", title: "", videoUrl: "" });
+type DraftLesson = { key: string; id: string; title: string; videoUrl: string; minutes: string; summary: string };
+const blankLesson = (): DraftLesson => ({ key: crypto.randomUUID(), id: "", title: "", videoUrl: "", minutes: "", summary: "" });
+/** Length is optional; when given, whole minutes up to 600. */
+const badMinutes = (m: string) => (m.trim() ? !/^\d{1,3}$/.test(m.trim()) || Number(m) > 600 : false);
 
 type DraftQuestion = QuestionIn & { key: string };
 const blankQuestion = (): DraftQuestion => ({ key: crypto.randomUUID(), id: "", text: "", options: ["", ""], correct: 0 });
@@ -552,7 +555,7 @@ function TrainingEditor({
     training?.questions.length ? training.questions.map((q) => ({ ...q, key: q.id })) : [blankQuestion()],
   );
   const [lessons, setLessons] = useState<DraftLesson[]>(
-    training?.lessons.length ? training.lessons.map((l) => ({ key: l.id, id: l.id, title: l.title, videoUrl: l.videoUrl })) : [blankLesson()],
+    training?.lessons.length ? training.lessons.map((l) => ({ key: l.id, id: l.id, title: l.title, videoUrl: l.videoUrl, minutes: l.minutes ? String(l.minutes) : "", summary: l.summary })) : [blankLesson()],
   );
   const [tried, setTried] = useState(false);
   const set = (patch: Partial<typeof f>) => setF((d) => ({ ...d, ...patch }));
@@ -564,7 +567,8 @@ function TrainingEditor({
       return next;
     });
   const usedLessons = lessons.filter((l) => l.title.trim() || l.videoUrl.trim());
-  const badLesson = usedLessons.findIndex((l) => !youtubeId(l.videoUrl));
+  const badLesson = usedLessons.findIndex((l) => !videoEmbed(l.videoUrl));
+  const badLength = usedLessons.findIndex((l) => badMinutes(l.minutes));
   const setQ = (i: number, patch: Partial<DraftQuestion>) => setQuestions((qs) => qs.map((q, j) => (j === i ? { ...q, ...patch } : q)));
 
   const rate = Number(f.rate);
@@ -573,7 +577,12 @@ function TrainingEditor({
   const qError = used.findIndex((q) => !q.text.trim() || q.options.filter((o) => o.trim()).length < 2 || !q.options[q.correct]?.trim());
   const errors = {
     title: !f.title.trim() ? "Give the training a title." : "",
-    lessons: badLesson >= 0 ? `Lesson ${lessons.indexOf(usedLessons[badLesson]) + 1}: paste a YouTube link (youtube.com/watch?v=… or youtu.be/…).` : "",
+    lessons:
+      badLesson >= 0
+        ? `Lesson ${lessons.indexOf(usedLessons[badLesson]) + 1}: paste a YouTube, Loom or Vimeo link.`
+        : badLength >= 0
+          ? `Lesson ${lessons.indexOf(usedLessons[badLength]) + 1}: the length is whole minutes, up to 600.`
+          : "",
     rate: !Number.isInteger(rate) || rate < 1 || rate > 100 ? "A whole number from 1 to 100." : "",
     questions: qError >= 0 ? `Question ${questions.indexOf(used[qError]) + 1} needs its text, at least two answers, and the right one picked.` : "",
   };
@@ -586,7 +595,13 @@ function TrainingEditor({
       title: f.title.trim(),
       audience: f.audience,
       category: f.category.trim(),
-      lessons: usedLessons.map((l) => ({ id: l.id, title: l.title.trim(), videoUrl: l.videoUrl.trim() })),
+      lessons: usedLessons.map((l) => ({
+        id: l.id,
+        title: l.title.trim(),
+        videoUrl: l.videoUrl.trim(),
+        minutes: Number(l.minutes.trim() || 0),
+        summary: l.summary.trim(),
+      })),
       description: f.description.trim(),
       passingRate: rate,
       ...(f.audience === "client" && { clientIds }),
@@ -618,7 +633,7 @@ function TrainingEditor({
       titleId="training-editor"
       kicker="TRAINING"
       title={isNew ? "New training" : "Edit training"}
-      subtitle="YouTube lessons, then a quiz. VAs pass when they reach the passing rate."
+      subtitle="Video lessons, then a quiz. VAs pass when they reach the passing rate."
       media={
         <IconTile brand size="lg">
           <Icon name="graduation" size={18} />
@@ -697,16 +712,20 @@ function TrainingEditor({
         <div className="quiz-builder">
           <span className="stack stack--2">
             <span className="text-strong">Lessons</span>
-            <span className="text-small">YouTube videos, watched in this order. Unlisted videos work too.</span>
+            <span className="text-small">YouTube, Loom or Vimeo videos, watched in this order. Unlisted videos work too.</span>
           </span>
           {lessons.map((l, i) => {
-            const id = youtubeId(l.videoUrl);
+            const video = videoEmbed(l.videoUrl);
+            const ytId = youtubeId(l.videoUrl);
+            const thumb = ytId ? lessonThumb({ provider: "youtube", videoId: ytId }) : null;
             return (
               <div key={l.key} className="lesson-row">
                 <span className="lesson-row__thumb">
-                  {id ? (
+                  {thumb ? (
                     // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail
-                    <img src={youtubeThumb(id)} alt="" />
+                    <img src={thumb} alt="" />
+                  ) : video ? (
+                    <span className="lesson-row__provider">{video.provider}</span>
                   ) : (
                     <span>{i + 1}</span>
                   )}
@@ -714,13 +733,33 @@ function TrainingEditor({
                 <span className="lesson-row__fields">
                   <Input aria-label={`Lesson ${i + 1} title`} placeholder={`Lesson ${i + 1} title`} value={l.title} onChange={(e) => setL(i, { title: e.target.value })} />
                   <Input
-                    aria-label={`Lesson ${i + 1} YouTube link`}
+                    aria-label={`Lesson ${i + 1} video link`}
                     type="url"
-                    placeholder="https://youtu.be/…"
+                    placeholder="YouTube, Loom or Vimeo link"
                     value={l.videoUrl}
-                    aria-invalid={tried && !!l.videoUrl.trim() && !id}
+                    aria-invalid={tried && !!l.videoUrl.trim() && !video}
                     onChange={(e) => setL(i, { videoUrl: e.target.value })}
                   />
+                  <span className="lesson-row__extra">
+                    <Input
+                      aria-label={`Lesson ${i + 1} summary`}
+                      placeholder="One line on what they'll learn (optional)"
+                      maxLength={300}
+                      value={l.summary}
+                      onChange={(e) => setL(i, { summary: e.target.value })}
+                    />
+                    <span className="lesson-row__minutes">
+                      <Input
+                        aria-label={`Lesson ${i + 1} length in minutes`}
+                        inputMode="numeric"
+                        placeholder="Length"
+                        value={l.minutes}
+                        aria-invalid={tried && badMinutes(l.minutes)}
+                        onChange={(e) => setL(i, { minutes: e.target.value })}
+                      />
+                      <span>min</span>
+                    </span>
+                  </span>
                 </span>
                 <span className="sop-step-editor__tools">
                   <IconButton label="Move up" size="sm" ghost disabled={i === 0} onClick={() => moveL(i, -1)}>

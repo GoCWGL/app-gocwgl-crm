@@ -60,3 +60,42 @@ export function resumeVideo(link: string): ResumeVideo | null {
   if (/\.(mp4|webm|ogv|ogg|mov|m4v)$/i.test(u.pathname)) return { kind: "file", src, label: host };
   return { kind: "embed", src, label: host };
 }
+
+// ------------------------------------------------------------------ Training lessons
+
+export type VideoProvider = "youtube" | "loom" | "vimeo";
+/** A training lesson's video as the API returns it (Vimeo unlisted: videoId "123456/hash"). */
+export type LessonVideoSource = { provider: VideoProvider; videoId: string };
+
+export const VIDEO_PROVIDER_LABEL: Record<VideoProvider, string> = PROVIDER_LABEL;
+
+/** The provider's player for a lesson, starting on its own when `autoplay` (the viewer already pressed play). */
+export function lessonPlayerSrc({ provider, videoId }: LessonVideoSource, autoplay = false): string {
+  const play = autoplay ? "&autoplay=1" : "";
+  if (provider === "loom") return `https://www.loom.com/embed/${encodeURIComponent(videoId)}?hide_owner=true&hide_share=true&hide_title=true${play}`;
+  if (provider === "vimeo") {
+    const [id, hash] = videoId.split("/");
+    return `https://player.vimeo.com/video/${encodeURIComponent(id)}?dnt=1&title=0&byline=0${hash ? `&h=${encodeURIComponent(hash)}` : ""}${play}`;
+  }
+  return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}?rel=0&modestbranding=1${play}`;
+}
+
+/** Where the video lives, for the player's caption ("vimeo.com/871831715"). */
+export function lessonVideoHost({ provider, videoId }: LessonVideoSource): string {
+  if (provider === "loom") return `loom.com/share/${videoId.slice(0, 10)}…`;
+  if (provider === "vimeo") return `vimeo.com/${videoId.split("/")[0]}`;
+  return `youtu.be/${videoId}`;
+}
+
+/** A poster image for the lesson (only YouTube gives one without an API call). */
+export const lessonThumb = ({ provider, videoId }: LessonVideoSource): string | null =>
+  provider === "youtube" && videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null;
+
+/** "12 min", "1h 40m"; "" when there's no length. */
+export function formatMinutes(total: number): string {
+  if (!total) return "";
+  if (total < 60) return `${total} min`;
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  return m ? `${h}h ${m}m` : `${h}h`;
+}

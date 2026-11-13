@@ -9085,6 +9085,16 @@ export interface components {
             title?: string;
             /** Videourl */
             videoUrl: string;
+            /**
+             * Minutes
+             * @default 0
+             */
+            minutes?: number;
+            /**
+             * Summary
+             * @default
+             */
+            summary?: string;
         };
         /** LessonOut */
         LessonOut: {
@@ -9096,6 +9106,15 @@ export interface components {
             videoUrl: string;
             /** Videoid */
             videoId: string;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "youtube" | "loom" | "vimeo";
+            /** Minutes */
+            minutes: number;
+            /** Summary */
+            summary: string;
         };
         /** LinksIn */
         LinksIn: {
@@ -13128,6 +13147,15 @@ export interface components {
             title: string;
             /** Videoid */
             videoId: string;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "youtube" | "loom" | "vimeo";
+            /** Minutes */
+            minutes: number;
+            /** Summary */
+            summary: string;
         };
         /** VaListOut */
         VaListOut: {

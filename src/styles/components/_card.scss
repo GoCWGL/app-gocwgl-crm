@@ -241,6 +241,105 @@
   }
 }
 
+// <LessonVideo>: a training lesson's 16:9 poster; the provider's player loads on play.
+.lesson-video {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: $radius-2xl;
+  background: #0b1424;
+  box-shadow: 0 14px 34px rgba(11, 20, 36, 0.16);
+
+  iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  &__poster {
+    @include button-reset;
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    background:
+      radial-gradient(ellipse at 70% 35%, rgba(103, 232, 249, 0.22), transparent 60%),
+      linear-gradient(135deg, #071a2c 0%, #12395a 55%, #0e6aa0 100%);
+    cursor: pointer;
+
+    img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.55;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 55%, rgba(7, 17, 30, 0.55));
+    }
+
+    &:focus-visible {
+      outline: 3px solid $orange;
+      outline-offset: -3px;
+    }
+  }
+
+  &__play {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    padding-left: 3px;
+    border-radius: 50%;
+    background: $white;
+    color: $ink;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  &__poster:hover &__play {
+    transform: scale(1.06);
+    box-shadow: 0 0 0 8px rgba(255, 255, 255, 0.16), 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+
+  &__tag {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    max-width: calc(100% - 28px);
+    color: rgba(255, 255, 255, 0.88);
+    font-size: 12px;
+    font-weight: 500;
+
+    strong {
+      padding: 4px 8px;
+      border-radius: $radius-xs;
+      background: rgba(7, 17, 30, 0.8);
+      color: $white;
+      font-weight: 800;
+    }
+
+    span {
+      @include truncate;
+    }
+  }
+}
+
 // <Stars> and <StarInput>.
 .stars {
   display: inline-flex;

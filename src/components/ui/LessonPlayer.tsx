@@ -1,16 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import type { LessonVideoSource } from "@/lib/video";
 import { Icon } from "./Icon";
-import { YouTubeEmbed } from "./YouTubeEmbed";
+import { LessonVideo } from "./LessonVideo";
 
-/** The course's lessons: the selected video, with the list beside it. */
-export function LessonPlayer({ lessons }: { lessons: Array<{ id: string; title: string; videoId: string }> }) {
+/** The course's lessons: the selected video, with the list beside it (staff preview). */
+export function LessonPlayer({ lessons }: { lessons: Array<LessonVideoSource & { id: string; title: string }> }) {
   const [current, setCurrent] = useState(0);
   const lesson = lessons[Math.min(current, lessons.length - 1)];
   return (
     <div className="lesson-player">
-      <YouTubeEmbed key={lesson.id} id={lesson.videoId} title={lesson.title} />
+      <LessonVideo key={lesson.id} video={lesson} title={lesson.title} />
       {lessons.length > 1 && (
         <ol className="lesson-player__list">
           {lessons.map((l, i) => (
