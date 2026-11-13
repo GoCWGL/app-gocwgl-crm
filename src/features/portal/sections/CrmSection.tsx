@@ -19,19 +19,25 @@ const PACKAGE_KEYS = OFFERED_CRM_PACKAGES;
 
 type CrmTab = "builds" | "packages" | "progress";
 
-/** CRM page: the client's CRM builds, the packages to start a new one, and Build progress (every build's timeline). */
-export function CrmSection() {
+/** The client's CRM builds and open requests, and the CRM page tab that's showing (also used by the menu). */
+export function useCrmTab() {
   const query = usePortalBuilds();
   const builds = (query.data ?? []).filter((b) => b.kind === "crm");
-  // Requests not turned into a build yet (a started one shows as its build).
   // Requests not turned into a build yet, plus any still waiting on payment (a paid, started one shows as its build).
   const requests = (usePortalCrmRequests().data ?? []).filter(
     (r) => r.status !== "declined" && (!r.projectId || (!!r.invoice && r.invoice.status !== "Paid")),
   );
-  const { state, update, readOnly } = usePortal();
-  const openTodos = (usePortalTodos().data ?? []).filter((t) => !t.done).length;
+  const { state } = usePortal();
   // Open on their builds or requests when they have some, otherwise on the packages.
   const tab: CrmTab = state.crmView || (builds.length || requests.length ? "builds" : "packages");
+  return { query, builds, requests, tab };
+}
+
+/** CRM page: the client's CRM builds, the packages to start a new one, and Build progress (every build's timeline). */
+export function CrmSection() {
+  const { query, builds, requests, tab } = useCrmTab();
+  const { update, readOnly } = usePortal();
+  const openTodos = (usePortalTodos().data ?? []).filter((t) => !t.done).length;
   const setPicked = (crmView: CrmTab) => update({ crmView });
 
   return (

@@ -66,54 +66,116 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   account: { title: "Account", subtitle: "Your profile, alerts and who can see this portal." },
 };
 
-/** The client portal menu, grouped by what the client is doing. */
-export const PORTAL_NAV: Array<{
-  group: string;
+/** One page in the portal menu. `view` opens one tab of that page (CRM, Funnels and VA tracker have tabs). */
+export type PortalMenuItem = {
+  key: string;
+  tab: PortalTab;
+  label: string;
+  icon: IconName;
+  view?: "builds" | "packages" | "progress" | "tracker" | "live";
   /** Shown only once the client has an active VA: new clients don't see it yet. */
   needsVa?: boolean;
-  items: Array<{ tab: PortalTab; label: string; icon: IconName; tone: Tone }>;
-}> = [
+};
+
+/** A category in the menu that opens its own second sidebar listing its pages (under headings). */
+export type PortalFlyout = {
+  key: string;
+  label: string;
+  icon: IconName;
+  /** One line under the panel title. */
+  description: string;
+  groups: Array<{ title?: string; needsVa?: boolean; items: PortalMenuItem[] }>;
+};
+
+export type PortalMenuEntry = PortalMenuItem | PortalFlyout;
+
+export const isPortalFlyout = (e: PortalMenuEntry): e is PortalFlyout => "groups" in e;
+
+const page = (tab: PortalTab, label: string, icon: IconName, extra?: Partial<PortalMenuItem>): PortalMenuItem => ({
+  key: tab,
+  tab,
+  label,
+  icon,
+  ...extra,
+});
+
+/** Build pages (CRM, Funnels) share the same three tabs. */
+const buildPages = (tab: "crm" | "funnels", noun: string, icon: IconName): PortalMenuItem[] => [
+  page(tab, `Your ${noun} builds`, icon, { key: `${tab}-builds`, view: "builds" }),
+  page(tab, `Get a ${noun}`, "sparkle", { key: `${tab}-packages`, view: "packages" }),
+  page(tab, "Build progress", "gauge", { key: `${tab}-progress`, view: "progress" }),
+];
+
+/**
+ * The client portal menu, the same way as the admin's: CRM, Funnel and VA each open their own second sidebar with
+ * their pages, and the main menu shrinks to its icons beside it.
+ */
+export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
+  { title: "Overview", items: [page("dashboard", "Dashboard", "grid")] },
   {
-    group: "Overview",
+    title: "Services",
     items: [
-      { tab: "dashboard", label: "Dashboard", icon: "grid", tone: "cyan" },
-      { tab: "funnels", label: "Request Funnel", icon: "funnel", tone: "brand" },
-      { tab: "crm", label: "Request CRM", icon: "users", tone: "purple" },
-      { tab: "team", label: "Request VA", icon: "briefcase", tone: "indigo" },
+      {
+        key: "crm-menu",
+        label: "CRM",
+        icon: "users",
+        description: "Your CRM builds, packages and progress",
+        groups: [{ items: buildPages("crm", "CRM", "rocket") }],
+      },
+      {
+        key: "funnel-menu",
+        label: "Funnel",
+        icon: "funnel",
+        description: "Your funnels, packages and progress",
+        groups: [{ items: buildPages("funnels", "funnel", "funnel") }],
+      },
+      {
+        key: "vas",
+        label: "VA",
+        icon: "briefcase",
+        description: "Your virtual assistant team and their work",
+        groups: [
+          { title: "Hiring", items: [page("team", "Request VA", "briefcase")] },
+          {
+            title: "Your team",
+            needsVa: true,
+            items: [page("vateam", "VA Team", "users"), page("projects", "Tasks", "clipboard"), page("ratings", "VA ratings", "star")],
+          },
+          {
+            title: "Time & activity",
+            needsVa: true,
+            items: [
+              page("journal", "VA tracker", "journal", { view: "tracker" }),
+              page("journal", "Live work", "pulse", { key: "live", view: "live" }),
+            ],
+          },
+          { title: "Learn", needsVa: true, items: [page("training", "Training", "graduation"), page("sops", "SOPs", "form")] },
+        ],
+      },
     ],
   },
   {
-    // Who works for them and what they're doing.
-    group: "My VA team",
-    needsVa: true,
+    title: "Account",
     items: [
-      { tab: "vateam", label: "VA Team", icon: "users", tone: "indigo" },
-      { tab: "projects", label: "Tasks", icon: "clipboard", tone: "brand" },
-      { tab: "journal", label: "VA tracker", icon: "journal", tone: "cyan" },
-      { tab: "ratings", label: "VA ratings", icon: "star", tone: "amber" },
-    ],
-  },
-  {
-    group: "Learn & support",
-    needsVa: true,
-    items: [
-      { tab: "training", label: "Training", icon: "graduation", tone: "purple" },
-      { tab: "sops", label: "SOPs", icon: "form", tone: "teal" },
-      { tab: "support", label: "Request support", icon: "lifebuoy", tone: "sky" },
-    ],
-  },
-  {
-    group: "Billing",
-    items: [
-      { tab: "billing", label: "Invoices", icon: "invoice", tone: "pink" },
-      { tab: "affiliate", label: "Affiliate", icon: "gift", tone: "amber" },
+      page("support", "Request support", "lifebuoy", { needsVa: true }),
+      page("billing", "Invoices", "invoice"),
+      page("affiliate", "Affiliate", "gift"),
     ],
   },
 ];
 
-/** The menu group a page belongs to ("My VA team"), for the page kicker. */
+/** Every page in the menu, with whether it needs an active VA (its own flag or its heading's). */
+const PORTAL_MENU_PAGES: Array<{ item: PortalMenuItem; group: string; needsVa: boolean }> = PORTAL_MENU.flatMap((g) =>
+  g.items.flatMap((e) =>
+    isPortalFlyout(e)
+      ? e.groups.flatMap((fg) => fg.items.map((item) => ({ item, group: e.label, needsVa: !!(fg.needsVa || item.needsVa) })))
+      : [{ item: e, group: g.title, needsVa: !!e.needsVa }],
+  ),
+);
+
+/** The menu category a page belongs to ("VAs"), for the page kicker. */
 export const PORTAL_GROUP_OF: Partial<Record<PortalTab, string>> = Object.fromEntries(
-  PORTAL_NAV.flatMap((g) => g.items.map((i) => [i.tab, g.group])),
+  PORTAL_MENU_PAGES.map((p) => [p.item.tab, p.group]),
 );
 
 export const ALERT_OPTIONS = [
@@ -284,7 +346,7 @@ export const CRM_FAQ = [
 
 
 /** Pages a client only gets once they have an active VA. */
-export const VA_ONLY_TABS = new Set<PortalTab>(PORTAL_NAV.filter((g) => g.needsVa).flatMap((g) => g.items.map((i) => i.tab)));
+export const VA_ONLY_TABS = new Set<PortalTab>(PORTAL_MENU_PAGES.filter((p) => p.needsVa).map((p) => p.item.tab));
 
 /** Pages switched off for now: not in the menu, and links to them open the dashboard. */
 export const HIDDEN_PORTAL_TABS = new Set<PortalTab>(["affiliate"]);

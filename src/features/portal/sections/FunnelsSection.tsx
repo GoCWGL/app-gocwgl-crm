@@ -29,14 +29,21 @@ const STATUS: Record<FunnelStatus, { label: string; tone: Tone }> = {
 
 type FunnelTab = "builds" | "packages" | "progress";
 
-/** Client portal › Request Funnel: your funnel builds, the packages (Get a funnel), and Build progress, like the CRM page. */
-export function FunnelsSection() {
-  const { state, update } = usePortal();
+/** How many funnel builds the client has, and the Funnels page tab that's showing (also used by the menu). */
+export function useFunnelTab() {
+  const { state } = usePortal();
   const funnels = usePortalFunnels().data ?? [];
   const builds = (usePortalBuilds().data ?? []).filter((b) => b.kind === "funnel");
-  const openTodos = (usePortalTodos().data ?? []).filter((t) => !t.done).length;
   const yours = builds.length + funnels.filter((f) => !(f.projectId && f.status === "build")).length;
   const tab: FunnelTab = state.funnelView || (yours ? "builds" : "packages");
+  return { yours, tab };
+}
+
+/** Client portal › Request Funnel: your funnel builds, the packages (Get a funnel), and Build progress, like the CRM page. */
+export function FunnelsSection() {
+  const { update } = usePortal();
+  const { yours, tab } = useFunnelTab();
+  const openTodos = (usePortalTodos().data ?? []).filter((t) => !t.done).length;
   const setTab = (funnelView: FunnelTab) => update({ funnelView });
 
   return (

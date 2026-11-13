@@ -25,6 +25,27 @@
   }
 }
 
+// Beside the shrink / expand button while a second sidebar is open.
+.sidebar--portal .portal-brand {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+// Main menu as icons only (desktop): just the business badge, no name or "Powered by".
+@include up(md) {
+  .dual-nav > .sidebar--compact {
+    .portal-brand {
+      flex: none;
+      padding: 0;
+    }
+
+    .portal-brand__text,
+    .portal-powered {
+      display: none;
+    }
+  }
+}
+
 // "POWERED BY GoCWGL" under the account button.
 .portal-powered {
   @include center;
