@@ -24,9 +24,9 @@ export function Sidebar({ label, className, brand, footer, children }: SidebarPr
 }
 
 /** Group of nav items with an optional mono heading ("SALES"). */
-export function SidebarGroup({ title, children }: { title?: string; children: ReactNode }) {
+export function SidebarGroup({ title, className, children }: { title?: string; className?: string; children: ReactNode }) {
   return (
-    <div className="sidebar__group">
+    <div className={className ? `sidebar__group ${className}` : "sidebar__group"}>
       {title && <span className="sidebar__label">{title}</span>}
       {children}
     </div>

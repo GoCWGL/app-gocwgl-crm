@@ -41,19 +41,22 @@ export const CRM_TABS: AdminTab[] = ["progress", "media"];
 export const DASHBOARD_TABS: AdminTab[] = ["dashboard", "reporting"];
 
 /** Menus that hold several pages, shown as tabs at the top of each one. */
-export const TAB_GROUPS: Array<{ label: string; tabs: Array<{ tab: AdminTab; label: string; icon: "grid" | "chart" | "rocket" | "folder"; tone: "brand" | "cyan" | "purple" | "indigo" }> }> = [
+export const TAB_GROUPS: Array<{
+  label: string;
+  tabs: Array<{ tab: AdminTab; label: string; hint: string; icon: "grid" | "chart" | "rocket" | "folder"; tone: "brand" | "cyan" | "purple" | "indigo" }>;
+}> = [
   {
     label: "Dashboard",
     tabs: [
-      { tab: "dashboard", label: "Overview", icon: "grid", tone: "brand" },
-      { tab: "reporting", label: "Reports", icon: "chart", tone: "purple" },
+      { tab: "dashboard", label: "Overview", hint: "Sign-ups and where they are", icon: "grid", tone: "brand" },
+      { tab: "reporting", label: "Reports", hint: "Highlights and trends", icon: "chart", tone: "purple" },
     ],
   },
   {
     label: "CRM Requests",
     tabs: [
-      { tab: "progress", label: "Build progress", icon: "rocket", tone: "brand" },
-      { tab: "media", label: "Client media", icon: "folder", tone: "indigo" },
+      { tab: "progress", label: "Build progress", hint: "CRM builds and requests", icon: "rocket", tone: "brand" },
+      { tab: "media", label: "Client media", hint: "Files clients shared", icon: "folder", tone: "indigo" },
     ],
   },
 ];

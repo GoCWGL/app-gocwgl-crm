@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Avatar, Badge, Button, ConfirmDialog, Icon, LoadState, Modal, Tabs } from "@/components/ui";
+import { Avatar, Badge, Button, ConfirmDialog, Icon, LoadState, Modal, TabBar } from "@/components/ui";
 import { avatarTone } from "@/lib/tones";
 import type { Tone } from "@/lib/tones";
 import type { TeamVa, VaRequestOut } from "@/utils/api/models";
@@ -9,7 +9,6 @@ import { formatShort } from "@/utils/format/dates";
 import { useCancelVaRequest, useVaRequests, useVaTeam } from "@/utils/hooks/useClientWork";
 import { requestHours, requestLoad, VaRequestDetails } from "../components/VaRequestDetails";
 import { ApplicantsReview } from "../components/ApplicantsReview";
-import { RaiseRequests } from "../components/RaiseRequests";
 import { VaProfileModal } from "../components/VaProfileModal";
 import { VaRequestForm, VaRequestModal } from "../components/VaRequestModal";
 import { StateChip, VaPresence } from "../components/VaPresence";
@@ -90,16 +89,13 @@ export function TeamSection() {
         )}
       </section>
 
-      <RaiseRequests readOnly={readOnly} />
-
-      <Tabs
+      <TabBar
         label="VAs"
         value={tab}
         onChange={setTab}
         options={[
-          { value: "active", label: "Active VAs", icon: "users", tone: "green", count: team.isPending ? "–" : vas.length },
-          { value: "requests", label: "Pending requests", icon: "userPlus", tone: "brand", count: requests.isPending ? "–" : pending.length },
-          { value: "matched", label: "Matched", icon: "circleCheck", tone: "green", count: requests.isPending ? "–" : matched.length },
+          { value: "requests", label: "Pending requests", hint: "Waiting for your VA", icon: "userPlus", tone: "brand", count: requests.isPending ? "–" : pending.length },
+          { value: "matched", label: "Matched", hint: "VAs found for you", icon: "circleCheck", tone: "green", count: requests.isPending ? "–" : matched.length },
         ]}
       />
 
@@ -109,18 +105,6 @@ export function TeamSection() {
             <RequestList requests={matched} onOpen={setOpenId} />
           ) : (
             <div className="empty-state">No matches yet. When GoCWGL matches you with a VA, or you hire one of the applicants, it shows here.</div>
-          )}
-        </LoadState>
-      ) : tab === "active" ? (
-        <LoadState query={team} loadingText="Loading your team…">
-          {vas.length > 0 ? (
-            <div className="tc-grid">
-              {vas.map((va) => (
-                <TeamCard key={va.vaId} va={va} />
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">No VA is working with you yet. Once GoCWGL places a VA with your business, they show up here.</div>
           )}
         </LoadState>
       ) : (
@@ -353,7 +337,7 @@ function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => void }) 
   );
 }
 
-function TeamCard({ va }: { va: TeamVa }) {
+export function TeamCard({ va }: { va: TeamVa }) {
   const { goTo, readOnly } = usePortal();
   const state = va.workingNow ? "working" : "offline";
   const extra = va.skills.length - 5;

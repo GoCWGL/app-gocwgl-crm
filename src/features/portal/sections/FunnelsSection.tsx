@@ -1,19 +1,20 @@
 "use client";
 
 import { Fragment, useState } from "react";
-import { Badge, Button, FormError, Icon, IconTile, LoadState, ProgressBar, StatGrid, buttonClass } from "@/components/ui";
-import type { FunnelStatus } from "@/data/portal";
+import { Badge, Button, FormError, Icon, IconTile, LoadState, ProgressBar, StatGrid, TabBar, buttonClass } from "@/components/ui";
+import { FUNNEL_PACKAGE_COPY, type FunnelPackageKey, type FunnelStatus } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { FunnelOut } from "@/utils/api/models";
 import { formatCents } from "@/utils/format/money";
 import { usePortalBilling } from "@/utils/hooks/useBilling";
 import { useEmbeds, usePortalBuilds } from "@/utils/hooks/useDelivery";
-import { useCancelFunnelRequest, usePortalFunnels } from "@/utils/hooks/usePortal";
+import { useCancelFunnelRequest, useFunnelCatalog, usePortalFunnels, usePortalTodos } from "@/utils/hooks/usePortal";
 import { BuildCards } from "../components/BuildCards";
 import { missingRequestDetails } from "../components/FunnelRequestDrawer";
 import { PayConfirmModal } from "../components/PayConfirmModal";
 import { usePortal } from "../state/PortalContext";
+import { BuildSection } from "./BuildSection";
 
 type Step = [string, number];
 const stepsOf = (f: FunnelOut) => (f.steps ?? []) as Step[];
@@ -26,8 +27,117 @@ const STATUS: Record<FunnelStatus, { label: string; tone: Tone }> = {
   quote: { label: "QUOTE REQUESTED", tone: "cyan" },
 };
 
+type FunnelTab = "builds" | "packages" | "progress";
+
+/** Client portal › Request Funnel: your funnel builds, the packages (Get a funnel), and Build progress, like the CRM page. */
 export function FunnelsSection() {
-  const { update, goTo, openSupport, readOnly } = usePortal();
+  const { state, update } = usePortal();
+  const funnels = usePortalFunnels().data ?? [];
+  const builds = (usePortalBuilds().data ?? []).filter((b) => b.kind === "funnel");
+  const openTodos = (usePortalTodos().data ?? []).filter((t) => !t.done).length;
+  const yours = builds.length + funnels.filter((f) => !(f.projectId && f.status === "build")).length;
+  const tab: FunnelTab = state.funnelView || (yours ? "builds" : "packages");
+  const setTab = (funnelView: FunnelTab) => update({ funnelView });
+
+  return (
+    <div className="page-stack">
+      <TabBar<FunnelTab>
+        label="Funnels"
+        value={tab}
+        onChange={setTab}
+        options={[
+          { value: "builds", label: "Your funnel builds", hint: "In progress and live", icon: "funnel", count: yours },
+          { value: "packages", label: "Get a funnel", hint: "Packages and pricing", icon: "sparkle", tone: "purple" },
+          { value: "progress", label: "Build progress", hint: "Timelines and your to-dos", icon: "gauge", tone: "brand", count: openTodos || undefined },
+        ]}
+      />
+      {tab === "progress" ? <BuildSection kind="funnel" /> : tab === "packages" ? <FunnelPackages /> : <FunnelBuilds />}
+    </div>
+  );
+}
+
+/** Get a funnel: the packages with their price and what's in them; each one starts a request with it picked. */
+function FunnelPackages() {
+  const { update, readOnly } = usePortal();
+  const catalog = useFunnelCatalog();
+  const packages = (catalog.data?.packages ?? {}) as Record<FunnelPackageKey, { label: string; price: number; list_price: number | null }>;
+  const request = (pkg: FunnelPackageKey | "") => update({ funnelRequestOpen: true, editFunnelId: "", funnelPackage: pkg });
+
+  return (
+    <>
+      <section className="crm-hero">
+        <IconTile size="xl" tone="brand">
+          <Icon name="funnel" size={22} />
+        </IconTile>
+        <div className="stack stack--4 u-grow">
+          <span className="kicker">FUNNEL BUILDS</span>
+          <h2 className="crm-hero__title">A funnel that turns visitors into booked calls</h2>
+          <span className="text-muted">
+            Custom-coded and hosted by your GoCWGL team, connected to your CRM, emails and calendar so every lead is followed up.
+          </span>
+        </div>
+      </section>
+
+      <div className="section-head">
+        <div className="stack stack--2">
+          <h2 className="section-title">Choose your funnel</h2>
+          <span className="text-muted">One-time build price. Pick a package and tell us about your offer; you see the total before anything is billed.</span>
+        </div>
+        {!readOnly && (
+          <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => request("")}>
+            <Icon name="plus" strokeWidth={2.4} />
+            Request a funnel
+          </Button>
+        )}
+      </div>
+
+      <LoadState query={catalog} loadingText="Loading the packages…">
+        <div className="crm-packages">
+          {(Object.keys(packages) as FunnelPackageKey[]).map((key) => {
+            const p = packages[key];
+            const copy = FUNNEL_PACKAGE_COPY[key];
+            return (
+              <article className={`card crm-package${copy?.tag ? " crm-package--featured" : ""}`} key={key}>
+                {copy?.tag && (
+                  <Badge tone="brand" mono>
+                    {copy.tag}
+                  </Badge>
+                )}
+                <div className="stack stack--4">
+                  <span className="crm-package__name">{p.label}</span>
+                  <span className="crm-package__price">
+                    {formatCents(p.price)}
+                    {p.list_price && p.list_price > p.price ? <s className="text-small"> {formatCents(p.list_price)}</s> : null}
+                  </span>
+                  {copy && <span className="text-muted">{copy.tagline}</span>}
+                </div>
+                {copy && (
+                  <ul className="crm-package__includes">
+                    {copy.includes.map((item) => (
+                      <li key={item}>
+                        <Icon name="check" size={14} strokeWidth={2.4} />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {!readOnly && (
+                  <Button variant={copy?.tag ? "primary" : "outline"} onClick={() => request(key)}>
+                    Request this package
+                  </Button>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      </LoadState>
+    </>
+  );
+}
+
+/** Your funnel builds: live funnels with their results, builds in progress, and requests. */
+function FunnelBuilds() {
+  const { update, openSupport, readOnly } = usePortal();
   const query = usePortalFunnels();
   const funnels = query.data ?? [];
   const live = funnels.filter((f) => f.status === "live");
@@ -90,7 +200,7 @@ export function FunnelsSection() {
           <span className="text-muted">Your live funnels with last 30 days results, and the funnels you’ve requested</span>
         </div>
         {!readOnly && (
-          <Button variant="primary" size="lg" onClick={() => update({ funnelRequestOpen: true, editFunnelId: "" })}>
+          <Button variant="primary" size="lg" onClick={() => update({ funnelRequestOpen: true, editFunnelId: "", funnelPackage: "" })}>
             <Icon name="plus" strokeWidth={2.4} />
             Request a new funnel
           </Button>
@@ -113,7 +223,7 @@ export function FunnelsSection() {
             embedCount={embeds.filter((e) => e.funnelId === f.id).length}
             embedIssues={embeds.filter((e) => e.funnelId === f.id && e.hasIssue).length}
             invoiceNumber={invoices.find((i) => i.id === f.invoiceId)?.number ?? ""}
-            onBuild={() => goTo("build")}
+            onBuild={() => update({ funnelView: "progress", buildId: f.projectId ?? "" })}
             onEdit={() => update({ funnelRequestOpen: true, editFunnelId: f.id })}
             onCancel={() => cancelRequest(f.id)}
             onEmbed={() => update({ embedFunnelId: f.id })}

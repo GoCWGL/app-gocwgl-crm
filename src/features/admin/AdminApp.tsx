@@ -2,7 +2,7 @@
 
 import { useEffect, type ComponentType } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
-import { Button, Tabs, Toast } from "@/components/ui";
+import { Button, TabBar, Toast } from "@/components/ui";
 import { ADMIN_PAGES, CONTACT_VIEWS, TAB_GROUPS, TAB_MENU, type AdminTab } from "@/data/admin";
 import { RequireStaff } from "@/utils/auth/guards";
 import { canUseMenu, canWriteCrm } from "@/utils/auth/session";
@@ -154,9 +154,9 @@ function GroupTabs() {
   if (!group) return null;
   const options = group.tabs
     .filter((t) => canUseMenu(me, TAB_MENU[t.tab]))
-    .map((t) => ({ value: t.tab, label: t.label, icon: t.icon, tone: t.tone }));
+    .map((t) => ({ value: t.tab, label: t.label, hint: t.hint, icon: t.icon, tone: t.tone }));
   if (options.length < 2) return null;
-  return <Tabs label={group.label} value={state.tab} onChange={(t) => goTo(t)} options={options} />;
+  return <TabBar label={group.label} value={state.tab} onChange={(t) => goTo(t)} options={options} />;
 }
 
 /** CRM Requests › Build progress: CRM builds and CRM requests. */

@@ -14,6 +14,7 @@ export type PortalTab =
   | "live"
   | "journal"
   | "team"
+  | "vateam"
   | "projects"
   | "ratings"
   | "build"
@@ -52,7 +53,8 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   crm: { title: "CRM", subtitle: "Your CRM builds, the packages to get one, and the progress on everything GoCWGL is building for you." },
   live: { title: "Live work", subtitle: "Who on your VA team is working for you right now, and on what." },
   journal: { title: "VA tracker", subtitle: "Everything your VAs logged for your business, day by day." },
-  team: { title: "VAs", subtitle: "The virtual assistants who work with your business, and your requests for more." },
+  team: { title: "Request VA", subtitle: "Ask GoCWGL for a VA, and follow each request until you're matched." },
+  vateam: { title: "VA Team", subtitle: "The virtual assistants working with your business right now." },
   projects: { title: "Tasks", subtitle: "Request a task, pick the VA for it, and follow its status." },
   ratings: { title: "VA ratings", subtitle: "Rate each VA on your team. Ratings go to GoCWGL and help us support them." },
   build: { title: "Build progress", subtitle: "Follow along as we build your system." },
@@ -65,28 +67,35 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
 };
 
 /** The client portal menu, grouped by what the client is doing. */
-export const PORTAL_NAV: Array<{ group: string; items: Array<{ tab: PortalTab; label: string; icon: IconName; tone: Tone }> }> = [
+export const PORTAL_NAV: Array<{
+  group: string;
+  /** Shown only once the client has an active VA: new clients don't see it yet. */
+  needsVa?: boolean;
+  items: Array<{ tab: PortalTab; label: string; icon: IconName; tone: Tone }>;
+}> = [
   {
     group: "Overview",
     items: [
       { tab: "dashboard", label: "Dashboard", icon: "grid", tone: "cyan" },
-      { tab: "funnels", label: "Funnels", icon: "funnel", tone: "brand" },
-      { tab: "crm", label: "CRM", icon: "users", tone: "purple" },
-      { tab: "team", label: "VAs", icon: "briefcase", tone: "indigo" },
+      { tab: "funnels", label: "Request Funnel", icon: "funnel", tone: "brand" },
+      { tab: "crm", label: "Request CRM", icon: "users", tone: "purple" },
+      { tab: "team", label: "Request VA", icon: "briefcase", tone: "indigo" },
     ],
   },
   {
     // Who works for them and what they're doing.
     group: "My VA team",
+    needsVa: true,
     items: [
-      { tab: "live", label: "Live work", icon: "pulse", tone: "green" },
-      { tab: "journal", label: "VA tracker", icon: "journal", tone: "cyan" },
+      { tab: "vateam", label: "VA Team", icon: "users", tone: "indigo" },
       { tab: "projects", label: "Tasks", icon: "clipboard", tone: "brand" },
+      { tab: "journal", label: "VA tracker", icon: "journal", tone: "cyan" },
       { tab: "ratings", label: "VA ratings", icon: "star", tone: "amber" },
     ],
   },
   {
     group: "Learn & support",
+    needsVa: true,
     items: [
       { tab: "training", label: "Training", icon: "graduation", tone: "purple" },
       { tab: "sops", label: "SOPs", icon: "form", tone: "teal" },
@@ -95,11 +104,10 @@ export const PORTAL_NAV: Array<{ group: string; items: Array<{ tab: PortalTab; l
   },
   {
     group: "Billing",
-    items: [{ tab: "billing", label: "Invoices", icon: "invoice", tone: "pink" }],
-  },
-  {
-    group: "Refer & earn",
-    items: [{ tab: "affiliate", label: "Affiliate", icon: "gift", tone: "amber" }],
+    items: [
+      { tab: "billing", label: "Invoices", icon: "invoice", tone: "pink" },
+      { tab: "affiliate", label: "Affiliate", icon: "gift", tone: "amber" },
+    ],
   },
 ];
 
@@ -274,3 +282,9 @@ export const CRM_FAQ = [
   { q: "How do I pay?", a: "After the call we send you an invoice for the agreed package. It shows up in Invoices." },
 ];
 
+
+/** Pages a client only gets once they have an active VA. */
+export const VA_ONLY_TABS = new Set<PortalTab>(PORTAL_NAV.filter((g) => g.needsVa).flatMap((g) => g.items.map((i) => i.tab)));
+
+/** Pages switched off for now: not in the menu, and links to them open the dashboard. */
+export const HIDDEN_PORTAL_TABS = new Set<PortalTab>(["affiliate"]);

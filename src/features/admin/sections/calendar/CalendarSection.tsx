@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, SegmentedControl, type SegmentOption } from "@/components/ui";
+import { Button, Icon, TabBar, type SegmentOption } from "@/components/ui";
 import { canWriteCrm } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
 import { Availability } from "./Availability";
@@ -26,21 +26,26 @@ export function CalendarSection() {
 
   return (
     <div className="page-stack">
-      <div className="section-head">
-        <SegmentedControl kind="tabs" label="Calendar views" options={VIEWS} value={view} onChange={setView} />
-        {canWrite && (
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => {
-              setCreating(true);
-              setView("types");
-            }}
-          >
-            + New calendar
-          </Button>
-        )}
-      </div>
+      <TabBar
+        stacked
+        label="Calendar views"
+        options={VIEWS}
+        value={view}
+        onChange={setView}
+        actions={
+          canWrite && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                setCreating(true);
+                setView("types");
+              }}
+            >
+              <Icon name="plus" size={14} /> New calendar
+            </Button>
+          )
+        }
+      />
 
       {creating && <NewCalendarForm onClose={() => setCreating(false)} />}
 

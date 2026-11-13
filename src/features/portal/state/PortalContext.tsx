@@ -30,15 +30,24 @@ export type PortalState = {
   embedFunnelId: string;
   /** Build shown on Build progress ("" = the first one). */
   buildId: string;
+  /** Funnels page tab ("" = pick by what the client has). */
+  funnelView: "" | "builds" | "packages" | "progress";
+  /** Package to start a new funnel request with (from Get a funnel); "" = let them pick. */
+  funnelPackage: string;
   /** CRM page tab ("" = pick by what the client has). Build progress lives here as the "progress" tab. */
   crmView: "" | "builds" | "packages" | "progress";
+  /** VA tracker page tab: the time log, or who's working right now (Live work lives here). */
+  trackerView: "tracker" | "live";
   /** VAs page tab. */
-  teamView: "active" | "requests" | "matched";
+  teamView: "requests" | "matched";
 };
 
-/** Build progress is a tab on the CRM page: links to it (dashboard, funnels, emails) open that tab. */
+/** Build progress is a tab on the CRM page, and Live work one on the VA tracker: links to them open those tabs. */
 function withBuildInCrm(s: PortalState): PortalState {
-  return s.tab === "build" ? { ...s, tab: "crm", crmView: "progress" } : s;
+  if (s.tab === "build") return { ...s, tab: "crm", crmView: "progress" };
+  // Live work is a tab on the VA tracker page: links to it (dashboard, emails) open that tab.
+  if (s.tab === "live") return { ...s, tab: "journal", trackerView: "live" };
+  return s;
 }
 
 /** Deep links, e.g. /portal?tab=billing from an invoice email. */
@@ -55,7 +64,10 @@ function initialState(params: URLSearchParams | null): PortalState {
     embedFunnelId: "",
     buildId: "",
     crmView: "",
-    teamView: "active",
+    funnelView: "",
+    funnelPackage: "",
+    teamView: "requests",
+    trackerView: "tracker",
   });
 }
 
@@ -100,7 +112,8 @@ export function PortalProvider({ children }: { children: ReactNode }) {
       update,
       readOnly,
       isOwner,
-      goTo: (tab) => update({ tab }),
+      // Opening the VA tracker shows its Tracker tab (Live work links use tab "live", which opens the Live work tab).
+      goTo: (tab) => update(tab === "journal" ? { tab, trackerView: "tracker" } : { tab }),
       notify: (toast) => update({ toast }),
       openSupport: (draft) => update((s) => ({ tab: "support", support: { ...s.support, view: "requests", ...draft } })),
     }),

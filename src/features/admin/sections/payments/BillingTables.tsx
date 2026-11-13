@@ -73,11 +73,10 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
   const error = updateSub.error ?? cancelSub.error ?? send.error ?? markPaid.error ?? voidInv.error;
 
   return (
-    <section className="card" aria-label="Billing">
-      <div className="section-head">
+    <section className="card card--flat board" aria-label="Billing">
+      <div className="board__bar">
         <SegmentedControl
           kind="tabs"
-          variant="soft"
           label="Billing views"
           value={view}
           onChange={onView}
@@ -89,6 +88,7 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
             ] as const
           ).filter((o) => views.includes(o.value))}
         />
+        <div className="board__actions">
         {canWrite && view === "opts" && (
           <Button variant="primary" onClick={() => setEditing(null)}>
             + Add product
@@ -109,8 +109,13 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
             </Button>
           </div>
         )}
+        </div>
       </div>
-      <FormError error={error} />
+      {error ? (
+        <div className="inset">
+          <FormError error={error} />
+        </div>
+      ) : null}
 
       <LoadState query={view === "subs" ? subsQuery : view === "inv" ? invoicesQuery : optionsQuery}>
       <div className="table-scroll">

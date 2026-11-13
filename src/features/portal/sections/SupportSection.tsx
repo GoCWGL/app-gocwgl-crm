@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import logoMark from "@/assets/images/logo-mark.png";
-import { Badge, Button, Field, FormError, Icon, IconTile, Input, LoadState, SegmentedControl, Select, Textarea } from "@/components/ui";
+import { Badge, Button, Field, FormError, Icon, IconTile, Input, LoadState, Select, TabBar, Textarea } from "@/components/ui";
 import { BUG_AREAS, PRIORITIES, REQUEST_TYPES, type RequestType } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
@@ -37,8 +37,8 @@ export function SupportSection() {
 
   return (
     <div className="page-stack">
-      <SegmentedControl
-        kind="tabs"
+      <TabBar
+        
         label="Support"
         value={draft.view}
         onChange={(view) => setDraft({ view })}

@@ -18,6 +18,7 @@ export { StarInput, Stars } from "./Stars";
 export { TaskRow, Timeline, TimelineItem, type PhaseState } from "./Timeline";
 export { SearchBox } from "./SearchBox";
 export { Tabs, type TabOption } from "./Tabs";
+export { TabBar } from "./TabBar";
 export { Toast } from "./Toast";
 export { Toggle } from "./Toggle";
 export { YouTubeEmbed } from "./YouTubeEmbed";

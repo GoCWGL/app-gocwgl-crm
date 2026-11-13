@@ -5382,7 +5382,7 @@ export interface paths {
         };
         /**
          * Client Trainings
-         * @description Published client trainings, with the quiz (no answers) and this person's best result.
+         * @description Published client trainings assigned to this client, with the quiz (no answers) and this person's best result.
          */
         get: operations["client_trainings_api_portal_trainings_get"];
         put?: never;
@@ -12270,6 +12270,8 @@ export interface components {
             passingRate?: number;
             /** Questions */
             questions?: components["schemas"]["QuestionIn"][];
+            /** Clientids */
+            clientIds?: string[];
         };
         /** TrainingOut */
         TrainingOut: {
@@ -12294,6 +12296,8 @@ export interface components {
             questions: components["schemas"]["QuestionOut"][];
             /** Publishedat */
             publishedAt: string | null;
+            /** Clientids */
+            clientIds?: string[];
             /** Updatedbyname */
             updatedByName: string;
             /**
@@ -12372,6 +12376,8 @@ export interface components {
             passingRate?: number | null;
             /** Questions */
             questions?: components["schemas"]["QuestionIn"][] | null;
+            /** Clientids */
+            clientIds?: string[] | null;
         };
         /** Trigger */
         Trigger: {

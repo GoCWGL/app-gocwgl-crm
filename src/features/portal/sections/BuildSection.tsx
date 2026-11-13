@@ -13,7 +13,8 @@ import { usePortal } from "../state/PortalContext";
 const PHASE_TONES = { Done: "green", "In progress": "brand", "Up next": "neutral" } as const;
 const STATUS_CLASS: Record<string, string> = { "On track": "u-green", "At risk": "u-pink", "Waiting on client": "u-amber", Launched: "u-green" };
 
-export function BuildSection() {
+/** `kind`: only CRM builds (the CRM page) or only funnel builds (the funnels page). */
+export function BuildSection({ kind }: { kind?: "crm" | "funnel" } = {}) {
   const { state, update, readOnly } = usePortal();
   const buildQuery = usePortalBuilds();
   const todosQuery = usePortalTodos();
@@ -23,7 +24,7 @@ export function BuildSection() {
   const todos = todosQuery.data ?? [];
   const openCount = todos.filter((t) => !t.done).length;
   // A client can have several builds (e.g. a funnel and a CRM): show one at a time.
-  const builds = buildQuery.data ?? [];
+  const builds = (buildQuery.data ?? []).filter((b) => !kind || b.kind === kind);
   const project = builds.find((b) => b.id === state.buildId) ?? builds[0];
   const build = project ? getBuildProgress(project) : null;
 

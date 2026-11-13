@@ -219,3 +219,80 @@
   border: 0;
   background: rgba(8, 145, 178, 0.15);
 }
+
+// Pick several clients (e.g. who a training is for).
+.clients-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__chosen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 4px 3px 3px;
+      border: 1px solid $line-soft;
+      border-radius: 999px;
+      background: $white;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    button {
+      display: grid;
+      place-items: center;
+      width: 20px;
+      height: 20px;
+      border: 0;
+      border-radius: 50%;
+      background: none;
+      color: $muted;
+      cursor: pointer;
+
+      &:hover {
+        background: $bg-soft;
+        color: $ink;
+      }
+    }
+  }
+
+  &__results {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 4px;
+    border: 1px solid $line-soft;
+    border-radius: 10px;
+    background: $white;
+    list-style: none;
+
+    button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      padding: 8px;
+      border: 0;
+      border-radius: 8px;
+      background: none;
+      color: $ink;
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+
+      &:hover,
+      &:focus-visible {
+        outline: none;
+        background: $bg-soft;
+      }
+    }
+  }
+}

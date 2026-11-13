@@ -58,7 +58,7 @@ export function missingRequestDetails(f: FunnelOut): string[] {
 }
 
 function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut; catalog: FunnelCatalogOut; onClose: () => void }) {
-  const { update } = usePortal();
+  const { state, update } = usePortal();
   const types = catalog.types as Record<FunnelTypeKey, CatalogType>;
   const packages = catalog.packages as Record<FunnelPackageKey, CatalogPackage>;
   const typeKeys = Object.keys(types) as FunnelTypeKey[];
@@ -77,7 +77,8 @@ function FunnelRequestForm({ editing, catalog, onClose }: { editing?: FunnelOut;
       offer: r?.offer ?? editing?.goal ?? "",
       audience: r?.audience ?? "",
       notes: r?.notes ?? "",
-      package: r?.package ?? "",
+      // A new request from Get a funnel starts with the package picked there.
+      package: r?.package ?? (!editing && state.funnelPackage in catalog.packages ? (state.funnelPackage as FunnelPackageKey) : ""),
       pay: "now",
       agree: false,
     };

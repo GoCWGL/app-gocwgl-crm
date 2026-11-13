@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Avatar, Badge, Button, LoadState, Modal, StatGrid, Tabs } from "@/components/ui";
+import { Avatar, Badge, Button, LoadState, Modal, StatGrid, TabBar } from "@/components/ui";
 import { avatarTone } from "@/lib/tones";
 import type { ClientVaInvoice } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
@@ -23,13 +23,13 @@ export function InvoicesSection() {
 
   return (
     <div className="page-stack">
-      <Tabs
+      <TabBar
         label="Invoices"
         value={view}
         onChange={setView}
         options={[
-          { value: "vas", label: "From your VAs", icon: "users", tone: "cyan", count: vaInvoices.data ? vaOpen || vaInvoices.data.length : "–" },
-          { value: "gocwgl", label: "From GoCWGL", icon: "invoice", tone: "pink", count: gocwgl.data ? gOpen || gocwgl.data.invoices.length : "–" },
+          { value: "vas", label: "From your VAs", hint: "For their hours", icon: "users", tone: "cyan", count: vaInvoices.data ? vaOpen || vaInvoices.data.length : "–" },
+          { value: "gocwgl", label: "From GoCWGL", hint: "Plans and builds", icon: "invoice", tone: "pink", count: gocwgl.data ? gOpen || gocwgl.data.invoices.length : "–" },
         ]}
       />
       {view === "vas" ? <VaInvoices /> : <BillingSection />}

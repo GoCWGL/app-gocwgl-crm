@@ -336,3 +336,41 @@
     border-top: 1px solid $line-faint;
   }
 }
+
+// A menu group that appears later (client portal: "My VA team" once they have an active VA): it slides in,
+// then its items one after another.
+.sidebar__group--reveal {
+  animation: sidebar-reveal 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+
+  > * {
+    animation: sidebar-reveal-item 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+
+  @for $i from 1 through 6 {
+    > :nth-child(#{$i}) {
+      animation-delay: #{80 + ($i - 1) * 60}ms;
+    }
+  }
+}
+
+@keyframes sidebar-reveal {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes sidebar-reveal-item {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

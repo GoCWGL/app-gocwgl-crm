@@ -116,7 +116,7 @@ $z-route-loader: $z-overlay + 10;
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(14px);
   }
   to {
     opacity: 1;
@@ -268,9 +268,36 @@ $z-route-loader: $z-overlay + 10;
 .page-enter {
   @include stack(24px);
   min-width: 0;
-  // "backwards", not "both": a transform kept after the animation would make this the containing block
-  // for position: fixed, trapping drawers and modals opened inside a section in the section's box.
-  animation: page-enter 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  animation: page-fade 0.3s ease-out backwards;
+
+  // Each section of a page rises in, one after another (a page's own .page-stack counts as its sections).
+  // "backwards", not "both": a transform kept after the animation would make a section the containing block
+  // for position: fixed, trapping drawers and modals opened inside it in its box.
+  > :not(.page-stack),
+  > .page-stack > * {
+    animation: page-enter 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+
+  @for $i from 1 through 8 {
+    > :not(.page-stack):nth-child(#{$i}),
+    > .page-stack > :nth-child(#{$i}) {
+      animation-delay: #{($i - 1) * 60}ms;
+    }
+  }
+
+  > :not(.page-stack):nth-child(n + 9),
+  > .page-stack > :nth-child(n + 9) {
+    animation-delay: 480ms;
+  }
+}
+
+@keyframes page-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -284,6 +311,10 @@ $z-route-loader: $z-overlay + 10;
   .route-loader,
   .route-loader .brand-loader,
   .page-enter,
+  .page-enter > *,
+  .page-enter > .page-stack > *,
+  .sidebar__group--reveal,
+  .sidebar__group--reveal > *,
   .nav-progress--sweep {
     animation: none;
   }

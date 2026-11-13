@@ -1,6 +1,6 @@
 "use client";
 
-import { SegmentedControl, StatGrid } from "@/components/ui";
+import { StatGrid, TabBar } from "@/components/ui";
 import { useContactsPage } from "@/utils/hooks/useContacts";
 import { useSentEmails } from "@/utils/hooks/useMarketing";
 import { useAdmin } from "../../state/AdminContext";
@@ -27,8 +27,7 @@ export function EmailSection() {
         ]}
       />
 
-      <SegmentedControl
-        kind="tabs"
+      <TabBar
         label="Email views"
         value={emailView}
         onChange={(view) => update({ emailView: view })}

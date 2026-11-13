@@ -1,13 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Avatar, Badge, Button, Icon, Input, LoadState, SegmentedControl, Select, StatGrid } from "@/components/ui";
+import { Avatar, Badge, Button, Icon, Input, LoadState, SegmentedControl, Select, StatGrid, TabBar } from "@/components/ui";
 import { avatarTone } from "@/lib/tones";
 import { EntryLabelChips, type TagColor } from "@/features/va/components/EntryLabels";
 import { dayHeading, dayKey, downloadCsv, rangeFor, rangeLabel, RANGES, timeOf, type RangeKey } from "@/features/va/lib/time";
 import type { JournalEntry } from "@/utils/api/models";
 import { formatCentsExact } from "@/utils/format/money";
-import { useTimeTags, useVaTeam, useWorkJournal } from "@/utils/hooks/useClientWork";
+import { useLiveWork, useTimeTags, useVaTeam, useWorkJournal } from "@/utils/hooks/useClientWork";
+import { LiveWorkSection } from "./LiveWorkSection";
 import { TimeTagsModal } from "../components/TimeTagsModal";
 import { hm, hoursDecimal, isoDay } from "../lib/vaTeam";
 import { usePortal } from "../state/PortalContext";
@@ -27,6 +28,27 @@ const daysBetween = (a: string, b: string) => Math.round((fromIso(b).getTime() -
  * (billable time × the VA's rate). Pick the dates, the VA, a project code or a tag; manage the tags your VAs pick from.
  */
 export function WorkJournalSection() {
+  const { state, update } = usePortal();
+  const working = useLiveWork().data?.working ?? 0;
+  const view = state.trackerView;
+  return (
+    <div className="page-stack">
+      <TabBar<"tracker" | "live">
+        label="VA tracker"
+        value={view}
+        onChange={(trackerView) => update({ trackerView })}
+        options={[
+          { value: "tracker", label: "Tracker", hint: "Time your VAs logged", icon: "journal" },
+          { value: "live", label: "Live work", hint: "Who's working right now", icon: "pulse", tone: "green", count: working || undefined },
+        ]}
+      />
+      {view === "live" ? <LiveWorkSection /> : <TrackerView />}
+    </div>
+  );
+}
+
+/** The Tracker tab: every entry by day, with filters, value and export. */
+function TrackerView() {
   const { readOnly } = usePortal();
   const [range, setRange] = useState<Range>("week");
   const [vaId, setVaId] = useState("");

@@ -7394,3 +7394,29 @@ $pdf-card-line: #e3ebf5;
     }
   }
 }
+
+// Admin dashboard: a reminder banner (e.g. launch the Affiliate program at 10 clients).
+.reminder-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  border-color: #f5dcb0;
+  background: linear-gradient(90deg, #fff8eb, $white 70%);
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: #ffedd2;
+    color: #c2410c;
+  }
+
+  strong {
+    color: $ink;
+    font-size: 15px;
+  }
+}

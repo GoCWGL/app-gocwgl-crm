@@ -46,7 +46,10 @@ export function BuildCards({ builds, icon }: { builds: ProjectOut[]; icon: "funn
                 {current && !launched && ` · Now: ${current.name}`}
               </span>
             </div>
-            <Button variant="outline" size="sm" className="u-self-start" onClick={() => update({ tab: "build", buildId: b.id })}>
+            <Button variant="outline" size="sm" className="u-self-start" onClick={() =>
+                // Each kind's Build progress is a tab on its own page.
+                update(b.kind === "funnel" ? { tab: "funnels", funnelView: "progress", buildId: b.id } : { tab: "crm", crmView: "progress", buildId: b.id })
+              }>
               See build progress
             </Button>
           </article>

@@ -4,8 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
-import { Avatar, Icon, IconTile } from "@/components/ui";
-import { PORTAL_NAV, type PortalTab } from "@/data/portal";
+import { Avatar, Icon } from "@/components/ui";
+import { HIDDEN_PORTAL_TABS, PORTAL_NAV, type PortalTab } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
 import { initials } from "@/lib/utils";
 import { usePortalBilling } from "@/utils/hooks/useBilling";
@@ -15,6 +15,7 @@ import { useSession } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
 import { usePortal } from "../state/PortalContext";
 import { useMenuCounts } from "@/utils/hooks/useMenuCounts";
+import { useHasTraining, useHasVaWork } from "../lib/vaAccess";
 
 type PortalSidebarProps = {
   /** Business shown at the top (from the API). */
@@ -39,6 +40,10 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
 
   // VAs, Live work, VA tracker, Tasks, Training, SOPs and Request support come from the server (see menus API).
   const server = useMenuCounts("portal", state.tab);
+  // "My VA team" and "Learn & support" appear once the client has an active VA.
+  const vaWork = useHasVaWork();
+  // Training appears once GoCWGL assigns the client a training.
+  const training = useHasTraining();
   const badges: Partial<Record<PortalTab, { text: string; tone: Tone }>> = {
     ...Object.fromEntries(Object.entries(server).filter(([, n]) => n > 0).map(([t, n]) => [t, { text: String(n), tone: (t === "live" ? "green" : "brand") as Tone }])),
     // Open to-dos on a build: Build progress is a tab on the CRM page.
@@ -49,6 +54,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   return (
     <Sidebar
       label="Portal menu"
+      className="sidebar--admin"
       brand={
         <div className="portal-brand">
           <span className="portal-brand__mark" aria-hidden="true">
@@ -85,9 +91,10 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
         </>
       }
     >
-      {PORTAL_NAV.map((group) => (
-        <SidebarGroup key={group.group} title={group.group}>
-          {group.items.map((item) => (
+      {PORTAL_NAV.filter((g) => !g.needsVa || vaWork.has).map((group) => (
+        // The VA groups slide in when they first appear (when the client gets an active VA).
+        <SidebarGroup key={group.group} title={group.group} className={group.needsVa ? "sidebar__group--reveal" : undefined}>
+          {group.items.filter((item) => !HIDDEN_PORTAL_TABS.has(item.tab) && (item.tab !== "training" || training.has)).map((item) => (
             <NavItem
               key={item.tab}
               label={item.label}
@@ -96,11 +103,8 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
               badge={badges[item.tab]}
               locked={item.tab === "affiliate" && affiliateLocked}
               lockedHint="For paid subscribers"
-              icon={
-                <IconTile tone={item.tone} size="sm">
-                  <Icon name={item.icon} size={14} strokeWidth={1.9} />
-                </IconTile>
-              }
+              // Plain icons, the same as the admin and VA menus.
+              icon={<Icon name={item.icon} size={17} strokeWidth={1.8} className="nav-item__icon" />}
             />
           ))}
         </SidebarGroup>

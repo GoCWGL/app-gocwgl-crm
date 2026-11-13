@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, Button, Icon, IconTile, LoadState, SegmentedControl } from "@/components/ui";
+import { Badge, Button, Icon, IconTile, LoadState, TabBar } from "@/components/ui";
 import { CRM_ADDONS, CRM_FAQ, CRM_PACKAGES, CRM_STEPS, OFFERED_CRM_PACKAGES, type CrmPackageKey } from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
 import type { Tone } from "@/lib/tones";
@@ -36,8 +36,7 @@ export function CrmSection() {
 
   return (
     <div className="page-stack">
-      <SegmentedControl<CrmTab>
-        kind="tabs"
+      <TabBar<CrmTab>
         label="CRM"
         value={tab}
         onChange={setPicked}
@@ -48,7 +47,7 @@ export function CrmSection() {
         ]}
       />
       {tab === "progress" ? (
-        <BuildSection />
+        <BuildSection kind="crm" />
       ) : tab === "builds" ? (
         <LoadState
           query={query}

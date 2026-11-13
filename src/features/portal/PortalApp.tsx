@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, type ComponentType, type ReactNode } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button, Toast } from "@/components/ui";
-import { PORTAL_GROUP_OF, PORTAL_PAGES, type PortalTab } from "@/data/portal";
+import { HIDDEN_PORTAL_TABS, PORTAL_GROUP_OF, PORTAL_PAGES, VA_ONLY_TABS, type PortalTab } from "@/data/portal";
+import { useHasTraining, useHasVaWork } from "./lib/vaAccess";
 import { RequireClient, SessionSplash } from "@/utils/auth/guards";
 import { setViewAs, useSession } from "@/utils/auth/session";
 import { useContactsPage } from "@/utils/hooks/useContacts";
@@ -28,6 +29,7 @@ import { ProjectsSection } from "./sections/ProjectsSection";
 import { RatingsSection } from "./sections/RatingsSection";
 import { SupportSection } from "./sections/SupportSection";
 import { TeamSection } from "./sections/TeamSection";
+import { VaTeamSection } from "./sections/VaTeamSection";
 import { WorkJournalSection } from "./sections/WorkJournalSection";
 import { StaffClientBar } from "./components/StaffClientBar";
 import { PortalProvider, usePortal } from "./state/PortalContext";
@@ -39,6 +41,7 @@ const SECTIONS: Record<PortalTab, ComponentType> = {
   live: LiveWorkSection,
   journal: WorkJournalSection,
   team: TeamSection,
+  vateam: VaTeamSection,
   projects: ProjectsSection,
   ratings: RatingsSection,
   build: BuildSection,
@@ -132,14 +135,27 @@ function PortalLayout() {
   const { user, viewAsClientId } = useSession();
   const subtitle = readOnly ? "Client portal · view only" : viewAsClientId && user?.isStaff ? "Client portal · acting as client" : "Client portal";
 
+  // Pages of "My VA team" and "Learn & support" open once the client has an active VA; until then, the dashboard.
+  const vaWork = useHasVaWork();
+  // Training opens once GoCWGL assigns the client a training.
+  const training = useHasTraining();
+  const locked =
+    HIDDEN_PORTAL_TABS.has(state.tab) ||
+    (vaWork.known && !vaWork.has && VA_ONLY_TABS.has(state.tab)) ||
+    (state.tab === "training" && training.known && !training.has);
+  useEffect(() => {
+    if (locked) update({ tab: "dashboard" });
+  }, [locked, update]);
+
   // Start each section at the top of the page, with the top progress sweep.
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [state.tab]);
   useSectionChangeSweep(state.tab);
 
-  const page = PORTAL_PAGES[state.tab];
-  const Section = SECTIONS[state.tab];
+  const tab = locked ? "dashboard" : state.tab;
+  const page = PORTAL_PAGES[tab];
+  const Section = SECTIONS[tab];
 
   return (
     <AppShell
@@ -154,13 +170,13 @@ function PortalLayout() {
     >
       <StaffClientBar />
       <PageHeader
-        kicker={`${(PORTAL_GROUP_OF[state.tab] ?? "My account").toUpperCase()} // ${page.title.toUpperCase()}`}
+        kicker={`${(PORTAL_GROUP_OF[tab] ?? "My account").toUpperCase()} // ${page.title.toUpperCase()}`}
         title={page.title}
         subtitle={page.subtitle}
         actions={
           // Only on Support, where requests live.
           !readOnly &&
-          state.tab === "support" && (
+          tab === "support" && (
             <Button variant="primary" size="lg" onClick={() => openSupport()}>
               + New request
             </Button>
@@ -168,7 +184,7 @@ function PortalLayout() {
         }
       />
       <Toast message={state.toast} onClose={() => update({ toast: "" })} />
-      <div className="page-enter" key={state.tab}>
+      <div className="page-enter" key={tab}>
         <Section />
       </div>
     </AppShell>

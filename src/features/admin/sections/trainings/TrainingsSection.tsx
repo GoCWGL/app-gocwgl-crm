@@ -37,6 +37,7 @@ import {
 } from "@/utils/hooks/useTrainings";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../../state/AdminContext";
+import { ClientsPicker } from "../../components/ClientsPicker";
 
 const AUDIENCE = {
   va: { tab: "VA trainings", hint: "Lessons with a quiz", icon: "graduation", tone: "cyan", noun: "VA" },
@@ -545,6 +546,8 @@ function TrainingEditor({
     description: training?.description ?? "",
     rate: String(training?.passingRate ?? 80),
   });
+  // Client trainings: who it's for (only they see it in their portal).
+  const [clientIds, setClientIds] = useState<string[]>(training?.clientIds ?? []);
   const [questions, setQuestions] = useState<DraftQuestion[]>(
     training?.questions.length ? training.questions.map((q) => ({ ...q, key: q.id })) : [blankQuestion()],
   );
@@ -586,6 +589,7 @@ function TrainingEditor({
       lessons: usedLessons.map((l) => ({ id: l.id, title: l.title.trim(), videoUrl: l.videoUrl.trim() })),
       description: f.description.trim(),
       passingRate: rate,
+      ...(f.audience === "client" && { clientIds }),
       questions: used.map((q) => {
         // Drop blank answers but keep the right one pointing at the same text.
         const kept = q.options.map((o, j) => ({ o: o.trim(), j })).filter((x) => x.o);
@@ -657,6 +661,15 @@ function TrainingEditor({
             ]}
           />
         </Field>
+        {f.audience === "client" && (
+          <Field
+            label={`Clients${clientIds.length ? ` · ${clientIds.length}` : ""}`}
+            htmlFor="tr-clients"
+            hint="Only these clients see this training. Their Training menu appears once they have one."
+          >
+            <ClientsPicker id="tr-clients" value={clientIds} onChange={setClientIds} />
+          </Field>
+        )}
         <Field label="Title" htmlFor="tr-title" required error={tried && errors.title}>
           <Input id="tr-title" placeholder="Inbox management basics" value={f.title} onChange={(e) => set({ title: e.target.value })} autoFocus />
         </Field>

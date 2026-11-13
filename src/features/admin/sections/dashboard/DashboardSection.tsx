@@ -115,6 +115,7 @@ export function DashboardSection() {
 
   return (
     <div className="page-stack">
+      <AffiliateReminder paidClients={paid} />
       <div className="stat-grid stat-grid--wide">
         {kpis.map((k) => (
           <KpiCard
@@ -318,5 +319,38 @@ export function DashboardSection() {
         </section>
       </div>
     </div>
+  );
+}
+
+/** When the client Affiliate program should open (it's hidden in the client portal until then). */
+const AFFILIATE_AT = 10;
+const DISMISSED_KEY = "gocwgl.affiliate-reminder-dismissed";
+
+/** Once there are 10 paying clients: a reminder to launch the client Affiliate program. Dismissed per browser. */
+function AffiliateReminder({ paidClients }: { paidClients: number }) {
+  const [dismissed, setDismissed] = useState(() => typeof window !== "undefined" && window.localStorage.getItem(DISMISSED_KEY) === "1");
+  if (paidClients < AFFILIATE_AT || dismissed) return null;
+  return (
+    <section className="card reminder-banner" role="status">
+      <span className="reminder-banner__icon" aria-hidden="true">
+        <Icon name="gift" size={20} />
+      </span>
+      <span className="stack stack--2 u-grow">
+        <strong>You have {paidClients} paying clients: time to launch the Affiliate program</strong>
+        <span className="text-small">
+          Clients can earn by referring other businesses. The Affiliate menu is hidden in the client portal until it’s switched on.
+        </span>
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => {
+          window.localStorage.setItem(DISMISSED_KEY, "1");
+          setDismissed(true);
+        }}
+      >
+        Dismiss
+      </Button>
+    </section>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Badge, Button, Dropdown, Icon, LoadState, Tabs } from "@/components/ui";
+import { Badge, Button, Dropdown, Icon, LoadState, TabBar } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import type { InvoiceClient, InvoicesOverview, VaInvoiceRow } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
@@ -52,27 +52,27 @@ export function InvoicesSection() {
 
   return (
     <div className="page-stack inv">
-      <div className="inv-top">
-        <Tabs<View>
-          label="Invoices"
-          value={view}
-          onChange={setView}
-          options={[
-            { value: "invoices", label: "Invoices", icon: "receipt", tone: "brand", count: d?.invoices.length ?? "–" },
-            { value: "payment", label: "Payment details", icon: "card", tone: "green", count: methods.data?.length ?? "–" },
-          ]}
-        />
-        <div className="cluster cluster--8">
-          {view === "invoices" && (
-            <Button variant="outline" onClick={exportCsv} disabled={!d?.invoices.length}>
-              <Icon name="download" size={14} /> Export
+      <TabBar<View>
+        label="Invoices"
+        value={view}
+        onChange={setView}
+        options={[
+          { value: "invoices", label: "Invoices", hint: "Bill GoCWGL for your time", icon: "receipt", tone: "brand", count: d?.invoices.length ?? "–" },
+          { value: "payment", label: "Payment details", hint: "How you get paid", icon: "card", tone: "green", count: methods.data?.length ?? "–" },
+        ]}
+        actions={
+          <>
+            {view === "invoices" && (
+              <Button variant="outline" onClick={exportCsv} disabled={!d?.invoices.length}>
+                <Icon name="download" size={14} /> Export
+              </Button>
+            )}
+            <Button variant="primary" onClick={() => setCreating(true)}>
+              <Icon name="plus" size={14} /> Create invoice
             </Button>
-          )}
-          <Button variant="primary" onClick={() => setCreating(true)}>
-            <Icon name="plus" size={14} /> Create invoice
-          </Button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {view === "payment" ? (
         <PaymentDetails />

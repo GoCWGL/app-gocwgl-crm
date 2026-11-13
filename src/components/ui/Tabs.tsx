@@ -17,7 +17,7 @@ export type TabOption<T extends string> = {
   count?: number | string;
 };
 
-type TabsProps<T extends string> = {
+export type TabsProps<T extends string> = {
   options: Array<TabOption<T>>;
   value: T;
   onChange: (value: T) => void;
