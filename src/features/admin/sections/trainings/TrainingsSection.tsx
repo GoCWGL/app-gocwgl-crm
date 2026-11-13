@@ -31,7 +31,7 @@ import { formatShort } from "@/utils/format/dates";
 import {
   useCreateTraining,
   useDeleteTraining,
-  useTrainingResults,
+  useTrainingLearners,
   useTrainingStats,
   useTrainings,
   useUpdateTraining,
@@ -226,6 +226,9 @@ export function TrainingsSection() {
                           <Icon name="gauge" size={12} /> Pass {t.passingRate}%
                         </span>
                       )}
+                      <span>
+                        <Icon name="userPlus" size={12} /> {t.peopleEnrolled} registered
+                      </span>
                     </span>
                     {t.audience === "va" && t.questions.length > 0 && (
                       <span className="training-card__progress">
@@ -250,6 +253,7 @@ export function TrainingsSection() {
                     <th>Lessons</th>
                     <th>Quiz</th>
                     <th>Status</th>
+                    <th>Registered</th>
                     {tab === "va" && <th>VAs passed</th>}
                     <th>Updated</th>
                   </tr>
@@ -279,6 +283,10 @@ export function TrainingsSection() {
                         <Badge tone={STATUS[t.status].tone} dot>
                           {STATUS[t.status].label}
                         </Badge>
+                      </td>
+                      <td>
+                        {t.peopleEnrolled}
+                        {t.peopleEnrolled > 0 && <span className="text-small"> · {t.peopleCompleted} done</span>}
                       </td>
                       {tab === "va" && <td>{t.questions.length ? `${t.peoplePassed} of ${t.peopleTried}` : "—"}</td>}
                       <td>{formatShort(t.updatedAt)}</td>
@@ -372,7 +380,7 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
   const { notify } = useAdmin();
   const save = useUpdateTraining();
   const remove = useDeleteTraining();
-  const results = useTrainingResults(t.audience === "va" ? t.id : "");
+  const learners = useTrainingLearners(t.id);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const meta = AUDIENCE[t.audience];
   const publish = (status: TrainingStatus) =>
@@ -472,44 +480,73 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
           </div>
         )}
 
-        {t.audience === "va" && t.questions.length > 0 && (
-          <div className="stack stack--8">
-            <span className="kicker">VA RESULTS</span>
-            <LoadState query={results} isEmpty={!results.data?.length} empty="No VA has taken the quiz yet." inline>
-              <table className="data-table data-table--plain">
+        <div className="stack stack--8">
+          <div className="cluster cluster--between">
+            <span className="kicker">
+              REGISTERED {t.audience === "va" ? "VAS" : "CLIENTS"} · {t.peopleEnrolled}
+            </span>
+            {t.peopleEnrolled > 0 && (
+              <span className="text-small">
+                {t.peopleCompleted} of {t.peopleEnrolled} finished
+              </span>
+            )}
+          </div>
+          <LoadState query={learners} isEmpty={!learners.data?.length} empty="Nobody has registered for this course yet." inline>
+            <div className="table-scroll">
+              <table className="data-table data-table--plain learner-table">
                 <thead>
                   <tr>
-                    <th>VA</th>
-                    <th>Best score</th>
-                    <th>Tries</th>
-                    <th>Result</th>
+                    <th>{t.audience === "va" ? "VA" : "Client"}</th>
+                    <th>Progress</th>
+                    {t.questions.length > 0 && <th>Quiz</th>}
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {results.data?.map((r) => (
-                    <tr key={r.userId}>
-                      <td>
-                        <div className="stack stack--2">
-                          <span className="u-strong u-ink">{r.name}</span>
-                          <span className="text-small">{r.email}</span>
-                        </div>
-                      </td>
-                      <td>{r.bestScore}%</td>
-                      <td>
-                        {r.tries} · last {formatShort(r.lastAttemptAt)}
-                      </td>
-                      <td>
-                        <Badge tone={r.passed ? "green" : "red"} dot>
-                          {r.passed ? "Passed" : "Not passed yet"}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))}
+                  {learners.data?.map((r) => {
+                    const pct = r.lessonsTotal ? Math.round((r.lessonsWatched / r.lessonsTotal) * 100) : 0;
+                    const state = r.completedAt
+                      ? { tone: "green" as const, label: r.passed ? "Passed" : "Completed" }
+                      : r.tries
+                        ? { tone: "amber" as const, label: "Not passed yet" }
+                        : r.currentStep || r.lessonsWatched
+                          ? { tone: "cyan" as const, label: "In progress" }
+                          : { tone: "slate" as const, label: "Not started" };
+                    return (
+                      <tr key={r.userId}>
+                        <td>
+                          <div className="stack stack--2">
+                            <span className="u-strong u-ink">{r.name}</span>
+                            <span className="text-small">{r.email}</span>
+                            <span className="text-small">Registered {formatShort(r.enrolledAt)}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="learner-table__progress">
+                            <span className="training-card__bar">
+                              <span style={{ width: `${pct}%` }} />
+                            </span>
+                            <span className="text-small">
+                              {r.lessonsWatched} of {r.lessonsTotal} lessons
+                            </span>
+                            {r.currentLabel && <span className="learner-table__now">Now on: {r.currentLabel}</span>}
+                            {r.lastActiveAt && <span className="text-small">Active {formatShort(r.lastActiveAt)}</span>}
+                          </div>
+                        </td>
+                        {t.questions.length > 0 && <td>{r.bestScore !== null ? `${r.bestScore}% · ${r.tries} tr${r.tries === 1 ? "y" : "ies"}` : "—"}</td>}
+                        <td>
+                          <Badge tone={state.tone} dot>
+                            {state.label}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
-            </LoadState>
-          </div>
-        )}
+            </div>
+          </LoadState>
+        </div>
       </div>
     </Modal>
   );

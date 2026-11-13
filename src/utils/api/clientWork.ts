@@ -25,6 +25,7 @@ import type {
   VaRequestStage,
   VaRequestStaffUpdate,
   VaTrainingOut,
+  ProgressIn,
 } from "./models";
 
 // Client portal › your VA team. The API never sends pay rates or work done for other clients.
@@ -66,6 +67,8 @@ export const getVaInvoice = (id: string) => get<ClientVaInvoiceDetail>(`/portal/
 // Client portal › Training and SOPs.
 export const listClientTrainings = () => get<VaTrainingOut[]>("/portal/trainings");
 export const submitClientQuiz = (id: string, answers: Array<number | null>) => post<AttemptOut>(`/portal/trainings/${id}/attempts`, { answers });
+export const enrollClientTraining = (id: string) => post<void>(`/portal/trainings/${id}/enroll`);
+export const saveClientTrainingProgress = (id: string, body: ProgressIn) => put<void>(`/portal/trainings/${id}/progress`, body);
 export const listClientSops = () => get<SopOut[]>("/portal/sops");
 
 // Admin › client profile › Projects.

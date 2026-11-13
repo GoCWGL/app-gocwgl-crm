@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import * as api from "@/utils/api/clientWork";
-import type { ProjectClientUpdate, TimeTagUpdate, VaRequestIn, ProjectStaffUpdate, VaRequestPost, VaRequestStage, VaRequestStaffUpdate } from "@/utils/api/models";
+import type { ProgressIn, ProjectClientUpdate, TimeTagUpdate, VaRequestIn, ProjectStaffUpdate, VaRequestPost, VaRequestStage, VaRequestStaffUpdate } from "@/utils/api/models";
 import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
 
@@ -49,6 +49,11 @@ export const useVaInvoiceForClient = (id: string) =>
 export const useClientTrainings = () => useQuery({ queryKey: qk.portalTrainings, queryFn: api.listClientTrainings });
 export const useSubmitClientQuiz = () =>
   useApiMutation((v: { id: string; answers: Array<number | null> }) => api.submitClientQuiz(v.id, v.answers), { invalidate: [qk.portalTrainings] });
+export const useEnrollClientTraining = () => useApiMutation(api.enrollClientTraining, { invalidate: [qk.portalTrainings] });
+export const useSaveClientTrainingProgress = () =>
+  useApiMutation((v: { id: string } & ProgressIn) => api.saveClientTrainingProgress(v.id, { watched: v.watched, currentStep: v.currentStep }), {
+    invalidate: [qk.portalTrainings],
+  });
 export const useClientSops = () => useQuery({ queryKey: qk.portalSops, queryFn: api.listClientSops });
 
 // Admin

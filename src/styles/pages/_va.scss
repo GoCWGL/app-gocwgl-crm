@@ -1428,6 +1428,31 @@
     margin-top: 6px;
   }
 
+  // Before registering: what the course covers and the button.
+  &__register {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: hidden;
+    padding: 28px 28px 24px;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(255, 153, 0, 0.12), transparent 45%),
+      $white;
+  }
+
+  &__register-icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 4px;
+    border-radius: $radius-xl;
+    background: $grad-orange;
+    color: $on-orange;
+    box-shadow: $glow-orange-soft;
+  }
+
   // The outline card.
   &__side {
     position: sticky;
@@ -1602,6 +1627,22 @@
     color: $ink-muted;
     font-size: 13px;
     line-height: 1.55;
+  }
+}
+
+// Admin › course drawer: who registered and where they are.
+.learner-table {
+  &__progress {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+  }
+
+  &__now {
+    color: $ink-soft;
+    font-size: 12px;
+    font-weight: 600;
   }
 }
 

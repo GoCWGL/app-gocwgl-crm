@@ -4,11 +4,12 @@ import { useVaAccess } from "../lib/access";
 import { useRef, useState } from "react";
 import { Badge, Button, FormError, Icon, LessonVideo, LoadState } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { formatShort } from "@/utils/format/dates";
 import { formatMinutes, lessonThumb, VIDEO_PROVIDER_LABEL } from "@/lib/video";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { AttemptOut, VaTrainingOut } from "@/utils/api/models";
-import { useSubmitClientQuiz } from "@/utils/hooks/useClientWork";
-import { useMyTrainings, useSubmitQuiz } from "@/utils/hooks/useTrainings";
+import { useEnrollClientTraining, useSaveClientTrainingProgress, useSubmitClientQuiz } from "@/utils/hooks/useClientWork";
+import { useEnrollTraining, useMyTrainings, useSaveTrainingProgress, useSubmitQuiz } from "@/utils/hooks/useTrainings";
 
 type Audience = "va" | "client";
 
@@ -28,6 +29,7 @@ export function TrainingList({ query, audience, readOnly }: { query: UseQueryRes
   if (open) return <CourseView key={open.id} training={open} audience={audience} readOnly={readOnly} onBack={() => setOpenId("")} />;
 
   const passed = trainings.filter((t) => t.myPassed).length;
+  const registered = trainings.filter((t) => t.enrolledAt).length;
   return (
     <div className="page-stack">
       <LoadState query={query} loadingText="Loading your trainings…" isEmpty={!trainings.length} empty={audience === "client" ? "No trainings yet. Guides from GoCWGL on working with your VA show up here." : "No trainings yet. New lessons from GoCWGL show up here."}>
@@ -35,8 +37,9 @@ export function TrainingList({ query, audience, readOnly }: { query: UseQueryRes
           <div className="cluster cluster--between">
             <span className="text-strong">
               {passed} of {trainings.length} trainings passed
+              <span className="text-small"> · {registered} registered</span>
             </span>
-            <span className="text-small">Watch the lessons, then take the quiz.</span>
+            <span className="text-small">Register for a course, watch the lessons, then take the quiz.</span>
           </div>
           <div className="training-card__bar">
             <span style={{ width: `${trainings.length ? (passed / trainings.length) * 100 : 0}%` }} />
@@ -77,6 +80,16 @@ export function TrainingList({ query, audience, readOnly }: { query: UseQueryRes
                     )}
                     {t.myBestScore !== null && <span>Best {t.myBestScore}%</span>}
                   </span>
+                  {t.enrolledAt && t.lessons.length > 0 && (
+                    <span className="training-card__progress">
+                      <span className="training-card__bar">
+                        <span style={{ width: `${(watchedCount(t) / t.lessons.length) * 100}%` }} />
+                      </span>
+                      <span className="text-small">
+                        {watchedCount(t)} of {t.lessons.length} lessons watched
+                      </span>
+                    </span>
+                  )}
                 </span>
               </button>
             );
@@ -88,37 +101,17 @@ export function TrainingList({ query, audience, readOnly }: { query: UseQueryRes
 }
 
 function StatusBadge({ t }: { t: VaTrainingOut }) {
-  if (t.myPassed) return <Badge tone="green" dot>Passed</Badge>;
+  if (t.myPassed || t.completedAt) return <Badge tone="green" dot>{t.myPassed ? "Passed" : "Completed"}</Badge>;
   if (t.myTries) return <Badge tone="amber" dot>Try again</Badge>;
-  return <Badge tone="slate" dot>Not started</Badge>;
+  if (t.enrolledAt) return <Badge tone="cyan" dot>Registered</Badge>;
+  return <Badge tone="slate" dot>Not registered</Badge>;
 }
 
-const statusLabel = (t: VaTrainingOut) => (t.myPassed ? "Passed" : t.myTries ? "Try again" : "In progress");
+const statusLabel = (t: VaTrainingOut) =>
+  t.myPassed ? "Passed" : t.completedAt ? "Completed" : t.myTries ? "Try again" : t.enrolledAt ? "In progress" : "Not registered";
 
-/** Lessons you've finished in this course, kept on this device (only quiz results are saved on the server). */
-function useWatched(trainingId: string) {
-  const storageKey = `gocwgl.training.${trainingId}.watched`;
-  const [watched, setWatched] = useState<string[]>(() => {
-    try {
-      const saved: unknown = JSON.parse(window.localStorage.getItem(storageKey) ?? "[]");
-      return Array.isArray(saved) ? saved.filter((x): x is string => typeof x === "string") : [];
-    } catch {
-      return [];
-    }
-  });
-  const markWatched = (lessonId: string) =>
-    setWatched((w) => {
-      if (w.includes(lessonId)) return w;
-      const next = [...w, lessonId];
-      try {
-        window.localStorage.setItem(storageKey, JSON.stringify(next));
-      } catch {
-        // Private mode / full storage: progress just isn't remembered.
-      }
-      return next;
-    });
-  return [watched, markWatched] as const;
-}
+/** Lessons of this course they've finished (ignores lessons since removed). */
+const watchedCount = (t: VaTrainingOut) => t.lessons.filter((l) => t.myWatched.includes(l.id)).length;
 
 /** One course: the lesson video and its card on the left, the course outline on the right; the quiz is the last step. */
 function CourseView({
@@ -134,14 +127,34 @@ function CourseView({
 }) {
   const hasQuiz = t.questions.length > 0;
   const steps = t.lessons.length + (hasQuiz ? 1 : 0);
-  const [watched, markWatched] = useWatched(t.id);
+  const enrolled = !!t.enrolledAt;
+  // Progress is saved on the server once registered; kept here too so the page answers at once.
+  const [watched, setWatched] = useState<string[]>(t.myWatched);
+  const vaEnroll = useEnrollTraining();
+  const clientEnroll = useEnrollClientTraining();
+  const enroll = audience === "client" ? clientEnroll : vaEnroll;
+  const vaProgress = useSaveTrainingProgress();
+  const clientProgress = useSaveClientTrainingProgress();
+  const progress = audience === "client" ? clientProgress : vaProgress;
+  const save = (step: number, finished: string[] = []) => {
+    if (!enrolled || readOnly) return;
+    const currentStep = step === t.lessons.length ? "quiz" : (t.lessons[step]?.id ?? "");
+    progress.mutate({ id: t.id, watched: finished, currentStep });
+  };
+  const markWatched = (lessonId: string, nextStep: number) => {
+    setWatched((w) => (w.includes(lessonId) ? w : [...w, lessonId]));
+    save(nextStep, [lessonId]);
+  };
   // Passing the quiz means the course is done, lessons included.
   const isDone = (i: number) => t.myPassed || watched.includes(t.lessons[i]?.id);
   const [current, setCurrent] = useState(() => {
-    if (t.myTries && hasQuiz) return t.lessons.length;
+    if (t.myCurrentStep === "quiz" && hasQuiz) return t.lessons.length;
+    const saved = t.lessons.findIndex((l) => l.id === t.myCurrentStep);
+    if (saved >= 0) return saved;
     const next = t.lessons.findIndex((l) => !watched.includes(l.id));
     return next >= 0 ? next : hasQuiz ? t.lessons.length : 0;
   });
+  const locked = !enrolled && !readOnly;
   const onQuiz = hasQuiz && current === t.lessons.length;
   const lesson = onQuiz ? null : t.lessons[current];
 
@@ -149,14 +162,20 @@ function CourseView({
   const totalMinutes = t.lessons.reduce((sum, l) => sum + l.minutes, 0);
 
   const top = useRef<HTMLElement>(null);
-  const go = (i: number) => {
+  const show = (i: number) => {
     setCurrent(i);
     top.current?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
   };
-  const next = () => {
-    if (lesson) markWatched(lesson.id);
-    if (current < steps - 1) go(current + 1);
+  const go = (i: number) => {
+    show(i);
+    save(i);
   };
+  const next = () => {
+    const to = Math.min(current + 1, steps - 1);
+    if (lesson) markWatched(lesson.id, to);
+    show(to);
+  };
+  const register = () => enroll.mutate(t.id, { onSuccess: () => save(current) });
 
   return (
     <div className="page-stack course">
@@ -176,10 +195,14 @@ function CourseView({
 
       <div className="course__layout">
         <div className="course__main">
-          {lesson ? (
+          {locked ? (
+            <RegisterCard training={t} totalMinutes={totalMinutes} pending={enroll.isPending} error={enroll.error} onRegister={register} />
+          ) : lesson ? (
             <>
               <LessonVideo key={lesson.id} video={lesson} title={lesson.title} className="course__video" />
               <section className="card course__lesson">
+                <FormError error={progress.error} />
+                {readOnly && !enrolled && <p className="text-small">Viewing only: progress isn’t saved.</p>}
                 <div className="course__chips">
                   <span className="course-chip course-chip--step">
                     Lesson {current + 1} of {t.lessons.length}
@@ -205,7 +228,7 @@ function CourseView({
                       {onQuizNext(current, t) ? "Take the quiz" : "Next lesson"} <Icon name="chevronRight" size={14} />
                     </Button>
                   ) : (
-                    <Button variant="primary" onClick={() => (isDone(current) ? onBack() : markWatched(lesson.id))}>
+                    <Button variant="primary" onClick={() => (isDone(current) ? onBack() : markWatched(lesson.id, current))}>
                       {isDone(current) ? "Back to trainings" : "Mark as watched"} <Icon name={isDone(current) ? "arrowRight" : "check"} size={14} />
                     </Button>
                   )}
@@ -217,7 +240,7 @@ function CourseView({
               key={t.id}
               training={t}
               audience={audience}
-              readOnly={readOnly}
+              readOnly={readOnly || !enrolled}
               onPrevious={t.lessons.length ? () => go(t.lessons.length - 1) : undefined}
               onDone={onBack}
             />
@@ -240,17 +263,27 @@ function CourseView({
               {hasQuiz && ` · quiz`}
             </span>
           </header>
-          <div className="course__progress">
-            <span className="cluster cluster--between">
-              <span>Course progress</span>
-              <strong>
-                {doneCount} / {steps}
-              </strong>
-            </span>
-            <span className="course__bar" role="progressbar" aria-valuemin={0} aria-valuemax={steps} aria-valuenow={doneCount} aria-label="Course progress">
-              <span style={{ width: `${steps ? (doneCount / steps) * 100 : 0}%` }} />
-            </span>
-          </div>
+          {locked ? (
+            <div className="course__progress">
+              <span>Register to start this course. Your progress is saved as you go, so you can pick up where you left off.</span>
+              <Button variant="primary" block disabled={enroll.isPending} onClick={register}>
+                {enroll.isPending ? "Registering…" : "Register for this course"}
+              </Button>
+            </div>
+          ) : (
+            <div className="course__progress">
+              {enrolled && <span className="text-small">Registered {formatShort(t.enrolledAt!)}</span>}
+              <span className="cluster cluster--between">
+                <span>Course progress</span>
+                <strong>
+                  {doneCount} / {steps}
+                </strong>
+              </span>
+              <span className="course__bar" role="progressbar" aria-valuemin={0} aria-valuemax={steps} aria-valuenow={doneCount} aria-label="Course progress">
+                <span style={{ width: `${steps ? (doneCount / steps) * 100 : 0}%` }} />
+              </span>
+            </div>
+          )}
           <ol className="course__outline">
             {t.lessons.map((l, i) => (
               <li key={l.id}>
@@ -286,10 +319,49 @@ function CourseView({
               </li>
             )}
           </ol>
-          {t.description && <p className="course__about va-pre">{t.description}</p>}
+          {t.description && !locked && <p className="course__about va-pre">{t.description}</p>}
         </aside>
       </div>
     </div>
+  );
+}
+
+/** Before registering: what the course covers, and the button. */
+function RegisterCard({
+  training: t,
+  totalMinutes,
+  pending,
+  error,
+  onRegister,
+}: {
+  training: VaTrainingOut;
+  totalMinutes: number;
+  pending: boolean;
+  error: unknown;
+  onRegister: () => void;
+}) {
+  return (
+    <section className="card course__register">
+      <span className="course__register-icon">
+        <Icon name="graduation" size={26} />
+      </span>
+      <div className="course__chips">
+        <span className="course-chip course-chip--step">
+          {t.lessons.length} lesson{t.lessons.length === 1 ? "" : "s"}
+        </span>
+        {totalMinutes > 0 && <span className="course-chip course-chip--provider">{formatMinutes(totalMinutes)}</span>}
+        {t.questions.length > 0 && <span className="course__len">Quiz · pass at {t.passingRate}%</span>}
+      </div>
+      <h2 className="course__title">{t.title}</h2>
+      <p className="course__summary">{t.description || "Register to start the lessons. Your progress is saved as you go."}</p>
+      <FormError error={error} />
+      <div className="course__nav">
+        <span className="text-small">Registering lets GoCWGL see your progress and help if you get stuck.</span>
+        <Button variant="primary" disabled={pending} onClick={onRegister}>
+          {pending ? "Registering…" : "Register for this course"} <Icon name="arrowRight" size={14} />
+        </Button>
+      </div>
+    </section>
   );
 }
 

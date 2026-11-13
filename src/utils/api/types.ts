@@ -789,6 +789,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/va/trainings/{training_id}/enroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Enroll
+         * @description Register for the course (so staff can see who's taking it).
+         */
+        post: operations["enroll_api_va_trainings__training_id__enroll_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/trainings/{training_id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Save Progress
+         * @description Lessons finished and the current step. 409 until registered.
+         */
+        put: operations["save_progress_api_va_trainings__training_id__progress_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/va/support": {
         parameters: {
             query?: never;
@@ -4167,6 +4207,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/trainings/{training_id}/learners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Training Learners
+         * @description Everyone registered for the course, newest first: progress, where they are now and their quiz result.
+         */
+        get: operations["training_learners_api_admin_trainings__training_id__learners_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/feedback": {
         parameters: {
             query?: never;
@@ -5445,6 +5505,40 @@ export interface paths {
         put?: never;
         /** Client Take Quiz */
         post: operations["client_take_quiz_api_portal_trainings__training_id__attempts_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/trainings/{training_id}/enroll": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Client Enroll */
+        post: operations["client_enroll_api_portal_trainings__training_id__enroll_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/trainings/{training_id}/progress": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Client Save Progress */
+        put: operations["client_save_progress_api_portal_trainings__training_id__progress_put"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -9071,6 +9165,41 @@ export interface components {
          * @enum {string}
          */
         LeadSource: "Manual entry" | "Landing page" | "Landing page · FB ad" | "Landing page · Referral" | "Portal sign-up" | "Lead form" | "Survey" | "Booking page" | "Google sign-in" | "Client application";
+        /** LearnerOut */
+        LearnerOut: {
+            /**
+             * Userid
+             * Format: uuid
+             */
+            userId: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+            /**
+             * Enrolledat
+             * Format: date-time
+             */
+            enrolledAt: string;
+            /** Lastactiveat */
+            lastActiveAt: string | null;
+            /** Completedat */
+            completedAt: string | null;
+            /** Lessonswatched */
+            lessonsWatched: number;
+            /** Lessonstotal */
+            lessonsTotal: number;
+            /** Currentstep */
+            currentStep: string;
+            /** Currentlabel */
+            currentLabel: string;
+            /** Bestscore */
+            bestScore: number | null;
+            /** Passed */
+            passed: boolean;
+            /** Tries */
+            tries: number;
+        };
         /** LessonIn */
         LessonIn: {
             /**
@@ -10156,6 +10285,16 @@ export interface components {
             title?: string | null;
             /** Timezone */
             timezone?: string | null;
+        };
+        /** ProgressIn */
+        ProgressIn: {
+            /** Watched */
+            watched?: string[];
+            /**
+             * Currentstep
+             * @default
+             */
+            currentStep?: string;
         };
         /** ProjectClientUpdate */
         ProjectClientUpdate: {
@@ -12511,6 +12650,10 @@ export interface components {
             peoplePassed: number;
             /** Attempts */
             attempts: number;
+            /** Peopleenrolled */
+            peopleEnrolled: number;
+            /** Peoplecompleted */
+            peopleCompleted: number;
         };
         /** TrainingResultOut */
         TrainingResultOut: {
@@ -13873,6 +14016,14 @@ export interface components {
             myPassed: boolean;
             /** Mytries */
             myTries: number;
+            /** Enrolledat */
+            enrolledAt: string | null;
+            /** Mywatched */
+            myWatched: string[];
+            /** Mycurrentstep */
+            myCurrentStep: string;
+            /** Completedat */
+            completedAt: string | null;
         };
         /** VaUpdate */
         VaUpdate: {
@@ -15729,6 +15880,86 @@ export interface operations {
                         data: components["schemas"]["AttemptOut"];
                     };
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    enroll_api_va_trainings__training_id__enroll_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    save_progress_api_va_trainings__training_id__progress_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgressIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -27310,6 +27541,49 @@ export interface operations {
             };
         };
     };
+    training_learners_api_admin_trainings__training_id__learners_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Training Learners Api Admin Trainings  Training Id  Learners Get */
+                        data: components["schemas"]["LearnerOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_feedback_api_admin_feedback_get: {
         parameters: {
             query?: never;
@@ -30777,6 +31051,86 @@ export interface operations {
                         data: components["schemas"]["AttemptOut"];
                     };
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_enroll_api_portal_trainings__training_id__enroll_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_save_progress_api_portal_trainings__training_id__progress_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProgressIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
