@@ -11,7 +11,23 @@ export const trainingResults = (id: string) => get<TrainingResultOut[]>(`/admin/
 export const trainingLearners = (id: string) => get<LearnerOut[]>(`/admin/trainings/${id}/learners`);
 
 // VA portal › Training (VAs).
-export const listMyTrainings = () => get<VaTrainingOut[]>("/va/trainings");
+export const listMyTrainings = () => get<VaTrainingOut[]>("/va/trainings").then(withTrainingDefaults);
 export const submitQuiz = (id: string, answers: Array<number | null>) => post<AttemptOut>(`/va/trainings/${id}/attempts`, { answers });
 export const enrollTraining = (id: string) => post<void>(`/va/trainings/${id}/enroll`);
 export const saveTrainingProgress = (id: string, body: ProgressIn) => put<void>(`/va/trainings/${id}/progress`, body);
+
+/**
+ * Fills fields a slightly older API may not send yet (lesson provider/length/summary, registration and progress),
+ * so the Training page keeps working while the frontend and API deploy at different times.
+ */
+export function withTrainingDefaults(rows: VaTrainingOut[]): VaTrainingOut[] {
+  return rows.map((t) => ({
+    ...t,
+    lessons: (t.lessons ?? []).map((l) => ({ ...l, provider: l.provider ?? "youtube", minutes: l.minutes ?? 0, summary: l.summary ?? "" })),
+    questions: t.questions ?? [],
+    enrolledAt: t.enrolledAt ?? null,
+    myWatched: t.myWatched ?? [],
+    myCurrentStep: t.myCurrentStep ?? "",
+    completedAt: t.completedAt ?? null,
+  }));
+}

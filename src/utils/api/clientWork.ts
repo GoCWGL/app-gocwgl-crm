@@ -1,4 +1,5 @@
 import { del, get, patch, post, put } from "./client";
+import { withTrainingDefaults } from "./trainings";
 import type {
   ClientVaOut,
   RaiseRequestOut,
@@ -65,7 +66,7 @@ export const listVaInvoices = () => get<ClientVaInvoice[]>("/portal/va-invoices"
 export const getVaInvoice = (id: string) => get<ClientVaInvoiceDetail>(`/portal/va-invoices/${id}`);
 
 // Client portal › Training and SOPs.
-export const listClientTrainings = () => get<VaTrainingOut[]>("/portal/trainings");
+export const listClientTrainings = () => get<VaTrainingOut[]>("/portal/trainings").then(withTrainingDefaults);
 export const submitClientQuiz = (id: string, answers: Array<number | null>) => post<AttemptOut>(`/portal/trainings/${id}/attempts`, { answers });
 export const enrollClientTraining = (id: string) => post<void>(`/portal/trainings/${id}/enroll`);
 export const saveClientTrainingProgress = (id: string, body: ProgressIn) => put<void>(`/portal/trainings/${id}/progress`, body);
