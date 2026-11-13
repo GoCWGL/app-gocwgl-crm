@@ -55,7 +55,8 @@ export const useUndoBonusPaid = () => useApiMutation(api.undoBonusPaid, { invali
 export const useDeleteReferral = () => useApiMutation(api.deleteReferral, { invalidate: ALL });
 
 // ------------------------------------------------------------------ VA referrals
-const VA_REFERRALS = [qk.vaReferrals];
+// VA profiles show who referred them, so they refresh too.
+const VA_REFERRALS = [qk.vaReferrals, ["vas"]];
 export const useVaReferrals = () =>
   useQuery({ queryKey: qk.vaReferrals, queryFn: api.listVaReferrals, enabled: useCanUseMenu("affiliates") });
 export const useCreateVaReferral = () => useApiMutation(api.createVaReferral, { invalidate: VA_REFERRALS });

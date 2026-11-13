@@ -7701,3 +7701,89 @@ $pdf-side: #f5f6f8;
     font-size: 12.5px;
   }
 }
+
+// Admin › VA profile › Application and Referred by
+.vp-app__label {
+  color: $muted;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.vp-ref__name {
+  color: $ink;
+  font-size: 15px;
+}
+
+.vp-referrer {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+
+  &__link {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: $cyan-700;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+
+    &:hover {
+      color: $cyan-800;
+    }
+  }
+}
+
+.vp-ref__progress {
+  display: block;
+  margin-top: 3px;
+  text-align: right;
+}
+
+// VA portal › Referrals › one referral: countdown to the bonus, then Claim.
+.va-ref-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 0;
+
+  & + & {
+    border-top: 1px solid $line-faint;
+  }
+
+  &__count {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 4px;
+    max-width: 360px;
+  }
+
+  &__bar {
+    display: block;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: $bg-soft;
+
+    > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: $grad-orange;
+    }
+  }
+
+  &.is-earned {
+    margin: 0 -12px;
+    padding: 12px;
+    border-radius: $radius-md;
+    background: #effaf3;
+  }
+}

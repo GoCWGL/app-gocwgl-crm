@@ -1231,6 +1231,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/va/referrals/{referral_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim My Referral Bonus
+         * @description Claim a referral bonus once the VA you referred has 30 days with 8+ hours. GoCWGL's team is notified to pay you.
+         */
+        post: operations["claim_my_referral_bonus_api_va_referrals__referral_id__claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/va/resume": {
         parameters: {
             query?: never;
@@ -9401,6 +9421,22 @@ export interface components {
             /** Bonuspaidat */
             bonusPaidAt: string | null;
             /**
+             * Qualifyingdays
+             * @default 0
+             */
+            qualifyingDays?: number;
+            /** Earnedon */
+            earnedOn?: string | null;
+            /** Claimedat */
+            claimedAt?: string | null;
+            /** Restartedon */
+            restartedOn?: string | null;
+            /**
+             * Todayseconds
+             * @default 0
+             */
+            todaySeconds?: number;
+            /**
              * Createdat
              * Format: date-time
              */
@@ -12589,6 +12625,78 @@ export interface components {
             /** Menuaccess */
             menuAccess?: string[] | null;
         };
+        /**
+         * VaApplicationAnswers
+         * @description What they sent with "Apply as a VA" (older applications may only have how they heard about GoCWGL).
+         */
+        VaApplicationAnswers: {
+            /** Submittedat */
+            submittedAt?: string | null;
+            /**
+             * Firstname
+             * @default
+             */
+            firstName?: string;
+            /**
+             * Lastname
+             * @default
+             */
+            lastName?: string;
+            /**
+             * Email
+             * @default
+             */
+            email?: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone?: string;
+            /**
+             * Country
+             * @default
+             */
+            country?: string;
+            /**
+             * Timezone
+             * @default
+             */
+            timezone?: string;
+            /**
+             * Headline
+             * @default
+             */
+            headline?: string;
+            /**
+             * Experience
+             * @default
+             */
+            experience?: string;
+            /** Skills */
+            skills?: string[];
+            /** Hourlyratecents */
+            hourlyRateCents?: number | null;
+            /**
+             * Portfoliourl
+             * @default
+             */
+            portfolioUrl?: string;
+            /**
+             * Heardfrom
+             * @default
+             */
+            heardFrom?: string;
+            /**
+             * Referrername
+             * @default
+             */
+            referrerName?: string;
+            /**
+             * About
+             * @default
+             */
+            about?: string;
+        };
         /** VaApplicationIn */
         VaApplicationIn: {
             /** Firstname */
@@ -12845,6 +12953,8 @@ export interface components {
              */
             resumePublic?: boolean;
             resume?: components["schemas"]["VaResumeFacts"] | null;
+            application?: components["schemas"]["VaApplicationAnswers"] | null;
+            referral?: components["schemas"]["VaReferralSummary"] | null;
         };
         /** VaInvitationOut */
         VaInvitationOut: {
@@ -13080,6 +13190,18 @@ export interface components {
              */
             note?: string;
         };
+        /** VaReferralLinked */
+        VaReferralLinked: {
+            /** Kind */
+            kind: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
         /** VaReferralOut */
         VaReferralOut: {
             /**
@@ -13102,8 +13224,65 @@ export interface components {
             bonusStatus: "pending" | "earned" | "paid";
             /** Bonuspaidat */
             bonusPaidAt: string | null;
+            /**
+             * Qualifyingdays
+             * @default 0
+             */
+            qualifyingDays?: number;
+            /** Earnedon */
+            earnedOn?: string | null;
+            /** Claimedat */
+            claimedAt?: string | null;
+            /** Restartedon */
+            restartedOn?: string | null;
+            /**
+             * Todayseconds
+             * @default 0
+             */
+            todaySeconds?: number;
             /** Note */
             note: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /**
+         * VaReferralSummary
+         * @description Who referred this VA, and the referrer's bonus (managed in the bonuses menu › VA referrals).
+         */
+        VaReferralSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Referrername */
+            referrerName: string;
+            linked: components["schemas"]["VaReferralLinked"] | null;
+            /** Bonuscents */
+            bonusCents: number;
+            /** Bonusstatus */
+            bonusStatus: string;
+            /** Bonuspaidat */
+            bonusPaidAt: string | null;
+            /**
+             * Qualifyingdays
+             * @default 0
+             */
+            qualifyingDays?: number;
+            /** Earnedon */
+            earnedOn?: string | null;
+            /** Claimedat */
+            claimedAt?: string | null;
+            /** Restartedon */
+            restartedOn?: string | null;
+            /**
+             * Todayseconds
+             * @default 0
+             */
+            todaySeconds?: number;
             /**
              * Createdat
              * Format: date-time
@@ -16758,6 +16937,48 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["MyReferralsOut"];
                     };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    claim_my_referral_bonus_api_va_referrals__referral_id__claim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referral_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyReferralOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Error */

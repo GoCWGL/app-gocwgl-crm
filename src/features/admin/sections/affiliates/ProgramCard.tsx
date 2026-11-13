@@ -1,5 +1,6 @@
 "use client";
 
+import { BONUS_DAYS, BONUS_HOURS } from "@/lib/referralBonus";
 import { useState, type FormEvent } from "react";
 import { Badge, Button, Field, FormError, Icon, IconTile, Input, Toggle } from "@/components/ui";
 import { centsToDollars, dollarsToCents, formatCents } from "@/utils/format/money";
@@ -125,7 +126,7 @@ export function ProgramCard({ canManage }: { canManage: boolean }) {
         )}
       </form>
       <p className="text-small">
-        Used for every referral without its own amount. A VA bonus is earned once the referred VA is active. Bonuses already paid keep
+        Used for every referral without its own amount. A VA bonus is earned once the referred VA has tracked {BONUS_HOURS}+ hours of client work a day on {BONUS_DAYS} days. Bonuses already paid keep
         their amount.
       </p>
       <FormError error={save.error} />

@@ -10,6 +10,7 @@ import type {
   VaTaskOut,
   VaTaskUpdate,
   OpenJobOut,
+  MyReferralOut,
   OrgSuggestion,
   PublicResumeOut,
   ResumeDocumentOut,
@@ -25,6 +26,8 @@ export const withdrawApplication = (id: string) => del(`/va/jobs/${id}/apply`);
 export const listVaSops = () => get<SopOut[]>("/va/sops");
 export const getMyRatings = () => get<MyFeedbackOut>("/va/feedback");
 export const getMyReferrals = () => get<MyReferralsOut>("/va/referrals");
+/** Claim a referral bonus once it's earned (the VA they referred has 30 days with 8+ hours); GoCWGL's team is notified. */
+export const claimReferral = (id: string) => post<MyReferralOut>(`/va/referrals/${id}/claim`);
 export const getResume = () => get<ResumeOut>("/va/resume");
 export const saveResume = (body: ResumeIn) => put<ResumeOut>("/va/resume", body);
 export const newResumeLink = () => post<ResumeOut>("/va/resume/new-link");
@@ -32,7 +35,7 @@ export const newResumeLink = () => post<ResumeOut>("/va/resume/new-link");
 export type OrgKind = "company" | "school" | "highschool";
 export const lookupOrg = (kind: OrgKind, q: string, country = "") =>
   get<OrgSuggestion[]>("/va/resume/lookup", { kind, q, country });
-/** A test result or certificate (PDF or image, up to 10 MB). */
+/** A headshot, test result or certificate (PDF or image; the form keeps it under 4 MB, photos shrunk first). */
 export const uploadResumeDocument = (file: File) => {
   const body = new FormData();
   body.append("file", file);

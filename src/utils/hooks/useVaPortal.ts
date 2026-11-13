@@ -25,6 +25,7 @@ export const useOpenJobs = (enabled = true) => useQuery({ queryKey: qk.vaJobs, q
 export const useVaSops = (enabled = true) => useQuery({ queryKey: qk.vaSops, queryFn: api.listVaSops, enabled });
 export const useMyRatings = (enabled = true) => useQuery({ queryKey: qk.vaRatings, queryFn: api.getMyRatings, enabled });
 export const useMyReferrals = (enabled = true) => useQuery({ queryKey: qk.myReferrals, queryFn: api.getMyReferrals, enabled });
+export const useClaimReferral = () => useApiMutation(api.claimReferral, { invalidate: [qk.myReferrals] });
 export const useResume = (enabled = true) => useQuery({ queryKey: qk.resume, queryFn: api.getResume, enabled });
 export const useSaveResume = () => useApiMutation(api.saveResume, { invalidate: [qk.resume, qk.vas] });
 export const useUploadResumeDocument = () => useApiMutation(api.uploadResumeDocument);

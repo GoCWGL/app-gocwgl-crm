@@ -1,21 +1,24 @@
 "use client";
 
+import { bonusProgress } from "@/lib/referralBonus";
 import { useDeferredValue, useState, type ReactNode } from "react";
 import { Avatar, Badge, Button, ConfirmDialog, FormError, Icon, IconTile, Input, LoadState, Modal, type IconName } from "@/components/ui";
 import { formatDuration } from "@/lib/duration";
 import { avatarTone, toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { VaDetailOut } from "@/utils/api/models";
-import { canWriteCrm } from "@/utils/auth/session";
+import { canUseMenu, canWriteCrm, isStaffAdmin } from "@/utils/auth/session";
 import { formatRelative, formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
 import { useContactsPage } from "@/utils/hooks/useContacts";
 import { useMe } from "@/utils/hooks/useUsers";
+import { useVaReferrals } from "@/utils/hooks/useAffiliates";
 import { useInviteVa, useSetVaClientRate, useSetVaClients, useVa } from "@/utils/hooks/useVas";
 import { contactName } from "../../lib/contacts";
 import { LOGIN_STATUS, rateText, VA_STATUS, vaRate } from "../../lib/vas";
 import { hasSchool, jobDates, schoolDates, schoolTitle } from "../../../va/lib/resumeFormat";
 import { CallInviteModal } from "../../modals/CallInviteModal";
+import { VaReferralModal } from "../affiliates/VaReferralsPanel";
 import { useAdmin } from "../../state/AdminContext";
 
 /** People › VAs › one VA: everything about them on one page, plus the clients they support. */
@@ -48,7 +51,14 @@ function localTime(timeZone: string): string {
 
 function Profile({ va }: { va: VaDetailOut }) {
   const { update, notify, openClient } = useAdmin();
-  const canWrite = canWriteCrm(useMe().data);
+  const me = useMe().data;
+  const canWrite = canWriteCrm(me);
+  // Referrals are managed by owners and admins with the bonuses menu (the API refuses the rest).
+  const canEditReferral = isStaffAdmin(me) && canUseMenu(me, "affiliates");
+  const [linkingReferral, setLinkingReferral] = useState(false);
+  /** Open the referrer's own profile (a VA here, or the client). */
+  const openReferrer = (linked: { kind: string; id: string }) =>
+    linked.kind === "va" ? update({ vaFullId: linked.id }) : openClient(linked.id);
   const status = VA_STATUS[va.status];
   const login = LOGIN_STATUS[va.loginStatus as keyof typeof LOGIN_STATUS] ?? LOGIN_STATUS.none;
   const [assigning, setAssigning] = useState(false);
@@ -237,6 +247,14 @@ function Profile({ va }: { va: VaDetailOut }) {
               </div>
             </ProfileCard>
           )}
+          {va.application && (
+            <ApplicationCard
+              app={va.application}
+              referral={va.referral ?? null}
+              onOpenReferrer={openReferrer}
+              onLink={canEditReferral ? () => setLinkingReferral(true) : undefined}
+            />
+          )}
           <ProfileCard icon="user" title="About">
             <p className="va-pre">{va.bio || <span className="vp-empty">Nothing here yet.</span>}</p>
           </ProfileCard>
@@ -328,6 +346,9 @@ function Profile({ va }: { va: VaDetailOut }) {
         </div>
 
         <aside className="vp-grid__side">
+          {(va.referral || canEditReferral) && (
+            <ReferralCard referral={va.referral ?? null} onOpenReferrer={openReferrer} onLink={canEditReferral ? () => setLinkingReferral(true) : undefined} />
+          )}
           <ResumeLinkCard va={va} />
           {resumeFacts.length > 0 && (
             <ProfileCard icon="textLong" title="From their resume">
@@ -366,6 +387,7 @@ function Profile({ va }: { va: VaDetailOut }) {
       </div>
 
       {assigning && <AddClientModal va={va} onClose={() => setAssigning(false)} />}
+      {linkingReferral && <LinkReferralFor va={va} onClose={() => setLinkingReferral(false)} />}
       {removing && (
         <ConfirmDialog
           title={`Take ${removing.name} off ${va.fullName}?`}
@@ -381,6 +403,216 @@ function Profile({ va }: { va: VaDetailOut }) {
       )}
     </>
   );
+}
+
+/** Their "Apply as a VA" answers, as sent (the profile above may have changed since). */
+function ApplicationCard({
+  app,
+  referral,
+  onOpenReferrer,
+  onLink,
+}: {
+  app: NonNullable<VaDetailOut["application"]>;
+  referral: VaDetailOut["referral"] | null;
+  onOpenReferrer: (linked: { kind: string; id: string }) => void;
+  onLink?: () => void;
+}) {
+  const referredBy = referral || app.referrerName ? (
+    <ReferrerName referral={referral} typedName={app.referrerName} onOpenReferrer={onOpenReferrer} onLink={onLink} />
+  ) : null;
+  const facts: Array<{ icon: IconName; label: string; value: ReactNode }> = [
+    ...(app.heardFrom ? [{ icon: "radio" as const, label: "How they heard about us", value: app.heardFrom }] : []),
+    ...(referredBy ? [{ icon: "gift" as const, label: "Referred by", value: referredBy }] : []),
+    ...(app.hourlyRateCents != null ? [{ icon: "dollar" as const, label: "Rate they asked for", value: rateText(app.hourlyRateCents, (c) => formatCentsExact(c)) }] : []),
+    ...(app.headline ? [{ icon: "star" as const, label: "Headline", value: app.headline }] : []),
+    ...(app.country ? [{ icon: "globe" as const, label: "Country", value: app.country }] : []),
+    ...(app.timezone ? [{ icon: "clock" as const, label: "Time zone", value: app.timezone.replace(/_/g, " ") }] : []),
+    ...(app.phone ? [{ icon: "phone" as const, label: "Phone", value: app.phone }] : []),
+    ...(app.portfolioUrl
+      ? [
+          {
+            icon: "link" as const,
+            label: "Portfolio",
+            value: (
+              <a href={app.portfolioUrl} target="_blank" rel="noreferrer">
+                {app.portfolioUrl.replace(/^https?:\/\/(www\.)?/, "")}
+              </a>
+            ),
+          },
+        ]
+      : []),
+  ];
+  const fullAnswers = !!(app.email || app.experience || app.about || app.skills?.length);
+  return (
+    <ProfileCard
+      icon="form"
+      title="Application"
+      action={app.submittedAt ? <span className="text-small">Applied {formatShort(app.submittedAt)}</span> : undefined}
+    >
+      <dl className="vp-details">
+        {facts.map((f) => (
+          <div key={f.label} className="vp-details__row">
+            <dt>
+              <Icon name={f.icon} size={14} />
+              {f.label}
+            </dt>
+            <dd>{f.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {app.experience && (
+        <div className="stack stack--4">
+          <span className="vp-app__label">Experience</span>
+          <p className="va-pre">{app.experience}</p>
+        </div>
+      )}
+      {(app.skills?.length ?? 0) > 0 && (
+        <div className="stack stack--4">
+          <span className="vp-app__label">Skills</span>
+          <div className="vp-skills">
+            {app.skills!.map((sk) => (
+              <span key={sk} className="vp-skill">
+                {sk}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+      {app.about && (
+        <div className="stack stack--4">
+          <span className="vp-app__label">About them</span>
+          <p className="va-pre">{app.about}</p>
+        </div>
+      )}
+      {!fullAnswers && <span className="text-small">They applied before every answer was saved here; the rest went into their profile.</span>}
+    </ProfileCard>
+  );
+}
+
+const BONUS: Record<string, { label: string; tone: "amber" | "green" | "slate" }> = {
+  pending: { label: "Pending", tone: "slate" },
+  earned: { label: "Earned · to pay", tone: "amber" },
+  paid: { label: "Paid", tone: "green" },
+};
+
+/**
+ * Who referred them, inline: the linked VA or client (opens their profile), else the name typed on the application
+ * with "Not linked" and a Link button.
+ */
+function ReferrerName({
+  referral,
+  typedName,
+  onOpenReferrer,
+  onLink,
+}: {
+  referral: VaDetailOut["referral"] | null;
+  typedName?: string | null;
+  onOpenReferrer: (linked: { kind: string; id: string }) => void;
+  onLink?: () => void;
+}) {
+  const linked = referral?.linked;
+  const name = typedName || referral?.referrerName || "";
+  if (linked) {
+    return (
+      <span className="vp-referrer">
+        <button type="button" className="vp-referrer__link" onClick={() => onOpenReferrer(linked)} title={`Open ${linked.name}'s profile`}>
+          {linked.name}
+        </button>
+        <Badge tone="cyan">{linked.kind === "va" ? "VA" : "Client"}</Badge>
+        {name && name !== linked.name && <span className="text-small">(typed “{name}”)</span>}
+      </span>
+    );
+  }
+  return (
+    <span className="vp-referrer">
+      <strong>{name || "Someone"}</strong>
+      <Badge tone="amber">Not linked</Badge>
+      {onLink && (
+        <Button size="sm" variant="link" onClick={onLink}>
+          Link
+        </Button>
+      )}
+    </span>
+  );
+}
+
+/** Who referred this VA, the referrer's bonus, and a button to link (or change) the referrer's profile. */
+function ReferralCard({
+  referral,
+  onOpenReferrer,
+  onLink,
+}: {
+  referral: VaDetailOut["referral"] | null;
+  onOpenReferrer: (linked: { kind: string; id: string }) => void;
+  onLink?: () => void;
+}) {
+  if (!referral) {
+    // No referral yet (added by staff, or nobody named one): the team can add who referred them.
+    return (
+      <ProfileCard icon="gift" title="Referred by">
+        <span className="vp-empty">No referral recorded.</span>
+        {onLink && (
+          <Button size="sm" variant="outline" onClick={onLink}>
+            <Icon name="userPlus" size={13} /> Add who referred them
+          </Button>
+        )}
+      </ProfileCard>
+    );
+  }
+  const status = BONUS[referral.bonusStatus] ?? BONUS.pending;
+  const linked = referral.linked;
+  return (
+    <ProfileCard icon="gift" title="Referred by">
+      <div className="stack stack--6">
+        <ReferrerName referral={referral} onOpenReferrer={onOpenReferrer} />
+        {!linked && <span className="text-small">Link the referrer to their VA or client profile so they see this referral and can be paid.</span>}
+        {linked && (
+          <Button size="sm" variant="link" className="u-self-start" onClick={() => onOpenReferrer(linked)}>
+            <Icon name="eye" size={12} /> View {linked.kind === "va" ? "their VA profile" : "the client"}
+          </Button>
+        )}
+      </div>
+      <dl className="vp-details">
+        <div className="vp-details__row">
+          <dt>
+            <Icon name="dollar" size={14} />
+            Referral bonus
+          </dt>
+          <dd>{formatCentsExact(referral.bonusCents)}</dd>
+        </div>
+        <div className="vp-details__row">
+          <dt>
+            <Icon name="circleCheck" size={14} />
+            Status
+          </dt>
+          <dd>
+            <Badge tone={status.tone}>{status.label}</Badge>
+            {referral.bonusPaidAt && <span className="text-small"> {formatShort(referral.bonusPaidAt)}</span>}
+            {bonusProgress(referral) && <span className="text-small vp-ref__progress">{bonusProgress(referral)}</span>}
+            {referral.claimedAt && !referral.bonusPaidAt && (
+              <span className="text-small vp-ref__progress u-strong">Claimed by the referrer {formatShort(referral.claimedAt)}</span>
+            )}
+          </dd>
+        </div>
+      </dl>
+      {onLink && (
+        <Button variant={linked ? "outline" : "primary"} size="sm" onClick={onLink}>
+          <Icon name="link" size={13} /> {linked ? "Change referrer" : "Link referrer profile"}
+        </Button>
+      )}
+      <a className="vp-resume__edit" href="/admin?tab=bonuses&referrals=vas">
+        All VA referrals <Icon name="arrowRight" size={12} />
+      </a>
+    </ProfileCard>
+  );
+}
+
+/** The referral form for this VA: their existing referral (to link or change the referrer), or a new one. */
+function LinkReferralFor({ va, onClose }: { va: VaDetailOut; onClose: () => void }) {
+  const list = useVaReferrals();
+  const existing = list.data?.find((r) => r.id === va.referral?.id) ?? null;
+  if (va.referral && !existing) return null; // still loading the referral to edit
+  return <VaReferralModal referral={existing} forVaId={va.id} onClose={onClose} />;
 }
 
 /** The VA's resume page: the link clients open, so the team can share it too. */

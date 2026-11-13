@@ -1,5 +1,6 @@
 import type { ResumeCert } from "@/utils/api/models";
 import type { ResumeContent } from "../components/ResumePaper";
+import { shrinkImage } from "@/lib/images";
 import { resumeVideo, videoSourceFrom } from "@/lib/video";
 import { dateOrder, parseMonthYear } from "./resumeFormat";
 import { networkOf, normalizeLink, socialLinkOk } from "./socials";
@@ -229,11 +230,31 @@ const PHOTO_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const PHOTO_EXT = /\.(png|jpe?g|webp)$/i;
 const DOC_EXT = /\.(pdf|png|jpe?g|webp)$/i;
 
-/** Why a file can't be uploaded (same rules as the API), or null when it's fine. Checked before sending it. */
+/**
+ * The most an upload can be. The API takes 10 MB, but the live site's hosting refuses requests over ~4.4 MB,
+ * so files are kept under 4 MB (photos are shrunk to fit first, see prepareUpload).
+ */
+export const UPLOAD_MAX_MB = 4;
+
+/** Why a file can't be uploaded, or null when it's fine. Checked before sending it. */
 export function uploadProblem(file: File, kind: "photo" | "document"): string | null {
   const okType = kind === "photo" ? PHOTO_TYPES.includes(file.type) || PHOTO_EXT.test(file.name) : file.type === "application/pdf" || PHOTO_TYPES.includes(file.type) || DOC_EXT.test(file.name);
   if (!okType) return kind === "photo" ? "Use a PNG, JPG or WebP photo." : "Upload a PDF or an image (PNG, JPG or WebP).";
-  if (file.size > 10 * MB) return `That file is ${(file.size / MB).toFixed(1)} MB. Use one under 10 MB.`;
   if (file.size === 0) return "That file is empty.";
+  if (file.size > UPLOAD_MAX_MB * MB) {
+    const size = `That file is ${(file.size / MB).toFixed(1)} MB.`;
+    return file.type === "application/pdf" || /\.pdf$/i.test(file.name)
+      ? `${size} Use a PDF under ${UPLOAD_MAX_MB} MB (try “Reduce file size” or print it to PDF again).`
+      : `${size} Use one under ${UPLOAD_MAX_MB} MB.`;
+  }
   return null;
+}
+
+/** Ready a file for upload: photos are shrunk (a 12 MB phone photo becomes a few hundred KB), then checked. */
+export async function prepareUpload(file: File, kind: "photo" | "document"): Promise<{ file: File } | { problem: string }> {
+  const typeProblem = uploadProblem(new File([], file.name, { type: file.type }), kind);
+  if (typeProblem && typeProblem !== "That file is empty.") return { problem: typeProblem };
+  const ready = PHOTO_TYPES.includes(file.type) ? await shrinkImage(file) : file;
+  const problem = uploadProblem(ready, kind);
+  return problem ? { problem } : { file: ready };
 }

@@ -63,6 +63,7 @@ export const NOTIFICATION_OPTIONS = [
   { key: "bug", label: "New bug reported", desc: "When a client reports a bug from their CRM", defaultOn: true },
   { key: "funnel_request", label: "Funnel request", desc: "When a client requests a new funnel from their portal", defaultOn: true },
   { key: "crm_request", label: "CRM request", desc: "When a client requests a CRM from their portal", defaultOn: true },
+  { key: "referral_claim", label: "Referral bonus claimed", desc: "When a VA claims a referral bonus (the VA they referred has 30 days with 8+ hours)", defaultOn: true },
   { key: "form", label: "Every form submission", desc: "Includes newsletter and other non-lead forms", defaultOn: false },
   { key: "digest", label: "Daily summary email", desc: "One email a day with yesterday’s numbers, at the time you choose below", defaultOn: true },
 ];

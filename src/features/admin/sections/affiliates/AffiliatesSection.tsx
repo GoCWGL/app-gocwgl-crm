@@ -23,7 +23,10 @@ type ReferralKind = "clients" | "vas";
 /** Finance › Referral bonus: client referrals (affiliate program) and VA referrals, one tab each. */
 export function ReferralBonusSection() {
   const canManage = isStaffAdmin(useMe().data);
-  const [kind, setKind] = useState<ReferralKind>("clients");
+  // In the admin state, so the bell (a claimed bonus) and links (?referrals=vas) can open VA referrals.
+  const { state, update } = useAdmin();
+  const kind: ReferralKind = state.referralKind;
+  const setKind = (referralKind: ReferralKind) => update({ referralKind });
   const clients = useReferrals().data;
   const vas = useVaReferrals().data;
   const toPay = (list: Array<{ bonusStatus: string }> | undefined) => list?.filter((r) => r.bonusStatus === "earned").length ?? 0;

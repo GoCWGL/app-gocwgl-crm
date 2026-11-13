@@ -6,7 +6,7 @@ import type { ResumeCert, ResumeJob, ResumeSchool } from "@/utils/api/models";
 import { openResumeDocument } from "@/utils/api/vaPortal";
 import { useUploadResumeDocument } from "@/utils/hooks/useVaPortal";
 import { COUNTRIES } from "@/data/countries";
-import { LIMITS, uploadProblem } from "../lib/resumeErrors";
+import { LIMITS, UPLOAD_MAX_MB, prepareUpload } from "../lib/resumeErrors";
 import { MONTHS, formatMonthYear, jobDates, parseMonthYear, schoolDates, schoolTitle } from "../lib/resumeFormat";
 import { OrgSearchInput } from "./OrgSearchInput";
 
@@ -313,11 +313,16 @@ export function CertCard({ cert, error, onChange, onRemove }: { cert: ResumeCert
   const patch = onChange;
   const isTest = kind.value === "personality" || kind.value === "skills";
 
-  const pick = (file: File | undefined) => {
-    if (!file) return;
-    const problem = uploadProblem(file, "document");
-    setFileError(problem);
-    if (problem) return;
+  const [preparing, setPreparing] = useState(false);
+  const pick = async (picked: File | undefined) => {
+    if (!picked) return;
+    // Photos of results are shrunk first; PDFs go as they are (under the size limit).
+    setPreparing(true);
+    const ready = await prepareUpload(picked, "document");
+    setPreparing(false);
+    setFileError("problem" in ready ? ready.problem : null);
+    if ("problem" in ready) return;
+    const file = ready.file;
     upload.reset();
     upload.mutate(file, { onSuccess: (doc) => patch({ documentId: doc.id, documentName: doc.name, documentType: doc.contentType }) });
   };
@@ -396,7 +401,7 @@ export function CertCard({ cert, error, onChange, onRemove }: { cert: ResumeCert
                 e.target.value = "";
               }}
             />
-            <Icon name="upload" size={14} /> {upload.isPending ? "Uploading…" : "Upload certificate or result (PDF or image, up to 10 MB)"}
+            <Icon name="upload" size={14} /> {preparing ? "Preparing…" : upload.isPending ? "Uploading…" : `Upload certificate or result (PDF up to ${UPLOAD_MAX_MB} MB, or a photo)`}
           </label>
         )}
       </div>

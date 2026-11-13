@@ -1,5 +1,6 @@
 "use client";
 
+import { BONUS_RULE, bonusProgress } from "@/lib/referralBonus";
 import { useDeferredValue, useState, type FormEvent } from "react";
 import {
   Badge,
@@ -40,7 +41,7 @@ import { ProgramCard } from "./ProgramCard";
 type Filter = "all" | "earned" | "pending" | "paid";
 const KIND_LABEL = { va: "VA", client: "Client", name: "Not linked yet" } as const;
 
-/** Finance › Referral bonus › VA referrals: who referred each VA, and the bonus once that VA is active. */
+/** Finance › Referral bonus › VA referrals: who referred each VA, and the bonus once that VA has tracked 8+ hours a day on 30 days. */
 export function VaReferralsPanel({ canManage }: { canManage: boolean }) {
   const { notify } = useAdmin();
   const query = useVaReferrals();
@@ -150,10 +151,14 @@ export function VaReferralsPanel({ canManage }: { canManage: boolean }) {
                         <div className="stack stack--2">
                           <span>
                             <Badge tone={bonus.tone} dot>
-                              {r.bonusStatus === "pending" ? "Pending · VA not active yet" : bonus.label}
+                              {bonus.label}
                             </Badge>
                           </span>
+                          {bonusProgress(r) && <span className="text-small">{bonusProgress(r)}</span>}
                           {r.bonusPaidAt && <span className="text-small">Paid {formatShort(r.bonusPaidAt)}</span>}
+                          {r.claimedAt && !r.bonusPaidAt && (
+                            <span className="text-small u-strong">Claimed {formatShort(r.claimedAt)} · ready to pay</span>
+                          )}
                           {r.note && <span className="text-small">{r.note}</span>}
                         </div>
                       </td>
@@ -211,7 +216,8 @@ export function VaReferralsPanel({ canManage }: { canManage: boolean }) {
 
 type ReferrerKind = "va" | "client" | "name";
 
-function VaReferralModal({ referral, onClose }: { referral: VaReferralOut | null; onClose: () => void }) {
+/** Add or edit a VA referral. `forVaId`: adding one for this VA (from their profile), so they aren't picked again. */
+export function VaReferralModal({ referral, forVaId, onClose }: { referral: VaReferralOut | null; forVaId?: string; onClose: () => void }) {
   const { notify } = useAdmin();
   const program = useAffiliateProgram().data;
   const vas = useVas().data?.vas ?? [];
@@ -220,7 +226,7 @@ function VaReferralModal({ referral, onClose }: { referral: VaReferralOut | null
   const isNew = !referral;
   const paidAlready = referral?.bonusStatus === "paid";
 
-  const [vaId, setVaId] = useState(referral?.va.id ?? "");
+  const [vaId, setVaId] = useState(referral?.va.id ?? forVaId ?? "");
   const [kind, setKind] = useState<ReferrerKind>(referral?.referrer.kind ?? "va");
   const [referrerVaId, setReferrerVaId] = useState(referral?.referrer.kind === "va" ? (referral.referrer.id ?? "") : "");
   const [referrerContact, setReferrerContact] = useState<{ id: string; name: string } | null>(
@@ -228,7 +234,7 @@ function VaReferralModal({ referral, onClose }: { referral: VaReferralOut | null
   );
   const [referrerName, setReferrerName] = useState(referral?.referrerName ?? "");
   const [ownAmount, setOwnAmount] = useState(!!referral?.customBonus);
-  const [amount, setAmount] = useState(referral ? centsToDollars(referral.bonusCents) : centsToDollars(program?.vaBonusCents ?? 2500));
+  const [amount, setAmount] = useState(referral ? centsToDollars(referral.bonusCents) : centsToDollars(program?.vaBonusCents ?? 7000));
   const [note, setNote] = useState(referral?.note ?? "");
   const [query, setQuery] = useState("");
   const q = useDeferredValue(query.trim());
@@ -275,7 +281,7 @@ function VaReferralModal({ referral, onClose }: { referral: VaReferralOut | null
       titleId="va-referral"
       kicker="VA REFERRAL"
       title={isNew ? "Add a VA referral" : `Referral for ${referral.va.name}`}
-      subtitle={`The referrer earns the bonus once the VA is active (program bonus: ${formatCents(program?.vaBonusCents ?? 2500)}).`}
+      subtitle={`The referrer earns the bonus once the VA has tracked ${BONUS_RULE} (program bonus: ${formatCents(program?.vaBonusCents ?? 7000)}).`}
       width={540}
       media={
         <IconTile brand size="lg">
@@ -294,7 +300,7 @@ function VaReferralModal({ referral, onClose }: { referral: VaReferralOut | null
     >
       <div className="stack stack--12">
         <FormError error={create.error ?? save.error} />
-        {isNew && (
+        {isNew && !forVaId && (
           <Field label="Referred VA" htmlFor="vr-va" required>
             <Select
               id="vr-va"

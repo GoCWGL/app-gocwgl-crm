@@ -15,6 +15,7 @@ const KINDS: Record<string, { label: string; icon: IconName; open: Partial<Admin
   "crm.requested": { label: "CRM request", icon: "users", open: { tab: "progress", progressView: "requests" } },
   "ticket.created": { label: "Support request", icon: "message", open: { tab: "bugs" } },
   "booking.created": { label: "Call booked", icon: "calendar", open: { tab: "calendar" } },
+  "va.referral_claimed": { label: "Bonus claimed", icon: "gift", open: { tab: "bonuses", referralKind: "vas" } },
   // Only in the mentioned teammate's bell; opens that contact's profile (see `openFor`).
   "note.mentioned": { label: "Mentioned you", icon: "userPlus", open: {} },
 };
@@ -25,7 +26,7 @@ const openFor = (item: ActivityOut, k: (typeof KINDS)[string]): Partial<AdminSta
 const kindOf = (kind: string) => KINDS[kind] ?? { label: "Request", icon: "bell" as IconName, open: {} };
 
 /**
- * Admin header bell: every client request (funnel, CRM, support, calls booked) and notes where a teammate mentioned you,
+ * Admin header bell: every client request (funnel, CRM, support, calls booked), referral bonuses VAs claimed, and notes where a teammate mentioned you,
  * with the ones since you last looked marked new.
  */
 export function NotificationBell() {

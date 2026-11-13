@@ -13,7 +13,7 @@ import { useNewResumeLink, useResume, useSaveResume, useUploadResumeDocument } f
 import { ResumePaper, type ResumeContent } from "../components/ResumePaper";
 import { SocialIcon, brandColor } from "../components/SocialIcon";
 import { SOCIAL_NETWORKS, networkOf, normalizeLink, type SocialLink, type SocialNetwork } from "../lib/socials";
-import { LIMITS, apiResumeErrors, certIsEmpty, uploadProblem, charCount, errorUnder, fieldLabel, validateResume, type ResumeErrors } from "../lib/resumeErrors";
+import { LIMITS, apiResumeErrors, certIsEmpty, prepareUpload, charCount, errorUnder, fieldLabel, validateResume, type ResumeErrors } from "../lib/resumeErrors";
 import { hasSchool } from "../lib/resumeFormat";
 import { AddEntryButton, CertCard, JobCard, SchoolCard, emptyCert, emptyJob, emptySchool } from "../components/ResumeEntries";
 import { useVaAccess } from "../lib/access";
@@ -698,6 +698,7 @@ function HeadshotField({
   onChange: (id: string | null) => void;
 }) {
   const [fileError, setFileError] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const initials =
     name
       .split(/\s+/)
@@ -723,18 +724,22 @@ function HeadshotField({
             <input
               type="file"
               accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
+              disabled={preparing || upload.isPending}
+              onChange={async (e) => {
+                const picked = e.target.files?.[0];
                 e.target.value = "";
-                if (!file) return;
-                const problem = uploadProblem(file, "photo");
-                setFileError(problem);
-                if (problem) return;
+                if (!picked) return;
+                // Shrunk in the browser first, so even a large phone photo uploads quickly.
+                setPreparing(true);
+                const ready = await prepareUpload(picked, "photo");
+                setPreparing(false);
+                setFileError("problem" in ready ? ready.problem : null);
+                if ("problem" in ready) return;
                 upload.reset();
-                upload.mutate(file, { onSuccess: (doc) => onChange(doc.id) });
+                upload.mutate(ready.file, { onSuccess: (doc) => onChange(doc.id) });
               }}
             />
-            <Icon name="upload" size={14} /> {upload.isPending ? "Uploading…" : hasPhoto ? "Replace photo" : "Upload photo"}
+            <Icon name="upload" size={14} /> {preparing ? "Preparing photo…" : upload.isPending ? "Uploading…" : hasPhoto ? "Replace photo" : "Upload photo"}
           </label>
           {hasPhoto && (
             <Button size="sm" variant="link" onClick={() => onChange(null)}>

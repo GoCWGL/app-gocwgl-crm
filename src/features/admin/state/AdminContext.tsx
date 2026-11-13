@@ -60,6 +60,8 @@ export type AdminState = {
   /** Build Progress tab: the builds, clients' funnel requests, or their CRM requests. */
   /** CRM Requests / Funnel Requests: the builds, or that page's requests ("funnels" is an old link to funnel requests). */
   progressView: "builds" | "funnels" | "requests";
+  /** Referral bonus: client referrals or VA referrals (?referrals=vas opens VA referrals). */
+  referralKind: "clients" | "vas";
   /** Selected card on the Build Progress page: a build id, or a client id for a paid client with no build yet. */
   projectId: string;
 };
@@ -99,6 +101,7 @@ function initialState(params: URLSearchParams | null): AdminState {
     jobRequestId: "",
     mediaFolderId: "",
     progressView: "builds",
+    referralKind: params?.get("referrals") === "vas" ? "vas" : "clients",
     projectId: "",
   };
 }
