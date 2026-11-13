@@ -6370,7 +6370,7 @@ export interface components {
         /** AttemptIn */
         AttemptIn: {
             /** Answers */
-            answers: (number | null)[];
+            answers: (number | string | null)[];
         };
         /** AttemptOut */
         AttemptOut: {
@@ -10714,23 +10714,41 @@ export interface components {
              * @default
              */
             id?: string;
+            /**
+             * Kind
+             * @default choice
+             * @enum {string}
+             */
+            kind?: "choice" | "text";
             /** Text */
             text: string;
             /** Options */
-            options: string[];
-            /** Correct */
-            correct: number;
+            options?: string[];
+            /**
+             * Correct
+             * @default 0
+             */
+            correct?: number;
+            /** Accepted */
+            accepted?: string[];
         };
         /** QuestionOut */
         QuestionOut: {
             /** Id */
             id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "choice" | "text";
             /** Text */
             text: string;
             /** Options */
             options: string[];
             /** Correct */
             correct: number;
+            /** Accepted */
+            accepted: string[];
         };
         /** RaiseIn */
         RaiseIn: {
@@ -13311,6 +13329,11 @@ export interface components {
         VaQuestionOut: {
             /** Id */
             id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "choice" | "text";
             /** Text */
             text: string;
             /** Options */

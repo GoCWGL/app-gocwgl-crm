@@ -22,7 +22,7 @@ export const useDeleteTraining = () => useApiMutation(api.deleteTraining, { inva
 // VA portal
 export const useMyTrainings = (enabled = true) => useQuery({ queryKey: qk.myTrainings, queryFn: api.listMyTrainings, enabled });
 export const useSubmitQuiz = () =>
-  useApiMutation((v: { id: string; answers: Array<number | null> }) => api.submitQuiz(v.id, v.answers), { invalidate: [qk.myTrainings] });
+  useApiMutation((v: { id: string; answers: Array<number | string | null> }) => api.submitQuiz(v.id, v.answers), { invalidate: [qk.myTrainings] });
 export const useEnrollTraining = () => useApiMutation(api.enrollTraining, { invalidate: [qk.myTrainings] });
 export const useSaveTrainingProgress = () =>
   useApiMutation((v: { id: string } & ProgressIn) => api.saveTrainingProgress(v.id, { watched: v.watched, currentStep: v.currentStep }), {

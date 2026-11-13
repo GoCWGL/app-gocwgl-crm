@@ -893,6 +893,10 @@
     width: 120px;
   }
 
+  &__kind {
+    padding-left: 32px;
+  }
+
   &__pct {
     display: flex;
     align-items: center;
@@ -1627,6 +1631,360 @@
     color: $ink-muted;
     font-size: 13px;
     line-height: 1.55;
+  }
+}
+
+// Admin › Training › create / edit a course: a centered builder with a step rail.
+.course-builder {
+  align-items: center;
+
+  .modal__panel {
+    max-height: calc(100vh - 48px);
+  }
+
+  .modal__body {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 0;
+    height: min(66vh, 680px);
+    max-height: none;
+    padding: 0;
+    overflow: hidden;
+
+    @include down(md) {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr);
+      height: min(74vh, 720px);
+    }
+  }
+
+  .modal__footer {
+    justify-content: flex-start;
+  }
+
+  &__rail {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px 14px;
+    border-right: 1px solid $line-faint;
+    background: $bg-soft;
+    overflow-y: auto;
+
+    ol {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    button {
+      @include button-reset;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid transparent;
+      border-radius: $radius-lg;
+      text-align: left;
+      transition: background 0.15s ease, border-color 0.15s ease;
+
+      &:hover {
+        background: $white;
+      }
+
+      &[aria-current="step"] {
+        border-color: $peach-strong;
+        background: $white;
+        box-shadow: $shadow-soft;
+
+        .course-builder__n {
+          background: $grad-orange;
+          color: $on-orange;
+        }
+      }
+
+      &.has-error .course-builder__n {
+        background: $red-600;
+        color: $white;
+      }
+    }
+
+    @include down(md) {
+      padding: 10px 12px;
+      border-right: 0;
+      border-bottom: 1px solid $line-faint;
+
+      ol {
+        flex-direction: row;
+        overflow-x: auto;
+      }
+
+      button {
+        width: auto;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  &__n {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border-radius: 50%;
+    background: $white;
+    color: $ink-soft;
+    box-shadow: inset 0 0 0 1px $line;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  &__step {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__label {
+    color: $ink;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__sub {
+    @include truncate;
+    max-width: 160px;
+    color: $muted;
+    font-size: 12px;
+
+    @include down(md) {
+      display: none;
+    }
+  }
+
+  // A live look at the course card as it's being built.
+  &__preview {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid $line-soft;
+    border-radius: $radius-lg;
+    background: $white;
+
+    @include down(md) {
+      display: none;
+    }
+  }
+
+  &__cover {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, #071a2c 0%, #12395a 55%, #0e6aa0 100%);
+    color: $white;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__preview-body {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 10px 12px 12px;
+
+    strong {
+      color: $ink;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+  }
+
+  &__content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 22px 26px 26px;
+    overflow-y: auto;
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
+    header {
+      h3 {
+        margin: 0;
+        color: $ink;
+        font-size: 17px;
+        font-weight: 800;
+      }
+
+      p {
+        margin: 2px 0 0;
+        color: $muted;
+        font-size: 13px;
+      }
+    }
+  }
+
+  &__head-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+
+    @include down(sm) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__adds {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+
+    @include down(sm) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__add {
+    @include button-reset;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px;
+    border: 1.5px dashed $line-strong;
+    border-radius: $radius-lg;
+    color: $cyan-700;
+    font-weight: 700;
+    transition: background 0.15s ease, border-color 0.15s ease;
+
+    &:hover:not(:disabled) {
+      border-color: $orange;
+      background: $peach;
+      color: $orange-ink;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// One lesson in the course builder: its poster on the left, the fields on the right.
+.lesson-card {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid $line-soft;
+  border-radius: $radius-xl;
+  background: $white;
+  box-shadow: $shadow-soft;
+
+  @include down(sm) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &__thumb {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: $radius-md;
+    background: $bg-tint;
+    color: $muted;
+
+    &.is-poster {
+      background: linear-gradient(135deg, #071a2c 0%, #12395a 55%, #0e6aa0 100%);
+      color: $white;
+    }
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__n {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    display: grid;
+    place-items: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: $radius-pill;
+    background: $grad-orange;
+    color: $on-orange;
+    font-size: 11px;
+    font-weight: 800;
+  }
+
+  &__provider {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    padding: 2px 7px;
+    border-radius: $radius-xs;
+    background: rgba(7, 17, 30, 0.8);
+    color: $white;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: capitalize;
+  }
+
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  &__row {
+    display: flex;
+    gap: 8px;
+
+    > :first-child {
+      flex: 1;
+    }
+  }
+
+  &__tools {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    @include down(sm) {
+      flex-direction: row;
+      justify-content: flex-end;
+    }
   }
 }
 

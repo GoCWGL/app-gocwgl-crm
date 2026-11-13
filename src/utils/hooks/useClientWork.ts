@@ -48,7 +48,7 @@ export const useVaInvoiceForClient = (id: string) =>
 
 export const useClientTrainings = () => useQuery({ queryKey: qk.portalTrainings, queryFn: api.listClientTrainings });
 export const useSubmitClientQuiz = () =>
-  useApiMutation((v: { id: string; answers: Array<number | null> }) => api.submitClientQuiz(v.id, v.answers), { invalidate: [qk.portalTrainings] });
+  useApiMutation((v: { id: string; answers: Array<number | string | null> }) => api.submitClientQuiz(v.id, v.answers), { invalidate: [qk.portalTrainings] });
 export const useEnrollClientTraining = () => useApiMutation(api.enrollClientTraining, { invalidate: [qk.portalTrainings] });
 export const useSaveClientTrainingProgress = () =>
   useApiMutation((v: { id: string } & ProgressIn) => api.saveClientTrainingProgress(v.id, { watched: v.watched, currentStep: v.currentStep }), {

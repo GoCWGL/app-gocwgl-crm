@@ -12,7 +12,7 @@ export const trainingLearners = (id: string) => get<LearnerOut[]>(`/admin/traini
 
 // VA portal › Training (VAs).
 export const listMyTrainings = () => get<VaTrainingOut[]>("/va/trainings").then(withTrainingDefaults);
-export const submitQuiz = (id: string, answers: Array<number | null>) => post<AttemptOut>(`/va/trainings/${id}/attempts`, { answers });
+export const submitQuiz = (id: string, answers: Array<number | string | null>) => post<AttemptOut>(`/va/trainings/${id}/attempts`, { answers });
 export const enrollTraining = (id: string) => post<void>(`/va/trainings/${id}/enroll`);
 export const saveTrainingProgress = (id: string, body: ProgressIn) => put<void>(`/va/trainings/${id}/progress`, body);
 
@@ -24,7 +24,7 @@ export function withTrainingDefaults(rows: VaTrainingOut[]): VaTrainingOut[] {
   return rows.map((t) => ({
     ...t,
     lessons: (t.lessons ?? []).map((l) => ({ ...l, provider: l.provider ?? "youtube", minutes: l.minutes ?? 0, summary: l.summary ?? "" })),
-    questions: t.questions ?? [],
+    questions: (t.questions ?? []).map((q) => ({ ...q, kind: q.kind ?? "choice" })),
     enrolledAt: t.enrolledAt ?? null,
     myWatched: t.myWatched ?? [],
     myCurrentStep: t.myCurrentStep ?? "",

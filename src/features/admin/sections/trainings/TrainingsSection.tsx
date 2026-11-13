@@ -23,9 +23,9 @@ import {
 import { customCategories, TRAINING_CATEGORIES } from "@/data/trainingCategories";
 import { toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
-import { lessonThumb, videoEmbed } from "@/lib/video";
+import { formatMinutes, lessonThumb, videoEmbed } from "@/lib/video";
 import { youtubeId } from "@/lib/youtube";
-import type { QuestionIn, TrainingAudience, TrainingOut, TrainingStatus } from "@/utils/api/models";
+import type { QuestionOut, TrainingAudience, TrainingOut, TrainingStatus } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
 import { formatShort } from "@/utils/format/dates";
 import {
@@ -466,14 +466,28 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
                   <span className="quiz-key__q">
                     {i + 1}. {q.text}
                   </span>
-                  <ul>
-                    {q.options.map((o, j) => (
-                      <li key={j} className={cn(j === q.correct && "is-correct")}>
-                        <Icon name={j === q.correct ? "circleCheck" : "radio"} size={14} />
-                        {o}
+                  {q.kind === "text" ? (
+                    <ul>
+                      <li className="quiz-key__typed">
+                        <Icon name="textShort" size={14} /> Typed answer · accepts:
                       </li>
-                    ))}
-                  </ul>
+                      {q.accepted.map((a, j) => (
+                        <li key={j} className="is-correct">
+                          <Icon name="circleCheck" size={14} />
+                          {a}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <ul>
+                      {q.options.map((o, j) => (
+                        <li key={j} className={cn(j === q.correct && "is-correct")}>
+                          <Icon name={j === q.correct ? "circleCheck" : "radio"} size={14} />
+                          {o}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
               ))}
             </ol>
@@ -554,13 +568,32 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
 
 // ------------------------------------------------------------------ Editor
 
+type BuilderStep = "details" | "lessons" | "quiz";
+const STEPS: Array<{ id: BuilderStep; label: string }> = [
+  { id: "details", label: "Details" },
+  { id: "lessons", label: "Lessons" },
+  { id: "quiz", label: "Quiz" },
+];
+
 type DraftLesson = { key: string; id: string; title: string; videoUrl: string; minutes: string; summary: string };
 const blankLesson = (): DraftLesson => ({ key: crypto.randomUUID(), id: "", title: "", videoUrl: "", minutes: "", summary: "" });
 /** Length is optional; when given, whole minutes up to 600. */
 const badMinutes = (m: string) => (m.trim() ? !/^\d{1,3}$/.test(m.trim()) || Number(m) > 600 : false);
 
-type DraftQuestion = QuestionIn & { key: string };
-const blankQuestion = (): DraftQuestion => ({ key: crypto.randomUUID(), id: "", text: "", options: ["", ""], correct: 0 });
+type QuestionKind = QuestionOut["kind"];
+
+/** Both kinds' fields are kept, so switching a question's type back and forth loses nothing. */
+type DraftQuestion = { key: string; id: string; kind: QuestionKind; text: string; options: string[]; correct: number; accepted: string[] };
+const blankQuestion = (kind: QuestionKind = "choice"): DraftQuestion => ({
+  key: crypto.randomUUID(),
+  id: "",
+  kind,
+  text: "",
+  options: ["", ""],
+  correct: 0,
+  accepted: [""],
+});
+const filled = (xs: string[]) => xs.filter((x) => x.trim());
 
 function TrainingEditor({
   training,
@@ -589,12 +622,23 @@ function TrainingEditor({
   // Client trainings: who it's for (only they see it in their portal).
   const [clientIds, setClientIds] = useState<string[]>(training?.clientIds ?? []);
   const [questions, setQuestions] = useState<DraftQuestion[]>(
-    training?.questions.length ? training.questions.map((q) => ({ ...q, key: q.id })) : [blankQuestion()],
+    training?.questions.length
+      ? training.questions.map((q) => ({
+          key: q.id,
+          id: q.id,
+          kind: q.kind ?? "choice",
+          text: q.text,
+          options: q.options.length ? q.options : ["", ""],
+          correct: q.correct,
+          accepted: q.accepted?.length ? q.accepted : [""],
+        }))
+      : [blankQuestion()],
   );
   const [lessons, setLessons] = useState<DraftLesson[]>(
     training?.lessons.length ? training.lessons.map((l) => ({ key: l.id, id: l.id, title: l.title, videoUrl: l.videoUrl, minutes: l.minutes ? String(l.minutes) : "", summary: l.summary })) : [blankLesson()],
   );
   const [tried, setTried] = useState(false);
+  const [step, setStep] = useState<BuilderStep>("details");
   const set = (patch: Partial<typeof f>) => setF((d) => ({ ...d, ...patch }));
   const setL = (i: number, patch: Partial<DraftLesson>) => setLessons((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
   const moveL = (i: number, by: number) =>
@@ -610,8 +654,10 @@ function TrainingEditor({
 
   const rate = Number(f.rate);
   // Questions that are entirely empty are skipped; partly filled ones must be complete.
-  const used = questions.filter((q) => q.text.trim() || q.options.some((o) => o.trim()));
-  const qError = used.findIndex((q) => !q.text.trim() || q.options.filter((o) => o.trim()).length < 2 || !q.options[q.correct]?.trim());
+  const used = questions.filter((q) => q.text.trim() || filled(q.kind === "text" ? q.accepted : q.options).length);
+  const qError = used.findIndex((q) =>
+    q.kind === "text" ? !q.text.trim() || !filled(q.accepted).length : !q.text.trim() || filled(q.options).length < 2 || !q.options[q.correct]?.trim(),
+  );
   const errors = {
     title: !f.title.trim() ? "Give the training a title." : "",
     lessons:
@@ -621,13 +667,27 @@ function TrainingEditor({
           ? `Lesson ${lessons.indexOf(usedLessons[badLength]) + 1}: the length is whole minutes, up to 600.`
           : "",
     rate: !Number.isInteger(rate) || rate < 1 || rate > 100 ? "A whole number from 1 to 100." : "",
-    questions: qError >= 0 ? `Question ${questions.indexOf(used[qError]) + 1} needs its text, at least two answers, and the right one picked.` : "",
+    questions:
+      qError >= 0
+        ? used[qError].kind === "text"
+          ? `Question ${questions.indexOf(used[qError]) + 1} needs its text and at least one accepted answer.`
+          : `Question ${questions.indexOf(used[qError]) + 1} needs its text, at least two answers, and the right one picked.`
+        : "",
   };
   const pending = create.isPending || save.isPending;
 
+  const stepErrors: Record<BuilderStep, string> = {
+    details: errors.title,
+    lessons: errors.lessons,
+    quiz: errors.rate || errors.questions,
+  };
   const submit = (status?: TrainingStatus) => {
     setTried(true);
-    if (Object.values(errors).some(Boolean)) return;
+    const firstBad = STEPS.find((s) => stepErrors[s.id]);
+    if (firstBad) {
+      setStep(firstBad.id);
+      return;
+    }
     const body = {
       title: f.title.trim(),
       audience: f.audience,
@@ -643,9 +703,10 @@ function TrainingEditor({
       passingRate: rate,
       ...(f.audience === "client" && { clientIds }),
       questions: used.map((q) => {
+        if (q.kind === "text") return { id: q.id, kind: "text" as const, text: q.text.trim(), accepted: filled(q.accepted).map((a) => a.trim()) };
         // Drop blank answers but keep the right one pointing at the same text.
         const kept = q.options.map((o, j) => ({ o: o.trim(), j })).filter((x) => x.o);
-        return { id: q.id, text: q.text.trim(), options: kept.map((x) => x.o), correct: kept.findIndex((x) => x.j === q.correct) };
+        return { id: q.id, kind: "choice" as const, text: q.text.trim(), options: kept.map((x) => x.o), correct: kept.findIndex((x) => x.j === q.correct) };
       }),
       ...(status && { status }),
     };
@@ -657,20 +718,31 @@ function TrainingEditor({
     else save.mutate({ id: training.id, body }, { onSuccess: done });
   };
 
+  const minutes = usedLessons.reduce((sum, l) => sum + (badMinutes(l.minutes) ? 0 : Number(l.minutes.trim() || 0)), 0);
+  const stepIndex = STEPS.findIndex((x) => x.id === step);
+  const firstThumb = usedLessons.map((l) => youtubeId(l.videoUrl)).find(Boolean);
+  const stepSub: Record<BuilderStep, string> = {
+    details: f.title.trim() || "Title, audience, category",
+    lessons: usedLessons.length
+      ? `${usedLessons.length} lesson${usedLessons.length === 1 ? "" : "s"}${minutes ? ` · ${formatMinutes(minutes)}` : ""}`
+      : "No lessons yet",
+    quiz: used.length ? `${used.length} question${used.length === 1 ? "" : "s"} · pass ${f.rate || "–"}%` : "No quiz",
+  };
+
   return (
     <Modal
       open
-      variant="drawer"
-      width={700}
+      width={1000}
+      className="course-builder"
       onClose={onClose}
       onSubmit={(e: FormEvent) => {
         e.preventDefault();
         submit();
       }}
       titleId="training-editor"
-      kicker="TRAINING"
-      title={isNew ? "New training" : "Edit training"}
-      subtitle="Video lessons, then a quiz. VAs pass when they reach the passing rate."
+      kicker={f.audience === "va" ? "VA TRAINING" : "CLIENT TRAINING"}
+      title={isNew ? "Create a course" : `Edit “${training.title}”`}
+      subtitle="Add the details, the video lessons, then a quiz. Learners pass at your passing rate."
       media={
         <IconTile brand size="lg">
           <Icon name="graduation" size={18} />
@@ -678,15 +750,25 @@ function TrainingEditor({
       }
       footer={
         <>
+          <Button disabled={stepIndex === 0} onClick={() => setStep(STEPS[stepIndex - 1].id)}>
+            <Icon name="chevronLeft" size={13} /> Back
+          </Button>
+          {stepIndex < STEPS.length - 1 && (
+            <Button variant="outline" onClick={() => setStep(STEPS[stepIndex + 1].id)}>
+              Next: {STEPS[stepIndex + 1].label} <Icon name="chevronRight" size={13} />
+            </Button>
+          )}
           <span className="u-spacer" />
-          <Button onClick={onClose}>Cancel</Button>
+          <Button variant="link" onClick={onClose}>
+            Cancel
+          </Button>
           {isNew ? (
             <>
               <Button type="submit" variant="outline" disabled={pending}>
                 Save as draft
               </Button>
               <Button variant="primary" disabled={pending} onClick={() => submit("published")}>
-                <Icon name="send" size={13} /> Publish
+                <Icon name="send" size={13} /> {pending ? "Saving…" : "Publish course"}
               </Button>
             </>
           ) : (
@@ -697,87 +779,153 @@ function TrainingEditor({
         </>
       }
     >
-      <div className="stack stack--14">
-        <FormError error={create.error ?? save.error} />
-        <Field label="For">
-          <SegmentedControl<TrainingAudience>
-            kind="radio"
-            variant="soft"
-            size="sm"
-            label="Who this training is for"
-            value={f.audience}
-            onChange={(a) => set({ audience: a })}
-            options={[
-              { value: "va", label: "VAs" },
-              { value: "client", label: "Clients" },
-            ]}
-          />
-        </Field>
-        {f.audience === "client" && (
-          <Field
-            label={`Clients${clientIds.length ? ` · ${clientIds.length}` : ""}`}
-            htmlFor="tr-clients"
-            hint="Only these clients see this training. Their Training menu appears once they have one."
-          >
-            <ClientsPicker id="tr-clients" value={clientIds} onChange={setClientIds} />
-          </Field>
-        )}
-        <Field label="Title" htmlFor="tr-title" required error={tried && errors.title}>
-          <Input id="tr-title" placeholder="Inbox management basics" value={f.title} onChange={(e) => set({ title: e.target.value })} autoFocus />
-        </Field>
-        <Field label="Category" htmlFor="tr-cat" hint="Groups courses on this page and in the portal.">
-          <GroupedPicker
-            id="tr-cat"
-            value={f.category}
-            onChange={(category) => set({ category })}
-            placeholder="Choose a category"
-            emptyLabel="No category"
-            searchPlaceholder="Search categories"
-            groups={[
-              ...TRAINING_CATEGORIES[f.audience].map((g) => ({ group: g.group, icon: g.icon, options: g.categories })),
-              // Ones already in use that aren't in the list (and this course's own), so nothing is lost.
-              ...(customCategories(f.audience, [...categories, f.category]).length
-                ? [{ group: "Your categories", icon: "tag" as const, options: customCategories(f.audience, [...categories, f.category]) }]
-                : []),
-            ]}
-          />
-        </Field>
-        <Field label="Description" htmlFor="tr-desc">
-          <Textarea id="tr-desc" rows={3} placeholder="What they'll learn and why it matters." value={f.description} onChange={(e) => set({ description: e.target.value })} />
-        </Field>
-
-        <div className="quiz-builder">
-          <span className="stack stack--2">
-            <span className="text-strong">Lessons</span>
-            <span className="text-small">YouTube, Loom or Vimeo videos, watched in this order. Unlisted videos work too.</span>
-          </span>
-          {lessons.map((l, i) => {
-            const video = videoEmbed(l.videoUrl);
-            const ytId = youtubeId(l.videoUrl);
-            const thumb = ytId ? lessonThumb({ provider: "youtube", videoId: ytId }) : null;
-            return (
-              <div key={l.key} className="lesson-row">
-                <span className="lesson-row__thumb">
-                  {thumb ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail
-                    <img src={thumb} alt="" />
-                  ) : video ? (
-                    <span className="lesson-row__provider">{video.provider}</span>
-                  ) : (
-                    <span>{i + 1}</span>
-                  )}
+      <nav className="course-builder__rail" aria-label="Course builder steps">
+        <ol>
+          {STEPS.map((x, i) => (
+            <li key={x.id}>
+              <button
+                type="button"
+                aria-current={step === x.id ? "step" : undefined}
+                className={cn(tried && stepErrors[x.id] && "has-error")}
+                onClick={() => setStep(x.id)}
+              >
+                <span className="course-builder__n">{tried && stepErrors[x.id] ? "!" : i + 1}</span>
+                <span className="course-builder__step">
+                  <span className="course-builder__label">{x.label}</span>
+                  <span className="course-builder__sub">{stepSub[x.id]}</span>
                 </span>
-                <span className="lesson-row__fields">
-                  <Input aria-label={`Lesson ${i + 1} title`} placeholder={`Lesson ${i + 1} title`} value={l.title} onChange={(e) => setL(i, { title: e.target.value })} />
-                  <Input
-                    aria-label={`Lesson ${i + 1} video link`}
-                    type="url"
-                    placeholder="YouTube, Loom or Vimeo link"
-                    value={l.videoUrl}
-                    aria-invalid={tried && !!l.videoUrl.trim() && !video}
-                    onChange={(e) => setL(i, { videoUrl: e.target.value })}
-                  />
-                  <span className="lesson-row__extra">
+              </button>
+            </li>
+          ))}
+        </ol>
+        <div className="course-builder__preview" aria-hidden>
+          <span className="course-builder__cover">
+            {firstThumb ? (
+              // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail
+              <img src={lessonThumb({ provider: "youtube", videoId: firstThumb })!} alt="" />
+            ) : (
+              <Icon name="play" size={20} />
+            )}
+          </span>
+          <span className="course-builder__preview-body">
+            {f.category && <span className="training-card__category">{f.category}</span>}
+            <strong>{f.title.trim() || "Untitled course"}</strong>
+            <span className="text-small">{stepSub.lessons}</span>
+          </span>
+        </div>
+      </nav>
+
+      <div className="course-builder__content">
+        <FormError error={create.error ?? save.error} />
+
+        {step === "details" && (
+          <section className="course-builder__section">
+            <header>
+              <h3>Course details</h3>
+              <p>What learners see on the course card and at the top of the course.</p>
+            </header>
+            <div className="course-builder__grid">
+              <Field label="For">
+                <SegmentedControl<TrainingAudience>
+                  kind="radio"
+                  variant="soft"
+                  size="sm"
+                  label="Who this training is for"
+                  value={f.audience}
+                  onChange={(a) => set({ audience: a })}
+                  options={[
+                    { value: "va", label: "VAs" },
+                    { value: "client", label: "Clients" },
+                  ]}
+                />
+              </Field>
+              <Field label="Category" htmlFor="tr-cat" hint="Groups courses here and in the portal.">
+                <GroupedPicker
+                  id="tr-cat"
+                  value={f.category}
+                  onChange={(category) => set({ category })}
+                  placeholder="Choose a category"
+                  emptyLabel="No category"
+                  searchPlaceholder="Search categories"
+                  groups={[
+                    ...TRAINING_CATEGORIES[f.audience].map((g) => ({ group: g.group, icon: g.icon, options: g.categories })),
+                    // Ones already in use that aren't in the list (and this course's own), so nothing is lost.
+                    ...(customCategories(f.audience, [...categories, f.category]).length
+                      ? [{ group: "Your categories", icon: "tag" as const, options: customCategories(f.audience, [...categories, f.category]) }]
+                      : []),
+                  ]}
+                />
+              </Field>
+            </div>
+            {f.audience === "client" && (
+              <Field
+                label={`Clients${clientIds.length ? ` · ${clientIds.length}` : ""}`}
+                htmlFor="tr-clients"
+                hint="Only these clients see this training. Their Training menu appears once they have one."
+              >
+                <ClientsPicker id="tr-clients" value={clientIds} onChange={setClientIds} />
+              </Field>
+            )}
+            <Field label="Title" htmlFor="tr-title" required error={tried && errors.title}>
+              <Input id="tr-title" placeholder="ELSAiA Module 2 · Daily reporting" value={f.title} onChange={(e) => set({ title: e.target.value })} autoFocus />
+            </Field>
+            <Field label="Description" htmlFor="tr-desc" hint="A short paragraph on what they'll learn and why it matters.">
+              <Textarea id="tr-desc" rows={5} placeholder="What they'll learn and why it matters." value={f.description} onChange={(e) => set({ description: e.target.value })} />
+            </Field>
+          </section>
+        )}
+
+        {step === "lessons" && (
+          <section className="course-builder__section">
+            <header>
+              <h3>Lessons</h3>
+              <p>YouTube, Loom or Vimeo videos, watched in this order. Unlisted videos work too.</p>
+            </header>
+            {lessons.map((l, i) => {
+              const video = videoEmbed(l.videoUrl);
+              const ytId = youtubeId(l.videoUrl);
+              const thumb = ytId ? lessonThumb({ provider: "youtube", videoId: ytId }) : null;
+              const badLink = tried && !!l.videoUrl.trim() && !video;
+              return (
+                <div key={l.key} className="lesson-card">
+                  <span className={cn("lesson-card__thumb", video && !thumb && "is-poster")}>
+                    {thumb ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail
+                      <img src={thumb} alt="" />
+                    ) : (
+                      <Icon name={video ? "play" : "video"} size={18} />
+                    )}
+                    <span className="lesson-card__n">{i + 1}</span>
+                    {video && <span className="lesson-card__provider">{video.provider}</span>}
+                  </span>
+                  <span className="lesson-card__fields">
+                    <span className="lesson-card__row">
+                      <Input
+                        aria-label={`Lesson ${i + 1} title`}
+                        placeholder={`Lesson ${i + 1} title`}
+                        value={l.title}
+                        onChange={(e) => setL(i, { title: e.target.value })}
+                      />
+                      <span className="lesson-row__minutes">
+                        <Input
+                          aria-label={`Lesson ${i + 1} length in minutes`}
+                          inputMode="numeric"
+                          placeholder="Length"
+                          value={l.minutes}
+                          aria-invalid={tried && badMinutes(l.minutes)}
+                          onChange={(e) => setL(i, { minutes: e.target.value })}
+                        />
+                        <span>min</span>
+                      </span>
+                    </span>
+                    <Input
+                      aria-label={`Lesson ${i + 1} video link`}
+                      type="url"
+                      placeholder="Paste a YouTube, Loom or Vimeo link"
+                      value={l.videoUrl}
+                      aria-invalid={badLink}
+                      onChange={(e) => setL(i, { videoUrl: e.target.value })}
+                    />
                     <Input
                       aria-label={`Lesson ${i + 1} summary`}
                       placeholder="One line on what they'll learn (optional)"
@@ -785,124 +933,163 @@ function TrainingEditor({
                       value={l.summary}
                       onChange={(e) => setL(i, { summary: e.target.value })}
                     />
-                    <span className="lesson-row__minutes">
-                      <Input
-                        aria-label={`Lesson ${i + 1} length in minutes`}
-                        inputMode="numeric"
-                        placeholder="Length"
-                        value={l.minutes}
-                        aria-invalid={tried && badMinutes(l.minutes)}
-                        onChange={(e) => setL(i, { minutes: e.target.value })}
-                      />
-                      <span>min</span>
-                    </span>
                   </span>
-                </span>
-                <span className="sop-step-editor__tools">
-                  <IconButton label="Move up" size="sm" ghost disabled={i === 0} onClick={() => moveL(i, -1)}>
-                    <Icon name="chevronUp" size={14} />
-                  </IconButton>
-                  <IconButton label="Move down" size="sm" ghost disabled={i === lessons.length - 1} onClick={() => moveL(i, 1)}>
-                    <Icon name="chevronDown" size={14} />
-                  </IconButton>
-                  <IconButton label="Remove lesson" size="sm" ghost onClick={() => setLessons((ls) => ls.filter((_, j) => j !== i))}>
-                    <Icon name="close" size={14} />
-                  </IconButton>
-                </span>
-              </div>
-            );
-          })}
-          {tried && errors.lessons && (
-            <p className="text-error" role="alert">
-              {errors.lessons}
-            </p>
-          )}
-          <span>
-            <Button size="sm" variant="outline" disabled={lessons.length >= 100} onClick={() => setLessons((ls) => [...ls, blankLesson()])}>
-              <Icon name="plus" size={13} /> Add lesson
-            </Button>
-          </span>
-        </div>
+                  <span className="lesson-card__tools">
+                    <IconButton label="Move up" size="sm" ghost disabled={i === 0} onClick={() => moveL(i, -1)}>
+                      <Icon name="chevronUp" size={14} />
+                    </IconButton>
+                    <IconButton label="Move down" size="sm" ghost disabled={i === lessons.length - 1} onClick={() => moveL(i, 1)}>
+                      <Icon name="chevronDown" size={14} />
+                    </IconButton>
+                    <IconButton label="Remove lesson" size="sm" ghost onClick={() => setLessons((ls) => ls.filter((_, j) => j !== i))}>
+                      <Icon name="trash" size={14} />
+                    </IconButton>
+                  </span>
+                </div>
+              );
+            })}
+            {tried && errors.lessons && (
+              <p className="text-error" role="alert">
+                {errors.lessons}
+              </p>
+            )}
+            <button type="button" className="course-builder__add" disabled={lessons.length >= 100} onClick={() => setLessons((ls) => [...ls, blankLesson()])}>
+              <Icon name="plus" size={14} /> Add a lesson
+            </button>
+          </section>
+        )}
 
-        <div className="quiz-builder">
-          <div className="cluster cluster--between">
-            <span className="stack stack--2">
-              <span className="text-strong">Quiz</span>
-              <span className="text-small">Click the circle beside the right answer.</span>
-            </span>
-            <Field label="Passing rate" htmlFor="tr-rate" error={tried && errors.rate} className="quiz-builder__rate">
-              <span className="quiz-builder__pct">
-                <Input id="tr-rate" inputMode="numeric" value={f.rate} onChange={(e) => set({ rate: e.target.value })} />
-                <span>%</span>
+        {step === "quiz" && (
+          <section className="course-builder__section">
+            <header className="course-builder__head-row">
+              <span>
+                <h3>Quiz</h3>
+                <p>Optional. Multiple choice (click the circle beside the right answer) or a typed answer. Leave it empty for no quiz.</p>
               </span>
-            </Field>
-          </div>
-
-          {questions.map((q, i) => (
-            <div key={q.key} className="quiz-builder__q">
-              <div className="cluster cluster--nowrap">
-                <span className="sop-steps__n">{i + 1}</span>
-                <Input aria-label={`Question ${i + 1}`} placeholder="Question" value={q.text} onChange={(e) => setQ(i, { text: e.target.value })} />
-                <IconButton label="Remove question" size="sm" ghost onClick={() => setQuestions((qs) => qs.filter((_, j) => j !== i))}>
-                  <Icon name="trash" size={14} />
-                </IconButton>
-              </div>
-              <div className="quiz-builder__options">
-                {q.options.map((o, j) => (
-                  <div key={j} className={cn("quiz-builder__option", q.correct === j && "is-correct")}>
-                    <button
-                      type="button"
-                      className="quiz-builder__pick"
-                      aria-label={`Mark answer ${j + 1} as right`}
-                      aria-pressed={q.correct === j}
-                      onClick={() => setQ(i, { correct: j })}
-                    >
-                      <Icon name={q.correct === j ? "circleCheck" : "radio"} size={16} />
-                    </button>
-                    <Input
-                      aria-label={`Question ${i + 1}, answer ${j + 1}`}
-                      placeholder={`Answer ${j + 1}`}
-                      value={o}
-                      onChange={(e) => setQ(i, { options: q.options.map((x, k) => (k === j ? e.target.value : x)) })}
-                    />
-                    {q.options.length > 2 && (
-                      <IconButton
-                        label="Remove answer"
-                        size="sm"
-                        ghost
-                        onClick={() =>
-                          setQ(i, {
-                            options: q.options.filter((_, k) => k !== j),
-                            correct: q.correct === j ? 0 : q.correct > j ? q.correct - 1 : q.correct,
-                          })
-                        }
-                      >
-                        <Icon name="close" size={13} />
-                      </IconButton>
+              <Field label="Passing rate" htmlFor="tr-rate" error={tried && errors.rate} className="quiz-builder__rate">
+                <span className="quiz-builder__pct">
+                  <Input id="tr-rate" inputMode="numeric" value={f.rate} onChange={(e) => set({ rate: e.target.value })} />
+                  <span>%</span>
+                </span>
+              </Field>
+            </header>
+            {questions.map((q, i) => (
+              <div key={q.key} className="quiz-builder__q">
+                <div className="cluster cluster--nowrap">
+                  <span className="sop-steps__n">{i + 1}</span>
+                  <Input aria-label={`Question ${i + 1}`} placeholder="Question" value={q.text} onChange={(e) => setQ(i, { text: e.target.value })} />
+                  <IconButton label="Remove question" size="sm" ghost onClick={() => setQuestions((qs) => qs.filter((_, j) => j !== i))}>
+                    <Icon name="trash" size={14} />
+                  </IconButton>
+                </div>
+                <div className="quiz-builder__kind">
+                  <SegmentedControl<QuestionKind>
+                    kind="radio"
+                    variant="soft"
+                    size="sm"
+                    label={`Question ${i + 1} type`}
+                    value={q.kind}
+                    onChange={(kind) => setQ(i, { kind })}
+                    options={[
+                      { value: "choice", label: "Multiple choice" },
+                      { value: "text", label: "Typed answer" },
+                    ]}
+                  />
+                </div>
+                {q.kind === "text" ? (
+                  <div className="quiz-builder__options">
+                    <span className="text-small">
+                      Accepted answers. Capitals, extra spaces and punctuation at the ends don’t matter; add other wordings you’d accept.
+                    </span>
+                    {q.accepted.map((a, j) => (
+                      <div key={j} className="quiz-builder__option is-correct">
+                        <span className="quiz-builder__pick" aria-hidden>
+                          <Icon name="circleCheck" size={16} />
+                        </span>
+                        <Input
+                          aria-label={`Question ${i + 1}, accepted answer ${j + 1}`}
+                          placeholder={j === 0 ? "The right answer" : "Another accepted wording"}
+                          maxLength={200}
+                          value={a}
+                          onChange={(e) => setQ(i, { accepted: q.accepted.map((x, k) => (k === j ? e.target.value : x)) })}
+                        />
+                        {q.accepted.length > 1 && (
+                          <IconButton label="Remove accepted answer" size="sm" ghost onClick={() => setQ(i, { accepted: q.accepted.filter((_, k) => k !== j) })}>
+                            <Icon name="close" size={13} />
+                          </IconButton>
+                        )}
+                      </div>
+                    ))}
+                    {q.accepted.length < 10 && (
+                      <span>
+                        <Button size="sm" variant="link" onClick={() => setQ(i, { accepted: [...q.accepted, ""] })}>
+                          + Add another accepted answer
+                        </Button>
+                      </span>
                     )}
                   </div>
-                ))}
-                {q.options.length < 6 && (
-                  <span>
-                    <Button size="sm" variant="link" onClick={() => setQ(i, { options: [...q.options, ""] })}>
-                      + Add answer
-                    </Button>
-                  </span>
+                ) : (
+                <div className="quiz-builder__options">
+                  {q.options.map((o, j) => (
+                    <div key={j} className={cn("quiz-builder__option", q.correct === j && "is-correct")}>
+                      <button
+                        type="button"
+                        className="quiz-builder__pick"
+                        aria-label={`Mark answer ${j + 1} as right`}
+                        aria-pressed={q.correct === j}
+                        onClick={() => setQ(i, { correct: j })}
+                      >
+                        <Icon name={q.correct === j ? "circleCheck" : "radio"} size={16} />
+                      </button>
+                      <Input
+                        aria-label={`Question ${i + 1}, answer ${j + 1}`}
+                        placeholder={`Answer ${j + 1}`}
+                        value={o}
+                        onChange={(e) => setQ(i, { options: q.options.map((x, k) => (k === j ? e.target.value : x)) })}
+                      />
+                      {q.options.length > 2 && (
+                        <IconButton
+                          label="Remove answer"
+                          size="sm"
+                          ghost
+                          onClick={() =>
+                            setQ(i, {
+                              options: q.options.filter((_, k) => k !== j),
+                              correct: q.correct === j ? 0 : q.correct > j ? q.correct - 1 : q.correct,
+                            })
+                          }
+                        >
+                          <Icon name="close" size={13} />
+                        </IconButton>
+                      )}
+                    </div>
+                  ))}
+                  {q.options.length < 6 && (
+                    <span>
+                      <Button size="sm" variant="link" onClick={() => setQ(i, { options: [...q.options, ""] })}>
+                        + Add answer
+                      </Button>
+                    </span>
+                  )}
+                </div>
                 )}
               </div>
+            ))}
+            {tried && errors.questions && (
+              <p className="text-error" role="alert">
+                {errors.questions}
+              </p>
+            )}
+            <div className="course-builder__adds">
+              <button type="button" className="course-builder__add" disabled={questions.length >= 50} onClick={() => setQuestions((qs) => [...qs, blankQuestion()])}>
+                <Icon name="plus" size={14} /> Multiple-choice question
+              </button>
+              <button type="button" className="course-builder__add" disabled={questions.length >= 50} onClick={() => setQuestions((qs) => [...qs, blankQuestion("text")])}>
+                <Icon name="textShort" size={14} /> Typed-answer question
+              </button>
             </div>
-          ))}
-          {tried && errors.questions && (
-            <p className="text-error" role="alert">
-              {errors.questions}
-            </p>
-          )}
-          <span>
-            <Button size="sm" variant="outline" disabled={questions.length >= 50} onClick={() => setQuestions((qs) => [...qs, blankQuestion()])}>
-              <Icon name="plus" size={13} /> Add question
-            </Button>
-          </span>
-        </div>
+          </section>
+        )}
       </div>
     </Modal>
   );

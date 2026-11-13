@@ -2,7 +2,7 @@
 
 import { useVaAccess } from "../lib/access";
 import { useRef, useState } from "react";
-import { Badge, Button, FormError, Icon, LessonVideo, LoadState } from "@/components/ui";
+import { Badge, Button, FormError, Icon, Input, LessonVideo, LoadState } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { formatShort } from "@/utils/format/dates";
 import { formatMinutes, lessonThumb, VIDEO_PROVIDER_LABEL } from "@/lib/video";
@@ -384,11 +384,13 @@ function QuizCard({
   const vaSubmit = useSubmitQuiz();
   const clientSubmit = useSubmitClientQuiz();
   const submit = audience === "client" ? clientSubmit : vaSubmit;
-  const [answers, setAnswers] = useState<Array<number | null>>(() => t.questions.map(() => null));
+  const [answers, setAnswers] = useState<Array<number | string | null>>(() => t.questions.map(() => null));
   const [result, setResult] = useState<AttemptOut | null>(null);
-  const unanswered = answers.filter((a) => a === null).length;
+  const unanswered = answers.filter((a) => a === null || (typeof a === "string" && !a.trim())).length;
+  const answer = (i: number, value: number | string) => setAnswers((a) => a.map((x, k) => (k === i ? value : x)));
 
-  const send = () => submit.mutate({ id: t.id, answers }, { onSuccess: (r) => setResult(r) });
+  const send = () =>
+    submit.mutate({ id: t.id, answers: answers.map((a) => (typeof a === "string" ? a.trim() : a)) }, { onSuccess: (r) => setResult(r) });
   const retry = () => {
     setAnswers(t.questions.map(() => null));
     setResult(null);
@@ -429,17 +431,22 @@ function QuizCard({
                 {i + 1}. {q.text}
                 {verdict !== undefined && <Icon name={verdict ? "circleCheck" : "circleX"} size={15} />}
               </legend>
-              {q.options.map((o, j) => (
-                <label key={j} className="va-quiz__option">
-                  <input
-                    type="radio"
-                    name={`q-${q.id}`}
-                    checked={answers[i] === j}
-                    onChange={() => setAnswers((a) => a.map((x, k) => (k === i ? j : x)))}
-                  />
-                  {o}
-                </label>
-              ))}
+              {q.kind === "text" ? (
+                <Input
+                  aria-label={`Your answer to question ${i + 1}`}
+                  placeholder="Type your answer"
+                  maxLength={300}
+                  value={typeof answers[i] === "string" ? (answers[i] as string) : ""}
+                  onChange={(e) => answer(i, e.target.value)}
+                />
+              ) : (
+                q.options.map((o, j) => (
+                  <label key={j} className="va-quiz__option">
+                    <input type="radio" name={`q-${q.id}`} checked={answers[i] === j} onChange={() => answer(i, j)} />
+                    {o}
+                  </label>
+                ))
+              )}
             </fieldset>
           );
         })}
