@@ -449,12 +449,12 @@ function VaAgreement({
   const load = CLIENT_LOADS.find((l) => l.value === loadKey) ?? CLIENT_LOADS[CLIENT_LOADS.length - 1];
   return (
     <div className="vrf">
-      <Section title="Hours a week" desc="How much your VA works for you. The monthly maintenance fee depends on it.">
+      <Section title="Hours a week" desc="How much your VA works for you. The monthly maintenance fee depends on it (your VA’s pay is separate).">
         <div className="vra-hours" role="radiogroup" aria-label="Hours a week">
           {CLIENT_LOADS.map((l) => (
             <button key={l.value} type="button" role="radio" aria-checked={l.value === loadKey} className={l.value === loadKey ? "is-on" : ""} onClick={() => onLoad(l.value)}>
               <span className="vra-hours__label">{l.label}</span>
-              <span className="vra-hours__fee">${VA_MAINTENANCE_FEE_DOLLARS[l.hours]} / month</span>
+              <span className="vra-hours__fee">${VA_MAINTENANCE_FEE_DOLLARS[l.hours]} / month fee</span>
             </button>
           ))}
         </div>
@@ -463,7 +463,10 @@ function VaAgreement({
       <Section title="VA agreement" desc="Please read it before you request a VA.">
         <div className="vra-doc" tabIndex={0} aria-label="VA agreement">
           <h4>Monthly maintenance fee</h4>
-          <p>Each VA you request comes with a monthly maintenance fee paid to GoCWGL, set by the hours they work for you:</p>
+          <p>
+            Each VA you request comes with a monthly maintenance fee paid to GoCWGL, set by the hours they work for you. The fee is
+            not your VA’s pay: their salary is separate (see “Your VA’s pay” below).
+          </p>
           <table className="vra-fees">
             <tbody>
               {CLIENT_LOADS.map((l) => (
@@ -481,8 +484,22 @@ function VaAgreement({
             <li>Ongoing training for your VA in the latest technology, including AI tools.</li>
             <li>Our team’s activity cost in supporting you and your VA.</li>
           </ul>
+          <h4>Your VA’s pay</h4>
+          <p>
+            The maintenance fee does <strong>not</strong> include your VA’s salary. You pay your VA separately, for the hours they
+            work, <strong>directly to your VA’s own payment method</strong>. Your VA sends you their invoices, and you’ll find them
+            in your portal. GoCWGL doesn’t collect, hold or pass on your VA’s pay.
+          </p>
           <h4>Billing</h4>
-          <p>GoCWGL invoices the fee monthly, and you’ll find those invoices in Invoices. It’s separate from your VA’s own invoices for the hours they work.</p>
+          <p>
+            GoCWGL invoices only the maintenance fee, monthly, and you’ll find those invoices in the Invoices menu. Your VA’s invoices for
+            their hours are separate and are paid to your VA.
+          </p>
+          <h4>When to pay</h4>
+          <p>
+            Pay every invoice <strong>within 3 business days of the invoice date</strong>: GoCWGL’s maintenance fee invoices and
+            your VA’s invoices for their hours alike.
+          </p>
           <h4>Changing the hours</h4>
           <p>If you change the hours on your request, the fee changes with them and you’ll be asked to accept this agreement again.</p>
         </div>
@@ -495,7 +512,7 @@ function VaAgreement({
             label={
               <>
                 I’ve read the VA agreement and agree to the <strong>${VA_MAINTENANCE_FEE_DOLLARS[load.hours]} monthly maintenance fee</strong> for{" "}
-                {load.hours} hours a week.
+                {load.hours} hours a week. I understand it doesn’t include my VA’s salary, which I pay directly to my VA’s payment method, and that I pay each invoice within 3 business days of its date.
               </>
             }
           />
