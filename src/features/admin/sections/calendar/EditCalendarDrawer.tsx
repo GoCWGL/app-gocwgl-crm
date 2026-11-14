@@ -26,9 +26,31 @@ type Draft = {
   on: boolean;
   customHours: boolean;
   hours: DayAvailability[];
+  daysAhead: string;
+  from: string;
+  until: string;
 };
 
-/** Edit a booking calendar: name, booking link, bio, duration, location, meeting link, color, confirmation email and hours. */
+/** "How far ahead" choices (days); a calendar saved with another number keeps it as an extra choice. */
+const DAYS_AHEAD = [7, 14, 30, 60, 90, 120, 180];
+
+const dayLabel = (iso: string) =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+
+/** One line on what guests can pick, e.g. "Guests can book from Dec 1, 2026 until Dec 20, 2026." */
+function windowSummary(daysAhead: string, from: string, until: string) {
+  const parts: string[] = [];
+  if (from) parts.push(`from ${dayLabel(from)}`);
+  // An end date sooner than the window is the real limit; otherwise the window is.
+  const windowEnd = new Date();
+  windowEnd.setDate(windowEnd.getDate() + Number(daysAhead));
+  const untilFirst = until && new Date(`${until}T12:00:00`) < windowEnd;
+  parts.push(untilFirst ? `until ${dayLabel(until)}` : `up to ${daysAhead} days ahead`);
+  return `Guests can book ${parts.join(" ")}.`;
+}
+
+/** Edit a booking calendar: name, booking link, bio, duration, location, meeting link, color, confirmation email, hours
+ * and booking window (how far ahead, and an optional date range). */
 export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: CalendarOut; onClose: () => void }) {
   const { notify } = useAdmin();
   const shared = toHours(useSettings().data?.availability);
@@ -47,6 +69,9 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
     on: cal.isActive,
     customHours: !!cal.hours,
     hours: cal.hours ? toHours(cal.hours) : shared,
+    daysAhead: String(cal.daysAhead ?? 60),
+    from: cal.availableFrom ?? "",
+    until: cal.availableUntil ?? "",
   });
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -71,6 +96,7 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
       if (bad) return setError(bad);
       if (!draft.hours.some((h) => h.on)) return setError("Turn on at least one day, or use your weekly hours.");
     }
+    if (draft.from && draft.until && draft.until < draft.from) return setError("The last bookable date must be on or after the first.");
     const body: CalendarUpdate = {
       name,
       slug,
@@ -83,6 +109,9 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
       color: draft.color,
       isActive: draft.on,
       hours: draft.customHours ? (draft.hours as DayHours[]) : null,
+      daysAhead: Number(draft.daysAhead),
+      availableFrom: draft.from || null,
+      availableUntil: draft.until || null,
     };
     // A taken booking link comes back as 409 duplicate_slug with a message for the user.
     updateCal.mutate(
@@ -248,6 +277,43 @@ export function EditCalendarDrawer({ calendar: cal, onClose }: { calendar: Calen
             this calendar.
           </span>
         )}
+      </div>
+
+      <div className="stack stack--10">
+        <span className="kicker">BOOKING WINDOW</span>
+        <Field label="How far ahead" htmlFor="ecal-ahead" hint="The furthest day out guests can pick, counted from today.">
+          <Select
+            id="ecal-ahead"
+            value={draft.daysAhead}
+            options={[...new Set([...DAYS_AHEAD, Number(draft.daysAhead)])]
+              .sort((a, b) => a - b)
+              .map((d) => ({ value: String(d), label: `${d} days` }))}
+            onChange={(e) => set({ daysAhead: e.target.value })}
+          />
+        </Field>
+        <div className="form-grid form-grid--narrow">
+          <Field label="First bookable date" htmlFor="ecal-from" hint="Optional. Leave empty to start today.">
+            <div className="cluster cluster--6 cluster--nowrap">
+              <Input id="ecal-from" type="date" value={draft.from} max={draft.until || undefined} onChange={(e) => set({ from: e.target.value })} />
+              {draft.from && (
+                <Button size="sm" variant="link" onClick={() => set({ from: "" })} aria-label="Clear the first bookable date">
+                  Clear
+                </Button>
+              )}
+            </div>
+          </Field>
+          <Field label="Last bookable date" htmlFor="ecal-until" hint="Optional. Leave empty for no end date.">
+            <div className="cluster cluster--6 cluster--nowrap">
+              <Input id="ecal-until" type="date" value={draft.until} min={draft.from || undefined} onChange={(e) => set({ until: e.target.value })} />
+              {draft.until && (
+                <Button size="sm" variant="link" onClick={() => set({ until: "" })} aria-label="Clear the last bookable date">
+                  Clear
+                </Button>
+              )}
+            </div>
+          </Field>
+        </div>
+        <span className="text-small">{windowSummary(draft.daysAhead, draft.from, draft.until)}</span>
       </div>
 
       {error && (

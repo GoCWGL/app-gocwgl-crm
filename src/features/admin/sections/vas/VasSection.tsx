@@ -10,7 +10,9 @@ import { formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useVas } from "@/utils/hooks/useVas";
+import { CallInviteButton } from "../../components/CallInviteButton";
 import { AddVaModal } from "../../modals/AddVaModal";
+import { CallInviteModal } from "../../modals/CallInviteModal";
 import { LOGIN_STATUS, rateText, VA_STATUS, VA_STATUSES, vaRate, vaTab } from "../../lib/vas";
 import { useAdmin } from "../../state/AdminContext";
 import { VaFullProfile } from "./VaFullProfile";
@@ -31,6 +33,7 @@ function VaList() {
   const vas = list.data?.vas ?? [];
   const [tab, setTab] = useState<VaStatus>("active");
   const [adding, setAdding] = useState(false);
+  const [interviewing, setInterviewing] = useState<VaSummary | null>(null);
 
   const count = (s: VaStatus) => vas.filter((v) => vaTab(v) === s).length;
   const shown = vas.filter((v) => vaTab(v) === tab);
@@ -76,7 +79,12 @@ function VaList() {
               </thead>
               <tbody>
                 {shown.map((va) => (
-                  <VaRow key={va.id} va={va} onFull={() => update({ vaFullId: va.id, vaId: "" })} />
+                  <VaRow
+                    key={va.id}
+                    va={va}
+                    onFull={() => update({ vaFullId: va.id, vaId: "" })}
+                    onInterview={canWrite && tab === "onboarding" ? () => setInterviewing(va) : undefined}
+                  />
                 ))}
               </tbody>
             </table>
@@ -96,6 +104,15 @@ function VaList() {
       </div>
 
       {adding && <AddVaModal onClose={() => setAdding(false)} />}
+      {interviewing && (
+        <CallInviteModal
+          kind="interview"
+          id={interviewing.id}
+          name={interviewing.fullName}
+          email={interviewing.email}
+          onClose={() => setInterviewing(null)}
+        />
+      )}
     </div>
   );
 }
@@ -103,9 +120,11 @@ function VaList() {
 type VaRowProps = {
   va: VaSummary;
   onFull: () => void;
+  /** Onboarding tab: email them a link to book an interview. */
+  onInterview?: () => void;
 };
 
-function VaRow({ va, onFull }: VaRowProps) {
+function VaRow({ va, onFull, onInterview }: VaRowProps) {
   const login = LOGIN_STATUS[va.loginStatus as keyof typeof LOGIN_STATUS] ?? LOGIN_STATUS.none;
   return (
     <tr>
@@ -114,6 +133,7 @@ function VaRow({ va, onFull }: VaRowProps) {
           <strong className="data-table__strong">{va.fullName}</strong>
           <span className="text-small">{va.email}</span>
         </button>
+        {onInterview && <CallInviteButton kind="interview" name={va.fullName} onClick={onInterview} />}
       </td>
       <td>{va.headline || (va.skills.length ? va.skills.slice(0, 3).join(", ") : "—")}</td>
       <td>{va.clientCount}</td>

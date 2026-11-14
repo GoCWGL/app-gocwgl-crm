@@ -53,8 +53,9 @@ export function dayIsOpen(
     viewZone,
     businessZone,
     openHours,
+    bookableFrom,
     bookableUntil,
-  }: { viewZone: string; businessZone: string; openHours?: OpenHours; bookableUntil?: string },
+  }: { viewZone: string; businessZone: string; openHours?: OpenHours; bookableFrom?: string; bookableUntil?: string },
 ): boolean {
   if (day < todayIso(viewZone)) return false;
   const dayStart = zonedToIso(day, "00:00", viewZone);
@@ -62,7 +63,7 @@ export function dayIsOpen(
   const now = new Date().toISOString();
   const businessToday = todayIso(businessZone);
   return businessDays(day, viewZone, businessZone).some((d) => {
-    if (d < businessToday || (bookableUntil && d > bookableUntil)) return false;
+    if (d < businessToday || (bookableFrom && d < bookableFrom) || (bookableUntil && d > bookableUntil)) return false;
     if (!openHours) return true; // not loaded yet: let the day be picked and its times decide
     const rule = openHours.find((h) => h.d === WEEKDAYS[new Date(`${d}T12:00:00Z`).getUTCDay()]);
     if (!rule) return false;

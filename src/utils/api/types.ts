@@ -6948,6 +6948,15 @@ export interface components {
             description?: string;
             /** Hours */
             hours?: components["schemas"]["DayHours"][] | null;
+            /**
+             * Daysahead
+             * @default 60
+             */
+            daysAhead?: number;
+            /** Availablefrom */
+            availableFrom?: string | null;
+            /** Availableuntil */
+            availableUntil?: string | null;
         };
         /** CalendarLinksOut */
         CalendarLinksOut: {
@@ -6989,6 +6998,12 @@ export interface components {
             hours: {
                 [key: string]: unknown;
             }[] | null;
+            /** Daysahead */
+            daysAhead: number;
+            /** Availablefrom */
+            availableFrom: string | null;
+            /** Availableuntil */
+            availableUntil: string | null;
         };
         /** CalendarUpdate */
         CalendarUpdate: {
@@ -7014,6 +7029,12 @@ export interface components {
             description?: string | null;
             /** Hours */
             hours?: components["schemas"]["DayHours"][] | null;
+            /** Daysahead */
+            daysAhead?: number | null;
+            /** Availablefrom */
+            availableFrom?: string | null;
+            /** Availableuntil */
+            availableUntil?: string | null;
         };
         /** CallInviteIn */
         CallInviteIn: {
@@ -10660,6 +10681,11 @@ export interface components {
             /** Openhours */
             openHours: components["schemas"]["OpenHoursOut"][];
             /**
+             * Bookablefrom
+             * Format: date
+             */
+            bookableFrom: string;
+            /**
              * Bookableuntil
              * Format: date
              */
@@ -10696,6 +10722,11 @@ export interface components {
             openWeekdays: string[];
             /** Openhours */
             openHours: components["schemas"]["OpenHoursOut"][];
+            /**
+             * Bookablefrom
+             * Format: date
+             */
+            bookableFrom: string;
             /**
              * Bookableuntil
              * Format: date

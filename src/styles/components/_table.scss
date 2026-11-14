@@ -95,6 +95,11 @@
   }
 }
 
+// A button under the name in the first cell (e.g. Onboarding's Interview / Discovery call).
+.data-table .data-table__row-action {
+  margin-top: 8px;
+}
+
 // Clickable cell that holds a name and a sub line.
 .cell-button {
   @include button-reset;

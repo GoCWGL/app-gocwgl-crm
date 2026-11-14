@@ -22,7 +22,7 @@ type BookingWidgetProps = {
   slug: string;
   /** The open weekdays, booking window and business zone come from the public calendar (not the admin's copy). */
   info: Pick<PublicCalendarOut, "name" | "durationMin" | "location" | "description"> &
-    Partial<Pick<PublicCalendarOut, "openHours" | "bookableUntil" | "timezone">>;
+    Partial<Pick<PublicCalendarOut, "openHours" | "bookableFrom" | "bookableUntil" | "timezone">>;
   /** Off: no days can be picked. */
   active: boolean;
   /** The business zone until the calendar's own arrives (the API sends it with the calendar and the slots). */
@@ -66,7 +66,14 @@ export function BookingWidget({
   const [firstDay, secondDay = ""] = date ? businessDays(date, viewZone, businessZone) : [""];
   const firstQuery = usePublicSlots(active ? slug : "", firstDay);
   const secondQuery = usePublicSlots(active ? slug : "", secondDay);
-  const limits = { viewZone, businessZone, openHours: info.openHours, bookableUntil: info.bookableUntil };
+  const limits = { viewZone, businessZone, openHours: info.openHours, bookableFrom: info.bookableFrom, bookableUntil: info.bookableUntil };
+  // A calendar that opens later starts on the month bookings open (once, when that date arrives).
+  const [openedOn, setOpenedOn] = useState("");
+  const opensMonth = info.bookableFrom && info.bookableFrom > today ? info.bookableFrom.slice(0, 7) : "";
+  if (opensMonth && openedOn !== opensMonth) {
+    setOpenedOn(opensMonth);
+    if (month < opensMonth) setMonth(opensMonth);
+  }
 
   const [y, m] = month.split("-").map(Number);
   const daysInMonth = new Date(y, m, 0).getDate();

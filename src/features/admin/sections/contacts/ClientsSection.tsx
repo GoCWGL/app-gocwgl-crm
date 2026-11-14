@@ -24,6 +24,8 @@ import {
   subscriptionOf,
   subscriptionText,
 } from "../../lib/contacts";
+import { CallInviteButton } from "../../components/CallInviteButton";
+import { CallInviteModal } from "../../modals/CallInviteModal";
 import { useAdmin } from "../../state/AdminContext";
 import { ClientFullProfile } from "./ClientFullProfile";
 
@@ -58,6 +60,7 @@ function ClientList() {
   const [stage, setStage] = useState<StageFilter>("all");
   const [query, setQuery] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [inviting, setInviting] = useState<ContactOut | null>(null);
   const [tag, setTag] = useState("");
   const [source, setSource] = useState<LeadSource | "">("");
   const [date, setDate] = useState<DateFilter>("any");
@@ -274,6 +277,8 @@ function ClientList() {
               const stageInfo = stageOf(stages, c.stage);
               const name = contactName(c);
               const edit = () => update({ clientFullId: c.id });
+              // Onboarding: email them a link to book a discovery call.
+              const invite = canWrite && contactView === "onboarding" && !c.archivedAt ? () => setInviting(c) : undefined;
               return (
                 <tr key={c.id}>
                   <td>
@@ -281,6 +286,7 @@ function ClientList() {
                       <strong className="data-table__strong">{name}</strong>
                       <span className="text-small">{c.email}</span>
                     </button>
+                    {invite && <CallInviteButton kind="discovery" name={name} onClick={invite} />}
                   </td>
                   <td>{c.phone}</td>
                   <td>{SOURCE_LABELS[c.source as LeadSource] ?? c.source}</td>
@@ -326,6 +332,15 @@ function ClientList() {
         )}
       </div>
       </LoadState>
+      {inviting && (
+        <CallInviteModal
+          kind="discovery"
+          id={inviting.id}
+          name={contactName(inviting)}
+          email={inviting.email}
+          onClose={() => setInviting(null)}
+        />
+      )}
     </div>
   );
 }

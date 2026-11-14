@@ -2,6 +2,9 @@
 
 // Sidebar + main column used by the admin CRM and the client portal.
 .app-shell {
+  // The page's own layers (backdrop, top bar, drawer, dialogs opened from a page) stack together, so a dialog
+  // covers the sticky top bar.
+  isolation: isolate;
   display: flex;
   flex-wrap: wrap;
   width: 100%;
@@ -12,7 +15,6 @@
 
 .app-main {
   position: relative;
-  isolation: isolate;
   flex: 999 1 560px;
   min-width: 0;
   @include stack(24px);
