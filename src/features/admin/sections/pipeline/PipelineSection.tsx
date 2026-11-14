@@ -230,7 +230,7 @@ export function PipelineSection() {
       <LoadState query={loading} loadingText="Loading board…">
         <div className="board-scroll">
           <div
-            className="board"
+            className="pipeline-board"
             style={{ "--columns": Math.max(1, stages.length), "--board-min": `${Math.max(1, stages.length) * 276}px` } as CSSProperties}
           >
             {pipeline &&

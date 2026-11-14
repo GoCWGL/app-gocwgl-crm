@@ -7,7 +7,7 @@
 
 .va-shortcuts {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   gap: 10px;
 }
 
@@ -185,7 +185,7 @@
 
 .vp-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 12px;
 }
 
@@ -294,7 +294,7 @@
 
 .vp-clients {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   gap: 10px;
 }
 
@@ -462,7 +462,7 @@
 
 .job-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
   gap: 14px;
   padding: 18px;
 }
@@ -599,7 +599,7 @@
 
 .sop-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
   gap: 12px;
 }
 
@@ -732,7 +732,7 @@
 
 .training-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 14px;
   padding: 18px;
 }
@@ -1091,6 +1091,21 @@
 
     .search-box input {
       width: 220px;
+    }
+
+    // Small screens: full width, the search takes what the buttons leave.
+    @include down(sm) {
+      flex: 1 1 100%;
+      flex-wrap: wrap;
+
+      .search-box {
+        flex: 1 1 160px;
+        min-width: 0;
+      }
+
+      .search-box input {
+        width: 100%;
+      }
     }
   }
 }
@@ -2408,7 +2423,7 @@
 // Client portal › Your VA.
 .your-vas {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 520px), 1fr));
   gap: 14px;
 }
 
@@ -2910,7 +2925,7 @@
 // Grid view
 .status-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr));
   gap: 12px;
   padding: 16px 18px 18px;
 }
@@ -4392,7 +4407,7 @@ $tl-colors: (
 
 .va-client-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 14px;
   padding: 16px 18px 18px;
 }
@@ -4561,7 +4576,7 @@ $tl-colors: (
 // Open jobs
 .va-jobs {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
   gap: 12px;
   padding: 16px 18px 18px;
 }
@@ -4787,7 +4802,7 @@ $tl-colors: (
 // SOP library
 .va-sops {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
   gap: 10px;
   padding: 16px 18px 18px;
 }
@@ -5316,7 +5331,7 @@ $tl-colors: (
 // Payment details
 .pay-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
   gap: 14px;
 }
 

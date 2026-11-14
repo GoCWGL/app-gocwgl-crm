@@ -3,6 +3,15 @@
 body {
   min-height: 100vh;
   background: $bg;
+  // Long emails, links and IDs wrap instead of pushing the page wider than a phone screen.
+  overflow-wrap: break-word;
+}
+
+// Form fields never grow wider than the column they sit in.
+input,
+select,
+textarea {
+  max-width: 100%;
 }
 
 a {

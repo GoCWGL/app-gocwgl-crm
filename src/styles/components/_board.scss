@@ -52,6 +52,21 @@
     .search-box input {
       width: 180px;
     }
+
+    // Small screens: its own full-width row under the tabs; the search takes what the buttons leave.
+    @include down(md) {
+      flex: 1 1 100%;
+      flex-wrap: wrap;
+
+      .search-box {
+        flex: 1 1 180px;
+        min-width: 0;
+      }
+
+      .search-box input {
+        width: 100%;
+      }
+    }
   }
 
   &__sub {
@@ -66,7 +81,7 @@
 
   &__panel {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
     gap: 14px;
     padding: 16px 18px;
     border-bottom: 1px solid $line-faint;

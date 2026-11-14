@@ -50,7 +50,7 @@
 // ------------------------------------------------------------------ Live work
 .cp-live {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 16px;
 }
 
@@ -231,7 +231,7 @@
 // ------------------------------------------------------------------ Team
 .cp-team {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
   gap: 18px;
 
   @include down(md) {
@@ -1575,7 +1575,7 @@ tr.is-clickable {
 .tc-grid,
 .rq-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
   gap: 16px;
 
   @include down(sm) {
@@ -2403,7 +2403,7 @@ tr.is-clickable {
 
 .ca-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 12px;
   margin: 0;
   padding: 0;
@@ -2572,7 +2572,7 @@ tr.is-clickable {
 
 .rd-facts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
   gap: 10px;
 }
 
@@ -2701,7 +2701,7 @@ tr.is-clickable {
 
 .rd-split {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 10px;
 }
 
@@ -2800,7 +2800,7 @@ tr.is-clickable {
 // ------------------------------------------------------------------ Tasks (client) — modern cards
 .tk-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
   gap: 16px;
 
   @include down(sm) {

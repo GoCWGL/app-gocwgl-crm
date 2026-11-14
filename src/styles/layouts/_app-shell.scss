@@ -22,6 +22,155 @@
   @include down(md) {
     padding: 20px 16px 40px;
   }
+
+  @include down(sm) {
+    gap: 18px;
+    padding: 16px 12px 32px;
+  }
+}
+
+// ------------------------------------------------- Phone / tablet navigation
+// Desktop: the drawer wrapper is invisible and the sidebar sits in the row as before.
+.app-topbar,
+.app-drawer__close,
+.app-drawer__scrim {
+  display: none;
+}
+
+.app-drawer {
+  display: contents;
+}
+
+@include down(md) {
+  // Top bar, then the page; the page fills the rest of the screen.
+  .app-shell {
+    flex-direction: column;
+    flex-wrap: nowrap;
+  }
+
+  .app-main {
+    flex: 1 0 auto;
+  }
+
+  // Slim bar with the menu button; stays at the top while the page scrolls.
+  .app-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    @include row(10px);
+    flex: none;
+    height: 56px;
+    padding: 0 12px;
+    border-bottom: 1px solid $line;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+
+    &__menu {
+      @include center;
+      flex: none;
+      width: 40px;
+      height: 40px;
+      border: 1px solid $line;
+      border-radius: $radius-md;
+      background: $white;
+      color: $ink;
+      cursor: pointer;
+
+      &:focus-visible {
+        @include focus-ring;
+      }
+    }
+
+    &__logo {
+      width: auto;
+      height: 26px;
+    }
+  }
+
+  // The sidebar slides in from the left over the page.
+  .app-drawer {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 71;
+    display: block;
+    width: min(320px, 88vw);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    background: $white;
+    box-shadow: 0 0 40px rgba(11, 20, 36, 0.22);
+    transform: translateX(-104%);
+    visibility: hidden;
+    transition: transform 0.26s cubic-bezier(0.22, 0.8, 0.24, 1), visibility 0s linear 0.26s;
+
+    > .sidebar,
+    > .dual-nav {
+      min-height: 100%;
+    }
+
+    .sidebar {
+      box-shadow: none;
+      border: 0;
+    }
+
+    .sidebar__brand {
+      padding-right: 44px;
+    }
+
+    // The shrink-to-icons toggle is a desktop thing.
+    .sidebar__toggle {
+      display: none;
+    }
+
+    &__close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 1;
+      @include center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid $line;
+      border-radius: $radius-sm;
+      background: $white;
+      color: $muted;
+      cursor: pointer;
+
+      &:focus-visible {
+        @include focus-ring;
+      }
+    }
+
+    &__scrim {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      display: block;
+      background: rgba(11, 20, 36, 0.42);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+  }
+
+  .app-shell--menu-open {
+    .app-drawer {
+      transform: none;
+      visibility: visible;
+      transition: transform 0.26s cubic-bezier(0.22, 0.8, 0.24, 1);
+    }
+
+    .app-drawer__scrim {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .app-drawer,
+    .app-shell--menu-open .app-drawer {
+      transition: none;
+    }
+  }
 }
 
 // Grid paper and three soft color blobs behind the page content.
@@ -124,7 +273,7 @@
 // Responsive grid of equal cards.
 .tile-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
   gap: 16px;
 
   &--wide {

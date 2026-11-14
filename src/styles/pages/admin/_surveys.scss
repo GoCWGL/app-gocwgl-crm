@@ -74,7 +74,7 @@ $violet-line: rgba(124, 77, 255, 0.3);
 // One page vs one question per page.
 .layout-options {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
   gap: 10px;
 }
 

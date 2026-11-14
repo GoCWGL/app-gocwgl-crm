@@ -6,6 +6,7 @@ import type { SVGProps } from "react";
  */
 export const ICONS = {
   plus: "M12 5v14M5 12h14",
+  menu: "M4 6h16M4 12h16M4 18h16",
   close: "M18 6 6 18M6 6l12 12",
   check: "M20 6 9 17l-5-5",
   chevronRight: "m9 6 6 6-6 6",

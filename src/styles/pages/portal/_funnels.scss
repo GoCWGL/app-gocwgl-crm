@@ -49,7 +49,7 @@
 
   &__kpis {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 130px), 1fr));
     gap: 10px;
   }
 
@@ -185,7 +185,7 @@
 // Builds the team is working on (Funnels and CRM pages), each linking to Build progress.
 .build-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 14px;
 }
 
