@@ -29,6 +29,9 @@ export const useUpdateMe = () =>
     onSuccess: (user) => setUser(user),
   });
 
+export const useSetMyPhoto = () => useApiMutation(api.setMyPhoto, { invalidate: [qk.me], onSuccess: (user) => setUser(user) });
+export const useRemoveMyPhoto = () => useApiMutation(api.removeMyPhoto, { invalidate: [qk.me], onSuccess: (user) => setUser(user) });
+
 export const useMyNotifications = () => useQuery({ queryKey: qk.myNotifications, queryFn: api.getMyNotifications });
 export const useSetMyNotifications = () => useApiMutation(api.setMyNotifications, { invalidate: [qk.myNotifications] });
 

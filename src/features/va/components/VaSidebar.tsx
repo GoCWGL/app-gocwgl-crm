@@ -4,7 +4,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
-import { Avatar, Icon } from "@/components/ui";
+import { Icon } from "@/components/ui";
+import { MyAvatar } from "@/features/account/ProfilePhoto";
 import { VA_NAV } from "@/data/va";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useInactiveAsks, useOpenJobs, useVaTasks } from "@/utils/hooks/useVaPortal";
@@ -50,7 +51,7 @@ export function VaSidebar() {
             </SidebarGroup>
           )}
           <ProfileButton
-            avatar={<Avatar name={name} brand ring />}
+            avatar={<MyAvatar name={name} brand ring />}
             name={name}
             subtitle="Profile & settings"
             active={tab === "account"}

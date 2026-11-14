@@ -18,6 +18,12 @@ export const useCreateTraining = () => useApiMutation(api.createTraining, { inva
 export const useUpdateTraining = () =>
   useApiMutation((v: { id: string; body: TrainingUpdate }) => api.updateTraining(v.id, v.body), { invalidate: ALL });
 export const useDeleteTraining = () => useApiMutation(api.deleteTraining, { invalidate: ALL });
+export const useSetTrainingThumbnail = () =>
+  useApiMutation((v: { id: string; file: File }) => api.setTrainingThumbnail(v.id, v.file), { invalidate: ALL });
+export const useRemoveTrainingThumbnail = () => useApiMutation(api.removeTrainingThumbnail, { invalidate: ALL });
+export const useDefaultThumbnail = () => useQuery({ queryKey: [...qk.trainings, "default-thumbnail"], queryFn: api.getDefaultThumbnail });
+export const useSetDefaultThumbnail = () => useApiMutation(api.setDefaultThumbnail, { invalidate: ALL });
+export const useRemoveDefaultThumbnail = () => useApiMutation(api.removeDefaultThumbnail, { invalidate: ALL });
 
 // VA portal
 export const useMyTrainings = (enabled = true) => useQuery({ queryKey: qk.myTrainings, queryFn: api.listMyTrainings, enabled });

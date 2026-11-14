@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
-import { Avatar, Field, Input, Select, Toggle } from "@/components/ui";
+import { Field, Input, Select, Toggle } from "@/components/ui";
+import { ProfilePhotoEditor } from "@/features/account/ProfilePhoto";
 import { CURRENCIES, NOTIFICATION_OPTIONS, TIME_ZONES, roleLabel } from "@/data/admin";
 import type { User } from "@/utils/api/models";
 
@@ -79,16 +80,13 @@ export function ProfileSettings({
 }) {
   return (
     <div className="stack stack--16">
-      <div className="cluster settings-profile">
-        <Avatar name={draft.fullName || user.email} brand ring size="xl" className="settings-profile__avatar" />
-        <div className="stack stack--2">
-          <span className="settings-profile__name">{draft.fullName || user.email}</span>
-          <span className="text-muted">
-            {roleLabel(user.role)}
-            {company && ` · ${company}`}
-          </span>
-        </div>
-      </div>
+      <ProfilePhotoEditor name={draft.fullName || user.email} avatar={{ className: "settings-profile__avatar" }}>
+        <span className="settings-profile__name">{draft.fullName || user.email}</span>
+        <span className="text-muted">
+          {roleLabel(user.role)}
+          {company && ` · ${company}`}
+        </span>
+      </ProfilePhotoEditor>
       <div className="form-grid">
         <TextFields
           values={draft}

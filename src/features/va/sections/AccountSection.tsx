@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Avatar, Button, Field, FormError, Icon, Input, LoadState, Select } from "@/components/ui";
+import { Button, Field, FormError, Icon, Input, LoadState, Select } from "@/components/ui";
+import { ProfilePhotoEditor } from "@/features/account/ProfilePhoto";
 import { TIME_ZONES } from "@/data/admin";
 import { SecuritySettings } from "@/features/admin/sections/settings/SecuritySettings";
 import { useSignOutConfirm } from "@/features/auth/components/SignOutConfirm";
@@ -82,13 +83,10 @@ function ProfileCard({ user, onSaved }: { user: User; onSaved: () => void }) {
   return (
     <section className="card card--roomy va-account__card">
       <CardHead icon="user" title="Profile" note="Your name and phone are also on your VA profile and resume." />
-      <div className="cluster settings-profile">
-        <Avatar name={draft.fullName || user.email} brand ring size="xl" className="settings-profile__avatar" />
-        <div className="stack stack--2">
-          <span className="settings-profile__name">{draft.fullName || user.email}</span>
-          <span className="text-muted">Virtual assistant · GoCWGL</span>
-        </div>
-      </div>
+      <ProfilePhotoEditor name={draft.fullName || user.email} avatar={{ className: "settings-profile__avatar" }}>
+        <span className="settings-profile__name">{draft.fullName || user.email}</span>
+        <span className="text-muted">Virtual assistant · GoCWGL</span>
+      </ProfilePhotoEditor>
       <div className="form-grid">
         <Field label="Full name" htmlFor="acc-name" required error={nameError}>
           <Input id="acc-name" autoComplete="name" maxLength={120} aria-invalid={nameError ? true : undefined} value={draft.fullName} onChange={(e) => set({ fullName: e.target.value })} />

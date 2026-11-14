@@ -2,12 +2,13 @@
 
 import { useVaAccess } from "../lib/access";
 import { useRef, useState } from "react";
-import { Badge, Button, FormError, Icon, Input, LessonVideo, LoadState } from "@/components/ui";
+import { Badge, Button, FormError, Icon, Input, LessonVideo, LoadState, TrainingCover } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { formatShort } from "@/utils/format/dates";
 import { formatMinutes, lessonThumb, VIDEO_PROVIDER_LABEL } from "@/lib/video";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { AttemptOut, VaTrainingOut } from "@/utils/api/models";
+import { trainingThumbPath } from "@/utils/api/trainings";
 import { useEnrollClientTraining, useSaveClientTrainingProgress, useSubmitClientQuiz } from "@/utils/hooks/useClientWork";
 import { useEnrollTraining, useMyTrainings, useSaveTrainingProgress, useSubmitQuiz } from "@/utils/hooks/useTrainings";
 
@@ -48,16 +49,12 @@ export function TrainingList({ query, audience, readOnly }: { query: UseQueryRes
         <div className="training-grid training-grid--flush">
           {trainings.map((t) => {
             const thumb = t.lessons[0] ? lessonThumb(t.lessons[0]) : null;
+            const uploaded = trainingThumbPath(audience === "client" ? "portal" : "va", t.id, t.thumbnail);
             const length = formatMinutes(t.lessons.reduce((sum, l) => sum + l.minutes, 0));
             return (
               <button key={t.id} type="button" className="training-card" onClick={() => setOpenId(t.id)}>
-                <span className={cn("training-card__thumb", !thumb && t.lessons.length > 0 && "is-poster")}>
-                  {thumb ? (
-                    // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail
-                    <img src={thumb} alt="" loading="lazy" />
-                  ) : (
-                    <Icon name={t.lessons.length ? "play" : "graduation"} size={28} />
-                  )}
+                <span className={cn("training-card__thumb", !uploaded && !thumb && t.lessons.length > 0 && "is-poster")}>
+                  <TrainingCover path={uploaded} poster={thumb} icon={t.lessons.length ? "play" : "graduation"} />
                 </span>
                 <span className="training-card__body">
                   {t.category && <span className="training-card__category">{t.category}</span>}

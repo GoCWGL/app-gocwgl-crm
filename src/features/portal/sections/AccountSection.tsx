@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { Avatar, Button, Field, FormError, Input, LoadState, Select, SoonNote, Toggle } from "@/components/ui";
+import { ProfilePhotoEditor } from "@/features/account/ProfilePhoto";
 import { TIME_ZONES } from "@/data/admin";
 import { ALERT_OPTIONS } from "@/data/portal";
 import { avatarTone } from "@/lib/tones";
@@ -82,45 +83,51 @@ function ProfileCard({ readOnly }: { readOnly: boolean }) {
       <span className="kicker">PROFILE</span>
       <LoadState query={me}>
         {showProfile ? (
-          <div className="form-grid">
-            <Field label="Full name" htmlFor="acct-name" error={api.fullName}>
-              <Input
-                id="acct-name"
-                autoComplete="name"
-                value={profile.fullName}
-                readOnly={readOnly}
-                onChange={(e) => setDraft({ ...profile, fullName: e.target.value })}
-              />
-            </Field>
-            <Field label="Email" htmlFor="acct-email" hint="Changing your login email is coming soon.">
-              <Input id="acct-email" type="email" value={user.email} readOnly aria-readonly="true" />
-            </Field>
-            <Field label="Phone" htmlFor="acct-phone" error={api.phone}>
-              <Input
-                id="acct-phone"
-                type="tel"
-                autoComplete="tel"
-                value={profile.phone}
-                readOnly={readOnly}
-                onChange={(e) => setDraft({ ...profile, phone: e.target.value })}
-              />
-            </Field>
-            <Field label="Job title" htmlFor="acct-title">
-              <Input id="acct-title" value={profile.title} readOnly={readOnly} onChange={(e) => setDraft({ ...profile, title: e.target.value })} />
-            </Field>
-            <Field label="Time zone" htmlFor="acct-tz">
-              <Select
-                id="acct-tz"
-                value={profile.timezone}
-                options={zones}
-                disabled={readOnly}
-                onChange={(e) => setDraft({ ...profile, timezone: e.target.value })}
-              />
-            </Field>
-            <Field label="Business name" htmlFor="acct-biz" hint="Ask your GoCWGL team to change this.">
-              <Input id="acct-biz" value={business} readOnly aria-readonly="true" />
-            </Field>
-          </div>
+          <>
+            <ProfilePhotoEditor name={profile.fullName || user.email} avatar={{ brand: false, tone: "purple" }} readOnly={readOnly}>
+              <span className="u-strong">{profile.fullName || user.email}</span>
+              {business && <span className="text-small">{business}</span>}
+            </ProfilePhotoEditor>
+            <div className="form-grid">
+              <Field label="Full name" htmlFor="acct-name" error={api.fullName}>
+                <Input
+                  id="acct-name"
+                  autoComplete="name"
+                  value={profile.fullName}
+                  readOnly={readOnly}
+                  onChange={(e) => setDraft({ ...profile, fullName: e.target.value })}
+                />
+              </Field>
+              <Field label="Email" htmlFor="acct-email" hint="Changing your login email is coming soon.">
+                <Input id="acct-email" type="email" value={user.email} readOnly aria-readonly="true" />
+              </Field>
+              <Field label="Phone" htmlFor="acct-phone" error={api.phone}>
+                <Input
+                  id="acct-phone"
+                  type="tel"
+                  autoComplete="tel"
+                  value={profile.phone}
+                  readOnly={readOnly}
+                  onChange={(e) => setDraft({ ...profile, phone: e.target.value })}
+                />
+              </Field>
+              <Field label="Job title" htmlFor="acct-title">
+                <Input id="acct-title" value={profile.title} readOnly={readOnly} onChange={(e) => setDraft({ ...profile, title: e.target.value })} />
+              </Field>
+              <Field label="Time zone" htmlFor="acct-tz">
+                <Select
+                  id="acct-tz"
+                  value={profile.timezone}
+                  options={zones}
+                  disabled={readOnly}
+                  onChange={(e) => setDraft({ ...profile, timezone: e.target.value })}
+                />
+              </Field>
+              <Field label="Business name" htmlFor="acct-biz" hint="Ask your GoCWGL team to change this.">
+                <Input id="acct-biz" value={business} readOnly aria-readonly="true" />
+              </Field>
+            </div>
+          </>
         ) : (
           <p className="text-muted">Viewing {business || "this client"}’s portal. Their profile is private.</p>
         )}

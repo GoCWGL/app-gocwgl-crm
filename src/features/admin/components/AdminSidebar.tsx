@@ -5,7 +5,8 @@ import Image from "next/image";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import logoMark from "@/assets/images/logo-mark.png";
 import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
-import { Avatar, Icon, type IconName } from "@/components/ui";
+import { Icon, type IconName } from "@/components/ui";
+import { MyAvatar } from "@/features/account/ProfilePhoto";
 import { cn } from "@/lib/utils";
 import { CRM_TABS, DASHBOARD_TABS, HIDDEN_TABS, TAB_MENU, type AdminTab } from "@/data/admin";
 import { canUseMenu } from "@/utils/auth/session";
@@ -219,7 +220,7 @@ export function AdminSidebar() {
               </SidebarGroup>
             )}
             <ProfileButton
-              avatar={<Avatar name={name} brand ring />}
+              avatar={<MyAvatar name={name} brand ring />}
               name={name}
               subtitle="Profile & settings"
               active={tab === "settings"}

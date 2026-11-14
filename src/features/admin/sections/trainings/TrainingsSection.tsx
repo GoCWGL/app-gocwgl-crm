@@ -18,8 +18,12 @@ import {
   Tabs,
   Textarea,
   LessonPlayer,
+  TrainingCover,
   type IconName,
 } from "@/components/ui";
+import { shrinkImage } from "@/lib/images";
+import { defaultThumbPath, trainingThumbPath } from "@/utils/api/trainings";
+import { useBlobUrl } from "@/utils/hooks/useBlobUrl";
 import { customCategories, TRAINING_CATEGORIES } from "@/data/trainingCategories";
 import { toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
@@ -30,7 +34,12 @@ import { canWriteCrm } from "@/utils/auth/session";
 import { formatShort } from "@/utils/format/dates";
 import {
   useCreateTraining,
+  useDefaultThumbnail,
   useDeleteTraining,
+  useRemoveDefaultThumbnail,
+  useRemoveTrainingThumbnail,
+  useSetDefaultThumbnail,
+  useSetTrainingThumbnail,
   useTrainingLearners,
   useTrainingStats,
   useTrainings,
@@ -53,8 +62,159 @@ const STATUS: Record<TrainingStatus, { label: string; tone: "green" | "slate" }>
 type StatusFilter = "all" | TrainingStatus;
 type View = "grid" | "list";
 
-/** First lesson's poster (YouTube only), for thumbnails. */
+/** First lesson's poster (YouTube only), for courses without an uploaded thumbnail. */
 const cover = (t: TrainingOut) => (t.lessons[0] ? lessonThumb(t.lessons[0]) : null);
+
+/** Thumbnails: PNG, JPG or WebP. Shrunk in the browser first, so uploads stay well under the hosting's request limit. */
+const THUMB_TYPES = "image/png,image/jpeg,image/webp";
+const THUMB_MAX_MB = 4;
+async function prepareThumbnail(file: File): Promise<{ file: File } | { problem: string }> {
+  if (!THUMB_TYPES.split(",").includes(file.type)) return { problem: "Choose a PNG, JPG or WebP image." };
+  const ready = await shrinkImage(file, { maxSide: 1280, skipUnder: 400 * 1024 });
+  if (ready.size > THUMB_MAX_MB * 1024 * 1024) return { problem: `That image is ${(ready.size / 1024 / 1024).toFixed(1)} MB. Use one under ${THUMB_MAX_MB} MB.` };
+  return { file: ready };
+}
+
+/** A 16:9 preview with "Upload image" (shrunk in the browser first) and, when there's one, "Remove". */
+function ThumbnailPicker({
+  id,
+  src,
+  caption,
+  busy,
+  error,
+  onPick,
+  onRemove,
+  removeLabel = "Remove",
+  replacing = !!src,
+}: {
+  id: string;
+  src: string | null;
+  /** Whether "Upload" replaces an image of this course (default: whenever one is shown). */
+  replacing?: boolean;
+  caption: string;
+  busy?: boolean;
+  error?: unknown;
+  onPick: (file: File) => void;
+  onRemove?: () => void;
+  removeLabel?: string;
+}) {
+  const [problem, setProblem] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  return (
+    <div className="thumb-picker">
+      <span className="thumb-picker__preview">
+        {src ? (
+          // eslint-disable-next-line @next/next/no-img-element -- a local preview or a signed-in blob: URL
+          <img src={src} alt="" />
+        ) : (
+          <Icon name="graduation" size={24} />
+        )}
+      </span>
+      <span className="stack stack--4">
+        <span className="text-small">{caption}</span>
+        <span className="cluster cluster--8">
+          <label className="resume-cert__upload" htmlFor={id}>
+            <input
+              id={id}
+              type="file"
+              accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+              disabled={busy || preparing}
+              onChange={async (e) => {
+                const picked = e.target.files?.[0];
+                e.target.value = "";
+                if (!picked) return;
+                setPreparing(true);
+                const ready = await prepareThumbnail(picked);
+                setPreparing(false);
+                setProblem("problem" in ready ? ready.problem : null);
+                if ("file" in ready) onPick(ready.file);
+              }}
+            />
+            <Icon name="upload" size={14} /> {preparing ? "Preparing image…" : busy ? "Uploading…" : replacing ? "Replace image" : "Upload image"}
+          </label>
+          {onRemove && (
+            <Button size="sm" variant="link" disabled={busy} onClick={onRemove}>
+              {removeLabel}
+            </Button>
+          )}
+        </span>
+        <span className="text-small">PNG, JPG or WebP. Wide images (16:9) look best, e.g. 1280 × 720.</span>
+        {problem && (
+          <span className="field__error" role="alert">
+            {problem}
+          </span>
+        )}
+        <FormError error={error} />
+      </span>
+    </div>
+  );
+}
+
+/** Toolbar › Default thumbnail: the picture every course without its own shows. */
+function DefaultThumbnailDialog({ onClose }: { onClose: () => void }) {
+  const { notify } = useAdmin();
+  const current = useDefaultThumbnail();
+  const set = useSetDefaultThumbnail();
+  const remove = useRemoveDefaultThumbnail();
+  const version = current.data?.thumbnail ?? null;
+  const src = useBlobUrl(defaultThumbPath(version));
+  return (
+    <Modal
+      open
+      width={560}
+      onClose={onClose}
+      titleId="default-thumbnail"
+      kicker="TRAINING"
+      title="Default thumbnail"
+      subtitle="Shown on every course that doesn't have its own thumbnail, for VAs, clients and here."
+      media={
+        <IconTile brand size="lg">
+          <Icon name="graduation" size={18} />
+        </IconTile>
+      }
+      footer={
+        <>
+          <span className="u-spacer" />
+          <Button variant="primary" onClick={onClose}>
+            Done
+          </Button>
+        </>
+      }
+    >
+      <LoadState query={current} loadingText="Loading…">
+        <ThumbnailPicker
+          id="default-thumb"
+          src={src}
+          caption={version ? "This is the default thumbnail." : "No default yet: courses without their own show their first YouTube lesson's image."}
+          busy={set.isPending || remove.isPending}
+          error={set.error ?? remove.error}
+          onPick={(file) => {
+            remove.reset();
+            set.mutate(file, { onSuccess: () => notify("The default thumbnail is saved.") });
+          }}
+          onRemove={version ? () => remove.mutate(undefined, { onSuccess: () => notify("The default thumbnail was removed.") }) : undefined}
+        />
+      </LoadState>
+    </Modal>
+  );
+}
+
+/** The small picture in the list view. */
+function CourseRowCover({ t }: { t: TrainingOut }) {
+  const path = trainingThumbPath("admin", t.id, t.thumbnail);
+  if (!path && !cover(t)) {
+    return (
+      <span className="course-table__ph">
+        <Icon name="graduation" size={16} />
+      </span>
+    );
+  }
+  return (
+    <span className="course-table__img">
+      <TrainingCover path={path} poster={cover(t)} iconSize={16} />
+    </span>
+  );
+}
 
 /** Engagement › Training: courses of YouTube, Loom or Vimeo lessons for VAs and clients; VAs pass a quiz at your passing rate. */
 export function TrainingsSection() {
@@ -68,6 +228,7 @@ export function TrainingsSection() {
   const [view, setView] = useState<View>("grid");
   const [openId, setOpenId] = useState("");
   const [editing, setEditing] = useState<TrainingOut | "new" | null>(null);
+  const [defaultThumbOpen, setDefaultThumbOpen] = useState(false);
   const q = search.trim().toLowerCase();
   const meta = AUDIENCE[tab];
 
@@ -107,6 +268,9 @@ export function TrainingsSection() {
           />
           {canWrite && (
             <div className="board__actions">
+              <Button variant="outline" onClick={() => setDefaultThumbOpen(true)}>
+                <Icon name="upload" size={14} /> Default thumbnail
+              </Button>
               <Button variant="primary" onClick={() => setEditing("new")}>
                 <Icon name="plus" size={14} /> New training
               </Button>
@@ -197,12 +361,7 @@ export function TrainingsSection() {
               {shown.map((t) => (
                 <button key={t.id} type="button" className="training-card" onClick={() => setOpenId(t.id)}>
                   <span className="training-card__thumb">
-                    {cover(t) ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail, no optimisation needed
-                      <img src={cover(t)!} alt="" loading="lazy" />
-                    ) : (
-                      <Icon name="graduation" size={28} />
-                    )}
+                    <TrainingCover path={trainingThumbPath("admin", t.id, t.thumbnail)} poster={cover(t)} />
                     {t.lessons.length > 0 && (
                       <span className="training-card__lessons">
                         <Icon name="video" size={12} /> {t.lessons.length} lesson{t.lessons.length === 1 ? "" : "s"}
@@ -263,14 +422,7 @@ export function TrainingsSection() {
                     <tr key={t.id}>
                       <td>
                         <button type="button" className="cell-button course-table__course" onClick={() => setOpenId(t.id)}>
-                          {cover(t) ? (
-                            // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail
-                            <img src={cover(t)!} alt="" loading="lazy" />
-                          ) : (
-                            <span className="course-table__ph">
-                              <Icon name="graduation" size={16} />
-                            </span>
-                          )}
+                          <CourseRowCover t={t} />
                           <span className="stack stack--2">
                             <strong className="data-table__strong">{t.title}</strong>
                             <span className="text-small">{t.category || "No category"}</span>
@@ -310,6 +462,7 @@ export function TrainingsSection() {
           }}
         />
       )}
+      {defaultThumbOpen && <DefaultThumbnailDialog onClose={() => setDefaultThumbOpen(false)} />}
       {editing && (
         <TrainingEditor
           training={editing === "new" ? null : editing}
@@ -611,7 +764,21 @@ function TrainingEditor({
   const { notify } = useAdmin();
   const create = useCreateTraining();
   const save = useUpdateTraining();
+  const setThumb = useSetTrainingThumbnail();
+  const removeThumb = useRemoveTrainingThumbnail();
+  const defaultThumb = useDefaultThumbnail();
   const isNew = !training;
+  // A new picture (uploaded when the course is saved), or "remove" to go back to the default.
+  const [thumb, setThumbChoice] = useState<{ file: File; url: string } | "remove" | null>(null);
+  const savedThumb = useBlobUrl(training ? trainingThumbPath("admin", training.id, training.thumbnail) : null);
+  const defaultSrc = useBlobUrl(defaultThumbPath(defaultThumb.data?.thumbnail));
+  const hasOwn = thumb ? thumb !== "remove" : !!training?.hasOwnThumbnail;
+  const thumbSrc = thumb === "remove" ? defaultSrc : thumb ? thumb.url : training?.hasOwnThumbnail ? savedThumb : (savedThumb ?? defaultSrc);
+  const pickThumb = (file: File) =>
+    setThumbChoice((old) => {
+      if (old && old !== "remove") URL.revokeObjectURL(old.url);
+      return { file, url: URL.createObjectURL(file) };
+    });
   const [f, setF] = useState({
     audience: training?.audience ?? audience,
     title: training?.title ?? "",
@@ -674,7 +841,7 @@ function TrainingEditor({
           : `Question ${questions.indexOf(used[qError]) + 1} needs its text, at least two answers, and the right one picked.`
         : "",
   };
-  const pending = create.isPending || save.isPending;
+  const pending = create.isPending || save.isPending || setThumb.isPending || removeThumb.isPending;
 
   const stepErrors: Record<BuilderStep, string> = {
     details: errors.title,
@@ -710,7 +877,21 @@ function TrainingEditor({
       }),
       ...(status && { status }),
     };
-    const done = (t: TrainingOut) => {
+    const done = async (saved: TrainingOut) => {
+      let t = saved;
+      // The thumbnail goes up after the course is saved (a new course has no id before that).
+      try {
+        if (thumb && thumb !== "remove") t = await setThumb.mutateAsync({ id: saved.id, file: thumb.file });
+        else if (thumb === "remove" && saved.hasOwnThumbnail) t = await removeThumb.mutateAsync(saved.id);
+      } catch {
+        if (isNew) {
+          // The course exists now: keep the editor open on it so the thumbnail can be tried again.
+          notify(`“${saved.title}” is saved, but its thumbnail didn't upload. Open it and try again.`);
+          onSaved(saved);
+        }
+        return; // the error shows above the form
+      }
+      if (thumb && thumb !== "remove") URL.revokeObjectURL(thumb.url);
       notify(isNew ? (t.status === "published" ? `“${t.title}” is published.` : `“${t.title}” is saved as a draft.`) : `“${t.title}” is saved.`);
       onSaved(t);
     };
@@ -800,9 +981,9 @@ function TrainingEditor({
         </ol>
         <div className="course-builder__preview" aria-hidden>
           <span className="course-builder__cover">
-            {firstThumb ? (
-              // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail
-              <img src={lessonThumb({ provider: "youtube", videoId: firstThumb })!} alt="" />
+            {thumbSrc || firstThumb ? (
+              // eslint-disable-next-line @next/next/no-img-element -- the uploaded thumbnail, or a remote YouTube poster
+              <img src={thumbSrc ?? lessonThumb({ provider: "youtube", videoId: firstThumb! })!} alt="" />
             ) : (
               <Icon name="play" size={20} />
             )}
@@ -816,7 +997,7 @@ function TrainingEditor({
       </nav>
 
       <div className="course-builder__content">
-        <FormError error={create.error ?? save.error} />
+        <FormError error={create.error ?? save.error ?? setThumb.error ?? removeThumb.error} />
 
         {step === "details" && (
           <section className="course-builder__section">
@@ -871,6 +1052,34 @@ function TrainingEditor({
             </Field>
             <Field label="Description" htmlFor="tr-desc" hint="A short paragraph on what they'll learn and why it matters.">
               <Textarea id="tr-desc" rows={5} placeholder="What they'll learn and why it matters." value={f.description} onChange={(e) => set({ description: e.target.value })} />
+            </Field>
+            <Field label="Thumbnail" htmlFor="tr-thumb" hint="The picture on the course card.">
+              <ThumbnailPicker
+                id="tr-thumb"
+                src={thumbSrc}
+                caption={
+                  thumb && thumb !== "remove"
+                    ? "New image: it's saved with the course."
+                    : hasOwn
+                      ? "This course's own thumbnail."
+                      : defaultThumb.data?.thumbnail
+                        ? "Using the default thumbnail. Upload an image to give this course its own."
+                        : "No thumbnail yet: the card shows the first YouTube lesson's image. You can also set a default for all courses."
+                }
+                busy={setThumb.isPending}
+                replacing={hasOwn}
+                onPick={pickThumb}
+                onRemove={
+                  hasOwn
+                    ? () =>
+                        setThumbChoice((old) => {
+                          if (old && old !== "remove") URL.revokeObjectURL(old.url);
+                          return training?.hasOwnThumbnail ? "remove" : null;
+                        })
+                    : undefined
+                }
+                removeLabel={defaultThumb.data?.thumbnail ? "Use the default" : "Remove"}
+              />
             </Field>
           </section>
         )}

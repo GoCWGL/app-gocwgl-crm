@@ -5,7 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
-import { Avatar, Icon, type IconName } from "@/components/ui";
+import { Icon, type IconName } from "@/components/ui";
+import { MyAvatar } from "@/features/account/ProfilePhoto";
 import {
   HIDDEN_PORTAL_TABS,
   PORTAL_MENU,
@@ -179,7 +180,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
               </SidebarGroup>
             )}
             <ProfileButton
-              avatar={<Avatar name={name} tone="purple" ring />}
+              avatar={<MyAvatar name={name} tone="purple" ring />}
               name={name}
               subtitle="Account & settings"
               active={tab === "account"}

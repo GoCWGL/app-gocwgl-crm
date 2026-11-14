@@ -436,6 +436,31 @@ export interface paths {
         patch: operations["update_profile_api_users_me_patch"];
         trace?: never;
     };
+    "/api/users/me/photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Profile Photo
+         * @description Your headshot image; 404 when you haven't added one. Fetch it as `/users/me/photo?v={photo}`.
+         */
+        get: operations["profile_photo_api_users_me_photo_get"];
+        /**
+         * Set Profile Photo
+         * @description Your headshot (staff, VAs and clients alike). Replaces the one you had.
+         */
+        put: operations["set_profile_photo_api_users_me_photo_put"];
+        post?: never;
+        /** Remove Profile Photo */
+        delete: operations["remove_profile_photo_api_users_me_photo_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users/me/notifications": {
         parameters: {
             query?: never;
@@ -761,6 +786,23 @@ export interface paths {
          * @description Published VA trainings, with the quiz (no answers) and this VA's best result.
          */
         get: operations["my_trainings_api_va_trainings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/trainings/{training_id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Va Training Thumbnail */
+        get: operations["va_training_thumbnail_api_va_trainings__training_id__thumbnail_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4150,6 +4192,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/trainings/default-thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Default Thumbnail
+         * @description The thumbnail shown on every course without its own.
+         */
+        get: operations["get_default_thumbnail_api_admin_trainings_default_thumbnail_get"];
+        /** Set Default Thumbnail */
+        put: operations["set_default_thumbnail_api_admin_trainings_default_thumbnail_put"];
+        post?: never;
+        /** Remove Default Thumbnail */
+        delete: operations["remove_default_thumbnail_api_admin_trainings_default_thumbnail_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/trainings/default-thumbnail/image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Default Thumbnail Image */
+        get: operations["default_thumbnail_image_api_admin_trainings_default_thumbnail_image_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/trainings": {
         parameters: {
             query?: never;
@@ -4222,6 +4303,34 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/trainings/{training_id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Training Thumbnail
+         * @description The course's thumbnail: its own, else the default. 404 when there's neither.
+         */
+        get: operations["training_thumbnail_api_admin_trainings__training_id__thumbnail_get"];
+        /**
+         * Set Training Thumbnail
+         * @description This course's own thumbnail (PNG, JPG or WebP, up to 5 MB). Replaces the one it had.
+         */
+        put: operations["set_training_thumbnail_api_admin_trainings__training_id__thumbnail_put"];
+        post?: never;
+        /**
+         * Remove Training Thumbnail
+         * @description Back to the default thumbnail.
+         */
+        delete: operations["remove_training_thumbnail_api_admin_trainings__training_id__thumbnail_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -5494,6 +5603,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/trainings/{training_id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Client Training Thumbnail */
+        get: operations["client_training_thumbnail_api_portal_trainings__training_id__thumbnail_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/trainings/{training_id}/attempts": {
         parameters: {
             query?: never;
@@ -6546,6 +6672,30 @@ export interface components {
             trigger?: components["schemas"]["Trigger"] | null;
             /** Steps */
             steps?: (components["schemas"]["ActionStep"] | components["schemas"]["ConditionStep"])[] | null;
+        };
+        /** Body_set_default_thumbnail_api_admin_trainings_default_thumbnail_put */
+        Body_set_default_thumbnail_api_admin_trainings_default_thumbnail_put: {
+            /**
+             * File
+             * @description PNG, JPG or WebP, up to 5 MB
+             */
+            file: string;
+        };
+        /** Body_set_profile_photo_api_users_me_photo_put */
+        Body_set_profile_photo_api_users_me_photo_put: {
+            /**
+             * File
+             * @description PNG, JPG or WebP, up to 5 MB
+             */
+            file: string;
+        };
+        /** Body_set_training_thumbnail_api_admin_trainings__training_id__thumbnail_put */
+        Body_set_training_thumbnail_api_admin_trainings__training_id__thumbnail_put: {
+            /**
+             * File
+             * @description PNG, JPG or WebP, up to 5 MB
+             */
+            file: string;
         };
         /** Body_upload_asset_api_portal_assets_post */
         Body_upload_asset_api_portal_assets_post: {
@@ -7799,6 +7949,11 @@ export interface components {
             start: string;
             /** End */
             end: string;
+        };
+        /** DefaultThumbnailOut */
+        DefaultThumbnailOut: {
+            /** Thumbnail */
+            thumbnail: string | null;
         };
         /** DeviceSessionOut */
         DeviceSessionOut: {
@@ -11825,6 +11980,11 @@ export interface components {
              */
             important?: string;
             /**
+             * Agreementaccepted
+             * @default false
+             */
+            agreementAccepted?: boolean;
+            /**
              * Contactid
              * Format: uuid
              */
@@ -12640,6 +12800,13 @@ export interface components {
             description: string;
             /** Category */
             category: string;
+            /** Thumbnail */
+            thumbnail?: string | null;
+            /**
+             * Hasownthumbnail
+             * @default false
+             */
+            hasOwnThumbnail?: boolean;
             /** Lessons */
             lessons: components["schemas"]["LessonOut"][];
             /** Passingrate */
@@ -12804,6 +12971,8 @@ export interface components {
             isStaff?: boolean;
             /** Menuaccess */
             menuAccess?: string[] | null;
+            /** Photo */
+            photo?: string | null;
         };
         /**
          * VaApplicationAnswers
@@ -13554,6 +13723,11 @@ export interface components {
              * @default
              */
             important?: string;
+            /**
+             * Agreementaccepted
+             * @default false
+             */
+            agreementAccepted?: boolean;
         };
         /** VaRequestMatch */
         VaRequestMatch: {
@@ -13641,6 +13815,10 @@ export interface components {
             inactiveRequestedAt?: string | null;
             /** Inactiveapprovedat */
             inactiveApprovedAt?: string | null;
+            /** Agreementacceptedat */
+            agreementAcceptedAt?: string | null;
+            /** Agreementfeecents */
+            agreementFeeCents?: number | null;
         };
         /**
          * VaRequestPost
@@ -14025,6 +14203,8 @@ export interface components {
             description: string;
             /** Category */
             category: string;
+            /** Thumbnail */
+            thumbnail?: string | null;
             /** Lessons */
             lessons: components["schemas"]["VaLessonOut"][];
             /** Passingrate */
@@ -15039,6 +15219,112 @@ export interface operations {
             };
         };
     };
+    profile_photo_api_users_me_photo_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_profile_photo_api_users_me_photo_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_set_profile_photo_api_users_me_photo_put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["UserOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_profile_photo_api_users_me_photo_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["UserOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     get_notifications_api_users_me_notifications_get: {
         parameters: {
             query?: never;
@@ -15865,6 +16151,48 @@ export interface operations {
                         /** Response My Trainings Api Va Trainings Get */
                         data: components["schemas"]["VaTrainingOut"][];
                     };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    va_training_thumbnail_api_va_trainings__training_id__thumbnail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Error */
@@ -27319,6 +27647,143 @@ export interface operations {
             };
         };
     };
+    get_default_thumbnail_api_admin_trainings_default_thumbnail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DefaultThumbnailOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_default_thumbnail_api_admin_trainings_default_thumbnail_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_set_default_thumbnail_api_admin_trainings_default_thumbnail_put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DefaultThumbnailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_default_thumbnail_api_admin_trainings_default_thumbnail_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DefaultThumbnailOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    default_thumbnail_image_api_admin_trainings_default_thumbnail_image_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_trainings_api_admin_trainings_get: {
         parameters: {
             query?: never;
@@ -27584,6 +28049,136 @@ export interface operations {
                     "application/json": {
                         /** Response Training Learners Api Admin Trainings  Training Id  Learners Get */
                         data: components["schemas"]["LearnerOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    training_thumbnail_api_admin_trainings__training_id__thumbnail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_training_thumbnail_api_admin_trainings__training_id__thumbnail_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_set_training_thumbnail_api_admin_trainings__training_id__thumbnail_put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TrainingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    remove_training_thumbnail_api_admin_trainings__training_id__thumbnail_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TrainingOut"];
                     };
                 };
             };
@@ -31036,6 +31631,48 @@ export interface operations {
                         /** Response Client Trainings Api Portal Trainings Get */
                         data: components["schemas"]["VaTrainingOut"][];
                     };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_training_thumbnail_api_portal_trainings__training_id__thumbnail_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Error */

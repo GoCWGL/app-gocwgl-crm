@@ -90,6 +90,7 @@ export type CustomLink = S["CustomLink"];
 export type DailyReportIn = S["DailyReportIn"];
 export type DailyReportOut = S["DailyReportOut"];
 export type DayHours = S["DayHours"];
+export type DefaultThumbnailOut = S["DefaultThumbnailOut"];
 export type DeviceSessionOut = S["DeviceSessionOut"];
 export type DisableMfaRequest = S["DisableMfaRequest"];
 export type DomainCreate = S["DomainCreate"];

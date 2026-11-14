@@ -1,4 +1,4 @@
-import { del, get, patch, post, put } from "./client";
+import { api, del, get, patch, post, put } from "./client";
 import type { InvitationOut, MemberOut, ProfileUpdate, RoleChange, TeamOut, User } from "./models";
 
 export type NotificationPrefsMap = Record<string, boolean>;
@@ -6,6 +6,15 @@ export type NotificationPrefsMap = Record<string, boolean>;
 // ------------------------------------------------------------------ Profile
 export const getMe = () => get<User>("/users/me");
 export const updateMe = (body: ProfileUpdate) => patch<User>("/users/me", body);
+/** Your headshot (PNG, JPG or WebP; the form shrinks photos first). */
+export const setMyPhoto = (file: File) => {
+  const body = new FormData();
+  body.append("file", file);
+  return api<User>("/users/me/photo", { method: "PUT", body, signal: AbortSignal.timeout(120_000) });
+};
+export const removeMyPhoto = () => del<User>("/users/me/photo");
+/** Where your headshot is fetched from (signed in); null when you have none. */
+export const myPhotoPath = (version: string | null | undefined) => (version ? `/users/me/photo?v=${encodeURIComponent(version)}` : null);
 export const getMyNotifications = () => get<{ prefs: NotificationPrefsMap }>("/users/me/notifications");
 export const setMyNotifications = (prefs: NotificationPrefsMap) =>
   put<{ prefs: NotificationPrefsMap }>("/users/me/notifications", { prefs });

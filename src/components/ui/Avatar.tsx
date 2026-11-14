@@ -14,9 +14,11 @@ type AvatarProps = {
   brand?: boolean;
   square?: boolean;
   className?: string;
+  /** A photo (e.g. a blob: URL of a headshot); initials show while there's none. */
+  src?: string | null;
 };
 
-export function Avatar({ name, text, tone, size = "default", ring, brand, square, className }: AvatarProps) {
+export function Avatar({ name, text, tone, size = "default", ring, brand, square, className, src }: AvatarProps) {
   return (
     <span
       className={cn(
@@ -26,11 +28,17 @@ export function Avatar({ name, text, tone, size = "default", ring, brand, square
         brand && "avatar--brand",
         square && "avatar--square",
         toneClass(tone),
+        src && "avatar--photo",
         className,
       )}
       aria-hidden="true"
     >
-      {text ?? (name ? toInitials(name) : "")}
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element -- a signed-in blob: URL
+        <img src={src} alt="" />
+      ) : (
+        (text ?? (name ? toInitials(name) : ""))
+      )}
     </span>
   );
 }
