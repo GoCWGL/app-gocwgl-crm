@@ -1395,6 +1395,11 @@
     }
   }
 
+  // A reading lesson's document and text, where a video lesson has its player.
+  &__reading {
+    padding: 18px;
+  }
+
   &__main {
     display: flex;
     flex-direction: column;
@@ -1895,6 +1900,16 @@
     }
   }
 
+  &__adds {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+
+    @include down(sm) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
   &__add {
     @include button-reset;
     display: flex;
@@ -1993,6 +2008,29 @@
     flex-direction: column;
     gap: 8px;
     min-width: 0;
+  }
+
+  // A reading lesson's document: picked or uploaded, or the button to add one.
+  &__doc {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: $ink-soft;
+
+    .mini-action {
+      cursor: pointer;
+    }
+  }
+
+  &__doc-name {
+    overflow: hidden;
+    max-width: 260px;
+    font-size: 13px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__row {

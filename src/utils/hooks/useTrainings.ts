@@ -20,6 +20,7 @@ export const useUpdateTraining = () =>
 export const useDeleteTraining = () => useApiMutation(api.deleteTraining, { invalidate: ALL });
 export const useSetTrainingThumbnail = () =>
   useApiMutation((v: { id: string; file: File }) => api.setTrainingThumbnail(v.id, v.file), { invalidate: ALL });
+export const useUploadLessonFile = () => useApiMutation((v: { id: string; file: File }) => api.uploadLessonFile(v.id, v.file));
 export const useRemoveTrainingThumbnail = () => useApiMutation(api.removeTrainingThumbnail, { invalidate: ALL });
 export const useDefaultThumbnail = () => useQuery({ queryKey: [...qk.trainings, "default-thumbnail"], queryFn: api.getDefaultThumbnail });
 export const useSetDefaultThumbnail = () => useApiMutation(api.setDefaultThumbnail, { invalidate: ALL });

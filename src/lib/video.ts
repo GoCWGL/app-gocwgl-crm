@@ -88,8 +88,15 @@ export function lessonVideoHost({ provider, videoId }: LessonVideoSource): strin
 }
 
 /** A poster image for the lesson (only YouTube gives one without an API call). */
-export const lessonThumb = ({ provider, videoId }: LessonVideoSource): string | null =>
+export const lessonThumb = ({ provider, videoId }: { provider?: VideoProvider | null; videoId: string }): string | null =>
   provider === "youtube" && videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null;
+
+/** A lesson as the API returns it: a video (provider set) or a reading (written text and/or a document). */
+export type AnyLesson = { kind?: "video" | "reading"; provider?: VideoProvider | null; videoId: string };
+
+/** The lesson's video, or null for a reading lesson. */
+export const lessonVideo = (l: AnyLesson): LessonVideoSource | null =>
+  l.kind !== "reading" && l.provider ? { provider: l.provider, videoId: l.videoId } : null;
 
 /** "12 min", "1h 40m"; "" when there's no length. */
 export function formatMinutes(total: number): string {

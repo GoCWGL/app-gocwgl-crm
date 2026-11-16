@@ -22,14 +22,14 @@ import {
   type IconName,
 } from "@/components/ui";
 import { shrinkImage } from "@/lib/images";
-import { defaultThumbPath, trainingThumbPath } from "@/utils/api/trainings";
+import { defaultThumbPath, LESSON_FILE_ACCEPT, LESSON_FILE_MAX_BYTES, lessonFilePath, trainingThumbPath } from "@/utils/api/trainings";
 import { useBlobUrl } from "@/utils/hooks/useBlobUrl";
 import { customCategories, TRAINING_CATEGORIES } from "@/data/trainingCategories";
 import { toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import { formatMinutes, lessonThumb, videoEmbed } from "@/lib/video";
 import { youtubeId } from "@/lib/youtube";
-import type { QuestionOut, TrainingAudience, TrainingOut, TrainingStatus } from "@/utils/api/models";
+import type { LessonFileOut, QuestionOut, TrainingAudience, TrainingOut, TrainingStatus } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
 import { formatShort } from "@/utils/format/dates";
 import {
@@ -44,6 +44,7 @@ import {
   useTrainingStats,
   useTrainings,
   useUpdateTraining,
+  useUploadLessonFile,
 } from "@/utils/hooks/useTrainings";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../../state/AdminContext";
@@ -604,7 +605,7 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
     >
       <div className="stack stack--16">
         <FormError error={save.error ?? remove.error} />
-        {t.lessons.length ? <LessonPlayer lessons={t.lessons} /> : <span className="vp-empty">No lessons yet.</span>}
+        {t.lessons.length ? <LessonPlayer lessons={t.lessons} filePath={(fileId) => lessonFilePath("admin", t.id, fileId)} /> : <span className="vp-empty">No lessons yet.</span>}
         {t.description && <p className="va-pre">{t.description}</p>}
 
         {t.questions.length > 0 && (
@@ -728,8 +729,45 @@ const STEPS: Array<{ id: BuilderStep; label: string }> = [
   { id: "quiz", label: "Quiz" },
 ];
 
-type DraftLesson = { key: string; id: string; title: string; videoUrl: string; minutes: string; summary: string };
-const blankLesson = (): DraftLesson => ({ key: crypto.randomUUID(), id: "", title: "", videoUrl: "", minutes: "", summary: "" });
+type LessonKind = "video" | "reading";
+/** Both kinds' fields are kept, so switching a lesson between video and reading loses nothing. */
+type DraftLesson = {
+  key: string;
+  id: string;
+  kind: LessonKind;
+  title: string;
+  videoUrl: string;
+  minutes: string;
+  summary: string;
+  /** Reading: the text to read. */
+  body: string;
+  /** Reading: the document already uploaded to the course. */
+  file: LessonFileOut | null;
+  /** Reading: a document picked but not uploaded yet (it goes up when the course is saved). */
+  pending: File | null;
+};
+const blankLesson = (kind: LessonKind = "video"): DraftLesson => ({
+  key: crypto.randomUUID(),
+  id: "",
+  kind,
+  title: "",
+  videoUrl: "",
+  minutes: "",
+  summary: "",
+  body: "",
+  file: null,
+  pending: null,
+});
+const lessonUsed = (l: DraftLesson) =>
+  l.kind === "reading" ? !!(l.title.trim() || l.body.trim() || l.file || l.pending) : !!(l.title.trim() || l.videoUrl.trim());
+const lessonProblem = (l: DraftLesson) =>
+  l.kind === "reading"
+    ? !l.body.trim() && !l.file && !l.pending
+      ? "write the reading or upload a document."
+      : ""
+    : !videoEmbed(l.videoUrl)
+      ? "paste a YouTube, Loom or Vimeo link."
+      : "";
 /** Length is optional; when given, whole minutes up to 600. */
 const badMinutes = (m: string) => (m.trim() ? !/^\d{1,3}$/.test(m.trim()) || Number(m) > 600 : false);
 
@@ -765,6 +803,8 @@ function TrainingEditor({
   const create = useCreateTraining();
   const save = useUpdateTraining();
   const setThumb = useSetTrainingThumbnail();
+  const uploadFile = useUploadLessonFile();
+  const [fileError, setFileError] = useState("");
   const removeThumb = useRemoveTrainingThumbnail();
   const defaultThumb = useDefaultThumbnail();
   const isNew = !training;
@@ -802,7 +842,20 @@ function TrainingEditor({
       : [blankQuestion()],
   );
   const [lessons, setLessons] = useState<DraftLesson[]>(
-    training?.lessons.length ? training.lessons.map((l) => ({ key: l.id, id: l.id, title: l.title, videoUrl: l.videoUrl, minutes: l.minutes ? String(l.minutes) : "", summary: l.summary })) : [blankLesson()],
+    training?.lessons.length
+      ? training.lessons.map((l) => ({
+          key: l.id,
+          id: l.id,
+          kind: l.kind ?? "video",
+          title: l.title,
+          videoUrl: l.videoUrl,
+          minutes: l.minutes ? String(l.minutes) : "",
+          summary: l.summary,
+          body: l.body ?? "",
+          file: l.file ?? null,
+          pending: null,
+        }))
+      : [blankLesson()],
   );
   const [tried, setTried] = useState(false);
   const [step, setStep] = useState<BuilderStep>("details");
@@ -814,8 +867,8 @@ function TrainingEditor({
       [next[i], next[i + by]] = [next[i + by], next[i]];
       return next;
     });
-  const usedLessons = lessons.filter((l) => l.title.trim() || l.videoUrl.trim());
-  const badLesson = usedLessons.findIndex((l) => !videoEmbed(l.videoUrl));
+  const usedLessons = lessons.filter(lessonUsed);
+  const badLesson = usedLessons.findIndex((l) => lessonProblem(l));
   const badLength = usedLessons.findIndex((l) => badMinutes(l.minutes));
   const setQ = (i: number, patch: Partial<DraftQuestion>) => setQuestions((qs) => qs.map((q, j) => (j === i ? { ...q, ...patch } : q)));
 
@@ -829,7 +882,7 @@ function TrainingEditor({
     title: !f.title.trim() ? "Give the training a title." : "",
     lessons:
       badLesson >= 0
-        ? `Lesson ${lessons.indexOf(usedLessons[badLesson]) + 1}: paste a YouTube, Loom or Vimeo link.`
+        ? `Lesson ${lessons.indexOf(usedLessons[badLesson]) + 1}: ${lessonProblem(usedLessons[badLesson])}`
         : badLength >= 0
           ? `Lesson ${lessons.indexOf(usedLessons[badLength]) + 1}: the length is whole minutes, up to 600.`
           : "",
@@ -841,7 +894,8 @@ function TrainingEditor({
           : `Question ${questions.indexOf(used[qError]) + 1} needs its text, at least two answers, and the right one picked.`
         : "",
   };
-  const pending = create.isPending || save.isPending || setThumb.isPending || removeThumb.isPending;
+  const [uploading, setUploading] = useState(false);
+  const pending = uploading || create.isPending || save.isPending || setThumb.isPending || removeThumb.isPending;
 
   const stepErrors: Record<BuilderStep, string> = {
     details: errors.title,
@@ -859,13 +913,7 @@ function TrainingEditor({
       title: f.title.trim(),
       audience: f.audience,
       category: f.category.trim(),
-      lessons: usedLessons.map((l) => ({
-        id: l.id,
-        title: l.title.trim(),
-        videoUrl: l.videoUrl.trim(),
-        minutes: Number(l.minutes.trim() || 0),
-        summary: l.summary.trim(),
-      })),
+      lessons: lessonsBody({}),
       description: f.description.trim(),
       passingRate: rate,
       ...(f.audience === "client" && { clientIds }),
@@ -895,13 +943,55 @@ function TrainingEditor({
       notify(isNew ? (t.status === "published" ? `“${t.title}” is published.` : `“${t.title}” is saved as a draft.`) : `“${t.title}” is saved.`);
       onSaved(t);
     };
-    if (isNew) create.mutate({ ...body, status: status ?? "draft" }, { onSuccess: done });
-    else save.mutate({ id: training.id, body }, { onSuccess: done });
+    const toUpload = usedLessons.filter((l) => l.kind === "reading" && l.pending);
+    if (!toUpload.length) {
+      if (isNew) create.mutate({ ...body, status: status ?? "draft" }, { onSuccess: done });
+      else save.mutate({ id: training.id, body }, { onSuccess: done });
+      return;
+    }
+    // Documents go up to the course first, so a new course is created (as a draft, no lessons) before them.
+    void (async () => {
+      setUploading(true);
+      let created: TrainingOut | null = null;
+      try {
+        const id = training?.id ?? (created = await create.mutateAsync({ ...body, lessons: [], status: "draft" })).id;
+        const uploaded: Record<string, LessonFileOut> = {};
+        for (const l of toUpload) uploaded[l.key] = await uploadFile.mutateAsync({ id, file: l.pending! });
+        setLessons((ls) => ls.map((l) => (uploaded[l.key] ? { ...l, file: uploaded[l.key], pending: null } : l)));
+        const saved = await save.mutateAsync({ id, body: { ...body, lessons: lessonsBody(uploaded), ...(isNew && { status: status ?? "draft" }) } });
+        await done(saved);
+      } catch {
+        if (created) {
+          notify(`“${created.title}” is saved as a draft, but a lesson document didn't upload. Open it and try again.`);
+          onSaved(created);
+        }
+        // Otherwise the error shows above the form.
+      } finally {
+        setUploading(false);
+      }
+    })();
+  };
+  /** The lessons to save; `uploaded` holds documents just uploaded for lessons that had one waiting. */
+  function lessonsBody(uploaded: Record<string, LessonFileOut>) {
+    return usedLessons.map((l) => {
+      const base = { id: l.id, title: l.title.trim(), minutes: Number(l.minutes.trim() || 0), summary: l.summary.trim() };
+      if (l.kind === "reading") return { ...base, kind: "reading" as const, body: l.body.trim(), fileId: (uploaded[l.key] ?? l.file)?.id ?? "" };
+      return { ...base, kind: "video" as const, videoUrl: l.videoUrl.trim() };
+    });
+  }
+  const pickFile = (i: number, file: File | undefined) => {
+    if (!file) return;
+    if (file.size > LESSON_FILE_MAX_BYTES) {
+      setFileError(`“${file.name}” is over 25 MB. Upload a smaller file.`);
+      return;
+    }
+    setFileError("");
+    setL(i, { pending: file, ...(!lessons[i].title.trim() && { title: file.name.replace(/\.[^.]+$/, "") }) });
   };
 
   const minutes = usedLessons.reduce((sum, l) => sum + (badMinutes(l.minutes) ? 0 : Number(l.minutes.trim() || 0)), 0);
   const stepIndex = STEPS.findIndex((x) => x.id === step);
-  const firstThumb = usedLessons.map((l) => youtubeId(l.videoUrl)).find(Boolean);
+  const firstThumb = usedLessons.map((l) => (l.kind === "video" ? youtubeId(l.videoUrl) : null)).find(Boolean);
   const stepSub: Record<BuilderStep, string> = {
     details: f.title.trim() || "Title, audience, category",
     lessons: usedLessons.length
@@ -923,7 +1013,7 @@ function TrainingEditor({
       titleId="training-editor"
       kicker={f.audience === "va" ? "VA TRAINING" : "CLIENT TRAINING"}
       title={isNew ? "Create a course" : `Edit “${training.title}”`}
-      subtitle="Add the details, the video lessons, then a quiz. Learners pass at your passing rate."
+      subtitle="Add the details, the lessons (videos or readings), then a quiz. Learners pass at your passing rate."
       media={
         <IconTile brand size="lg">
           <Icon name="graduation" size={18} />
@@ -997,7 +1087,7 @@ function TrainingEditor({
       </nav>
 
       <div className="course-builder__content">
-        <FormError error={create.error ?? save.error ?? setThumb.error ?? removeThumb.error} />
+        <FormError error={create.error ?? save.error ?? uploadFile.error ?? setThumb.error ?? removeThumb.error} />
 
         {step === "details" && (
           <section className="course-builder__section">
@@ -1088,26 +1178,40 @@ function TrainingEditor({
           <section className="course-builder__section">
             <header>
               <h3>Lessons</h3>
-              <p>YouTube, Loom or Vimeo videos, watched in this order. Unlisted videos work too.</p>
+              <p>Videos (YouTube, Loom or Vimeo; unlisted works too) or readings (written text and/or a PDF, image or Office document), taken in this order.</p>
             </header>
             {lessons.map((l, i) => {
-              const video = videoEmbed(l.videoUrl);
-              const ytId = youtubeId(l.videoUrl);
+              const reading = l.kind === "reading";
+              const video = reading ? null : videoEmbed(l.videoUrl);
+              const ytId = reading ? null : youtubeId(l.videoUrl);
               const thumb = ytId ? lessonThumb({ provider: "youtube", videoId: ytId }) : null;
-              const badLink = tried && !!l.videoUrl.trim() && !video;
+              const badLink = tried && !reading && !!l.videoUrl.trim() && !video;
+              const doc = l.pending ? { name: l.pending.name, size: l.pending.size } : l.file;
               return (
                 <div key={l.key} className="lesson-card">
-                  <span className={cn("lesson-card__thumb", video && !thumb && "is-poster")}>
+                  <span className={cn("lesson-card__thumb", ((video && !thumb) || reading) && "is-poster")}>
                     {thumb ? (
                       // eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail
                       <img src={thumb} alt="" />
                     ) : (
-                      <Icon name={video ? "play" : "video"} size={18} />
+                      <Icon name={reading ? "form" : video ? "play" : "video"} size={18} />
                     )}
                     <span className="lesson-card__n">{i + 1}</span>
-                    {video && <span className="lesson-card__provider">{video.provider}</span>}
+                    {(video || reading) && <span className="lesson-card__provider">{reading ? "reading" : video!.provider}</span>}
                   </span>
                   <span className="lesson-card__fields">
+                    <SegmentedControl<LessonKind>
+                      kind="radio"
+                      variant="soft"
+                      size="sm"
+                      label={`Lesson ${i + 1} type`}
+                      value={l.kind}
+                      onChange={(kind) => setL(i, { kind })}
+                      options={[
+                        { value: "video", label: "Video" },
+                        { value: "reading", label: "Reading" },
+                      ]}
+                    />
                     <span className="lesson-card__row">
                       <Input
                         aria-label={`Lesson ${i + 1} title`}
@@ -1119,7 +1223,7 @@ function TrainingEditor({
                         <Input
                           aria-label={`Lesson ${i + 1} length in minutes`}
                           inputMode="numeric"
-                          placeholder="Length"
+                          placeholder={reading ? "Read time" : "Length"}
                           value={l.minutes}
                           aria-invalid={tried && badMinutes(l.minutes)}
                           onChange={(e) => setL(i, { minutes: e.target.value })}
@@ -1127,14 +1231,56 @@ function TrainingEditor({
                         <span>min</span>
                       </span>
                     </span>
-                    <Input
-                      aria-label={`Lesson ${i + 1} video link`}
-                      type="url"
-                      placeholder="Paste a YouTube, Loom or Vimeo link"
-                      value={l.videoUrl}
-                      aria-invalid={badLink}
-                      onChange={(e) => setL(i, { videoUrl: e.target.value })}
-                    />
+                    {reading ? (
+                      <>
+                        <Textarea
+                          aria-label={`Lesson ${i + 1} reading`}
+                          rows={6}
+                          maxLength={50_000}
+                          placeholder="Write the lesson here (a blank line starts a new paragraph). Or upload a document below, or both."
+                          value={l.body}
+                          aria-invalid={tried && !!lessonProblem(l)}
+                          onChange={(e) => setL(i, { body: e.target.value })}
+                        />
+                        <span className="lesson-card__doc">
+                          {doc ? (
+                            <>
+                              <Icon name="form" size={14} />
+                              <span className="lesson-card__doc-name" title={doc.name}>
+                                {doc.name}
+                              </span>
+                              <span className="text-tiny">
+                                {doc.size >= 1024 * 1024 ? `${(doc.size / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(doc.size / 1024))} KB`}
+                                {l.pending && " · uploads when you save"}
+                              </span>
+                              <span className="u-spacer" />
+                              <label className="mini-action">
+                                Replace
+                                <input type="file" hidden accept={LESSON_FILE_ACCEPT} onChange={(e) => (pickFile(i, e.target.files?.[0]), (e.target.value = ""))} />
+                              </label>
+                              <button type="button" className="mini-action mini-action--danger" onClick={() => setL(i, { file: null, pending: null })}>
+                                Remove
+                              </button>
+                            </>
+                          ) : (
+                            <label className="btn btn--outline btn--sm">
+                              <Icon name="upload" size={13} /> Upload a document
+                              <input type="file" hidden accept={LESSON_FILE_ACCEPT} onChange={(e) => (pickFile(i, e.target.files?.[0]), (e.target.value = ""))} />
+                            </label>
+                          )}
+                          {!doc && <span className="text-tiny">PDF, image, Word, PowerPoint, Excel or text · up to 25 MB. PDFs and images show in the lesson.</span>}
+                        </span>
+                      </>
+                    ) : (
+                      <Input
+                        aria-label={`Lesson ${i + 1} video link`}
+                        type="url"
+                        placeholder="Paste a YouTube, Loom or Vimeo link"
+                        value={l.videoUrl}
+                        aria-invalid={badLink}
+                        onChange={(e) => setL(i, { videoUrl: e.target.value })}
+                      />
+                    )}
                     <Input
                       aria-label={`Lesson ${i + 1} summary`}
                       placeholder="One line on what they'll learn (optional)"
@@ -1162,9 +1308,19 @@ function TrainingEditor({
                 {errors.lessons}
               </p>
             )}
-            <button type="button" className="course-builder__add" disabled={lessons.length >= 100} onClick={() => setLessons((ls) => [...ls, blankLesson()])}>
-              <Icon name="plus" size={14} /> Add a lesson
-            </button>
+            {fileError && (
+              <p className="text-error" role="alert">
+                {fileError}
+              </p>
+            )}
+            <div className="course-builder__adds">
+              <button type="button" className="course-builder__add" disabled={lessons.length >= 100} onClick={() => setLessons((ls) => [...ls, blankLesson()])}>
+                <Icon name="video" size={14} /> Add a video lesson
+              </button>
+              <button type="button" className="course-builder__add" disabled={lessons.length >= 100} onClick={() => setLessons((ls) => [...ls, blankLesson("reading")])}>
+                <Icon name="form" size={14} /> Add a reading lesson
+              </button>
+            </div>
           </section>
         )}
 

@@ -173,6 +173,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/heartbeat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Heartbeat
+         * @description The open portal pings this about once a minute so the team can see who's online.
+         */
+        post: operations["heartbeat_api_auth_heartbeat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/auth/me": {
         parameters: {
             query?: never;
@@ -496,6 +516,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/presence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Presence
+         * @description Who's online right now: VA and client accounts, with how many of each are online.
+         */
+        get: operations["presence_api_admin_presence_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/team/invitations": {
         parameters: {
             query?: never;
@@ -803,6 +843,26 @@ export interface paths {
         };
         /** Va Training Thumbnail */
         get: operations["va_training_thumbnail_api_va_trainings__training_id__thumbnail_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/trainings/{training_id}/files/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Va Lesson File
+         * @description A reading lesson's document in a published VA course.
+         */
+        get: operations["va_lesson_file_api_va_trainings__training_id__files__file_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -4336,6 +4396,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/trainings/{training_id}/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Lesson File
+         * @description A document for a reading lesson. Put its id in the lesson's `fileId` and save the course; files no lesson
+         *     uses are removed a day after upload.
+         */
+        post: operations["upload_lesson_file_api_admin_trainings__training_id__files_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/trainings/{training_id}/files/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lesson File */
+        get: operations["lesson_file_api_admin_trainings__training_id__files__file_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/feedback": {
         parameters: {
             query?: never;
@@ -4754,7 +4852,7 @@ export interface paths {
         /**
          * Request Funnel
          * @description Prices come from the server's catalog. `payment: "now"` returns `payUrl` (the package's Wise link) to send the
-         *     client to; `"invoice"` emails the invoice with that link.
+         *     client to; `"invoice"` emails the invoice with that link. 403 `packages_hidden` when the team turned packages off.
          */
         post: operations["request_funnel_api_portal_funnels_requests_post"];
         delete?: never;
@@ -4938,7 +5036,8 @@ export interface paths {
         put?: never;
         /**
          * Request Crm
-         * @description "Request a CRM": saved for the team before the client books their CRM discovery call.
+         * @description "Request a CRM": saved for the team before the client books their CRM discovery call. 403 `packages_hidden`
+         *     when the team turned packages off for this client.
          */
         post: operations["request_crm_api_portal_crm_requests_post"];
         delete?: never;
@@ -5612,6 +5711,23 @@ export interface paths {
         };
         /** Client Training Thumbnail */
         get: operations["client_training_thumbnail_api_portal_trainings__training_id__thumbnail_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/trainings/{training_id}/files/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Client Lesson File */
+        get: operations["client_lesson_file_api_portal_trainings__training_id__files__file_id__get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -6703,6 +6819,14 @@ export interface components {
             file: string;
             category?: components["schemas"]["FileCategory"] | null;
         };
+        /** Body_upload_lesson_file_api_admin_trainings__training_id__files_post */
+        Body_upload_lesson_file_api_admin_trainings__training_id__files_post: {
+            /**
+             * File
+             * @description PDF, image, Word, PowerPoint, Excel or text file, up to 25 MB
+             */
+            file: string;
+        };
         /** Body_upload_media_api_admin_media__contact_id__post */
         Body_upload_media_api_admin_media__contact_id__post: {
             /** File */
@@ -7751,6 +7875,11 @@ export interface components {
             archivedAt: string | null;
             /** Tags */
             tags: components["schemas"]["TagOut"][];
+            /**
+             * Showpackages
+             * @default true
+             */
+            showPackages?: boolean;
         };
         /** ContactReferrerIn */
         ContactReferrerIn: {
@@ -7825,6 +7954,8 @@ export interface components {
             tagIds?: string[] | null;
             /** Onboarded */
             onboarded?: boolean | null;
+            /** Showpackages */
+            showPackages?: boolean | null;
         };
         /**
          * CrmPackage
@@ -9376,6 +9507,22 @@ export interface components {
             /** Tries */
             tries: number;
         };
+        /**
+         * LessonFileOut
+         * @description A reading lesson's document. Fetch it from `/{admin|va|portal}/trainings/{training_id}/files/{id}`.
+         */
+        LessonFileOut: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Contenttype */
+            contentType: string;
+            /** Size */
+            size: number;
+            /** Inline */
+            inline: boolean;
+        };
         /** LessonIn */
         LessonIn: {
             /**
@@ -9384,12 +9531,31 @@ export interface components {
              */
             id?: string;
             /**
+             * Kind
+             * @default video
+             * @enum {string}
+             */
+            kind?: "video" | "reading";
+            /**
              * Title
              * @default
              */
             title?: string;
-            /** Videourl */
-            videoUrl: string;
+            /**
+             * Videourl
+             * @default
+             */
+            videoUrl?: string;
+            /**
+             * Body
+             * @default
+             */
+            body?: string;
+            /**
+             * Fileid
+             * @default
+             */
+            fileId?: string;
             /**
              * Minutes
              * @default 0
@@ -9405,21 +9571,30 @@ export interface components {
         LessonOut: {
             /** Id */
             id: string;
+            /**
+             * Kind
+             * @default video
+             * @enum {string}
+             */
+            kind?: "video" | "reading";
             /** Title */
             title: string;
             /** Videourl */
             videoUrl: string;
             /** Videoid */
             videoId: string;
-            /**
-             * Provider
-             * @enum {string}
-             */
-            provider: "youtube" | "loom" | "vimeo";
+            /** Provider */
+            provider: ("youtube" | "loom" | "vimeo") | null;
             /** Minutes */
             minutes: number;
             /** Summary */
             summary: string;
+            /**
+             * Body
+             * @default
+             */
+            body?: string;
+            file?: components["schemas"]["LessonFileOut"] | null;
         };
         /** LinksIn */
         LinksIn: {
@@ -9973,6 +10148,11 @@ export interface components {
             health: string;
             /** Openinvoices */
             openInvoices: number;
+            /**
+             * Showpackages
+             * @default true
+             */
+            showPackages?: boolean;
         };
         /** Page[ContactOut] */
         Page_ContactOut_: {
@@ -10445,6 +10625,48 @@ export interface components {
             name: string;
             /** Email */
             email: string;
+        };
+        /** PresenceOut */
+        PresenceOut: {
+            /** Onlinewithinseconds */
+            onlineWithinSeconds: number;
+            /** Vasonline */
+            vasOnline: number;
+            /** Clientsonline */
+            clientsOnline: number;
+            /** People */
+            people: components["schemas"]["PresenceUserOut"][];
+        };
+        /** PresenceUserOut */
+        PresenceUserOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Fullname */
+            fullName: string;
+            /** Email */
+            email: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "va" | "client";
+            /** Contactid */
+            contactId?: string | null;
+            /**
+             * Business
+             * @default
+             */
+            business?: string;
+            /**
+             * Lastseenat
+             * Format: date-time
+             */
+            lastSeenAt: string;
+            /** Online */
+            online: boolean;
         };
         /**
          * Priority
@@ -13504,19 +13726,28 @@ export interface components {
         VaLessonOut: {
             /** Id */
             id: string;
+            /**
+             * Kind
+             * @default video
+             * @enum {string}
+             */
+            kind?: "video" | "reading";
             /** Title */
             title: string;
             /** Videoid */
             videoId: string;
-            /**
-             * Provider
-             * @enum {string}
-             */
-            provider: "youtube" | "loom" | "vimeo";
+            /** Provider */
+            provider: ("youtube" | "loom" | "vimeo") | null;
             /** Minutes */
             minutes: number;
             /** Summary */
             summary: string;
+            /**
+             * Body
+             * @default
+             */
+            body?: string;
+            file?: components["schemas"]["LessonFileOut"] | null;
         };
         /** VaListOut */
         VaListOut: {
@@ -14657,6 +14888,33 @@ export interface operations {
             };
         };
     };
+    heartbeat_api_auth_heartbeat_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     me_api_auth_me_get: {
         parameters: {
             query?: never;
@@ -15468,6 +15726,37 @@ export interface operations {
             };
         };
     };
+    presence_api_admin_presence_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PresenceOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     invite_staff_api_admin_team_invitations_post: {
         parameters: {
             query?: never;
@@ -16201,6 +16490,49 @@ export interface operations {
             header?: never;
             path: {
                 training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    va_lesson_file_api_va_trainings__training_id__files__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+                file_id: string;
             };
             cookie?: never;
         };
@@ -28233,6 +28565,95 @@ export interface operations {
             };
         };
     };
+    upload_lesson_file_api_admin_trainings__training_id__files_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_lesson_file_api_admin_trainings__training_id__files_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LessonFileOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    lesson_file_api_admin_trainings__training_id__files__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_feedback_api_admin_feedback_get: {
         parameters: {
             query?: never;
@@ -31681,6 +32102,49 @@ export interface operations {
             header?: never;
             path: {
                 training_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_lesson_file_api_portal_trainings__training_id__files__file_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+                file_id: string;
             };
             cookie?: never;
         };

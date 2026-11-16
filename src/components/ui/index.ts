@@ -26,4 +26,5 @@ export { BrandLoader } from "./BrandLoader";
 export { LessonPlayer } from "./LessonPlayer";
 export { TrainingCover } from "./TrainingCover";
 export { LessonVideo } from "./LessonVideo";
+export { LessonReading } from "./LessonReading";
 export { ErrorState, FormError, Loading, LoadState, SoonNote } from "./LoadState";

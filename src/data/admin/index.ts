@@ -81,7 +81,7 @@ export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> 
   reporting: { title: "Dashboard", subtitle: "Reports: team hours, billing and meeting no-shows, plus how signups turn into paying clients." },
   bugs: { title: "Report Bugs", subtitle: "Every bug your clients report from their own CRM, in one place." },
   status: { title: "Status", subtitle: "See which VAs are working right now, who they're working for, who's on a break and who's offline." },
-  training: { title: "Training", subtitle: "YouTube lessons for your VAs and clients. VAs take a quiz and pass at your passing rate." },
+  training: { title: "Training", subtitle: "Video and reading lessons for your VAs and clients. VAs take a quiz and pass at your passing rate." },
   sops: { title: "SOPs", subtitle: "Step-by-step guides for your clients and your VAs. Draft them, then publish when they're ready." },
   support: { title: "Support", subtitle: "Every request for help from your clients and your VAs, in one place." },
   jobs: { title: "Job Postings", subtitle: "Client roles for your VAs: review them, post them, interview, and mark them filled." },

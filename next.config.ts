@@ -23,7 +23,8 @@ const APP: Policy = {
   "img-src": ["'self'", "data:", "blob:", "https:"],
   "font-src": ["'self'", "data:"],
   "connect-src": ["'self'"],
-  "frame-src": ["'self'", TURNSTILE, YOUTUBE, LOOM, VIMEO],
+  // blob: shows a reading lesson's PDF, fetched signed in (only types the API allows, served with a fixed type).
+  "frame-src": ["'self'", "blob:", TURNSTILE, YOUTUBE, LOOM, VIMEO],
   "object-src": ["'none'"],
   "base-uri": ["'self'"],
   "form-action": ["'self'"],
@@ -49,7 +50,7 @@ const EMBED_PREVIEW: Policy = {
 
 // Pages that show a VA's resume (VA portal, client portal, the public resume page): a VA's intro video can come
 // from any https video host, as a sandboxed player frame or a video file.
-const RESUME: Policy = { ...APP, "frame-src": ["'self'", TURNSTILE, "https:"], "media-src": ["'self'", "blob:", "https:"] };
+const RESUME: Policy = { ...APP, "frame-src": ["'self'", "blob:", TURNSTILE, "https:"], "media-src": ["'self'", "blob:", "https:"] };
 
 // Booking pages, forms and surveys are embedded on clients' own websites.
 const PUBLIC: Policy = { ...APP, "frame-ancestors": ["*"] };

@@ -340,6 +340,91 @@
   }
 }
 
+// <LessonReading>: a reading lesson's document (PDF or image in the page; other files download) and its text.
+.lesson-reading {
+  @include stack(14px);
+
+  &__doc {
+    overflow: hidden;
+    border: 1px solid $line;
+    border-radius: $radius-2xl;
+    background: $bg;
+
+    iframe {
+      display: block;
+      width: 100%;
+      height: min(75vh, 860px);
+      border: 0;
+      background: $white;
+    }
+
+    &.is-image {
+      @include center;
+      padding: 10px;
+
+      img {
+        max-width: 100%;
+        max-height: 75vh;
+        object-fit: contain;
+        border-radius: $radius-xl;
+      }
+    }
+  }
+
+  &__loading {
+    @include center;
+    gap: 8px;
+    min-height: 220px;
+    color: $ink-soft;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  &__file {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid $line;
+    border-radius: $radius-xl;
+    background: $white;
+  }
+
+  &__ext {
+    @include center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-lg;
+    background: $bg;
+    color: $ink-soft;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+
+  &__name {
+    @include truncate;
+    display: block;
+    font-size: 13px;
+  }
+
+  &__body {
+    @include stack(12px);
+    max-width: 72ch;
+    font-size: 15px;
+    line-height: 1.7;
+
+    p {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+  }
+}
+
 // <Stars> and <StarInput>.
 .stars {
   display: inline-flex;

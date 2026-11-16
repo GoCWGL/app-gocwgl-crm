@@ -2,10 +2,11 @@
 
 import { useVaAccess } from "../lib/access";
 import { useRef, useState } from "react";
-import { Badge, Button, FormError, Icon, Input, LessonVideo, LoadState, TrainingCover } from "@/components/ui";
+import { Badge, Button, FormError, Icon, Input, LessonReading, LessonVideo, LoadState, TrainingCover } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { formatShort } from "@/utils/format/dates";
-import { formatMinutes, lessonThumb, VIDEO_PROVIDER_LABEL } from "@/lib/video";
+import { formatMinutes, lessonThumb, lessonVideo, VIDEO_PROVIDER_LABEL } from "@/lib/video";
+import { lessonFilePath } from "@/utils/api/trainings";
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { AttemptOut, VaTrainingOut } from "@/utils/api/models";
 import { trainingThumbPath } from "@/utils/api/trainings";
@@ -40,7 +41,7 @@ export function TrainingList({ query, audience, readOnly }: { query: UseQueryRes
               {passed} of {trainings.length} trainings passed
               <span className="text-small"> · {registered} registered</span>
             </span>
-            <span className="text-small">Register for a course, watch the lessons, then take the quiz.</span>
+            <span className="text-small">Register for a course, go through the lessons, then take the quiz.</span>
           </div>
           <div className="training-card__bar">
             <span style={{ width: `${trainings.length ? (passed / trainings.length) * 100 : 0}%` }} />
@@ -83,7 +84,7 @@ export function TrainingList({ query, audience, readOnly }: { query: UseQueryRes
                         <span style={{ width: `${(watchedCount(t) / t.lessons.length) * 100}%` }} />
                       </span>
                       <span className="text-small">
-                        {watchedCount(t)} of {t.lessons.length} lessons watched
+                        {watchedCount(t)} of {t.lessons.length} lessons done
                       </span>
                     </span>
                   )}
@@ -154,6 +155,7 @@ function CourseView({
   const locked = !enrolled && !readOnly;
   const onQuiz = hasQuiz && current === t.lessons.length;
   const lesson = onQuiz ? null : t.lessons[current];
+  const video = lesson ? lessonVideo(lesson) : null;
 
   const doneCount = t.lessons.filter((_, i) => isDone(i)).length + (hasQuiz && t.myPassed ? 1 : 0);
   const totalMinutes = t.lessons.reduce((sum, l) => sum + l.minutes, 0);
@@ -196,7 +198,18 @@ function CourseView({
             <RegisterCard training={t} totalMinutes={totalMinutes} pending={enroll.isPending} error={enroll.error} onRegister={register} />
           ) : lesson ? (
             <>
-              <LessonVideo key={lesson.id} video={lesson} title={lesson.title} className="course__video" />
+              {video ? (
+                <LessonVideo key={lesson.id} video={video} title={lesson.title} className="course__video" />
+              ) : (
+                <LessonReading
+                  key={lesson.id}
+                  title={lesson.title}
+                  body={lesson.body ?? ""}
+                  file={lesson.file}
+                  filePath={lesson.file ? lessonFilePath(audience === "client" ? "portal" : "va", t.id, lesson.file.id) : null}
+                  className="card course__reading"
+                />
+              )}
               <section className="card course__lesson">
                 <FormError error={progress.error} />
                 {readOnly && !enrolled && <p className="text-small">Viewing only: progress isn’t saved.</p>}
@@ -205,12 +218,12 @@ function CourseView({
                     Lesson {current + 1} of {t.lessons.length}
                   </span>
                   <span className="course-chip course-chip--provider">
-                    <Icon name="play" size={9} /> {VIDEO_PROVIDER_LABEL[lesson.provider]}
+                    <Icon name={video ? "play" : "form"} size={9} /> {video ? VIDEO_PROVIDER_LABEL[video.provider] : "Reading"}
                   </span>
                   {lesson.minutes > 0 && <span className="course__len">{formatMinutes(lesson.minutes)}</span>}
                   {isDone(current) && (
                     <span className="course__len course__len--done">
-                      <Icon name="circleCheck" size={13} /> Watched
+                      <Icon name="circleCheck" size={13} /> {video ? "Watched" : "Read"}
                     </span>
                   )}
                 </div>
@@ -226,7 +239,7 @@ function CourseView({
                     </Button>
                   ) : (
                     <Button variant="primary" onClick={() => (isDone(current) ? onBack() : markWatched(lesson.id, current))}>
-                      {isDone(current) ? "Back to trainings" : "Mark as watched"} <Icon name={isDone(current) ? "arrowRight" : "check"} size={14} />
+                      {isDone(current) ? "Back to trainings" : video ? "Mark as watched" : "Mark as read"} <Icon name={isDone(current) ? "arrowRight" : "check"} size={14} />
                     </Button>
                   )}
                 </div>
@@ -289,7 +302,7 @@ function CourseView({
                   <span className="course__item">
                     <span className="course__item-title">{l.title}</span>
                     <span className="course__item-meta">
-                      {VIDEO_PROVIDER_LABEL[l.provider]}
+                      {l.kind !== "reading" && l.provider ? VIDEO_PROVIDER_LABEL[l.provider] : "Reading"}
                       {l.minutes > 0 && ` · ${formatMinutes(l.minutes)}`}
                     </span>
                   </span>
@@ -415,7 +428,7 @@ function QuizCard({
               <span>
                 {result.passed
                   ? `You passed! ${result.correct} of ${result.total} right.`
-                  : `${result.correct} of ${result.total} right. You need ${result.passingRate}% to pass — rewatch the lessons and try again.`}
+                  : `${result.correct} of ${result.total} right. You need ${result.passingRate}% to pass — go over the lessons again and retry.`}
               </span>
             </span>
           </div>

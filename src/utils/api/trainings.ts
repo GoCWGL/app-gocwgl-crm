@@ -1,5 +1,5 @@
 import { api, del, get, patch, post, put } from "./client";
-import type { AttemptOut, DefaultThumbnailOut, LearnerOut, ProgressIn, TrainingAudience, TrainingIn, TrainingOut, TrainingResultOut, TrainingStatsOut, TrainingUpdate, VaTrainingOut } from "./models";
+import type { AttemptOut, DefaultThumbnailOut, LearnerOut, LessonFileOut, ProgressIn, TrainingAudience, TrainingIn, TrainingOut, TrainingResultOut, TrainingStatsOut, TrainingUpdate, VaTrainingOut } from "./models";
 
 // Engagement › Training (staff).
 export const listTrainings = () => get<TrainingOut[]>("/admin/trainings");
@@ -26,6 +26,15 @@ export const setDefaultThumbnail = (file: File) =>
   api<DefaultThumbnailOut>("/admin/trainings/default-thumbnail", { method: "PUT", body: imageForm(file), signal: AbortSignal.timeout(UPLOAD_TIMEOUT) });
 export const removeDefaultThumbnail = () => del<DefaultThumbnailOut>("/admin/trainings/default-thumbnail");
 
+// Reading lessons' documents (PDF, image, Word, PowerPoint, Excel or text, up to 25 MB).
+export const LESSON_FILE_ACCEPT = ".pdf,.png,.jpg,.jpeg,.webp,.docx,.pptx,.xlsx,.txt";
+export const LESSON_FILE_MAX_BYTES = 25 * 1024 * 1024;
+export const uploadLessonFile = (id: string, file: File) =>
+  api<LessonFileOut>(`/admin/trainings/${id}/files`, { method: "POST", body: imageForm(file), signal: AbortSignal.timeout(UPLOAD_TIMEOUT) });
+/** Where a reading lesson's document is fetched from (signed in), for staff, VAs or client users. */
+export const lessonFilePath = (scope: "admin" | "va" | "portal", trainingId: string, fileId: string) =>
+  `/${scope}/trainings/${trainingId}/files/${encodeURIComponent(fileId)}`;
+
 /** Where a course's thumbnail is fetched from (signed in), for staff, VAs or client users; null when it has none. */
 export const trainingThumbPath = (scope: "admin" | "va" | "portal", id: string, version: string | null | undefined) =>
   version ? `/${scope}/trainings/${id}/thumbnail?v=${encodeURIComponent(version)}` : null;
@@ -45,7 +54,15 @@ export const saveTrainingProgress = (id: string, body: ProgressIn) => put<void>(
 export function withTrainingDefaults(rows: VaTrainingOut[]): VaTrainingOut[] {
   return rows.map((t) => ({
     ...t,
-    lessons: (t.lessons ?? []).map((l) => ({ ...l, provider: l.provider ?? "youtube", minutes: l.minutes ?? 0, summary: l.summary ?? "" })),
+    lessons: (t.lessons ?? []).map((l) => ({
+      ...l,
+      kind: l.kind ?? "video",
+      provider: l.kind === "reading" ? null : (l.provider ?? "youtube"),
+      minutes: l.minutes ?? 0,
+      summary: l.summary ?? "",
+      body: l.body ?? "",
+      file: l.file ?? null,
+    })),
     questions: (t.questions ?? []).map((q) => ({ ...q, kind: q.kind ?? "choice" })),
     enrolledAt: t.enrolledAt ?? null,
     myWatched: t.myWatched ?? [],
