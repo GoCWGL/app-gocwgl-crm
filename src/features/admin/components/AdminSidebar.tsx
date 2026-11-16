@@ -52,7 +52,26 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
   {
     title: "People",
     items: [
-      item("clients", "Clients", "user"),
+      {
+        key: "clients-menu",
+        label: "Clients",
+        icon: "user",
+        description: "Your clients, who's online and what they learn",
+        groups: [
+          {
+            title: "Clients",
+            items: [item("clients", "Client directory", "users"), item("clientStatus", "Live status", "pulse")],
+          },
+          {
+            title: "Enablement",
+            items: [item("clientTraining", "Training", "graduation"), item("clientSops", "SOPs", "clipboard")],
+          },
+          {
+            title: "Client care",
+            items: [item("feedback", "Client feedback", "star")],
+          },
+        ],
+      },
       {
         key: "vas-menu",
         label: "VAs",
@@ -68,8 +87,8 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
             items: [item("training", "Training", "graduation"), item("sops", "SOPs", "clipboard")],
           },
           {
-            title: "Client care",
-            items: [item("feedback", "Client feedback", "star"), item("support", "Support desk", "lifebuoy")],
+            title: "Support",
+            items: [item("support", "Support desk", "lifebuoy")],
           },
           {
             title: "Engagement",
@@ -155,7 +174,7 @@ export function AdminSidebar() {
   const isActive = (i: MenuItem) => pagesOf(i).includes(tab);
   const holds = (f: Flyout, t: AdminTab) => flyoutItems(f).some((i) => pagesOf(i).includes(t));
 
-  // Clicking VAs, Finance or Marketing opens that menu's own sidebar next to the main one, and the main
+  // Clicking Clients, VAs, Finance or Marketing opens that menu's own sidebar next to the main one, and the main
   // menu shrinks to its icons. It stays while you move between its pages; hiding it (or going to a page
   // outside it) brings the full main menu back. "Expand" shows the full main menu beside it.
   const [panel, setPanel] = useState<{ tab: AdminTab; key: string | null }>({ tab, key: null });

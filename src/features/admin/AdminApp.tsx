@@ -24,6 +24,7 @@ import { SupportSection } from "./sections/engagement/SupportSection";
 import { JobPostingsSection } from "./sections/jobs/JobPostingsSection";
 import { SopsSection } from "./sections/sops/SopsSection";
 import { TrainingsSection } from "./sections/trainings/TrainingsSection";
+import { ClientStatusSection } from "./sections/engagement/ClientStatusSection";
 import { CalendarSection } from "./sections/calendar/CalendarSection";
 import { ClientsSection } from "./sections/contacts/ClientsSection";
 import { TagsSection } from "./sections/contacts/TagsSection";
@@ -40,6 +41,12 @@ import { ReportingSection } from "./sections/reporting/ReportingSection";
 import { SettingsSection } from "./sections/settings/SettingsSection";
 import { SurveysSection } from "./sections/surveys/SurveysSection";
 import { AdminProvider, useAdmin } from "./state/AdminContext";
+
+// Training and SOPs are one page each in the VAs menu and one in the Clients menu.
+const VaTrainingsSection = () => <TrainingsSection audience="va" />;
+const ClientTrainingsSection = () => <TrainingsSection audience="client" />;
+const VaSopsSection = () => <SopsSection audience="va" />;
+const ClientSopsSection = () => <SopsSection audience="client" />;
 
 const SECTIONS: Record<AdminTab, ComponentType> = {
   dashboard: DashboardSection,
@@ -61,8 +68,11 @@ const SECTIONS: Record<AdminTab, ComponentType> = {
   reporting: ReportingSection,
   bugs: BugsSection,
   status: StatusSection,
-  training: TrainingsSection,
-  sops: SopsSection,
+  training: VaTrainingsSection,
+  sops: VaSopsSection,
+  clientStatus: ClientStatusSection,
+  clientTraining: ClientTrainingsSection,
+  clientSops: ClientSopsSection,
   support: SupportSection,
   feedback: FeedbackSection,
   jobs: JobPostingsSection,

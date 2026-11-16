@@ -29,6 +29,9 @@ export type AdminTab =
   | "status"
   | "training"
   | "sops"
+  | "clientStatus"
+  | "clientTraining"
+  | "clientSops"
   | "support"
   | "feedback"
   | "jobs"
@@ -81,8 +84,11 @@ export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> 
   reporting: { title: "Dashboard", subtitle: "Reports: team hours, billing and meeting no-shows, plus how signups turn into paying clients." },
   bugs: { title: "Report Bugs", subtitle: "Every bug your clients report from their own CRM, in one place." },
   status: { title: "Status", subtitle: "See which VAs are working right now, who they're working for, who's on a break and who's offline." },
-  training: { title: "Training", subtitle: "Video and reading lessons for your VAs and clients. VAs take a quiz and pass at your passing rate." },
-  sops: { title: "SOPs", subtitle: "Step-by-step guides for your clients and your VAs. Draft them, then publish when they're ready." },
+  training: { title: "VA training", subtitle: "Video and reading lessons for your VAs. They take a quiz and pass at your passing rate." },
+  sops: { title: "VA SOPs", subtitle: "Step-by-step guides for your VAs. Draft them, then publish when they're ready." },
+  clientStatus: { title: "Client live status", subtitle: "Which clients have their portal open right now, and when the others were last on." },
+  clientTraining: { title: "Client training", subtitle: "Video and reading lessons for your clients, assigned to the clients who should see them." },
+  clientSops: { title: "Client SOPs", subtitle: "Step-by-step guides for your clients. Draft them, then publish when they're ready." },
   support: { title: "Support", subtitle: "Every request for help from your clients and your VAs, in one place." },
   jobs: { title: "Job Postings", subtitle: "Client roles for your VAs: review them, post them, interview, and mark them filled." },
   feedback: { title: "Feedback", subtitle: "What your clients say about their VAs: star ratings and comments." },
@@ -165,6 +171,10 @@ export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
   status: null,
   training: null,
   sops: null,
+  // The Clients menu's pages: whoever can use Contacts & Clients sees them.
+  clientStatus: "contacts",
+  clientTraining: "contacts",
+  clientSops: "contacts",
   // Tickets belong to the "Report a bug" menu on the API.
   support: "bugs",
   feedback: null,

@@ -36,12 +36,12 @@ const STATUS: Record<SopStatus, { label: string; tone: "green" | "slate" }> = {
   draft: { label: "Draft", tone: "slate" },
 };
 
-/** Engagement › SOPs: step-by-step guides for clients and for VAs. */
-export function SopsSection() {
+/** VAs › SOPs and Clients › SOPs: step-by-step guides for one audience. */
+export function SopsSection({ audience: tab }: { audience: SopAudience }) {
+  const { goTo } = useAdmin();
   const canWrite = canWriteCrm(useMe().data);
   const query = useSops();
   const sops = query.data ?? [];
-  const [tab, setTab] = useState<SopAudience>("va");
   const [search, setSearch] = useState("");
   const [reading, setReading] = useState<SopOut | null>(null);
   const [editing, setEditing] = useState<SopOut | "new" | null>(null);
@@ -65,8 +65,8 @@ export function SopsSection() {
           <Tabs<SopAudience>
             label="SOPs"
             value={tab}
-            onChange={setTab}
-            options={(Object.keys(AUDIENCE) as SopAudience[]).map((a) => ({
+            onChange={() => undefined}
+            options={[tab].map((a) => ({
               value: a,
               label: AUDIENCE[a].tab,
               hint: AUDIENCE[a].hint,
@@ -163,8 +163,9 @@ export function SopsSection() {
           onClose={() => setEditing(null)}
           onSaved={(s) => {
             setEditing(null);
-            setTab(s.audience);
-            setReading(s);
+            // Moved to the other audience: it's now on that menu's SOPs page.
+            if (s.audience !== tab) goTo(s.audience === "va" ? "sops" : "clientSops");
+            else setReading(s);
           }}
         />
       )}

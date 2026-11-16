@@ -217,12 +217,15 @@ function CourseRowCover({ t }: { t: TrainingOut }) {
   );
 }
 
-/** Engagement › Training: courses of YouTube, Loom or Vimeo lessons for VAs and clients; VAs pass a quiz at your passing rate. */
-export function TrainingsSection() {
+/**
+ * VAs › Training and Clients › Training: courses of video and reading lessons for one audience; VAs pass a quiz at
+ * your passing rate.
+ */
+export function TrainingsSection({ audience: tab }: { audience: TrainingAudience }) {
+  const { goTo } = useAdmin();
   const canWrite = canWriteCrm(useMe().data);
   const query = useTrainings();
   const trainings = query.data ?? [];
-  const [tab, setTab] = useState<TrainingAudience>("va");
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -242,11 +245,6 @@ export function TrainingsSection() {
   const open = trainings.find((t) => t.id === openId) ?? null;
   const allCategories = [...new Set(trainings.map((t) => t.category).filter(Boolean))].sort();
 
-  const switchTab = (a: TrainingAudience) => {
-    setTab(a);
-    setCategory("");
-    setStatus("all");
-  };
 
   return (
     <div className="page-stack">
@@ -257,8 +255,8 @@ export function TrainingsSection() {
           <Tabs<TrainingAudience>
             label="Trainings"
             value={tab}
-            onChange={switchTab}
-            options={(Object.keys(AUDIENCE) as TrainingAudience[]).map((a) => ({
+            onChange={() => undefined}
+            options={[tab].map((a) => ({
               value: a,
               label: AUDIENCE[a].tab,
               hint: AUDIENCE[a].hint,
@@ -472,8 +470,9 @@ export function TrainingsSection() {
           onClose={() => setEditing(null)}
           onSaved={(t) => {
             setEditing(null);
-            switchTab(t.audience);
-            setOpenId(t.id);
+            // Moved to the other audience: it's now on that menu's Training page.
+            if (t.audience !== tab) goTo(t.audience === "va" ? "training" : "clientTraining");
+            else setOpenId(t.id);
           }}
         />
       )}
