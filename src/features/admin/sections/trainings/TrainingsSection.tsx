@@ -17,10 +17,10 @@ import {
   SegmentedControl,
   GroupedPicker,
   Tabs,
-  Textarea,
   Select,
   LessonPlayer,
   RichTextEditor,
+  RichTextView,
   TrainingCover,
   type IconName,
 } from "@/components/ui";
@@ -245,7 +245,7 @@ export function TrainingsSection({ audience: tab }: { audience: TrainingAudience
   const categories = [...new Set(inTab.map((t) => t.category).filter(Boolean))].sort();
   const byCategory = inTab.filter((t) => !category || t.category === category);
   const shown = byCategory.filter(
-    (t) => (status === "all" || t.status === status) && (!q || [t.title, t.description, t.category].some((x) => x.toLowerCase().includes(q))),
+    (t) => (status === "all" || t.status === status) && (!q || [t.title, toPlainText(t.description), t.category].some((x) => x.toLowerCase().includes(q))),
   );
   const open = trainings.find((t) => t.id === openId) ?? null;
   const allCategories = [...new Set(trainings.map((t) => t.category).filter(Boolean))].sort();
@@ -619,7 +619,7 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
             </Badge>
           </span>
         )}
-        {t.description && <p className="va-pre">{t.description}</p>}
+        {t.description && <RichTextView body={t.description} className="course-about" />}
 
         {t.questions.length > 0 && (
           <div className="stack stack--8">
@@ -973,7 +973,7 @@ function TrainingEditor({
       audience: f.audience,
       category: f.category.trim(),
       lessons: lessonsBody({}),
-      description: f.description.trim(),
+      description: toPlainText(f.description).trim() ? f.description.trim() : "",
       passingRate: rate,
       dailyLessons: Number(f.daily),
       unlockHour: Number(f.unlockHour),
@@ -1201,8 +1201,14 @@ function TrainingEditor({
             <Field label="Title" htmlFor="tr-title" required error={tried && errors.title}>
               <Input id="tr-title" placeholder="ELSAiA Module 2 · Daily reporting" value={f.title} onChange={(e) => set({ title: e.target.value })} autoFocus />
             </Field>
-            <Field label="Description" htmlFor="tr-desc" hint="A short paragraph on what they'll learn and why it matters.">
-              <Textarea id="tr-desc" rows={5} placeholder="What they'll learn and why it matters." value={f.description} onChange={(e) => set({ description: e.target.value })} />
+            <Field label="Description" hint="A short paragraph on what they'll learn and why it matters.">
+              <RichTextEditor
+                aria-label="Description"
+                maxLength={40_000}
+                placeholder="What they'll learn and why it matters. Select text to change its font, weight or size."
+                value={f.description}
+                onChange={(description) => set({ description })}
+              />
             </Field>
             <Field label="Thumbnail" htmlFor="tr-thumb" hint="The picture on the course card.">
               <ThumbnailPicker

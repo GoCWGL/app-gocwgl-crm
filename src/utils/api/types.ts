@@ -14727,6 +14727,11 @@ export interface components {
             /** Nextunlockat */
             nextUnlockAt?: string | null;
             /**
+             * Timezone
+             * @default UTC
+             */
+            timezone?: string;
+            /**
              * Quizlocked
              * @default false
              */

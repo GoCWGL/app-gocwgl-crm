@@ -28,4 +28,5 @@ export { TrainingCover } from "./TrainingCover";
 export { LessonVideo } from "./LessonVideo";
 export { LessonReading } from "./LessonReading";
 export { RichTextEditor } from "./RichTextEditor";
+export { RichTextView } from "./RichTextView";
 export { ErrorState, FormError, Loading, LoadState, SoonNote } from "./LoadState";

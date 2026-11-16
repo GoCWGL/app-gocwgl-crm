@@ -1757,11 +1757,51 @@
     letter-spacing: -0.02em;
   }
 
-  &__about {
+  // The hero's opening words of the description (the full text is in "About this course").
+  &__lede {
+    display: -webkit-box;
     margin: 0;
+    overflow: hidden;
     color: $ink-muted;
-    font-size: 15px;
+    font-size: 15.5px;
     line-height: 1.65;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+  }
+
+  // "About this course": the description with its formatting.
+  &__about {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 24px clamp(20px, 4vw, 40px) 28px;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(14, 165, 233, 0.06), transparent 40%),
+      $white;
+  }
+
+  &__about-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid $line-faint;
+  }
+
+  &__about-icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-lg;
+    background: $grad-orange;
+    color: $on-orange;
+    box-shadow: $glow-orange-soft;
+  }
+
+  &__about-body {
+    max-width: 72ch;
   }
 
   &__facts {
@@ -1935,6 +1975,180 @@
       display: none;
     }
   }
+}
+
+// Formatted text from the course editor (course descriptions): comfortable type, lists in a soft panel.
+.rich-text {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: $ink-soft;
+  font-size: 16px;
+  line-height: 1.75;
+
+  p,
+  li,
+  h2,
+  h3,
+  blockquote {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  strong,
+  b {
+    color: $ink;
+    font-weight: 700;
+  }
+
+  h2,
+  h3 {
+    margin-top: 6px;
+    color: $ink;
+    font-weight: 800;
+    line-height: 1.3;
+  }
+
+  h2 {
+    font-size: 22px;
+  }
+
+  h3 {
+    font-size: 18px;
+  }
+
+  ul,
+  ol {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 14px 18px 14px 38px;
+    border: 1px solid $line-soft;
+    border-radius: $radius-lg;
+    background: $bg-soft;
+  }
+
+  li::marker {
+    color: $orange;
+    font-weight: 800;
+  }
+
+  blockquote {
+    padding: 12px 16px;
+    border-left: 4px solid $orange;
+    border-radius: 0 $radius-lg $radius-lg 0;
+    background: #fff8eb;
+    color: $ink;
+  }
+}
+
+// Admin course details: the description, a little smaller.
+.course-about {
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+// Daily pace: when the next lesson opens, with a live countdown (VA and client portals).
+.next-lesson {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: $radius-xl;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(14, 165, 233, 0.12), transparent 55%),
+    #f5fbff;
+
+  &.is-open {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: $green-50;
+
+    .next-lesson__icon {
+      background: $green-500;
+    }
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+    color: $white;
+  }
+
+  &__text {
+    display: flex;
+    flex: 1 1 180px;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+
+    strong {
+      color: $ink;
+      font-size: 14px;
+    }
+
+    span {
+      color: $ink-muted;
+      font-size: 12.5px;
+    }
+  }
+
+  &__clock {
+    display: flex;
+    gap: 6px;
+
+    span {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 48px;
+      padding: 6px 4px;
+      border: 1px solid $line-soft;
+      border-radius: 10px;
+      background: $white;
+      box-shadow: 0 1px 2px rgba(11, 20, 36, 0.05);
+    }
+
+    b {
+      color: $ink;
+      font-family: $font-mono;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+    }
+
+    i {
+      color: $muted;
+      font-size: 10px;
+      font-style: normal;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+  }
+}
+
+// The short version on course cards and the course outline.
+.next-lesson-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  padding: 3px 9px;
+  border-radius: $radius-pill;
+  background: #eaf6fe;
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 // A reading lesson in the course: a clean article with a header, comfortable type and the next step at the end.

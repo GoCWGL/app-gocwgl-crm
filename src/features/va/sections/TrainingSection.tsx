@@ -1,8 +1,9 @@
 "use client";
 
 import { useVaAccess } from "../lib/access";
-import { useRef, useState } from "react";
-import { Badge, Button, FormError, Icon, Input, LessonReading, LessonVideo, LoadState, TrainingCover } from "@/components/ui";
+import { useRef, useState, type ReactNode } from "react";
+import { Badge, Button, FormError, Icon, Input, LessonReading, LessonVideo, LoadState, RichTextView, TrainingCover } from "@/components/ui";
+import { NextLessonCountdown } from "../components/NextLessonCountdown";
 import { cn } from "@/lib/utils";
 import { toPlainText, withoutLeadingTitle } from "@/lib/richText";
 import { formatShort } from "@/utils/format/dates";
@@ -87,6 +88,7 @@ export function TrainingList({ query, audience, readOnly }: { query: UseQueryRes
                       <span className="text-small">
                         {watchedCount(t)} of {t.lessons.length} lessons done
                       </span>
+                      {t.nextUnlockAt && !t.completedAt && <NextLessonCountdown compact at={t.nextUnlockAt} timezone={t.timezone} />}
                     </span>
                   )}
                 </span>
@@ -273,20 +275,18 @@ function CourseView({
               step={`Lesson ${current + 1} of ${t.lessons.length}`}
               message={
                 current === firstUndone && t.nextUnlockAt
-                  ? `You've finished today's lesson${t.dailyLessons === 1 ? "" : "s"}. This one opens ${opensAt(t.nextUnlockAt)}.`
+                  ? `You've finished today's lesson${t.dailyLessons === 1 ? "" : "s"}. Great work! This one opens on its own when the timer runs out.`
                   : `Finish ${firstUndone >= 0 ? `lesson ${firstUndone + 1}` : "the lessons before it"} first. Lessons open in order${t.dailyLessons ? `, ${t.dailyLessons} a day` : ""}.`
               }
+              countdown={t.nextUnlockAt ? <NextLessonCountdown at={t.nextUnlockAt} timezone={t.timezone} /> : undefined}
               onPrevious={current > 0 ? () => go(current - 1) : undefined}
             />
           ) : quizLocked ? (
             <LockedCard
               title="Quiz"
               step="Last step"
-              message={
-                t.nextUnlockAt
-                  ? `Finish every lesson first, then take the quiz. Your next lesson opens ${opensAt(t.nextUnlockAt)}.`
-                  : "Finish every lesson first, then take the quiz."
-              }
+              message="Finish every lesson first, then take the quiz."
+              countdown={t.nextUnlockAt ? <NextLessonCountdown at={t.nextUnlockAt} timezone={t.timezone} /> : undefined}
               onPrevious={t.lessons.length ? () => go(t.lessons.length - 1) : undefined}
             />
           ) : lesson && video ? (
@@ -364,6 +364,7 @@ function CourseView({
             <span className="course__bar" role="progressbar" aria-valuemin={0} aria-valuemax={steps} aria-valuenow={doneCount} aria-label="Course progress">
               <span style={{ width: `${steps ? (doneCount / steps) * 100 : 0}%` }} />
             </span>
+            {enrolled && t.nextUnlockAt && <NextLessonCountdown compact at={t.nextUnlockAt} timezone={t.timezone} />}
           </div>
           <ol className="course__outline">
             {t.lessons.map((l, i) => (
@@ -411,19 +412,20 @@ function CourseView({
   );
 }
 
-/** "today at 8:00 AM", "tomorrow at 8:00 AM" or "Wed, Nov 18 at 8:00 AM", in the learner's own clock. */
-function opensAt(iso: string): string {
-  const at = new Date(iso);
-  const time = at.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-  const days = Math.round((day(at) - day(new Date())) / 86_400_000);
-  if (days === 0) return `today at ${time}`;
-  if (days === 1) return `tomorrow at ${time}`;
-  return `${at.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at ${time}`;
-}
-
 /** Daily pace: a lesson (or the quiz) that isn't open yet, and when it will be. */
-function LockedCard({ title, step, message, onPrevious }: { title: string; step: string; message: string; onPrevious?: () => void }) {
+function LockedCard({
+  title,
+  step,
+  message,
+  countdown,
+  onPrevious,
+}: {
+  title: string;
+  step: string;
+  message: string;
+  countdown?: ReactNode;
+  onPrevious?: () => void;
+}) {
   return (
     <section className="card course__lesson course__locked">
       <span className="course__locked-icon" aria-hidden="true">
@@ -434,6 +436,7 @@ function LockedCard({ title, step, message, onPrevious }: { title: string; step:
       </div>
       <h2 className="course__title">{title}</h2>
       <p className="course__summary">{message}</p>
+      {countdown}
       {onPrevious && (
         <div className="course__nav">
           <Button variant="secondary" onClick={onPrevious}>
@@ -493,6 +496,16 @@ function CourseDashboard({
   const cover = trainingThumbPath(audience === "client" ? "portal" : "va", t.id, t.thumbnail);
   const poster = t.lessons[0] ? lessonThumb(t.lessons[0]) : null;
   const isDone = (i: number) => t.myPassed || watched.includes(t.lessons[i]?.id);
+  // The description in full (with its formatting) goes in "About this course"; the hero shows its opening words.
+  // Lines (paragraphs, list items) joined as sentences, so bullet points don't run together.
+  const aboutText = toPlainText(t.description ?? "")
+    .split("\n")
+    .map((l) => l.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .map((l) => (/[.!?:…]$/.test(l) ? l : `${l}.`))
+    .join(" ");
+  const excerpt = aboutText.length > 220 ? `${aboutText.slice(0, 220).replace(/\s+\S*$/, "")}…` : aboutText;
+  const hasAbout = !!aboutText;
   const nextLabel = resume >= t.lessons.length ? "Quiz" : `Lesson ${resume + 1} · ${t.lessons[resume]?.title ?? ""}`;
 
   const cta = !canOpen
@@ -531,7 +544,7 @@ function CourseDashboard({
         <div className="course-dash__intro">
           <span className="course-dash__kicker">{t.category || "Training"}</span>
           <h1 className="course-dash__title">{t.title}</h1>
-          <p className="course-dash__about va-pre">{t.description || "Go through the lessons in order. Your progress is saved as you go."}</p>
+          <p className="course-dash__lede">{excerpt || "Go through the lessons in order. Your progress is saved as you go."}</p>
           <ul className="course-dash__facts">
             <li>
               <Icon name="video" size={14} />
@@ -583,6 +596,7 @@ function CourseDashboard({
             </div>
           )}
 
+          {enrolled && !finished && t.nextUnlockAt && <NextLessonCountdown at={t.nextUnlockAt} timezone={t.timezone} />}
           <FormError error={enrollError} />
           <div className="course-dash__actions">
             <Button variant="primary" size="lg" disabled={enrolling || !steps} onClick={cta.onClick}>
@@ -595,6 +609,21 @@ function CourseDashboard({
           {!canOpen && <span className="text-small">Registering lets GoCWGL see your progress and help if you get stuck.</span>}
         </div>
       </section>
+
+      {hasAbout && (
+        <section className="card course-dash__about">
+          <header className="course-dash__about-head">
+            <span className="course-dash__about-icon" aria-hidden="true">
+              <Icon name="textLong" size={16} />
+            </span>
+            <span className="stack stack--0">
+              <h2 className="course-dash__h2">About this course</h2>
+              <span className="text-small">What you’ll learn and why it matters</span>
+            </span>
+          </header>
+          <RichTextView body={t.description} className="course-dash__about-body" />
+        </section>
+      )}
 
       <section className="card course-dash__outline">
         <header className="cluster cluster--between">
