@@ -16,6 +16,7 @@ import { useMe } from "@/utils/hooks/useUsers";
 import { StateChip, VaPresence } from "../components/VaPresence";
 import { isOpenProject, PROJECT_STATUS } from "../lib/projects";
 import { firstName, hm } from "../lib/vaTeam";
+import { useShowPackages } from "../lib/vaAccess";
 import { usePortal } from "../state/PortalContext";
 import { TwoStepReminder } from "@/features/account/TwoStepReminder";
 
@@ -29,6 +30,8 @@ function greeting() {
 /** Client portal › Dashboard: the VA team's status right now, and everything that needs a look. */
 export function DashboardSection() {
   const { goTo } = usePortal();
+  // "Request a VA" only once the team turns on the VA packages for this client.
+  const showVaPackages = useShowPackages("va");
   const me = useMe().data;
   const live = useLiveWork().data;
   const team = useVaTeam().data ?? [];
@@ -117,7 +120,7 @@ export function DashboardSection() {
                 ))}
               </ul>
             ) : (
-              <Empty text="No VAs yet." action="Request a VA" onClick={() => goTo("team")} />
+              <Empty text="No VAs yet." action={showVaPackages ? "Request a VA" : undefined} onClick={() => goTo("team")} />
             )}
             {requests.length > 0 && (
               <button type="button" className="cp-dash-note" onClick={() => goTo("team")}>

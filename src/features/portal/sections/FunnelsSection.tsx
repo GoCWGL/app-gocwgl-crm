@@ -36,7 +36,7 @@ export function useFunnelTab() {
   const funnels = usePortalFunnels().data ?? [];
   const builds = (usePortalBuilds().data ?? []).filter((b) => b.kind === "funnel");
   const yours = builds.length + funnels.filter((f) => !(f.projectId && f.status === "build")).length;
-  const showPackages = useShowPackages();
+  const showPackages = useShowPackages("funnels");
   const picked: FunnelTab = state.funnelView || (yours || !showPackages ? "builds" : "packages");
   const tab: FunnelTab = picked === "packages" && !showPackages ? "builds" : picked;
   return { yours, tab, showPackages };
@@ -148,7 +148,7 @@ function FunnelPackages() {
 /** Your funnel builds: live funnels with their results, builds in progress, and requests. */
 function FunnelBuilds() {
   const { update, openSupport, readOnly } = usePortal();
-  const showPackages = useShowPackages();
+  const showPackages = useShowPackages("funnels");
   const query = usePortalFunnels();
   const funnels = query.data ?? [];
   const live = funnels.filter((f) => f.status === "live");

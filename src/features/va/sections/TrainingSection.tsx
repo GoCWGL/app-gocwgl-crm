@@ -156,6 +156,10 @@ function CourseView({
   const onQuiz = hasQuiz && current === t.lessons.length;
   const lesson = onQuiz ? null : t.lessons[current];
   const video = lesson ? lessonVideo(lesson) : null;
+  // Daily pace: lessons open in order, a few a day; the quiz after the last one.
+  const firstUndone = t.lessons.findIndex((l) => !watched.includes(l.id));
+  const lessonLocked = !!lesson?.locked && !isDone(current);
+  const quizLocked = onQuiz && !!t.quizLocked && !t.myPassed;
 
   const doneCount = t.lessons.filter((_, i) => isDone(i)).length + (hasQuiz && t.myPassed ? 1 : 0);
   const totalMinutes = t.lessons.reduce((sum, l) => sum + l.minutes, 0);
@@ -196,6 +200,28 @@ function CourseView({
         <div className="course__main">
           {locked ? (
             <RegisterCard training={t} totalMinutes={totalMinutes} pending={enroll.isPending} error={enroll.error} onRegister={register} />
+          ) : lesson && lessonLocked ? (
+            <LockedCard
+              title={lesson.title}
+              step={`Lesson ${current + 1} of ${t.lessons.length}`}
+              message={
+                current === firstUndone && t.nextUnlockAt
+                  ? `You've finished today's lesson${t.dailyLessons === 1 ? "" : "s"}. This one opens ${opensAt(t.nextUnlockAt)}.`
+                  : `Finish ${firstUndone >= 0 ? `lesson ${firstUndone + 1}` : "the lessons before it"} first. Lessons open in order${t.dailyLessons ? `, ${t.dailyLessons} a day` : ""}.`
+              }
+              onPrevious={current > 0 ? () => go(current - 1) : undefined}
+            />
+          ) : quizLocked ? (
+            <LockedCard
+              title="Quiz"
+              step="Last step"
+              message={
+                t.nextUnlockAt
+                  ? `Finish every lesson first, then take the quiz. Your next lesson opens ${opensAt(t.nextUnlockAt)}.`
+                  : "Finish every lesson first, then take the quiz."
+              }
+              onPrevious={t.lessons.length ? () => go(t.lessons.length - 1) : undefined}
+            />
           ) : lesson ? (
             <>
               {video ? (
@@ -298,7 +324,9 @@ function CourseView({
             {t.lessons.map((l, i) => (
               <li key={l.id}>
                 <button type="button" aria-current={i === current ? "step" : undefined} className={cn(isDone(i) && "is-done")} onClick={() => go(i)}>
-                  <span className="course__n">{isDone(i) && i !== current ? <Icon name="check" size={12} /> : i + 1}</span>
+                  <span className="course__n">
+                    {isDone(i) && i !== current ? <Icon name="check" size={12} /> : l.locked && !isDone(i) ? <Icon name="lock" size={11} /> : i + 1}
+                  </span>
                   <span className="course__item">
                     <span className="course__item-title">{l.title}</span>
                     <span className="course__item-meta">
@@ -333,6 +361,40 @@ function CourseView({
         </aside>
       </div>
     </div>
+  );
+}
+
+/** "today at 8:00 AM", "tomorrow at 8:00 AM" or "Wed, Nov 18 at 8:00 AM", in the learner's own clock. */
+function opensAt(iso: string): string {
+  const at = new Date(iso);
+  const time = at.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  const day = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  const days = Math.round((day(at) - day(new Date())) / 86_400_000);
+  if (days === 0) return `today at ${time}`;
+  if (days === 1) return `tomorrow at ${time}`;
+  return `${at.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })} at ${time}`;
+}
+
+/** Daily pace: a lesson (or the quiz) that isn't open yet, and when it will be. */
+function LockedCard({ title, step, message, onPrevious }: { title: string; step: string; message: string; onPrevious?: () => void }) {
+  return (
+    <section className="card course__lesson course__locked">
+      <span className="course__locked-icon" aria-hidden="true">
+        <Icon name="lock" size={20} />
+      </span>
+      <div className="course__chips">
+        <span className="course-chip course-chip--step">{step}</span>
+      </div>
+      <h2 className="course__title">{title}</h2>
+      <p className="course__summary">{message}</p>
+      {onPrevious && (
+        <div className="course__nav">
+          <Button variant="secondary" onClick={onPrevious}>
+            <Icon name="chevronLeft" size={14} /> Previous
+          </Button>
+        </div>
+      )}
+    </section>
   );
 }
 

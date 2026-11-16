@@ -860,7 +860,7 @@ export interface paths {
         };
         /**
          * Va Lesson File
-         * @description A reading lesson's document in a published VA course.
+         * @description A reading lesson's document in a published VA course (not while its lesson is locked by the daily pace).
          */
         get: operations["va_lesson_file_api_va_trainings__training_id__files__file_id__get"];
         put?: never;
@@ -4852,7 +4852,7 @@ export interface paths {
         /**
          * Request Funnel
          * @description Prices come from the server's catalog. `payment: "now"` returns `payUrl` (the package's Wise link) to send the
-         *     client to; `"invoice"` emails the invoice with that link. 403 `packages_hidden` when the team turned packages off.
+         *     client to; `"invoice"` emails the invoice with that link. 403 `packages_hidden` when the team turned the Funnel packages off.
          */
         post: operations["request_funnel_api_portal_funnels_requests_post"];
         delete?: never;
@@ -5037,7 +5037,7 @@ export interface paths {
         /**
          * Request Crm
          * @description "Request a CRM": saved for the team before the client books their CRM discovery call. 403 `packages_hidden`
-         *     when the team turned packages off for this client.
+         *     when the team turned the CRM packages off for this client.
          */
         post: operations["request_crm_api_portal_crm_requests_post"];
         delete?: never;
@@ -5596,7 +5596,8 @@ export interface paths {
         put?: never;
         /**
          * Request Va
-         * @description Ask GoCWGL for a VA (another one, or your first). The team is emailed.
+         * @description Ask GoCWGL for a VA (another one, or your first). The team is emailed. 403 `packages_hidden` when the team turned
+         *     the VA packages off for this client.
          */
         post: operations["request_va_api_portal_va_requests_post"];
         delete?: never;
@@ -7876,10 +7877,20 @@ export interface components {
             /** Tags */
             tags: components["schemas"]["TagOut"][];
             /**
-             * Showpackages
+             * Showcrmpackages
              * @default true
              */
-            showPackages?: boolean;
+            showCrmPackages?: boolean;
+            /**
+             * Showfunnelpackages
+             * @default true
+             */
+            showFunnelPackages?: boolean;
+            /**
+             * Showvapackages
+             * @default false
+             */
+            showVaPackages?: boolean;
         };
         /** ContactReferrerIn */
         ContactReferrerIn: {
@@ -7954,8 +7965,12 @@ export interface components {
             tagIds?: string[] | null;
             /** Onboarded */
             onboarded?: boolean | null;
-            /** Showpackages */
-            showPackages?: boolean | null;
+            /** Showcrmpackages */
+            showCrmPackages?: boolean | null;
+            /** Showfunnelpackages */
+            showFunnelPackages?: boolean | null;
+            /** Showvapackages */
+            showVaPackages?: boolean | null;
         };
         /**
          * CrmPackage
@@ -10149,10 +10164,20 @@ export interface components {
             /** Openinvoices */
             openInvoices: number;
             /**
-             * Showpackages
+             * Showcrmpackages
              * @default true
              */
-            showPackages?: boolean;
+            showCrmPackages?: boolean;
+            /**
+             * Showfunnelpackages
+             * @default true
+             */
+            showFunnelPackages?: boolean;
+            /**
+             * Showvapackages
+             * @default false
+             */
+            showVaPackages?: boolean;
         };
         /** Page[ContactOut] */
         Page_ContactOut_: {
@@ -13033,6 +13058,16 @@ export interface components {
              * @default 80
              */
             passingRate?: number;
+            /**
+             * Dailylessons
+             * @default 0
+             */
+            dailyLessons?: number;
+            /**
+             * Unlockhour
+             * @default 8
+             */
+            unlockHour?: number;
             /** Questions */
             questions?: components["schemas"]["QuestionIn"][];
             /** Clientids */
@@ -13064,6 +13099,16 @@ export interface components {
             lessons: components["schemas"]["LessonOut"][];
             /** Passingrate */
             passingRate: number;
+            /**
+             * Dailylessons
+             * @default 0
+             */
+            dailyLessons?: number;
+            /**
+             * Unlockhour
+             * @default 8
+             */
+            unlockHour?: number;
             /** Questions */
             questions: components["schemas"]["QuestionOut"][];
             /** Publishedat */
@@ -13150,6 +13195,10 @@ export interface components {
             lessons?: components["schemas"]["LessonIn"][] | null;
             /** Passingrate */
             passingRate?: number | null;
+            /** Dailylessons */
+            dailyLessons?: number | null;
+            /** Unlockhour */
+            unlockHour?: number | null;
             /** Questions */
             questions?: components["schemas"]["QuestionIn"][] | null;
             /** Clientids */
@@ -13732,6 +13781,11 @@ export interface components {
              * @enum {string}
              */
             kind?: "video" | "reading";
+            /**
+             * Locked
+             * @default false
+             */
+            locked?: boolean;
             /** Title */
             title: string;
             /** Videoid */
@@ -14489,6 +14543,23 @@ export interface components {
             myCurrentStep: string;
             /** Completedat */
             completedAt: string | null;
+            /**
+             * Dailylessons
+             * @default 0
+             */
+            dailyLessons?: number;
+            /**
+             * Unlockhour
+             * @default 8
+             */
+            unlockHour?: number;
+            /** Nextunlockat */
+            nextUnlockAt?: string | null;
+            /**
+             * Quizlocked
+             * @default false
+             */
+            quizLocked?: boolean;
         };
         /** VaUpdate */
         VaUpdate: {

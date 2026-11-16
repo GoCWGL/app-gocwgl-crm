@@ -18,7 +18,12 @@ export function useHasTraining(): { known: boolean; has: boolean } {
   return { known: trainings.isSuccess, has: (trainings.data ?? []).length > 0 };
 }
 
-/** The CRM and Funnel packages ("Request CRM", "Request Funnel"): on unless the team turned them off for this client. */
-export function useShowPackages(): boolean {
-  return useOverview(30).data?.showPackages !== false;
+/**
+ * The CRM packages ("Request CRM") and Funnel packages ("Request Funnel") show unless the team turned them off for this
+ * client; the VA packages ("Request VA") only once the team turns them on.
+ */
+export function useShowPackages(kind: "crm" | "funnels" | "va"): boolean {
+  const overview = useOverview(30).data;
+  if (kind === "va") return overview?.showVaPackages === true;
+  return (kind === "crm" ? overview?.showCrmPackages : overview?.showFunnelPackages) !== false;
 }

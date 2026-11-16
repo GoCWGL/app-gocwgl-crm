@@ -29,7 +29,7 @@ export function useCrmTab() {
     (r) => r.status !== "declined" && (!r.projectId || (!!r.invoice && r.invoice.status !== "Paid")),
   );
   const { state } = usePortal();
-  const showPackages = useShowPackages();
+  const showPackages = useShowPackages("crm");
   // Open on their builds or requests when they have some, otherwise on the packages (when the team shows them).
   const picked: CrmTab = state.crmView || (builds.length || requests.length || !showPackages ? "builds" : "packages");
   const tab: CrmTab = picked === "packages" && !showPackages ? "builds" : picked;

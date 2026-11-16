@@ -17,6 +17,7 @@ import {
   GroupedPicker,
   Tabs,
   Textarea,
+  Select,
   LessonPlayer,
   TrainingCover,
   type IconName,
@@ -605,6 +606,13 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
       <div className="stack stack--16">
         <FormError error={save.error ?? remove.error} />
         {t.lessons.length ? <LessonPlayer lessons={t.lessons} filePath={(fileId) => lessonFilePath("admin", t.id, fileId)} /> : <span className="vp-empty">No lessons yet.</span>}
+        {(t.dailyLessons ?? 0) > 0 && (
+          <span>
+            <Badge tone="sky">
+              {t.dailyLessons} lesson{t.dailyLessons === 1 ? "" : "s"} a day · next opens at {UNLOCK_HOURS[t.unlockHour ?? 8]?.label} learner time
+            </Badge>
+          </span>
+        )}
         {t.description && <p className="va-pre">{t.description}</p>}
 
         {t.questions.length > 0 && (
@@ -729,6 +737,12 @@ const STEPS: Array<{ id: BuilderStep; label: string }> = [
 ];
 
 type LessonKind = "video" | "reading";
+
+/** "12:00 AM" … "11:00 PM", for when a paced course opens the next day's lessons. */
+const UNLOCK_HOURS = Array.from({ length: 24 }, (_, h) => ({
+  value: String(h),
+  label: `${h % 12 || 12}:00 ${h < 12 ? "AM" : "PM"}`,
+}));
 /** Both kinds' fields are kept, so switching a lesson between video and reading loses nothing. */
 type DraftLesson = {
   key: string;
@@ -824,6 +838,9 @@ function TrainingEditor({
     category: training?.category ?? "",
     description: training?.description ?? "",
     rate: String(training?.passingRate ?? 80),
+    // Daily pace: lessons a learner can finish per day ("0" = no limit), opening at this hour in their time zone.
+    daily: String(training?.dailyLessons ?? 0),
+    unlockHour: String(training?.unlockHour ?? 8),
   });
   // Client trainings: who it's for (only they see it in their portal).
   const [clientIds, setClientIds] = useState<string[]>(training?.clientIds ?? []);
@@ -915,6 +932,8 @@ function TrainingEditor({
       lessons: lessonsBody({}),
       description: f.description.trim(),
       passingRate: rate,
+      dailyLessons: Number(f.daily),
+      unlockHour: Number(f.unlockHour),
       ...(f.audience === "client" && { clientIds }),
       questions: used.map((q) => {
         if (q.kind === "text") return { id: q.id, kind: "text" as const, text: q.text.trim(), accepted: filled(q.accepted).map((a) => a.trim()) };
@@ -1179,6 +1198,29 @@ function TrainingEditor({
               <h3>Lessons</h3>
               <p>Videos (YouTube, Loom or Vimeo; unlisted works too) or readings (written text and/or a PDF, image or Office document), taken in this order.</p>
             </header>
+            <div className="course-pace">
+              <Field label="Lessons per day" hint="Learners finish this many, then the next lesson locks until the next day.">
+                <SegmentedControl
+                  kind="radio"
+                  variant="soft"
+                  size="sm"
+                  label="Lessons per day"
+                  value={f.daily}
+                  onChange={(daily) => set({ daily })}
+                  options={[
+                    { value: "0", label: "No limit" },
+                    { value: "1", label: "1 a day" },
+                    { value: "2", label: "2 a day" },
+                    { value: "3", label: "3 a day" },
+                  ]}
+                />
+              </Field>
+              {f.daily !== "0" && (
+                <Field label="Next lesson opens at" htmlFor="tr-unlock" hint="In each learner's own time zone. The quiz opens after the last lesson.">
+                  <Select id="tr-unlock" value={f.unlockHour} options={UNLOCK_HOURS} onChange={(e) => set({ unlockHour: e.target.value })} />
+                </Field>
+              )}
+            </div>
             {lessons.map((l, i) => {
               const reading = l.kind === "reading";
               const video = reading ? null : videoEmbed(l.videoUrl);

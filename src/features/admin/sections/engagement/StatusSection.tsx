@@ -8,10 +8,12 @@ import { cn } from "@/lib/utils";
 import type { VaStatusRow } from "@/utils/api/models";
 import { formatRelative } from "@/utils/format/dates";
 import { useVaStatus } from "@/utils/hooks/useShifts";
+import { usePresence } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../../state/AdminContext";
 
 type State = VaStatusRow["state"];
-type Filter = "all" | State;
+/** "online": VAs with the VA portal open right now, clocked in or not. */
+type Filter = "all" | State | "online";
 type View = "list" | "grid";
 
 const STATES: State[] = ["working", "on_break", "offline"];
@@ -48,11 +50,18 @@ export function StatusSection() {
   const [search, setSearch] = useState("");
   const q = search.trim().toLowerCase();
   const open = (r: VaStatusRow) => update({ tab: "vas", vaFullId: r.vaId, vaId: "" });
+  // Who has the VA portal open right now (it checks in about once a minute), whether or not they're clocked in.
+  const presence = usePresence();
+  const onlineIds = new Set((presence.data?.people ?? []).filter((p) => p.role === "va" && p.online).map((p) => p.id));
+  const isOnline = (r: VaStatusRow) => onlineIds.has(r.vaId);
 
   const shown = rows.filter(
-    (r) => (filter === "all" || r.state === filter) && (!q || `${r.name} ${r.email} ${r.headline} ${clientOf(r)} ${r.shift?.note ?? ""}`.toLowerCase().includes(q)),
+    (r) =>
+      (filter === "all" || (filter === "online" ? isOnline(r) : r.state === filter)) &&
+      (!q || `${r.name} ${r.email} ${r.headline} ${clientOf(r)} ${r.shift?.note ?? ""}`.toLowerCase().includes(q)),
   );
   const count = (s: State) => rows.filter((r) => r.state === s).length;
+  const onlineCount = rows.filter(isOnline).length;
   const onClock = count("working") + count("on_break");
   const totalToday = rows.reduce((t, r) => t + live(r), 0);
   const workedToday = rows.filter((r) => live(r) > 0).length;
@@ -128,17 +137,18 @@ export function StatusSection() {
       <div className="card card--flat board">
         <div className="course-toolbar status-toolbar">
           <div className="filter-track" role="group" aria-label="Filter by status">
-            {(["all", ...STATES] as Filter[]).map((f) => (
+            {(["all", "online", ...STATES] as Filter[]).map((f) => (
               <button
                 key={f}
                 type="button"
-                className={cn("filter-pill", f !== "all" && `tone-${STATE[f].tone}`)}
+                className={cn("filter-pill", f === "online" ? "tone-sky" : f !== "all" && `tone-${STATE[f].tone}`)}
                 aria-pressed={filter === f}
+                title={f === "online" ? "VAs with the VA portal open right now, clocked in or not" : undefined}
                 onClick={() => setFilter(f)}
               >
                 {f !== "all" && <span className="filter-pill__dot" aria-hidden="true" />}
-                {f === "all" ? "All VAs" : STATE[f].label}
-                <span className="filter-pill__count">{f === "all" ? rows.length : count(f)}</span>
+                {f === "all" ? "All VAs" : f === "online" ? "Online" : STATE[f].label}
+                <span className="filter-pill__count">{f === "all" ? rows.length : f === "online" ? onlineCount : count(f)}</span>
               </button>
             ))}
           </div>
@@ -166,7 +176,7 @@ export function StatusSection() {
                   ? "No VAs yet"
                   : q
                     ? `No matches for “${search.trim()}”`
-                    : `No VAs ${filter === "offline" ? "offline" : filter === "on_break" ? "on a break" : "working"} right now`}
+                    : `No VAs ${filter === "online" ? "online" : filter === "offline" ? "offline" : filter === "on_break" ? "on a break" : "working"} right now`}
               </span>
               <span className="text-small">{rows.length ? "Try another filter." : "Add VAs from People › VAs; they clock in from Time tracker in their portal."}</span>
             </div>
@@ -191,7 +201,7 @@ export function StatusSection() {
                       <span className="roster__group-count">{group.length}</span>
                     </div>
                     {group.map((r) => (
-                      <RosterRow key={r.vaId} row={r} now={now} worked={live(r)} onOpen={() => open(r)} />
+                      <RosterRow key={r.vaId} row={r} now={now} worked={live(r)} online={isOnline(r)} onOpen={() => open(r)} />
                     ))}
                   </div>
                 );
@@ -200,7 +210,7 @@ export function StatusSection() {
           ) : (
             <div className="status-grid">
               {shown.map((r) => (
-                <StatusCard key={r.vaId} row={r} now={now} worked={live(r)} onOpen={() => open(r)} />
+                <StatusCard key={r.vaId} row={r} now={now} worked={live(r)} online={isOnline(r)} onOpen={() => open(r)} />
               ))}
             </div>
           )}
@@ -210,14 +220,16 @@ export function StatusSection() {
   );
 }
 
-type RowProps = { row: VaStatusRow; now: number; worked: number; onOpen: () => void };
+type RowProps = { row: VaStatusRow; now: number; worked: number; online: boolean; onOpen: () => void };
 
 /** What they're doing, in a line: client and note, or when they were last around. */
-function Activity({ row: r, now }: { row: VaStatusRow; now: number }) {
+function Activity({ row: r, now, online }: { row: VaStatusRow; now: number; online: boolean }) {
   if (r.state === "offline") {
     return (
       <span className="roster__activity is-muted">
-        <span className="text-small">{r.lastSeenAt ? `Last seen ${formatRelative(r.lastSeenAt, new Date(now))}` : "Hasn’t clocked in yet"}</span>
+        <span className="text-small">
+          {online ? "In the VA portal now, not clocked in" : r.lastSeenAt ? `Last seen ${formatRelative(r.lastSeenAt, new Date(now))}` : "Hasn’t clocked in yet"}
+        </span>
       </span>
     );
   }
@@ -249,7 +261,7 @@ function TodayBar({ worked }: { worked: number }) {
   );
 }
 
-function RosterRow({ row: r, now, worked, onOpen }: RowProps) {
+function RosterRow({ row: r, now, worked, online, onOpen }: RowProps) {
   const s = STATE[r.state];
   return (
     <button type="button" role="row" className={cn("roster__row", `is-${r.state}`)} onClick={onOpen}>
@@ -264,7 +276,7 @@ function RosterRow({ row: r, now, worked, onOpen }: RowProps) {
         </span>
       </span>
       <span role="cell">
-        <Activity row={r} now={now} />
+        <Activity row={r} now={now} online={online} />
       </span>
       <span role="cell" className="roster__since">
         {r.state === "offline" ? (
@@ -289,7 +301,7 @@ function RosterRow({ row: r, now, worked, onOpen }: RowProps) {
   );
 }
 
-function StatusCard({ row: r, now, worked, onOpen }: RowProps) {
+function StatusCard({ row: r, now, worked, online, onOpen }: RowProps) {
   const s = STATE[r.state];
   return (
     <button type="button" className={cn("status-card", `is-${r.state}`, `tone-${s.tone}`)} onClick={onOpen}>
@@ -308,7 +320,7 @@ function StatusCard({ row: r, now, worked, onOpen }: RowProps) {
           {r.state !== "offline" && <span className="status-chip__time">{formatDuration(sinceSeconds(r, now))}</span>}
         </span>
       </span>
-      <Activity row={r} now={now} />
+      <Activity row={r} now={now} online={online} />
       <span className="status-card__foot">
         <TodayBar worked={worked} />
         <span className="status-card__local" title={r.timezone}>

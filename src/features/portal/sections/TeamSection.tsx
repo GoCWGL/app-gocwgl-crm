@@ -13,6 +13,7 @@ import { VaProfileModal } from "../components/VaProfileModal";
 import { VaRequestForm, VaRequestModal } from "../components/VaRequestModal";
 import { StateChip, VaPresence } from "../components/VaPresence";
 import { firstName, hm } from "../lib/vaTeam";
+import { useShowPackages } from "../lib/vaAccess";
 import { usePortal } from "../state/PortalContext";
 
 const since = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric" });
@@ -50,6 +51,8 @@ const STATUS_TEXT: Record<VaRequestOut["status"], string> = {
 /** Client portal › VAs: Active VAs, and Pending requests for more. */
 export function TeamSection() {
   const { readOnly, state, update } = usePortal();
+  // New requests only once the team turns on the VA packages for this client; requests already sent still show.
+  const canRequest = useShowPackages("va") && !readOnly;
   const team = useVaTeam();
   const requests = useVaRequests();
   const [asking, setAsking] = useState(false);
@@ -78,11 +81,13 @@ export function TeamSection() {
           </strong>
           <span className="text-small">
             {vas.length
-              ? `${working ? `${working} working for you right now. ` : ""}Need more hands or a different skill set? Request another VA.`
-              : "Tell us what you need help with and GoCWGL will match you with a trained VA."}
+              ? `${working ? `${working} working for you right now. ` : ""}${canRequest ? "Need more hands or a different skill set? Request another VA." : ""}`
+              : canRequest
+                ? "Tell us what you need help with and GoCWGL will match you with a trained VA."
+                : "Your requests for a VA and their progress show here."}
           </span>
         </div>
-        {!readOnly && (
+        {canRequest && (
           <Button variant="primary" onClick={() => setAsking(true)}>
             <Icon name="userPlus" size={15} /> Request a VA
           </Button>
@@ -113,8 +118,8 @@ export function TeamSection() {
             <RequestList requests={pending} onOpen={setOpenId} />
           ) : (
             <div className="empty-state stack stack--10">
-              <span>No pending requests. Need another VA? Tell us about the role and we’ll find the right person.</span>
-              {!readOnly && (
+              <span>{canRequest ? "No pending requests. Need another VA? Tell us about the role and we’ll find the right person." : "No pending requests."}</span>
+              {canRequest && (
                 <span>
                   <Button variant="outline" size="sm" onClick={() => setAsking(true)}>
                     <Icon name="userPlus" size={13} /> Request a VA

@@ -8632,3 +8632,33 @@ $pdf-side: #f5f6f8;
   gap: 16px;
   flex-wrap: wrap;
 }
+
+// Course builder › Lessons: the daily pace (lessons per day, and when the next one opens).
+.course-pace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 220px);
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid $line;
+  border-radius: $radius-lg;
+  background: $bg;
+
+  @include down(sm) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// Training › a lesson (or the quiz) locked by the course's daily pace.
+.course__locked {
+  align-items: flex-start;
+}
+
+.course__locked-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-lg;
+  background: $bg;
+  color: $ink-soft;
+}

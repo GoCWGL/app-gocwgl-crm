@@ -23,6 +23,7 @@ import { useMyAffiliate } from "@/utils/hooks/useAffiliates";
 import { usePortalTodos } from "@/utils/hooks/usePortal";
 import { useSession } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
+import { useVaRequests } from "@/utils/hooks/useClientWork";
 import { usePortal } from "../state/PortalContext";
 import { useMenuCounts } from "@/utils/hooks/useMenuCounts";
 import { useHasTraining, useHasVaWork, useShowPackages } from "../lib/vaAccess";
@@ -66,13 +67,18 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const vaWork = useHasVaWork();
   // Training appears once GoCWGL assigns the client a training.
   const training = useHasTraining();
-  // Request CRM / Request Funnel (the packages) show unless the team turned them off for this client.
-  const showPackages = useShowPackages();
+  // Request CRM and Request Funnel (the packages) each show unless the team turned it off for this client.
+  const showCrmPackages = useShowPackages("crm");
+  const showFunnelPackages = useShowPackages("funnels");
+  // Request VA shows once the team turns the VA packages on, or while they have requests to follow.
+  const showVaPackages = useShowPackages("va");
+  const hasVaRequests = (useVaRequests().data ?? []).some((r) => r.status !== "cancelled");
   const shown = (i: PortalMenuItem, needsVa?: boolean) =>
     !HIDDEN_PORTAL_TABS.has(i.tab) &&
     (!(needsVa || i.needsVa) || vaWork.has) &&
     (i.tab !== "training" || training.has) &&
-    (i.view !== "packages" || showPackages);
+    (i.view !== "packages" || (i.tab === "crm" ? showCrmPackages : showFunnelPackages)) &&
+    (i.tab !== "team" || showVaPackages || hasVaRequests);
   const groups = PORTAL_MENU.map((g) => ({
     ...g,
     items: g.items

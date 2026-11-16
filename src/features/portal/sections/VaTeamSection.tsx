@@ -3,12 +3,15 @@
 import { Button, Icon, LoadState } from "@/components/ui";
 import { useVaTeam } from "@/utils/hooks/useClientWork";
 import { RaiseRequests } from "../components/RaiseRequests";
+import { useShowPackages } from "../lib/vaAccess";
 import { usePortal } from "../state/PortalContext";
 import { TeamCard } from "./TeamSection";
 
 /** Client portal › My VA team › VA Team: the VAs working with the business now, and their rate requests. */
 export function VaTeamSection() {
   const { readOnly, goTo } = usePortal();
+  // "Request another VA" only once the team turns on the VA packages for this client.
+  const canRequestVa = useShowPackages("va");
   const team = useVaTeam();
   const vas = team.data ?? [];
   const working = vas.filter((v) => v.workingNow).length;
@@ -29,7 +32,7 @@ export function VaTeamSection() {
               : "Once GoCWGL places a VA with your business, they show up here."}
           </span>
         </div>
-        {!readOnly && (
+        {!readOnly && canRequestVa && (
           <Button variant="outline" onClick={() => goTo("team")}>
             <Icon name="userPlus" size={15} /> Request another VA
           </Button>

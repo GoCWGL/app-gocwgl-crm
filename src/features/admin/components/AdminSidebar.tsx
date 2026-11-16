@@ -60,7 +60,10 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
         groups: [
           {
             title: "Clients",
-            items: [item("clients", "Client directory", "users"), item("clientStatus", "Live status", "pulse")],
+            items: [
+              item("clients", "Client directory", "users"),
+              item("clientStatus", "Live status", "pulse"),
+            ],
           },
           {
             title: "Enablement",
@@ -80,7 +83,10 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
         groups: [
           {
             title: "Team",
-            items: [item("vas", "VA directory", "users"), item("status", "Live status", "pulse")],
+            items: [
+              item("vas", "VA directory", "users"),
+              item("status", "Live status", "pulse"),
+            ],
           },
           {
             title: "Enablement",

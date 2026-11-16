@@ -82,6 +82,12 @@
   }
 }
 
+// Portal menu card: one row per packages menu (CRM, Funnel), each with its own switch.
+.portal-menu-row {
+  padding-top: 10px;
+  border-top: 1px dashed $line;
+}
+
 // The contact's own portal login (set password / reset link / invite).
 .portal-login,
 .referred-by-contact {
