@@ -14,6 +14,8 @@ export const useTrainingResults = (id: string) =>
   useQuery({ queryKey: [...qk.trainings, "results", id], queryFn: () => api.trainingResults(id), enabled: !!id });
 export const useTrainingLearners = (id: string) =>
   useQuery({ queryKey: [...qk.trainings, "learners", id], queryFn: () => api.trainingLearners(id), enabled: !!id });
+export const useRemoveLearner = () =>
+  useApiMutation((v: { id: string; userId: string }) => api.removeLearner(v.id, v.userId), { invalidate: ALL });
 export const useCreateTraining = () => useApiMutation(api.createTraining, { invalidate: ALL });
 export const useUpdateTraining = () =>
   useApiMutation((v: { id: string; body: TrainingUpdate }) => api.updateTraining(v.id, v.body), { invalidate: ALL });

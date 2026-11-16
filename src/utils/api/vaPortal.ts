@@ -1,5 +1,6 @@
 import { api, apiUrl, del, download, get, patch, post, put } from "./client";
 import type {
+  TaskMessageOut,
   InactiveAskOut,
   JournalEntryIn,
   JournalEntryOut,
@@ -60,3 +61,8 @@ export const listInactiveAsks = () => get<InactiveAskOut[]>("/va/inactive-reques
 export const approveInactive = (requestId: string) => post<InactiveAskOut[]>(`/va/inactive-requests/${requestId}/approve`);
 export const listVaTasks = () => get<VaTaskOut[]>("/va/tasks");
 export const updateVaTask = (id: string, body: VaTaskUpdate) => patch<VaTaskOut>(`/va/tasks/${id}`, body);
+/** A task's conversation with the client, oldest first. */
+export const listVaTaskMessages = (id: string) => get<TaskMessageOut[]>(`/va/tasks/${id}/messages`);
+/** The VA has read the task's conversation (clears its unread mark). */
+export const markVaTaskMessagesRead = (id: string) => post<void>(`/va/tasks/${id}/messages/read`);
+export const postVaTaskMessage = (id: string, body: string) => post<TaskMessageOut>(`/va/tasks/${id}/messages`, { body });

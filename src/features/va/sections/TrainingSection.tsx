@@ -4,6 +4,7 @@ import { useVaAccess } from "../lib/access";
 import { useRef, useState } from "react";
 import { Badge, Button, FormError, Icon, Input, LessonReading, LessonVideo, LoadState, TrainingCover } from "@/components/ui";
 import { cn } from "@/lib/utils";
+import { toPlainText, withoutLeadingTitle } from "@/lib/richText";
 import { formatShort } from "@/utils/format/dates";
 import { formatMinutes, lessonThumb, lessonVideo, VIDEO_PROVIDER_LABEL } from "@/lib/video";
 import { lessonFilePath } from "@/utils/api/trainings";
@@ -152,7 +153,8 @@ function CourseView({
     const next = t.lessons.findIndex((l) => !watched.includes(l.id));
     return next >= 0 ? next : hasQuiz ? t.lessons.length : 0;
   });
-  const locked = !enrolled && !readOnly;
+  // Opening a course shows its dashboard first; "Start", "Continue" or a lesson in the outline opens the lessons.
+  const [stage, setStage] = useState<"overview" | "learn">("overview");
   const onQuiz = hasQuiz && current === t.lessons.length;
   const lesson = onQuiz ? null : t.lessons[current];
   const video = lesson ? lessonVideo(lesson) : null;
@@ -179,6 +181,75 @@ function CourseView({
     show(to);
   };
   const register = () => enroll.mutate(t.id, { onSuccess: () => save(current) });
+  const learn = (i: number) => {
+    setStage("learn");
+    go(i);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const overview = () => {
+    setStage("overview");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  if (stage === "overview")
+    return (
+      <CourseDashboard
+        training={t}
+        audience={audience}
+        readOnly={readOnly}
+        watched={watched}
+        resume={current}
+        doneCount={doneCount}
+        steps={steps}
+        totalMinutes={totalMinutes}
+        enrolling={enroll.isPending}
+        enrollError={enroll.error}
+        onRegister={register}
+        onLearn={learn}
+        onBack={onBack}
+      />
+    );
+
+  const stepLabel = onQuiz ? "Quiz" : `Lesson ${current + 1}`;
+  const reading = !!lesson && !video;
+  const chips = lesson && (
+    <div className="course__chips">
+      <span className="course-chip course-chip--step">
+        Lesson {current + 1} of {t.lessons.length}
+      </span>
+      <span className="course-chip course-chip--provider">
+        <Icon name={video ? "play" : "form"} size={9} /> {video ? VIDEO_PROVIDER_LABEL[video.provider] : "Reading"}
+      </span>
+      {reading ? (
+        <span className="course__len">
+          <Icon name="clock" size={12} /> {formatMinutes(lesson.minutes || readMinutes(lesson.body ?? ""))} read
+        </span>
+      ) : (
+        lesson.minutes > 0 && <span className="course__len">{formatMinutes(lesson.minutes)}</span>
+      )}
+      {isDone(current) && (
+        <span className="course__len course__len--done">
+          <Icon name="circleCheck" size={13} /> {video ? "Watched" : "Read"}
+        </span>
+      )}
+    </div>
+  );
+  const nav = lesson && (
+    <div className="course__nav">
+      <Button variant="secondary" onClick={() => (current === 0 ? overview() : go(current - 1))}>
+        <Icon name="chevronLeft" size={14} /> {current === 0 ? "Course overview" : "Previous"}
+      </Button>
+      {current < steps - 1 ? (
+        <Button variant="primary" onClick={next}>
+          {onQuizNext(current, t) ? "Take the quiz" : reading ? "Done reading · next lesson" : "Next lesson"} <Icon name="chevronRight" size={14} />
+        </Button>
+      ) : (
+        <Button variant="primary" onClick={() => (isDone(current) ? overview() : markWatched(lesson.id, current))}>
+          {isDone(current) ? "Back to the course" : video ? "Mark as watched" : "Mark as read"} <Icon name={isDone(current) ? "arrowRight" : "check"} size={14} />
+        </Button>
+      )}
+    </div>
+  );
 
   return (
     <div className="page-stack course">
@@ -186,21 +257,17 @@ function CourseView({
         <button type="button" onClick={onBack}>
           Training
         </button>
-        {t.category && (
-          <>
-            <Icon name="chevronRight" size={12} />
-            <span>{t.category}</span>
-          </>
-        )}
         <Icon name="chevronRight" size={12} />
-        <strong aria-current="page">{t.title}</strong>
+        <button type="button" onClick={overview}>
+          {t.title}
+        </button>
+        <Icon name="chevronRight" size={12} />
+        <strong aria-current="page">{stepLabel}</strong>
       </nav>
 
       <div className="course__layout">
         <div className="course__main">
-          {locked ? (
-            <RegisterCard training={t} totalMinutes={totalMinutes} pending={enroll.isPending} error={enroll.error} onRegister={register} />
-          ) : lesson && lessonLocked ? (
+          {lesson && lessonLocked ? (
             <LockedCard
               title={lesson.title}
               step={`Lesson ${current + 1} of ${t.lessons.length}`}
@@ -222,55 +289,42 @@ function CourseView({
               }
               onPrevious={t.lessons.length ? () => go(t.lessons.length - 1) : undefined}
             />
-          ) : lesson ? (
+          ) : lesson && video ? (
             <>
-              {video ? (
-                <LessonVideo key={lesson.id} video={video} title={lesson.title} className="course__video" />
-              ) : (
-                <LessonReading
-                  key={lesson.id}
-                  title={lesson.title}
-                  body={lesson.body ?? ""}
-                  file={lesson.file}
-                  filePath={lesson.file ? lessonFilePath(audience === "client" ? "portal" : "va", t.id, lesson.file.id) : null}
-                  className="card course__reading"
-                />
-              )}
+              <LessonVideo key={lesson.id} video={video} title={lesson.title} className="course__video" />
               <section className="card course__lesson">
                 <FormError error={progress.error} />
                 {readOnly && !enrolled && <p className="text-small">Viewing only: progress isn’t saved.</p>}
-                <div className="course__chips">
-                  <span className="course-chip course-chip--step">
-                    Lesson {current + 1} of {t.lessons.length}
-                  </span>
-                  <span className="course-chip course-chip--provider">
-                    <Icon name={video ? "play" : "form"} size={9} /> {video ? VIDEO_PROVIDER_LABEL[video.provider] : "Reading"}
-                  </span>
-                  {lesson.minutes > 0 && <span className="course__len">{formatMinutes(lesson.minutes)}</span>}
-                  {isDone(current) && (
-                    <span className="course__len course__len--done">
-                      <Icon name="circleCheck" size={13} /> {video ? "Watched" : "Read"}
-                    </span>
-                  )}
-                </div>
+                {chips}
                 <h2 className="course__title">{lesson.title}</h2>
                 {lesson.summary && <p className="course__summary">{lesson.summary}</p>}
-                <div className="course__nav">
-                  <Button variant="secondary" disabled={current === 0} onClick={() => go(current - 1)}>
-                    <Icon name="chevronLeft" size={14} /> Previous
-                  </Button>
-                  {current < steps - 1 ? (
-                    <Button variant="primary" onClick={next}>
-                      {onQuizNext(current, t) ? "Take the quiz" : "Next lesson"} <Icon name="chevronRight" size={14} />
-                    </Button>
-                  ) : (
-                    <Button variant="primary" onClick={() => (isDone(current) ? onBack() : markWatched(lesson.id, current))}>
-                      {isDone(current) ? "Back to trainings" : video ? "Mark as watched" : "Mark as read"} <Icon name={isDone(current) ? "arrowRight" : "check"} size={14} />
-                    </Button>
-                  )}
-                </div>
+                {nav}
               </section>
             </>
+          ) : lesson ? (
+            <article key={lesson.id} className="card reading-lesson">
+              <header className="reading-lesson__head">
+                <span className="reading-lesson__badge" aria-hidden="true">
+                  <Icon name="form" size={20} />
+                </span>
+                {chips}
+                <h1 className="reading-lesson__title">{lesson.title}</h1>
+                {lesson.summary && <p className="reading-lesson__lede">{lesson.summary}</p>}
+              </header>
+              <FormError error={progress.error} />
+              {readOnly && !enrolled && <p className="text-small">Viewing only: progress isn’t saved.</p>}
+              <LessonReading
+                title={lesson.title}
+                body={withoutLeadingTitle(lesson.body ?? "", lesson.title)}
+                file={lesson.file}
+                filePath={lesson.file ? lessonFilePath(audience === "client" ? "portal" : "va", t.id, lesson.file.id) : null}
+                className="reading-lesson__content"
+              />
+              <footer className="reading-lesson__foot">
+                {!isDone(current) && <span className="reading-lesson__end">You’ve reached the end of this reading.</span>}
+                {nav}
+              </footer>
+            </article>
           ) : hasQuiz ? (
             <QuizCard
               key={t.id}
@@ -278,7 +332,7 @@ function CourseView({
               audience={audience}
               readOnly={readOnly || !enrolled}
               onPrevious={t.lessons.length ? () => go(t.lessons.length - 1) : undefined}
-              onDone={onBack}
+              onDone={overview}
             />
           ) : (
             <section className="card course__lesson">
@@ -299,27 +353,18 @@ function CourseView({
               {hasQuiz && ` · quiz`}
             </span>
           </header>
-          {locked ? (
-            <div className="course__progress">
-              <span>Register to start this course. Your progress is saved as you go, so you can pick up where you left off.</span>
-              <Button variant="primary" block disabled={enroll.isPending} onClick={register}>
-                {enroll.isPending ? "Registering…" : "Register for this course"}
-              </Button>
-            </div>
-          ) : (
-            <div className="course__progress">
-              {enrolled && <span className="text-small">Registered {formatShort(t.enrolledAt!)}</span>}
-              <span className="cluster cluster--between">
-                <span>Course progress</span>
-                <strong>
-                  {doneCount} / {steps}
-                </strong>
-              </span>
-              <span className="course__bar" role="progressbar" aria-valuemin={0} aria-valuemax={steps} aria-valuenow={doneCount} aria-label="Course progress">
-                <span style={{ width: `${steps ? (doneCount / steps) * 100 : 0}%` }} />
-              </span>
-            </div>
-          )}
+          <div className="course__progress">
+            {enrolled && <span className="text-small">Registered {formatShort(t.enrolledAt!)}</span>}
+            <span className="cluster cluster--between">
+              <span>Course progress</span>
+              <strong>
+                {doneCount} / {steps}
+              </strong>
+            </span>
+            <span className="course__bar" role="progressbar" aria-valuemin={0} aria-valuemax={steps} aria-valuenow={doneCount} aria-label="Course progress">
+              <span style={{ width: `${steps ? (doneCount / steps) * 100 : 0}%` }} />
+            </span>
+          </div>
           <ol className="course__outline">
             {t.lessons.map((l, i) => (
               <li key={l.id}>
@@ -357,7 +402,9 @@ function CourseView({
               </li>
             )}
           </ol>
-          {t.description && !locked && <p className="course__about va-pre">{t.description}</p>}
+          <button type="button" className="course__overview-link" onClick={overview}>
+            <Icon name="graduation" size={13} /> Course overview
+          </button>
         </aside>
       </div>
     </div>
@@ -398,42 +445,204 @@ function LockedCard({ title, step, message, onPrevious }: { title: string; step:
   );
 }
 
-/** Before registering: what the course covers, and the button. */
-function RegisterCard({
+/** About 200 words a minute, for readings without a length set. */
+function readMinutes(body: string): number {
+  const words = toPlainText(body).trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 200));
+}
+
+/**
+ * A course's dashboard, shown first whenever it's opened: its cover, what it's about, how far along they are, and
+ * the button to register, start, continue or review; the outline below opens any lesson.
+ */
+function CourseDashboard({
   training: t,
+  audience,
+  readOnly,
+  watched,
+  resume,
+  doneCount,
+  steps,
   totalMinutes,
-  pending,
-  error,
+  enrolling,
+  enrollError,
   onRegister,
+  onLearn,
+  onBack,
 }: {
   training: VaTrainingOut;
+  audience: Audience;
+  readOnly?: boolean;
+  watched: string[];
+  resume: number;
+  doneCount: number;
+  steps: number;
   totalMinutes: number;
-  pending: boolean;
-  error: unknown;
+  enrolling: boolean;
+  enrollError: unknown;
   onRegister: () => void;
+  onLearn: (step: number) => void;
+  onBack: () => void;
 }) {
+  const enrolled = !!t.enrolledAt;
+  const hasQuiz = t.questions.length > 0;
+  const canOpen = enrolled || !!readOnly;
+  const finished = t.myPassed || !!t.completedAt;
+  const started = doneCount > 0 || !!t.myCurrentStep || t.myTries > 0;
+  const pct = steps ? Math.round((doneCount / steps) * 100) : 0;
+  const cover = trainingThumbPath(audience === "client" ? "portal" : "va", t.id, t.thumbnail);
+  const poster = t.lessons[0] ? lessonThumb(t.lessons[0]) : null;
+  const isDone = (i: number) => t.myPassed || watched.includes(t.lessons[i]?.id);
+  const nextLabel = resume >= t.lessons.length ? "Quiz" : `Lesson ${resume + 1} · ${t.lessons[resume]?.title ?? ""}`;
+
+  const cta = !canOpen
+    ? { label: enrolling ? "Registering…" : "Register for this course", icon: "arrowRight" as const, onClick: onRegister }
+    : !enrolled
+      ? { label: "Preview the course", icon: "play" as const, onClick: () => onLearn(0) }
+      : finished
+        ? { label: "Review the course", icon: "arrowRight" as const, onClick: () => onLearn(0) }
+        : started
+          ? { label: "Continue the course", icon: "play" as const, onClick: () => onLearn(resume) }
+          : { label: "Start the course", icon: "play" as const, onClick: () => onLearn(resume) };
+
   return (
-    <section className="card course__register">
-      <span className="course__register-icon">
-        <Icon name="graduation" size={26} />
-      </span>
-      <div className="course__chips">
-        <span className="course-chip course-chip--step">
-          {t.lessons.length} lesson{t.lessons.length === 1 ? "" : "s"}
-        </span>
-        {totalMinutes > 0 && <span className="course-chip course-chip--provider">{formatMinutes(totalMinutes)}</span>}
-        {t.questions.length > 0 && <span className="course__len">Quiz · pass at {t.passingRate}%</span>}
-      </div>
-      <h2 className="course__title">{t.title}</h2>
-      <p className="course__summary">{t.description || "Register to start the lessons. Your progress is saved as you go."}</p>
-      <FormError error={error} />
-      <div className="course__nav">
-        <span className="text-small">Registering lets GoCWGL see your progress and help if you get stuck.</span>
-        <Button variant="primary" disabled={pending} onClick={onRegister}>
-          {pending ? "Registering…" : "Register for this course"} <Icon name="arrowRight" size={14} />
-        </Button>
-      </div>
-    </section>
+    <div className="page-stack course course-dash">
+      <nav className="course__crumbs" aria-label="Breadcrumb">
+        <button type="button" onClick={onBack}>
+          Training
+        </button>
+        {t.category && (
+          <>
+            <Icon name="chevronRight" size={12} />
+            <span>{t.category}</span>
+          </>
+        )}
+        <Icon name="chevronRight" size={12} />
+        <strong aria-current="page">{t.title}</strong>
+      </nav>
+
+      <section className="card course-dash__hero">
+        <div className={cn("course-dash__cover", !cover && !poster && "is-poster")}>
+          <TrainingCover path={cover} poster={poster} icon="graduation" iconSize={40} />
+          <span className="course-dash__status">
+            <StatusBadge t={t} />
+          </span>
+        </div>
+        <div className="course-dash__intro">
+          <span className="course-dash__kicker">{t.category || "Training"}</span>
+          <h1 className="course-dash__title">{t.title}</h1>
+          <p className="course-dash__about va-pre">{t.description || "Go through the lessons in order. Your progress is saved as you go."}</p>
+          <ul className="course-dash__facts">
+            <li>
+              <Icon name="video" size={14} />
+              <span>
+                <strong>{t.lessons.length}</strong> lesson{t.lessons.length === 1 ? "" : "s"}
+              </span>
+            </li>
+            {totalMinutes > 0 && (
+              <li>
+                <Icon name="clock" size={14} />
+                <span>
+                  <strong>{formatMinutes(totalMinutes)}</strong> in all
+                </span>
+              </li>
+            )}
+            {hasQuiz && (
+              <li>
+                <Icon name="survey" size={14} />
+                <span>
+                  Quiz · pass at <strong>{t.passingRate}%</strong>
+                </span>
+              </li>
+            )}
+            {(t.dailyLessons ?? 0) > 0 && (
+              <li>
+                <Icon name="calendar" size={14} />
+                <span>
+                  <strong>{t.dailyLessons}</strong> lesson{t.dailyLessons === 1 ? "" : "s"} a day
+                </span>
+              </li>
+            )}
+          </ul>
+
+          {enrolled && (
+            <div className="course-dash__progress">
+              <span className="cluster cluster--between">
+                <span>
+                  {finished ? (t.myPassed ? "Passed" : "Completed") : started ? `Up next: ${nextLabel}` : "Ready when you are"}
+                </span>
+                <strong>{pct}%</strong>
+              </span>
+              <span className="course__bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Course progress">
+                <span style={{ width: `${pct}%` }} />
+              </span>
+              <span className="text-small">
+                {doneCount} of {steps} step{steps === 1 ? "" : "s"} done · registered {formatShort(t.enrolledAt!)}
+                {t.myBestScore !== null && ` · best quiz score ${t.myBestScore}%`}
+              </span>
+            </div>
+          )}
+
+          <FormError error={enrollError} />
+          <div className="course-dash__actions">
+            <Button variant="primary" size="lg" disabled={enrolling || !steps} onClick={cta.onClick}>
+              {cta.label} <Icon name={cta.icon} size={14} />
+            </Button>
+            <Button variant="secondary" size="lg" onClick={onBack}>
+              All trainings
+            </Button>
+          </div>
+          {!canOpen && <span className="text-small">Registering lets GoCWGL see your progress and help if you get stuck.</span>}
+        </div>
+      </section>
+
+      <section className="card course-dash__outline">
+        <header className="cluster cluster--between">
+          <h2 className="course-dash__h2">What’s inside</h2>
+          <span className="text-small">
+            {t.lessons.length} lesson{t.lessons.length === 1 ? "" : "s"}
+            {hasQuiz && " · 1 quiz"}
+          </span>
+        </header>
+        <ol className="course-dash__list">
+          {t.lessons.map((l, i) => {
+            const done = enrolled && isDone(i);
+            const locked = !!l.locked && !done;
+            const reading = l.kind === "reading";
+            return (
+              <li key={l.id}>
+                <button type="button" className={cn("course-dash__row", done && "is-done", i === resume && enrolled && !finished && "is-next")} disabled={!canOpen} onClick={() => onLearn(i)}>
+                  <span className="course-dash__n">{done ? <Icon name="check" size={13} /> : locked && enrolled ? <Icon name="lock" size={12} /> : i + 1}</span>
+                  <span className="course-dash__row-main">
+                    <span className="course-dash__row-title">{l.title}</span>
+                    {l.summary && <span className="course-dash__row-sum">{l.summary}</span>}
+                  </span>
+                  <span className="course-dash__row-meta">
+                    <Icon name={reading ? "form" : "play"} size={12} />
+                    {reading ? "Reading" : l.provider ? VIDEO_PROVIDER_LABEL[l.provider] : "Video"}
+                    {l.minutes > 0 && ` · ${formatMinutes(l.minutes)}`}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+          {hasQuiz && (
+            <li>
+              <button type="button" className={cn("course-dash__row", t.myPassed && "is-done", resume === t.lessons.length && enrolled && !finished && "is-next")} disabled={!canOpen} onClick={() => onLearn(t.lessons.length)}>
+                <span className="course-dash__n">{t.myPassed ? <Icon name="check" size={13} /> : <Icon name="survey" size={13} />}</span>
+                <span className="course-dash__row-main">
+                  <span className="course-dash__row-title">Final quiz</span>
+                  <span className="course-dash__row-sum">
+                    {t.questions.length} question{t.questions.length === 1 ? "" : "s"} · pass at {t.passingRate}%
+                  </span>
+                </span>
+                <span className="course-dash__row-meta">{t.myBestScore !== null ? `Best ${t.myBestScore}%` : "Quiz"}</span>
+              </button>
+            </li>
+          )}
+        </ol>
+      </section>
+    </div>
   );
 }
 

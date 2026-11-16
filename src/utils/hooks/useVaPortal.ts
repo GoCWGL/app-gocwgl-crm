@@ -15,7 +15,13 @@ export const useApproveInactive = () => {
   const qc = useQueryClient();
   return useApiMutation(api.approveInactive, { onSuccess: (data) => qc.setQueryData(qk.vaInactiveAsks, data) });
 };
-export const useVaTasks = (enabled = true) => useQuery({ queryKey: qk.vaTasks, queryFn: api.listVaTasks, enabled, refetchInterval: 120_000 });
+export const useVaTasks = (enabled = true) => useQuery({ queryKey: qk.vaTasks, queryFn: api.listVaTasks, enabled, refetchInterval: 30_000 }); // stays in step with the client's requests
+/** A task's conversation, refreshed every 15 s while open so the client's answers show up. */
+export const useVaTaskMessages = (id: string) =>
+  useQuery({ queryKey: [...qk.vaTasks, id, "messages"], queryFn: () => api.listVaTaskMessages(id), refetchInterval: 15_000 });
+export const useMarkVaTaskRead = () => useApiMutation(api.markVaTaskMessagesRead, { invalidate: [qk.vaTasks] });
+export const usePostVaTaskMessage = () =>
+  useApiMutation((v: { id: string; body: string }) => api.postVaTaskMessage(v.id, v.body), { invalidate: [qk.vaTasks] });
 export const useUpdateVaTask = () =>
   useApiMutation((v: { id: string; status: VaTaskUpdate["status"] }) => api.updateVaTask(v.id, { status: v.status }), {
     // Start task also starts the timer: refresh the time tracker too.

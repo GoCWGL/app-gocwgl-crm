@@ -9,6 +9,8 @@ export const deleteTraining = (id: string) => del(`/admin/trainings/${id}`);
 export const trainingStats = (audience: TrainingAudience) => get<TrainingStatsOut>("/admin/trainings/stats", { audience });
 export const trainingResults = (id: string) => get<TrainingResultOut[]>(`/admin/trainings/${id}/results`);
 export const trainingLearners = (id: string) => get<LearnerOut[]>(`/admin/trainings/${id}/learners`);
+/** Take someone off a course: their registration, progress and quiz tries are removed (they can register again). */
+export const removeLearner = (id: string, userId: string) => del(`/admin/trainings/${id}/learners/${userId}`);
 
 // Thumbnails: each course's own, and the default shown on courses without one.
 const imageForm = (file: File) => {

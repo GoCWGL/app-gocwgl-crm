@@ -8,6 +8,7 @@ import type {
   TimeTagUpdate,
   AttemptOut,
   ClientProjectOut,
+  TaskMessageOut,
   ClientVaInvoice,
   ClientVaInvoiceDetail,
   JournalEntry,
@@ -48,6 +49,11 @@ export const vaTeam = () => get<TeamVa[]>("/portal/va-team");
 export const listProjects = () => get<ClientProjectOut[]>("/portal/projects");
 export const requestProject = (body: ProjectIn) => post<ClientProjectOut>("/portal/projects", body);
 export const updateProject = (id: string, body: ProjectClientUpdate) => patch<ClientProjectOut>(`/portal/projects/${id}`, body);
+/** A task's conversation with the VA, oldest first. */
+export const listProjectMessages = (id: string) => get<TaskMessageOut[]>(`/portal/projects/${id}/messages`);
+/** The client has read the task's conversation (clears its unread mark). */
+export const markProjectMessagesRead = (id: string) => post<void>(`/portal/projects/${id}/messages/read`);
+export const postProjectMessage = (id: string, body: string) => post<TaskMessageOut>(`/portal/projects/${id}/messages`, { body });
 
 export const listVaRequests = () => get<VaRequestOut[]>("/portal/va-requests");
 export const requestVa = (body: VaRequestIn) => post<VaRequestOut>("/portal/va-requests", body);

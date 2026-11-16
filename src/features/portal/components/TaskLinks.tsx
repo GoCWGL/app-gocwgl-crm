@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Icon } from "@/components/ui";
 
 /** "https://docs.google.com/document/d/…" → "docs.google.com/document/d/…". */
@@ -20,6 +21,57 @@ export function TaskLinkChips({ links, max }: { links: string[]; max?: number })
         </li>
       ))}
       {max && links.length > max && <li className="tk-links__more">+{links.length - max} more</li>}
+    </ul>
+  );
+}
+
+/**
+ * A task's links in full, for the details pop-up: the site, the whole address, and Open and Copy buttons, so every
+ * link the client added is easy to reach.
+ */
+export function TaskLinkList({ links }: { links: string[] }) {
+  const [copied, setCopied] = useState("");
+  if (!links.length) return <p className="tk-linklist__empty">No links were added to this task.</p>;
+  const copy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(url);
+      window.setTimeout(() => setCopied((c) => (c === url ? "" : c)), 1800);
+    } catch {
+      // Clipboard blocked: the address is on screen to select.
+    }
+  };
+  return (
+    <ul className="tk-linklist">
+      {links.map((url, i) => {
+        let host = "";
+        try {
+          host = new URL(url).hostname.replace(/^www\./, "");
+        } catch {
+          host = bare(url).split("/")[0];
+        }
+        return (
+          <li key={`${url}-${i}`} className="tk-linklist__item">
+            <span className="tk-linklist__icon" aria-hidden="true">
+              <Icon name="link" size={14} />
+            </span>
+            <span className="tk-linklist__text">
+              <strong>{host || `Link ${i + 1}`}</strong>
+              <a href={url} target="_blank" rel="noreferrer noopener">
+                {url}
+              </a>
+            </span>
+            <span className="tk-linklist__actions">
+              <button type="button" className="mini-action" onClick={() => copy(url)} aria-label={`Copy ${url}`}>
+                <Icon name={copied === url ? "check" : "copy"} size={12} /> {copied === url ? "Copied" : "Copy"}
+              </button>
+              <a className="mini-action" href={url} target="_blank" rel="noreferrer noopener">
+                Open <Icon name="arrowRight" size={12} />
+              </a>
+            </span>
+          </li>
+        );
+      })}
     </ul>
   );
 }

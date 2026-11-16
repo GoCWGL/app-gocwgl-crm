@@ -27,4 +27,5 @@ export { LessonPlayer } from "./LessonPlayer";
 export { TrainingCover } from "./TrainingCover";
 export { LessonVideo } from "./LessonVideo";
 export { LessonReading } from "./LessonReading";
+export { RichTextEditor } from "./RichTextEditor";
 export { ErrorState, FormError, Loading, LoadState, SoonNote } from "./LoadState";

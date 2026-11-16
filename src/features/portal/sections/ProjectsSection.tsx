@@ -1,14 +1,18 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { Avatar, Button, Field, FormError, Icon, Input, LoadState, Modal, SegmentedControl, Select, StatGrid, Textarea } from "@/components/ui";
+import { useEffect, useState, type FormEvent } from "react";
+import { Avatar, Button, ConfirmDialog, Field, FormError, Icon, Input, LoadState, Modal, SegmentedControl, Select, StatGrid, Textarea } from "@/components/ui";
 import { avatarTone, toneClass } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { ClientProjectOut, TeamVa } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
-import { useProjects, useRequestProject, useUpdateProject, useVaTeam } from "@/utils/hooks/useClientWork";
-import { isOpenProject, PRIORITY, PROJECT_FLOW, PROJECT_STATUS, type ProjectPriority } from "../lib/projects";
-import { LinkInputs, TaskLinkChips } from "../components/TaskLinks";
+import { useSession } from "@/utils/auth/session";
+import { useMarkProjectRead, usePostProjectMessage, useProjectMessages, useProjects, useRequestProject, useUpdateProject, useVaTeam } from "@/utils/hooks/useClientWork";
+import { isOpenProject, PRIORITY, PROJECT_STATUS, type ProjectPriority } from "../lib/projects";
+import { LinkInputs } from "../components/TaskLinks";
+import { TaskConversation, UnreadMark } from "../components/TaskConversation";
+import { TaskBar, TaskFilter, TaskSearch, TaskTabs, taskText } from "../components/TaskFilters";
+import { isTaskOverdue, TaskSheet, TaskStatus } from "../components/TaskSheet";
 import { usePortal } from "../state/PortalContext";
 
 type View = "open" | "done" | "cancelled";
@@ -20,177 +24,316 @@ export function ProjectsSection() {
   const team = useVaTeam();
   const [view, setView] = useState<View>("open");
   const [requesting, setRequesting] = useState(false);
-  const all = projects.data ?? [];
+  const [openId, setOpenId] = useState("");
+  const [search, setSearch] = useState("");
+  const [vaFilter, setVaFilter] = useState("");
+  const [sort, setSort] = useState<"newest" | "due">("newest");
+  const everything = projects.data ?? [];
+  const opened = everything.find((p) => p.id === openId) ?? null;
+  // The VAs on their tasks, for the VA filter (A–Z).
+  const vas = [...new Map(everything.filter((p) => p.va).map((p) => [p.va!.id, p.va!])).values()].sort((a, b) => a.name.localeCompare(b.name));
+  const q = search.trim().toLowerCase();
+  const all = everything.filter(
+    (p) =>
+      (!vaFilter || (vaFilter === "none" ? !p.va : p.va?.id === vaFilter)) &&
+      (!q || taskText(p.title, p.details, p.va?.name, p.requestedByName).includes(q)),
+  );
   const open = all.filter(isOpenProject);
   const done = all.filter((p) => p.status === "done");
   const cancelled = all.filter((p) => p.status === "cancelled");
-  const shown = view === "open" ? open : view === "done" ? done : cancelled;
+  const shown = (view === "open" ? open : view === "done" ? done : cancelled)
+    .slice()
+    .sort((a, b) =>
+      sort === "newest" ? b.createdAt.localeCompare(a.createdAt) : (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999") || b.createdAt.localeCompare(a.createdAt),
+    );
 
   return (
     <div className="page-stack">
       <StatGrid
         items={[
-          { label: "Requested", value: String(all.filter((p) => p.status === "requested").length), tone: "sky" },
-          { label: "In progress", value: String(all.filter((p) => p.status === "in_progress" || p.status === "review").length), tone: "brand" },
-          { label: "Done", value: String(done.length), tone: "green" },
+          { label: "Requested", value: String(everything.filter((p) => p.status === "requested").length), tone: "sky" },
+          { label: "In progress", value: String(everything.filter((p) => p.status === "in_progress" || p.status === "review").length), tone: "brand" },
+          { label: "Done", value: String(everything.filter((p) => p.status === "done").length), tone: "green" },
         ]}
       />
 
-      <div className="cp-toolbar">
-        <SegmentedControl
-          label="Tasks"
-          size="sm"
-          value={view}
-          onChange={setView}
-          options={[
-            { value: "open", label: "Open", count: open.length },
-            { value: "done", label: "Done", count: done.length },
-            { value: "cancelled", label: "Cancelled", count: cancelled.length },
-          ]}
-        />
-        <span className="u-spacer" />
-        {!readOnly && (
-          <Button variant="primary" onClick={() => setRequesting(true)}>
-            <Icon name="plus" size={14} /> Request a task
-          </Button>
-        )}
-      </div>
+      <TaskBar
+        top={
+          <>
+            <TaskTabs
+              value={view}
+              onChange={setView}
+              options={[
+                { value: "open", label: "Open", count: open.length },
+                { value: "done", label: "Done", count: done.length },
+                { value: "cancelled", label: "Cancelled", count: cancelled.length },
+              ]}
+            />
+            <span className="u-spacer" />
+            <TaskSearch value={search} onChange={setSearch} placeholder="Search tasks or details" />
+            {!readOnly && (
+              <Button variant="primary" onClick={() => setRequesting(true)}>
+                <Icon name="plus" size={14} /> Request a task
+              </Button>
+            )}
+          </>
+        }
+        filters={
+          <>
+            <TaskFilter
+              icon="user"
+              label="VA"
+              value={vaFilter}
+              onChange={setVaFilter}
+              active={!!vaFilter}
+              options={[
+                { value: "", label: "Any VA" },
+                ...vas.map((v) => ({ value: v.id, label: v.name })),
+                { value: "none", label: "Not assigned yet" },
+              ]}
+            />
+            <span className="u-spacer" />
+            <TaskFilter
+              icon="chart"
+              label="Sort"
+              value={sort}
+              onChange={setSort}
+              options={[
+                { value: "newest", label: "Newest first" },
+                { value: "due", label: "Due soonest" },
+              ]}
+            />
+            {(vaFilter || search) && (
+              <button
+                type="button"
+                className="tk-bar__clear"
+                onClick={() => {
+                  setVaFilter("");
+                  setSearch("");
+                }}
+              >
+                Clear filters
+              </button>
+            )}
+          </>
+        }
+      />
 
       <LoadState
         query={projects}
         loadingText="Loading your tasks…"
         isEmpty={!shown.length}
         empty={
-          view === "open"
+          q || vaFilter
+            ? "No tasks match these filters."
+            : view === "open"
             ? "No open tasks. Request one and pick the VA you’d like on it, and GoCWGL takes it from there."
             : view === "done"
               ? "No finished tasks yet."
               : "No cancelled tasks."
         }
       >
-        <div className="tk-grid">
+        <div className="card tk-list" role="table" aria-label="Tasks">
+          <div className="tk-list__head" role="row">
+            <span role="columnheader">Task</span>
+            <span role="columnheader">Assigned VA</span>
+            <span role="columnheader">Status</span>
+            <span role="columnheader">Due</span>
+            <span role="columnheader" aria-label="Open" />
+          </div>
           {shown.map((p) => (
-            <ProjectCard key={p.id} p={p} team={team.data ?? []} />
+            <ProjectRow key={p.id} p={p} onOpen={() => setOpenId(p.id)} />
           ))}
         </div>
       </LoadState>
+
+      {opened && <ProjectDetails p={opened} team={team.data ?? []} onClose={() => setOpenId("")} />}
 
       {requesting && <RequestModal team={team.data ?? []} onClose={() => setRequesting(false)} />}
     </div>
   );
 }
 
-function ProjectCard({ p, team }: { p: ClientProjectOut; team: TeamVa[] }) {
+/** One task in the list; clicking it (or Open task) opens the full details. */
+function ProjectRow({ p, onOpen }: { p: ClientProjectOut; onOpen: () => void }) {
+  const overdue = isTaskOverdue(p);
+  return (
+    <div
+      className={cn("tk-row", `is-${p.status}`, (p.unreadCount ?? 0) > 0 && "has-unread")}
+      role="row"
+      tabIndex={0}
+      aria-label={`${p.title}, ${PROJECT_STATUS[p.status].label}. Open details`}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onOpen();
+        }
+      }}
+    >
+      <span className="tk-row__main" role="cell">
+        <span className="tk-row__title">
+          {p.title}
+          {p.priority !== "normal" && (
+            <span className={cn("tk-chip", toneClass(PRIORITY[p.priority].tone))}>
+              <Icon name="bolt" size={11} /> {PRIORITY[p.priority].label}
+            </span>
+          )}
+          {(p.unreadCount ?? 0) > 0 && <UnreadMark count={p.unreadCount ?? 0} />}
+        </span>
+        <span className="tk-row__sub">
+          {p.details ? p.details.split("\n")[0] : `Requested ${formatShort(p.createdAt)}`}
+          {p.links.length > 0 && (
+            <span className="tk-row__links">
+              <Icon name="link" size={11} /> {p.links.length}
+            </span>
+          )}
+          {(p.messageCount ?? 0) > 0 && (
+            <span className="tk-row__msgs">
+              <Icon name="message" size={11} /> {p.messageCount}
+            </span>
+          )}
+        </span>
+      </span>
+      <span className="tk-row__client" role="cell">
+        {p.va ? (
+          <>
+            <Avatar name={p.va.name} tone={avatarTone(p.va.id)} size="sm" /> {p.va.name}
+          </>
+        ) : (
+          <span className="tk-row__muted">GoCWGL is picking</span>
+        )}
+      </span>
+      <span role="cell">
+        <TaskStatus status={p.status} />
+      </span>
+      <span className={cn("tk-row__due", overdue && "is-late")} role="cell">
+        {p.dueDate ? (overdue ? `Overdue · ${formatShort(p.dueDate)}` : formatShort(p.dueDate)) : "No due date"}
+      </span>
+      <span className="tk-row__action" role="cell">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen();
+          }}
+        >
+          <Icon name="eye" size={12} /> Open task
+        </Button>
+        <Icon name="chevronRight" size={14} className="tk-row__chev" />
+      </span>
+    </div>
+  );
+}
+
+/** The full task in a pop-up: what was asked, every link, the VA on it (changeable while open) and cancelling a request. */
+function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamVa[]; onClose: () => void }) {
   const { readOnly, notify } = usePortal();
   const update = useUpdateProject();
-  const [more, setMore] = useState(false);
-  const step = PROJECT_FLOW.indexOf(p.status);
+  const [cancelling, setCancelling] = useState(false);
+  const messages = useProjectMessages(p.id);
+  const { viewAsClientId } = useSession();
+  // Opening the task (or a new message arriving while it's open) reads the conversation. GoCWGL viewing as the
+  // client doesn't (the server ignores it), so the client still sees the mark.
+  const { mutate: markRead } = useMarkProjectRead();
+  const unread = p.unreadCount ?? 0;
+  useEffect(() => {
+    if (unread > 0 && !viewAsClientId) markRead(p.id);
+  }, [p.id, unread, viewAsClientId, markRead, messages.data?.length]);
+  const post = usePostProjectMessage();
   const canEdit = !readOnly && isOpenProject(p);
-  const overdue = !!p.dueDate && isOpenProject(p) && p.dueDate < new Date().toISOString().slice(0, 10);
-  const long = p.details.length > 180 || p.details.split("\n").length > 3;
+
+  const actions = canEdit ? (
+    <div className="tk-sheet__row">
+      <Field label="VA on this task" htmlFor="pj-va-pick">
+        <Select
+          id="pj-va-pick"
+          value={p.va?.id ?? ""}
+          disabled={update.isPending}
+          onChange={(e) => update.mutate({ id: p.id, body: { vaId: e.target.value || null } }, { onSuccess: () => notify("VA updated.") })}
+          options={[{ value: "", label: "Let GoCWGL choose" }, ...team.map((v) => ({ value: v.vaId, label: v.name }))]}
+        />
+      </Field>
+      {p.status === "requested" && (
+        <Button variant="danger" disabled={update.isPending} onClick={() => (update.reset(), setCancelling(true))}>
+          Cancel request
+        </Button>
+      )}
+    </div>
+  ) : undefined;
 
   return (
-    <article className={cn("tk-card", `is-${p.status}`)}>
-      <header className="tk-card__head">
-        <span className={cn("tk-status", toneClass(PROJECT_STATUS[p.status].tone))}>
-          <span className="tk-status__dot" aria-hidden="true" />
-          {PROJECT_STATUS[p.status].label}
-        </span>
-        {p.priority !== "normal" && (
-          <span className={cn("tk-chip", toneClass(PRIORITY[p.priority].tone))}>
-            <Icon name="bolt" size={11} /> {PRIORITY[p.priority].label}
-          </span>
-        )}
-        <span className="u-spacer" />
-        {p.dueDate && (
-          <span className={cn("tk-due", overdue && "is-late")}>
-            <Icon name="clock" size={12} /> {overdue ? "Overdue · " : "Due "}
-            {formatShort(p.dueDate)}
-          </span>
-        )}
-      </header>
-
-      <h3 className="tk-card__title">{p.title}</h3>
-      <span className="tk-card__meta">
-        Requested {formatShort(p.createdAt)}
-        {p.requestedByName ? ` by ${p.requestedByName}` : ""}
-        {p.completedAt && ` · finished ${formatShort(p.completedAt)}`}
-      </span>
-
-      {p.status !== "cancelled" && (
-        <ol className="rq-steps tk-card__steps" aria-label="Progress">
-          {PROJECT_FLOW.map((s, i) => (
-            <li key={s} className={cn(i < step && "is-done", i === step && "is-now", p.status === "done" && "is-done")}>
-              <span className="rq-steps__dot" aria-hidden="true">
-                {(i < step || p.status === "done") && <Icon name="check" size={9} />}
-              </span>
-              <span className="rq-steps__label">{PROJECT_STATUS[s].label}</span>
-            </li>
-          ))}
-        </ol>
-      )}
-
-      {p.details && (
-        <div className="tk-card__details">
-          <p className={cn(!more && "vr-clamp")}>{p.details}</p>
-          {long && (
-            <button type="button" className="rq-link" onClick={() => setMore((m) => !m)}>
-              {more ? "Show less" : "Show more"}
-            </button>
-          )}
-        </div>
-      )}
-      <TaskLinkChips links={p.links} />
-      {p.teamNote && (
-        <p className="rq-card__note">
-          <Icon name="message" size={13} />
-          <span>
-            <b>GoCWGL:</b> {p.teamNote}
-          </span>
-        </p>
-      )}
-
-      <footer className="tk-card__foot">
-        <span className="tk-card__va">
-          {p.va ? (
-            <>
-              <Avatar name={p.va.name} tone={avatarTone(p.va.id)} size="sm" />
-              <span className="stack stack--0">
-                <span className="tk-card__va-label">Assigned VA</span>
-                <strong>{p.va.name}</strong>
-              </span>
-            </>
-          ) : (
-            <span className="tk-card__va-label">GoCWGL is picking a VA</span>
-          )}
-        </span>
-        {canEdit && (
-          <span className="cluster cluster--8">
-            <Select
-              size="sm"
-              aria-label="VA on this task"
-              value={p.va?.id ?? ""}
-              disabled={update.isPending}
-              onChange={(e) => update.mutate({ id: p.id, body: { vaId: e.target.value || null } }, { onSuccess: () => notify("VA updated.") })}
-              options={[{ value: "", label: "Let GoCWGL choose" }, ...team.map((v) => ({ value: v.vaId, label: v.name }))]}
+    <Modal
+      open
+      width={1080}
+      onClose={onClose}
+      titleId="client-task"
+      kicker="YOUR TASK REQUEST"
+      title={p.title}
+      footer={
+        <>
+          <span className="text-small">Your VA sees exactly what’s here. Status updates show every 30 seconds.</span>
+          <span className="u-spacer" />
+          <Button variant="primary" onClick={onClose}>
+            Close
+          </Button>
+        </>
+      }
+    >
+      <div className="stack stack--12">
+        {!cancelling && <FormError error={update.error} />}
+        <TaskSheet
+          t={p}
+          people={{
+            icon: "user",
+            label: "Assigned VA",
+            value: p.va ? p.va.name : "GoCWGL is picking a VA",
+          }}
+          actions={actions}
+          emptyDetails="You didn’t add details to this request."
+          conversation={
+            <TaskConversation
+              side="client"
+              otherName={p.va?.name ?? "your VA"}
+              vaName={p.va?.name ?? "your VA"}
+              otherReadAt={p.vaReadAt}
+              messages={messages}
+              send={(body, done) => post.mutate({ id: p.id, body }, { onSuccess: done })}
+              sending={post.isPending}
+              sendError={post.error}
+              closed={p.status === "cancelled"}
+              readOnly={readOnly}
+              staffViewing={!!viewAsClientId}
             />
-            {p.status === "requested" && (
-              <button
-                type="button"
-                className="rq-link rq-link--danger"
-                disabled={update.isPending}
-                onClick={() => {
-                  if (window.confirm(`Cancel “${p.title}”?`)) update.mutate({ id: p.id, body: { cancel: true } }, { onSuccess: () => notify("Request cancelled.") });
-                }}
-              >
-                Cancel
-              </button>
-            )}
-          </span>
-        )}
-      </footer>
-      <FormError error={update.error} />
-    </article>
+          }
+        />
+      </div>
+      {cancelling && (
+        <ConfirmDialog
+          title="Cancel this task request?"
+          confirmLabel="Yes, cancel it"
+          icon="close"
+          pending={update.isPending}
+          error={update.error}
+          onClose={() => setCancelling(false)}
+          onConfirm={() =>
+            update.mutate(
+              { id: p.id, body: { cancel: true } },
+              {
+                onSuccess: () => {
+                  notify("Request cancelled.");
+                  setCancelling(false);
+                  onClose();
+                },
+              },
+            )
+          }
+        >
+          “{p.title}” is cancelled and moves to the Cancelled tab. {p.va ? `${p.va.name} won’t work on it.` : ""}
+        </ConfirmDialog>
+      )}
+    </Modal>
   );
 }
 

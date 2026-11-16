@@ -1,11 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import type { LessonFileOut } from "@/utils/api/models";
 import { download } from "@/utils/api/client";
 import { useBlobUrl } from "@/utils/hooks/useBlobUrl";
 import { cn, fileExtension } from "@/lib/utils";
+import { lessonBodyHtml } from "@/lib/richText";
 import { Icon } from "./Icon";
+
+const noop = () => () => {};
+const yes = () => true;
+const no = () => false;
 
 const formatSize = (bytes: number) =>
   bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -32,6 +37,10 @@ export function LessonReading({
   const [busy, setBusy] = useState(false);
   const [failed, setFailed] = useState(false);
   const isImage = !!file?.contentType.startsWith("image/");
+  // Formatted (or older plain) text, cleaned to the safe subset the editor writes. Cleaning needs the browser, so the
+  // server render leaves it out.
+  const client = useSyncExternalStore(noop, yes, no);
+  const html = useMemo(() => (client && body ? lessonBodyHtml(body) : ""), [client, body]);
 
   const save = async () => {
     if (!file || !filePath) return;
@@ -85,13 +94,7 @@ export function LessonReading({
           </button>
         </div>
       )}
-      {body && (
-        <div className="lesson-reading__body">
-          {body.split(/\n\s*\n/).map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
-        </div>
-      )}
+      {html && <div className="lesson-reading__body" dangerouslySetInnerHTML={{ __html: html }} />}
     </div>
   );
 }

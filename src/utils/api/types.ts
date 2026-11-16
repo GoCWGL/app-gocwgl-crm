@@ -1538,6 +1538,50 @@ export interface paths {
         patch: operations["update_my_task_api_va_tasks__task_id__patch"];
         trace?: never;
     };
+    "/api/va/tasks/{task_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Task Messages
+         * @description The task's conversation with the client, oldest first.
+         */
+        get: operations["my_task_messages_api_va_tasks__task_id__messages_get"];
+        put?: never;
+        /**
+         * Post Task Message
+         * @description Ask the client for clarification on your task; they answer from their Tasks page.
+         */
+        post: operations["post_task_message_api_va_tasks__task_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/tasks/{task_id}/messages/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read Task Messages
+         * @description You've read the task's conversation: its unread mark goes away.
+         */
+        post: operations["read_task_messages_api_va_tasks__task_id__messages_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/va/inactive-requests": {
         parameters: {
             query?: never;
@@ -4368,6 +4412,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/trainings/{training_id}/learners/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Learner
+         * @description Take someone off the course: their registration, progress and quiz tries are removed. They can register again.
+         */
+        delete: operations["remove_learner_api_admin_trainings__training_id__learners__user_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/trainings/{training_id}/thumbnail": {
         parameters: {
             query?: never;
@@ -5545,6 +5609,50 @@ export interface paths {
         head?: never;
         /** Update My Project */
         patch: operations["update_my_project_api_portal_projects__project_id__patch"];
+        trace?: never;
+    };
+    "/api/portal/projects/{project_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Project Messages
+         * @description The task's conversation with your VA, oldest first.
+         */
+        get: operations["my_project_messages_api_portal_projects__project_id__messages_get"];
+        put?: never;
+        /**
+         * Post Project Message
+         * @description Answer your VA's question (or add something) in the task's conversation.
+         */
+        post: operations["post_project_message_api_portal_projects__project_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/projects/{project_id}/messages/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Read Project Messages
+         * @description You've read the task's conversation: its unread mark goes away.
+         */
+        post: operations["read_project_messages_api_portal_projects__project_id__messages_read_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/api/portal/va-invoices": {
@@ -7421,6 +7529,24 @@ export interface components {
             /** Completedat */
             completedAt: string | null;
             va: components["schemas"]["ProjectVa"] | null;
+            /**
+             * Messagecount
+             * @default 0
+             */
+            messageCount?: number;
+            /** Lastmessageat */
+            lastMessageAt?: string | null;
+            /** Lastmessagefrom */
+            lastMessageFrom?: ("client" | "va" | "staff") | null;
+            /**
+             * Unreadcount
+             * @default 0
+             */
+            unreadCount?: number;
+            /** Clientreadat */
+            clientReadAt?: string | null;
+            /** Vareadat */
+            vaReadAt?: string | null;
         };
         /** ClientTicketIn */
         ClientTicketIn: {
@@ -12574,6 +12700,33 @@ export interface components {
              */
             done?: boolean;
         };
+        /** TaskMessageIn */
+        TaskMessageIn: {
+            /** Body */
+            body: string;
+        };
+        /** TaskMessageOut */
+        TaskMessageOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Authorrole
+             * @enum {string}
+             */
+            authorRole: "client" | "va" | "staff";
+            /** Authorname */
+            authorName: string;
+            /** Body */
+            body: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
         /** TaskOut */
         TaskOut: {
             /**
@@ -14490,6 +14643,24 @@ export interface components {
             /** Completedat */
             completedAt: string | null;
             va: components["schemas"]["ProjectVa"] | null;
+            /**
+             * Messagecount
+             * @default 0
+             */
+            messageCount?: number;
+            /** Lastmessageat */
+            lastMessageAt?: string | null;
+            /** Lastmessagefrom */
+            lastMessageFrom?: ("client" | "va" | "staff") | null;
+            /**
+             * Unreadcount
+             * @default 0
+             */
+            unreadCount?: number;
+            /** Clientreadat */
+            clientReadAt?: string | null;
+            /** Vareadat */
+            vaReadAt?: string | null;
             /** Clientname */
             clientName: string;
             /**
@@ -18400,6 +18571,133 @@ export interface operations {
                         data: components["schemas"]["VaTaskOut"];
                     };
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_task_messages_api_va_tasks__task_id__messages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Task Messages Api Va Tasks  Task Id  Messages Get */
+                        data: components["schemas"]["TaskMessageOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    post_task_message_api_va_tasks__task_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskMessageIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TaskMessageOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    read_task_messages_api_va_tasks__task_id__messages_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                task_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -28506,6 +28804,45 @@ export interface operations {
             };
         };
     };
+    remove_learner_api_admin_trainings__training_id__learners__user_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                training_id: string;
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     training_thumbnail_api_admin_trainings__training_id__thumbnail_get: {
         parameters: {
             query?: never;
@@ -31787,6 +32124,133 @@ export interface operations {
                         data: components["schemas"]["ClientProjectOut"];
                     };
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_project_messages_api_portal_projects__project_id__messages_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Project Messages Api Portal Projects  Project Id  Messages Get */
+                        data: components["schemas"]["TaskMessageOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    post_project_message_api_portal_projects__project_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaskMessageIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["TaskMessageOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    read_project_messages_api_portal_projects__project_id__messages_read_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

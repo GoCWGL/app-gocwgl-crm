@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import {
   Badge,
   Button,
+  ConfirmDialog,
   Field,
   FormError,
   Icon,
@@ -19,6 +20,7 @@ import {
   Textarea,
   Select,
   LessonPlayer,
+  RichTextEditor,
   TrainingCover,
   type IconName,
 } from "@/components/ui";
@@ -28,6 +30,7 @@ import { useBlobUrl } from "@/utils/hooks/useBlobUrl";
 import { customCategories, TRAINING_CATEGORIES } from "@/data/trainingCategories";
 import { toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
+import { toPlainText } from "@/lib/richText";
 import { formatMinutes, lessonThumb, videoEmbed } from "@/lib/video";
 import { youtubeId } from "@/lib/youtube";
 import type { LessonFileOut, QuestionOut, TrainingAudience, TrainingOut, TrainingStatus } from "@/utils/api/models";
@@ -38,6 +41,7 @@ import {
   useDefaultThumbnail,
   useDeleteTraining,
   useRemoveDefaultThumbnail,
+  useRemoveLearner,
   useRemoveTrainingThumbnail,
   useSetDefaultThumbnail,
   useSetTrainingThumbnail,
@@ -535,6 +539,8 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
   const save = useUpdateTraining();
   const remove = useDeleteTraining();
   const learners = useTrainingLearners(t.id);
+  const removeLearner = useRemoveLearner();
+  const [removing, setRemoving] = useState<{ userId: string; name: string } | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const meta = AUDIENCE[t.audience];
   const publish = (status: TrainingStatus) =>
@@ -675,6 +681,7 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
                     <th>Progress</th>
                     {t.questions.length > 0 && <th>Quiz</th>}
                     <th>Status</th>
+                    {canWrite && <th aria-label="Actions" />}
                   </tr>
                 </thead>
                 <tbody>
@@ -714,6 +721,18 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
                             {state.label}
                           </Badge>
                         </td>
+                        {canWrite && (
+                          <td className="learner-table__actions">
+                            <button
+                              type="button"
+                              className="mini-action mini-action--danger"
+                              title={`Remove ${r.name} from this course`}
+                              onClick={() => (removeLearner.reset(), setRemoving({ userId: r.userId, name: r.name }))}
+                            >
+                              Remove
+                            </button>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}
@@ -723,6 +742,30 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
           </LoadState>
         </div>
       </div>
+      {removing && (
+        <ConfirmDialog
+          title={`Remove ${removing.name} from this course?`}
+          confirmLabel="Remove from course"
+          icon="trash"
+          pending={removeLearner.isPending}
+          error={removeLearner.error}
+          onClose={() => setRemoving(null)}
+          onConfirm={() =>
+            removeLearner.mutate(
+              { id: t.id, userId: removing.userId },
+              {
+                onSuccess: () => {
+                  notify(`${removing.name} was removed from “${t.title}”.`);
+                  setRemoving(null);
+                },
+              },
+            )
+          }
+        >
+          Their registration, lesson progress and quiz tries for this course are deleted. They can register again and start from
+          the beginning.
+        </ConfirmDialog>
+      )}
     </Modal>
   );
 }
@@ -772,10 +815,10 @@ const blankLesson = (kind: LessonKind = "video"): DraftLesson => ({
   pending: null,
 });
 const lessonUsed = (l: DraftLesson) =>
-  l.kind === "reading" ? !!(l.title.trim() || l.body.trim() || l.file || l.pending) : !!(l.title.trim() || l.videoUrl.trim());
+  l.kind === "reading" ? !!(l.title.trim() || toPlainText(l.body).trim() || l.file || l.pending) : !!(l.title.trim() || l.videoUrl.trim());
 const lessonProblem = (l: DraftLesson) =>
   l.kind === "reading"
-    ? !l.body.trim() && !l.file && !l.pending
+    ? !toPlainText(l.body).trim() && !l.file && !l.pending
       ? "write the reading or upload a document."
       : ""
     : !videoEmbed(l.videoUrl)
@@ -1274,14 +1317,13 @@ function TrainingEditor({
                     </span>
                     {reading ? (
                       <>
-                        <Textarea
+                        <RichTextEditor
                           aria-label={`Lesson ${i + 1} reading`}
-                          rows={6}
                           maxLength={50_000}
-                          placeholder="Write the lesson here (a blank line starts a new paragraph). Or upload a document below, or both."
+                          placeholder="Write the lesson here. Pick a font, weight or size for selected text (or the paragraph you're in). Or upload a document below, or both."
                           value={l.body}
-                          aria-invalid={tried && !!lessonProblem(l)}
-                          onChange={(e) => setL(i, { body: e.target.value })}
+                          invalid={tried && !!lessonProblem(l)}
+                          onChange={(body) => setL(i, { body })}
                         />
                         <span className="lesson-card__doc">
                           {doc ? (

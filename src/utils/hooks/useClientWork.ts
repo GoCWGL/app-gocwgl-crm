@@ -24,8 +24,15 @@ export const useUpdateTimeTag = () => useApiMutation((v: { id: string; body: Tim
 export const useDeleteTimeTag = () => useApiMutation(api.deleteTimeTag, { invalidate: [qk.portalTimeTags] });
 export const useVaTeam = () => useQuery({ queryKey: qk.portalVaTeam, queryFn: api.vaTeam });
 
-export const useProjects = () => useQuery({ queryKey: qk.portalProjects, queryFn: api.listProjects });
+/** Refreshed every 30 s so the VA's status changes show up without reloading. */
+export const useProjects = () => useQuery({ queryKey: qk.portalProjects, queryFn: api.listProjects, refetchInterval: 30_000 });
 export const useRequestProject = () => useApiMutation(api.requestProject, { invalidate: [qk.portalProjects] });
+/** A task's conversation, refreshed every 15 s while open so the VA's questions show up. */
+export const useProjectMessages = (id: string) =>
+  useQuery({ queryKey: [...qk.portalProjects, id, "messages"], queryFn: () => api.listProjectMessages(id), refetchInterval: 15_000 });
+export const useMarkProjectRead = () => useApiMutation(api.markProjectMessagesRead, { invalidate: [qk.portalProjects] });
+export const usePostProjectMessage = () =>
+  useApiMutation((v: { id: string; body: string }) => api.postProjectMessage(v.id, v.body), { invalidate: [qk.portalProjects] });
 export const useUpdateProject = () =>
   useApiMutation((v: { id: string; body: ProjectClientUpdate }) => api.updateProject(v.id, v.body), { invalidate: [qk.portalProjects] });
 
