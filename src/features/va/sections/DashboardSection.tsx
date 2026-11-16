@@ -10,6 +10,7 @@ import { useMyClients, useMyShift, useTimeEntries } from "@/utils/hooks/useShift
 import { useOpenJobs } from "@/utils/hooks/useVaPortal";
 import { clientLabel, hms, rangeFor } from "../lib/time";
 import { useVa } from "../state/VaContext";
+import { TwoStepReminder } from "@/features/account/TwoStepReminder";
 
 /** The pages a VA opens most, as shortcuts on the dashboard. */
 const SHORTCUTS: VaTab[] = ["time", "clients", "tasks", "jobs", "training", "support"];
@@ -35,6 +36,7 @@ export function DashboardSection() {
 
   return (
     <div className="page-stack">
+      <TwoStepReminder onSetUp={() => goTo("account")} />
       <StatGrid
         items={[
           { label: "Active clients", value: dash(String(clients.data?.clients.filter((c) => c.active).length ?? 0)), tone: "cyan" },

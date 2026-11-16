@@ -21,6 +21,48 @@
   gap: 4px;
 }
 
+// Online now: VAs and clients with the portal open.
+.dash-online {
+  gap: 12px;
+
+  .card__header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+    gap: 8px;
+    max-height: 340px;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      padding: 8px 10px;
+      border: 1px solid $line-faint;
+      border-radius: $radius-lg;
+
+      .u-strong,
+      .text-small {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      > .stack {
+        min-width: 0;
+      }
+    }
+  }
+}
+
 // Horizontal bar split into one part per pipeline stage.
 .stacked-bar {
   display: flex;

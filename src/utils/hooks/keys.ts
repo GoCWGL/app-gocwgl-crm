@@ -4,6 +4,7 @@ export const qk = {
   myNotifications: ["me", "notifications"] as const,
   staffTeam: ["staff-team"] as const,
   portalTeam: ["portal-team"] as const,
+  presence: ["presence"] as const,
   sessions: ["auth", "sessions"] as const,
   mfa: ["auth", "mfa"] as const,
 

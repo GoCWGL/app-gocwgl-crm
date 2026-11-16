@@ -1,6 +1,7 @@
 "use client";
 
 import { useClientTrainings, useVaTeam } from "@/utils/hooks/useClientWork";
+import { useOverview } from "@/utils/hooks/usePortal";
 
 /**
  * Whether this client has an active VA (one working with them now). Until then the "My VA team" and
@@ -15,4 +16,9 @@ export function useHasVaWork(): { known: boolean; has: boolean } {
 export function useHasTraining(): { known: boolean; has: boolean } {
   const trainings = useClientTrainings();
   return { known: trainings.isSuccess, has: (trainings.data ?? []).length > 0 };
+}
+
+/** The CRM and Funnel packages ("Request CRM", "Request Funnel"): on unless the team turned them off for this client. */
+export function useShowPackages(): boolean {
+  return useOverview(30).data?.showPackages !== false;
 }

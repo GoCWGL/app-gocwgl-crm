@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
 import { VA_PAGES, type VaTab } from "@/data/va";
 import { RequireVa } from "@/utils/auth/guards";
+import { useSession } from "@/utils/auth/session";
+import { usePresenceHeartbeat } from "@/utils/hooks/useUsers";
 import { useSectionChangeSweep } from "@/utils/navigation";
 import { StaffVaBar, StaffVaGate } from "./components/StaffVaGate";
 import { VaSidebar } from "./components/VaSidebar";
@@ -38,6 +40,9 @@ export function VaApp() {
 function VaLayout() {
   const { tab } = useVa();
   const page = VA_PAGES[tab];
+  // Online status for the team (not for staff looking at the VA portal).
+  const { user } = useSession();
+  usePresenceHeartbeat(!!user && !user.isStaff);
 
   useEffect(() => {
     window.scrollTo(0, 0);

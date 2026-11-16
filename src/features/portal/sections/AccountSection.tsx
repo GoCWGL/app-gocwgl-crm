@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Avatar, Button, Field, FormError, Input, LoadState, Select, SoonNote, Toggle } from "@/components/ui";
 import { ProfilePhotoEditor } from "@/features/account/ProfilePhoto";
+import { SecuritySettings } from "@/features/admin/sections/settings/SecuritySettings";
 import { TIME_ZONES } from "@/data/admin";
 import { ALERT_OPTIONS } from "@/data/portal";
 import { avatarTone } from "@/lib/tones";
@@ -34,6 +35,7 @@ export function AccountSection() {
     <div className="card-row">
       <ReferredByCard />
       <ProfileCard readOnly={readOnly} />
+      {!isStaff && <SecurityCard />}
       {!isStaff && <TeamCard />}
       <SocialLinksCard />
     </div>
@@ -169,6 +171,18 @@ function ProfileCard({ readOnly }: { readOnly: boolean }) {
           </div>
         </>
       )}
+    </section>
+  );
+}
+
+// ------------------------------------------------------------------ Password & security
+/** Their password, 2-step verification and signed-in devices (the same panel the team and VAs use). */
+function SecurityCard() {
+  const { notify } = usePortal();
+  return (
+    <section className="card account-profile" id="account-security">
+      <span className="kicker">PASSWORD &amp; SECURITY</span>
+      <SecuritySettings onMessage={notify} />
     </section>
   );
 }

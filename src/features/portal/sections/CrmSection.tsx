@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, Button, Icon, IconTile, LoadState, TabBar } from "@/components/ui";
+import { Badge, Button, Icon, IconTile, LoadState, TabBar, type TabOption } from "@/components/ui";
 import { CRM_ADDONS, CRM_FAQ, CRM_PACKAGES, CRM_STEPS, OFFERED_CRM_PACKAGES, type CrmPackageKey } from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
 import type { Tone } from "@/lib/tones";
@@ -14,6 +14,7 @@ import { BuildCards } from "../components/BuildCards";
 import { CrmRequestModal } from "../components/CrmRequestModal";
 import { PayConfirmModal } from "../components/PayConfirmModal";
 import { usePortal } from "../state/PortalContext";
+import { useShowPackages } from "../lib/vaAccess";
 
 const PACKAGE_KEYS = OFFERED_CRM_PACKAGES;
 
@@ -28,14 +29,16 @@ export function useCrmTab() {
     (r) => r.status !== "declined" && (!r.projectId || (!!r.invoice && r.invoice.status !== "Paid")),
   );
   const { state } = usePortal();
-  // Open on their builds or requests when they have some, otherwise on the packages.
-  const tab: CrmTab = state.crmView || (builds.length || requests.length ? "builds" : "packages");
-  return { query, builds, requests, tab };
+  const showPackages = useShowPackages();
+  // Open on their builds or requests when they have some, otherwise on the packages (when the team shows them).
+  const picked: CrmTab = state.crmView || (builds.length || requests.length || !showPackages ? "builds" : "packages");
+  const tab: CrmTab = picked === "packages" && !showPackages ? "builds" : picked;
+  return { query, builds, requests, tab, showPackages };
 }
 
 /** CRM page: the client's CRM builds, the packages to start a new one, and Build progress (every build's timeline). */
 export function CrmSection() {
-  const { query, builds, requests, tab } = useCrmTab();
+  const { query, builds, requests, tab, showPackages } = useCrmTab();
   const { update, readOnly } = usePortal();
   const openTodos = (usePortalTodos().data ?? []).filter((t) => !t.done).length;
   const setPicked = (crmView: CrmTab) => update({ crmView });
@@ -46,11 +49,11 @@ export function CrmSection() {
         label="CRM"
         value={tab}
         onChange={setPicked}
-        options={[
+        options={([
           { value: "builds", label: "Your CRM builds", hint: "In progress and live", icon: "rocket", count: builds.length },
           { value: "packages", label: "Get a CRM", hint: "Packages and pricing", icon: "sparkle", tone: "purple" },
           { value: "progress", label: "Build progress", hint: "Timelines and your to-dos", icon: "gauge", tone: "brand", count: openTodos || undefined },
-        ]}
+        ] satisfies Array<TabOption<CrmTab>>).filter((o) => showPackages || o.value !== "packages")}
       />
       {tab === "progress" ? (
         <BuildSection kind="crm" />
@@ -59,7 +62,7 @@ export function CrmSection() {
           query={query}
           loadingText="Loading your CRM builds…"
           isEmpty={!builds.length && !requests.length}
-          empty="No CRM builds yet. See Get a CRM for the packages, and request one to start."
+          empty={showPackages ? "No CRM builds yet. See Get a CRM for the packages, and request one to start." : "No CRM builds yet."}
         >
           {requests.length > 0 && (
             <section className="card stack stack--10">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type CSSProperties, type ReactNode } from "react";
-import { Avatar, Badge, BarChart, BarRow, Button, ErrorState, Icon, IconTile, KpiCard, Loading, type IconName } from "@/components/ui";
+import { Avatar, Badge, BarChart, BarRow, Button, ErrorState, Icon, IconTile, KpiCard, Loading, SegmentedControl, type IconName } from "@/components/ui";
 import { CORE_STAGES, SOURCE_LABELS, type AdminTab, type LeadSource } from "@/data/admin";
 import { avatarTone, toneClass, type Tone } from "@/lib/tones";
 import { cn, percent } from "@/lib/utils";
@@ -10,6 +10,7 @@ import { formatCents } from "@/utils/format/money";
 import { useBookings } from "@/utils/hooks/useCalendar";
 import { usePipelines, useSalesBoard } from "@/utils/hooks/useContacts";
 import { useActivity, useDashboard } from "@/utils/hooks/useReporting";
+import { usePresence } from "@/utils/hooks/useUsers";
 import { contactName, getSalesStages, stageOf } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
 
@@ -131,6 +132,8 @@ export function DashboardSection() {
           />
         ))}
       </div>
+
+      <OnlineNow />
 
       <div className="card-row card-row--stretch">
         <section className="card dash-revenue">
@@ -319,6 +322,62 @@ export function DashboardSection() {
         </section>
       </div>
     </div>
+  );
+}
+
+/** Who's online right now: VAs and clients with the portal open (it checks in about once a minute). */
+function OnlineNow() {
+  const presence = usePresence();
+  const [who, setWho] = useState<"va" | "client">("va");
+  const data = presence.data;
+  const people = (data?.people ?? []).filter((p) => p.role === who);
+  const online = people.filter((p) => p.online);
+  const earlier = people.filter((p) => !p.online);
+
+  return (
+    <section className="card dash-online">
+      <div className="card__header">
+        <div className="stack stack--2">
+          <h2 className="card-title">Online now</h2>
+          <span className="text-small">
+            {data
+              ? `${data.vasOnline} VA${data.vasOnline === 1 ? "" : "s"} and ${data.clientsOnline} client${data.clientsOnline === 1 ? "" : "s"} online · updates every 30 seconds`
+              : "Who has the VA or client portal open"}
+          </span>
+        </div>
+        <SegmentedControl
+          label="Show"
+          size="sm"
+          variant="soft"
+          value={who}
+          onChange={setWho}
+          options={[
+            { value: "va", label: "VAs", count: data?.vasOnline ?? "–" },
+            { value: "client", label: "Clients", count: data?.clientsOnline ?? "–" },
+          ]}
+        />
+      </div>
+      {presence.isPending && <Loading inline />}
+      {presence.isError && <ErrorState error={presence.error} onRetry={presence.refetch} />}
+      {data && !people.length && <p className="text-muted">No {who === "va" ? "VAs" : "clients"} have signed in today.</p>}
+      {data && people.length > 0 && (
+        <ul className="dash-online__list">
+          {[...online, ...earlier].map((p) => (
+            <li key={p.id} className={p.online ? "is-online" : undefined}>
+              <span className={cn("presence", p.online ? "is-working" : "is-offline")}>
+                <Avatar name={p.fullName || p.email} tone={avatarTone(p.id)} size="md" />
+                <span className="presence__dot" aria-hidden="true" />
+              </span>
+              <span className="stack stack--2 u-grow">
+                <span className="u-strong">{p.fullName || p.email}</span>
+                <span className="text-small">{p.role === "client" && p.business ? `${p.business} · ${p.email}` : p.email}</span>
+              </span>
+              <span className={cn("text-small u-strong", p.online && "u-green")}>{p.online ? "Online" : `Seen ${formatRelative(p.lastSeenAt)}`}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 

@@ -25,7 +25,7 @@ import { useSession } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
 import { usePortal } from "../state/PortalContext";
 import { useMenuCounts } from "@/utils/hooks/useMenuCounts";
-import { useHasTraining, useHasVaWork } from "../lib/vaAccess";
+import { useHasTraining, useHasVaWork, useShowPackages } from "../lib/vaAccess";
 import { useCrmTab } from "../sections/CrmSection";
 import { useFunnelTab } from "../sections/FunnelsSection";
 
@@ -66,8 +66,13 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const vaWork = useHasVaWork();
   // Training appears once GoCWGL assigns the client a training.
   const training = useHasTraining();
+  // Request CRM / Request Funnel (the packages) show unless the team turned them off for this client.
+  const showPackages = useShowPackages();
   const shown = (i: PortalMenuItem, needsVa?: boolean) =>
-    !HIDDEN_PORTAL_TABS.has(i.tab) && (!(needsVa || i.needsVa) || vaWork.has) && (i.tab !== "training" || training.has);
+    !HIDDEN_PORTAL_TABS.has(i.tab) &&
+    (!(needsVa || i.needsVa) || vaWork.has) &&
+    (i.tab !== "training" || training.has) &&
+    (i.view !== "packages" || showPackages);
   const groups = PORTAL_MENU.map((g) => ({
     ...g,
     items: g.items

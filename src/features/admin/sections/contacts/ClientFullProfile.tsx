@@ -20,6 +20,7 @@ import { ContactAnswersCard } from "../../components/ContactAnswersCard";
 import { ContactNotesCard } from "../../components/ContactNotesCard";
 import { ContactOverviewCard } from "../../components/ContactOverviewCard";
 import { PortalLoginCard } from "../../components/PortalLoginCard";
+import { PortalMenuCard } from "../../components/PortalMenuCard";
 import { ReferredByContactCard } from "../../components/ReferredByContactCard";
 import {
   CONTACT_STATUS,
@@ -205,6 +206,9 @@ function Profile({ c }: { c: ContactOut }) {
           </ProfileCard>
           <section className="card vp-card vp-card--flush">
             <PortalLoginCard contact={c} />
+          </section>
+          <section className="card vp-card vp-card--flush">
+            <PortalMenuCard contact={c} />
           </section>
           <section className="card vp-card vp-card--flush">
             <ReferredByContactCard contact={c} />

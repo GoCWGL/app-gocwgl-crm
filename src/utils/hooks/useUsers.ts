@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@/utils/api/models";
 import * as api from "@/utils/api/users";
@@ -52,3 +53,29 @@ export const usePortalTeam = () => useQuery({ queryKey: qk.portalTeam, queryFn: 
 export const useInvitePortalMember = () => useApiMutation(api.invitePortalMember, { invalidate: [qk.portalTeam] });
 export const useCancelPortalInvitation = () => useApiMutation(api.cancelPortalInvitation, { invalidate: [qk.portalTeam] });
 export const useRemovePortalMember = () => useApiMutation(api.removePortalMember, { invalidate: [qk.portalTeam] });
+
+// ------------------------------------------------------------------ Online status
+const HEARTBEAT_MS = 60_000;
+
+/**
+ * Tells the API this person has the portal open (once now, then every minute while the tab is visible), so the team
+ * can see who's online. Pass false to skip it, e.g. for staff using "View as".
+ */
+export function usePresenceHeartbeat(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    const beat = () => {
+      if (document.visibilityState === "visible") api.heartbeat().catch(() => {});
+    };
+    beat();
+    const timer = window.setInterval(beat, HEARTBEAT_MS);
+    document.addEventListener("visibilitychange", beat);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", beat);
+    };
+  }, [enabled]);
+}
+
+/** Admin dashboard: who's online, refreshed every 30 seconds. */
+export const usePresence = () => useQuery({ queryKey: qk.presence, queryFn: api.getPresence, refetchInterval: 30_000 });

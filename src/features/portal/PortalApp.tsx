@@ -11,6 +11,7 @@ import { RequireClient, SessionSplash } from "@/utils/auth/guards";
 import { setViewAs, useSession } from "@/utils/auth/session";
 import { useContactsPage } from "@/utils/hooks/useContacts";
 import { useOverview } from "@/utils/hooks/usePortal";
+import { usePresenceHeartbeat } from "@/utils/hooks/useUsers";
 import { useSectionChangeSweep } from "@/utils/navigation";
 import { EmbedCodeDialog } from "./components/EmbedCodeDialog";
 import { FunnelRequestDrawer } from "./components/FunnelRequestDrawer";
@@ -134,6 +135,8 @@ function PortalLayout() {
   const business = useOverview(30).data?.business || "Your business";
   const { user, viewAsClientId } = useSession();
   const subtitle = readOnly ? "Client portal · view only" : viewAsClientId && user?.isStaff ? "Client portal · acting as client" : "Client portal";
+  // Online status for the team (not for staff using "View as client").
+  usePresenceHeartbeat(!!user && !user.isStaff);
 
   // Pages of "My VA team" and "Learn & support" open once the client has an active VA; until then, the dashboard.
   const vaWork = useHasVaWork();

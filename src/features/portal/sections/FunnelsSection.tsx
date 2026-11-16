@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useState } from "react";
-import { Badge, Button, FormError, Icon, IconTile, LoadState, ProgressBar, StatGrid, TabBar, buttonClass } from "@/components/ui";
+import { Badge, Button, FormError, Icon, IconTile, LoadState, ProgressBar, StatGrid, TabBar, buttonClass, type TabOption } from "@/components/ui";
 import { FUNNEL_PACKAGE_COPY, type FunnelPackageKey, type FunnelStatus } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
@@ -14,6 +14,7 @@ import { BuildCards } from "../components/BuildCards";
 import { missingRequestDetails } from "../components/FunnelRequestDrawer";
 import { PayConfirmModal } from "../components/PayConfirmModal";
 import { usePortal } from "../state/PortalContext";
+import { useShowPackages } from "../lib/vaAccess";
 import { BuildSection } from "./BuildSection";
 
 type Step = [string, number];
@@ -35,14 +36,16 @@ export function useFunnelTab() {
   const funnels = usePortalFunnels().data ?? [];
   const builds = (usePortalBuilds().data ?? []).filter((b) => b.kind === "funnel");
   const yours = builds.length + funnels.filter((f) => !(f.projectId && f.status === "build")).length;
-  const tab: FunnelTab = state.funnelView || (yours ? "builds" : "packages");
-  return { yours, tab };
+  const showPackages = useShowPackages();
+  const picked: FunnelTab = state.funnelView || (yours || !showPackages ? "builds" : "packages");
+  const tab: FunnelTab = picked === "packages" && !showPackages ? "builds" : picked;
+  return { yours, tab, showPackages };
 }
 
 /** Client portal › Request Funnel: your funnel builds, the packages (Get a funnel), and Build progress, like the CRM page. */
 export function FunnelsSection() {
   const { update } = usePortal();
-  const { yours, tab } = useFunnelTab();
+  const { yours, tab, showPackages } = useFunnelTab();
   const openTodos = (usePortalTodos().data ?? []).filter((t) => !t.done).length;
   const setTab = (funnelView: FunnelTab) => update({ funnelView });
 
@@ -52,11 +55,11 @@ export function FunnelsSection() {
         label="Funnels"
         value={tab}
         onChange={setTab}
-        options={[
+        options={([
           { value: "builds", label: "Your funnel builds", hint: "In progress and live", icon: "funnel", count: yours },
           { value: "packages", label: "Get a funnel", hint: "Packages and pricing", icon: "sparkle", tone: "purple" },
           { value: "progress", label: "Build progress", hint: "Timelines and your to-dos", icon: "gauge", tone: "brand", count: openTodos || undefined },
-        ]}
+        ] satisfies Array<TabOption<FunnelTab>>).filter((o) => showPackages || o.value !== "packages")}
       />
       {tab === "progress" ? <BuildSection kind="funnel" /> : tab === "packages" ? <FunnelPackages /> : <FunnelBuilds />}
     </div>
@@ -145,6 +148,7 @@ function FunnelPackages() {
 /** Your funnel builds: live funnels with their results, builds in progress, and requests. */
 function FunnelBuilds() {
   const { update, openSupport, readOnly } = usePortal();
+  const showPackages = useShowPackages();
   const query = usePortalFunnels();
   const funnels = query.data ?? [];
   const live = funnels.filter((f) => f.status === "live");
@@ -206,7 +210,7 @@ function FunnelBuilds() {
           <h2 className="section-title">Your funnels</h2>
           <span className="text-muted">Your live funnels with last 30 days results, and the funnels you’ve requested</span>
         </div>
-        {!readOnly && (
+        {!readOnly && showPackages && (
           <Button variant="primary" size="lg" onClick={() => update({ funnelRequestOpen: true, editFunnelId: "", funnelPackage: "" })}>
             <Icon name="plus" strokeWidth={2.4} />
             Request a new funnel
@@ -218,7 +222,7 @@ function FunnelBuilds() {
       <LoadState
         query={query}
         isEmpty={!listed.length}
-        empty={builds.length ? "No live funnels or open requests yet." : "No funnels yet. Request your first one and your GoCWGL team will build it."}
+        empty={builds.length || !showPackages ? "No live funnels or open requests yet." : "No funnels yet. Request your first one and your GoCWGL team will build it."}
       >
         {listed.map((f) => (
           <FunnelCard

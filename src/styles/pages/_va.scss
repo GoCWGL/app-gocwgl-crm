@@ -8016,6 +8016,7 @@ $pdf-side: #f5f6f8;
 // Admin dashboard: a reminder banner (e.g. launch the Affiliate program at 10 clients).
 .reminder-banner {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
   gap: 14px;

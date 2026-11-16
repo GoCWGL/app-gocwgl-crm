@@ -63,7 +63,7 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   training: { title: "Training", subtitle: "Short lessons from GoCWGL on getting the most from your VA team." },
   sops: { title: "SOPs", subtitle: "Step-by-step guides from GoCWGL." },
   affiliate: { title: "Affiliate", subtitle: "Your referral ID, the businesses you referred, and your bonuses." },
-  account: { title: "Account", subtitle: "Your profile, alerts and who can see this portal." },
+  account: { title: "Account", subtitle: "Your profile, alerts, password & 2-step verification, and who can see this portal." },
 };
 
 /** One page in the portal menu. `view` opens one tab of that page (CRM, Funnels and VA tracker have tabs). */

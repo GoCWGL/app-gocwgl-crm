@@ -17,6 +17,7 @@ import { StateChip, VaPresence } from "../components/VaPresence";
 import { isOpenProject, PROJECT_STATUS } from "../lib/projects";
 import { firstName, hm } from "../lib/vaTeam";
 import { usePortal } from "../state/PortalContext";
+import { TwoStepReminder } from "@/features/account/TwoStepReminder";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -53,6 +54,7 @@ export function DashboardSection() {
 
   return (
     <div className="page-stack cp-dash">
+      <TwoStepReminder onSetUp={() => goTo("account")} />
       <section className="card cp-dash-hero">
         <div className="stack stack--4 u-grow">
           <span className="kicker kicker--sm">{new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }).toUpperCase()}</span>

@@ -1,5 +1,5 @@
 import { api, del, get, patch, post, put } from "./client";
-import type { InvitationOut, MemberOut, ProfileUpdate, RoleChange, TeamOut, User } from "./models";
+import type { InvitationOut, MemberOut, PresenceOut, ProfileUpdate, RoleChange, TeamOut, User } from "./models";
 
 export type NotificationPrefsMap = Record<string, boolean>;
 
@@ -18,6 +18,12 @@ export const myPhotoPath = (version: string | null | undefined) => (version ? `/
 export const getMyNotifications = () => get<{ prefs: NotificationPrefsMap }>("/users/me/notifications");
 export const setMyNotifications = (prefs: NotificationPrefsMap) =>
   put<{ prefs: NotificationPrefsMap }>("/users/me/notifications", { prefs });
+
+// ------------------------------------------------------------------ Online status
+/** "Still here": the open VA / client portal sends this about once a minute. */
+export const heartbeat = () => post<void>("/auth/heartbeat");
+/** Admin: VAs and clients seen in the last day, and how many are online right now. */
+export const getPresence = () => get<PresenceOut>("/admin/presence");
 
 // ------------------------------------------------------------------ Staff team (admin)
 export type StaffRole = RoleChange["role"];
