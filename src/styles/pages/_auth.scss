@@ -521,8 +521,8 @@ $brand-grid: 32px;
     -webkit-backdrop-filter: blur(22px) saturate(1.4);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      0 24px 60px rgba(138, 69, 0, 0.16),
-      0 2px 8px rgba(138, 69, 0, 0.06);
+      0 24px 60px rgba(8, 145, 178, 0.16),
+      0 2px 8px rgba(8, 145, 178, 0.06);
 
     @include down(sm) {
       padding: 24px 18px;
@@ -984,7 +984,7 @@ $brand-grid: 32px;
   .auth-sso__button:hover {
     transform: translateY(-2px);
     border-color: rgba(255, 153, 0, 0.45);
-    box-shadow: 0 8px 20px rgba(138, 69, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(8, 145, 178, 0.1);
   }
 
   .btn--link {
@@ -1004,7 +1004,7 @@ $brand-grid: 32px;
     &:hover,
     &:focus-visible {
       border-color: rgba(255, 153, 0, 0.45);
-      box-shadow: 0 10px 24px rgba(138, 69, 0, 0.12);
+      box-shadow: 0 10px 24px rgba(8, 145, 178, 0.12);
       transform: translateY(-2px);
 
       > :last-child {
