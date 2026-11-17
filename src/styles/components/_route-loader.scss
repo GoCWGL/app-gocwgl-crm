@@ -273,20 +273,21 @@ $z-route-loader: $z-overlay + 10;
   // Each section of a page rises in, one after another (a page's own .page-stack counts as its sections).
   // "backwards", not "both": a transform kept after the animation would make a section the containing block
   // for position: fixed, trapping drawers and modals opened inside it in its box.
-  > :not(.page-stack),
-  > .page-stack > * {
+  // Pop-ups rendered in the page (.modal) are skipped: they have their own entrance (components/_modal).
+  > :not(.page-stack, .modal),
+  > .page-stack > :not(.modal) {
     animation: page-enter 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
   }
 
   @for $i from 1 through 8 {
-    > :not(.page-stack):nth-child(#{$i}),
-    > .page-stack > :nth-child(#{$i}) {
+    > :not(.page-stack, .modal):nth-child(#{$i}),
+    > .page-stack > :not(.modal):nth-child(#{$i}) {
       animation-delay: #{($i - 1) * 60}ms;
     }
   }
 
-  > :not(.page-stack):nth-child(n + 9),
-  > .page-stack > :nth-child(n + 9) {
+  > :not(.page-stack, .modal):nth-child(n + 9),
+  > .page-stack > :not(.modal):nth-child(n + 9) {
     animation-delay: 480ms;
   }
 }

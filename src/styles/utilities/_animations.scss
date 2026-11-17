@@ -4,6 +4,8 @@
 @include keyframes-fade-in;
 @include keyframes-slide-up;
 @include keyframes-pop-in;
+@include keyframes-fields;
+@include keyframes-modal;
 
 .u-pulse {
   animation: blink 1.6s ease-in-out infinite;

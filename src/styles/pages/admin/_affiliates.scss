@@ -83,12 +83,12 @@
   font-size: 14px;
 }
 
-// An affiliate's account: a large dialog floating in the middle of the screen, popping in.
+// An affiliate's account: a large dialog floating in the middle of the screen
+// (it pops in with every other pop-up; see components/_modal).
 .affiliate-modal {
   align-items: center;
 
   .modal__panel {
-    animation: pop-in 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15);
     transition: max-width 0.28s ease;
   }
 
@@ -101,9 +101,4 @@
     max-height: min(68vh, 720px);
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .modal__panel {
-      animation: fade-in 0.15s ease-out;
-    }
-  }
 }

@@ -2,6 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Button, Field, FormError, Icon, IconTile, Input, Modal, Select, Textarea, type IconName } from "@/components/ui";
 import { browserZone, zoneOptions } from "@/features/booking/zones";
 import { isEmail } from "@/lib/utils";
@@ -19,6 +20,13 @@ const OPTIONS: Array<{ kind: Kind; icon: IconName; title: string; text: string }
 /** Under the sign-in form: no self sign-up, but people can apply as a client or a VA. */
 export function ApplyOptions() {
   const [open, setOpen] = useState<Kind | null>(null);
+  const popup =
+    open === "client" ? (
+      <ClientApplyModal onClose={() => setOpen(null)} />
+    ) : open === "va" ? (
+      <VaApplyModal onClose={() => setOpen(null)} />
+    ) : null;
+
   return (
     <section className="auth-apply" aria-label="New to GoCWGL?">
       <div className="auth-divider" aria-hidden="true">
@@ -38,8 +46,9 @@ export function ApplyOptions() {
           </button>
         ))}
       </div>
-      {open === "client" && <ClientApplyModal onClose={() => setOpen(null)} />}
-      {open === "va" && <VaApplyModal onClose={() => setOpen(null)} />}
+      {/* Rendered into <body>: the sign-in card floats (CSS transform), which would
+          otherwise trap these full-screen pop-ups inside the card. */}
+      {popup && createPortal(popup, document.body)}
     </section>
   );
 }
@@ -70,6 +79,7 @@ function ApplyModal({
   return (
     <Modal
       open
+      className="apply-modal"
       onClose={onClose}
       onSubmit={done ? undefined : onSubmit}
       titleId={`apply-${kind}`}

@@ -1,7 +1,12 @@
 @use "../abstracts" as *;
 
 // <Modal variant="dialog|drawer"> — centered dialog or right-side drawer.
+// Opening: the backdrop fades/blurs in, a dialog springs up (a drawer slides in),
+// the header icon pops and the body rows rise in turn. Closing: Modal.tsx leaves a
+// copy with `.modal--closing` that plays the exit. Fields use the bubble style.
 .modal {
+  @include bubble-fields;
+
   position: fixed;
   inset: 0;
   z-index: $z-modal;
@@ -12,7 +17,7 @@
   overflow-y: auto;
   background: rgba(11, 20, 36, 0.42);
   backdrop-filter: blur(3px);
-  animation: fade-in 0.15s ease-out;
+  animation: modal-backdrop-in 0.3s ease-out;
 
   // Invisible full-screen button so a click outside closes the modal.
   &__backdrop {
@@ -35,7 +40,25 @@
     background: $white;
     box-shadow: $shadow-modal;
     overflow: hidden;
-    animation: slide-up 0.2s ease-out;
+    // "backwards", not "both": a transform held after the end would become the
+    // containing block for any position: fixed menu inside the pop-up.
+    animation: modal-in 0.5s cubic-bezier(0.2, 0.9, 0.3, 1.1) backwards;
+  }
+
+  // Header icon / avatar (when there is one) pops in as the panel lands.
+  &__header > :first-child:not(.modal__heading) {
+    animation: modal-icon-pop 0.5s 0.22s $bubble-spring backwards;
+  }
+
+  // Body rows rise in one after another.
+  &__body > * {
+    animation: modal-row-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+
+  @for $i from 1 through 8 {
+    &__body > :nth-child(#{$i}) {
+      animation-delay: 0.14s + ($i - 1) * 0.05s;
+    }
   }
 
   &__header {
@@ -84,7 +107,7 @@
       border-left: 1px solid $cyan-glow;
       border-radius: 0;
       box-shadow: -10px 0 40px rgba(11, 20, 36, 0.25);
-      animation: none;
+      animation: drawer-in 0.45s cubic-bezier(0.2, 0.8, 0.3, 1) backwards;
     }
 
     .modal__header {
@@ -100,6 +123,34 @@
     .modal__footer {
       justify-content: flex-start;
     }
+  }
+}
+
+// The closing copy (see Modal.tsx): the panel shrinks and drops away (a drawer
+// slides back out) while the backdrop clears. Nothing inside replays its entrance.
+.modal.modal--closing {
+  pointer-events: none;
+  animation: modal-backdrop-out 0.24s ease-in forwards;
+
+  .modal__panel {
+    animation: modal-out 0.24s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+
+  &.modal--drawer .modal__panel {
+    animation: drawer-out 0.28s cubic-bezier(0.4, 0, 1, 1) forwards;
+  }
+
+  .modal__panel * {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal,
+  .modal .modal__panel,
+  .modal .modal__header > *,
+  .modal .modal__body > * {
+    animation: none;
   }
 }
 

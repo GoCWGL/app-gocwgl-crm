@@ -10,7 +10,13 @@
   width: 100%;
   height: 100vh;
   overflow: hidden;
-  background: $bg;
+  // One drifting grid across the whole page, in soft cyan on white.
+  background-color: $white;
+  background-image:
+    linear-gradient(rgba(8, 145, 178, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(8, 145, 178, 0.07) 1px, transparent 1px);
+  background-size: 32px 32px;
+  animation: auth-grid-drift 6s linear infinite;
 
   > section,
   > main {
@@ -50,9 +56,6 @@
   flex: 1 1 520px;
   max-width: 100%;
   padding: 32px 44px;
-  border-right: 1px solid $line;
-  background: $white;
-  @include grid-paper;
   overflow: hidden;
 
   @include down(lg) {
@@ -80,6 +83,10 @@
     @include stack(12px);
     max-width: 520px;
     margin-top: auto;
+
+    .kicker {
+      color: $orange-ink;
+    }
   }
 
   &__title {
@@ -103,23 +110,27 @@
   }
 }
 
-// Glowing "system status" card on the brand panel.
+// "System status" card on the brand panel: frosted glass with a cyan glow,
+// matching the form card.
 .auth-status {
   max-width: 460px;
   margin-top: 16px;
   margin-bottom: auto;
-  border: 1px solid $cyan-glow;
-  border-radius: $radius-2xl;
-  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
   box-shadow:
-    0 0 0 1px rgba(34, 211, 238, 0.2),
-    0 12px 36px rgba(8, 145, 178, 0.14);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 1px rgba(34, 211, 238, 0.22),
+    0 18px 44px rgba(8, 145, 178, 0.14);
   overflow: hidden;
 
   &__head {
     @include row(8px);
-    padding: 10px 14px;
-    border-bottom: 1px solid $line-soft;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(8, 145, 178, 0.14);
     background: rgba(8, 145, 178, 0.05);
   }
 
@@ -128,7 +139,7 @@
   }
 
   &__title {
-    @include mono-label;
+    @include mono-label($color: $cyan-700);
     flex: 1 1 auto;
   }
 
@@ -140,7 +151,7 @@
 
   &__rows {
     @include stack(0);
-    padding: 6px 14px;
+    padding: 6px 16px;
   }
 
   &__row {
@@ -235,13 +246,15 @@ $brand-grid: 32px;
   0%,
   100% {
     box-shadow:
-      0 0 0 1px rgba(34, 211, 238, 0.2),
-      0 12px 36px rgba(8, 145, 178, 0.14);
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 0 0 1px rgba(34, 211, 238, 0.22),
+      0 18px 44px rgba(8, 145, 178, 0.14);
   }
   50% {
     box-shadow:
-      0 0 0 3px rgba(34, 211, 238, 0.28),
-      0 18px 48px rgba(8, 145, 178, 0.26);
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 0 0 3px rgba(34, 211, 238, 0.3),
+      0 22px 54px rgba(8, 145, 178, 0.26);
   }
 }
 
@@ -279,8 +292,6 @@ $brand-grid: 32px;
 }
 
 .auth-brand {
-  animation: auth-grid-drift 6s linear infinite;
-
   // Glows sit behind the content, scan line sweeps over the grid.
   &::before,
   &::after {
@@ -296,8 +307,8 @@ $brand-grid: 32px;
     height: 520px;
     border-radius: 50%;
     background:
-      radial-gradient(circle at 30% 30%, rgba(34, 211, 238, 0.22), transparent 60%),
-      radial-gradient(circle at 75% 80%, rgba(16, 185, 129, 0.14), transparent 55%);
+      radial-gradient(circle at 30% 30%, rgba(34, 211, 238, 0.16), transparent 60%),
+      radial-gradient(circle at 75% 80%, rgba(8, 145, 178, 0.1), transparent 55%);
     filter: blur(20px);
     animation: auth-orb 18s ease-in-out infinite;
   }
@@ -310,8 +321,8 @@ $brand-grid: 32px;
     background: linear-gradient(
       to bottom,
       transparent,
-      rgba(34, 211, 238, 0.1) 70%,
-      rgba(34, 211, 238, 0.35) 98%,
+      rgba(34, 211, 238, 0.05) 70%,
+      rgba(34, 211, 238, 0.18) 98%,
       transparent
     );
     animation: auth-scan 7s linear infinite;
@@ -430,6 +441,7 @@ $brand-grid: 32px;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .auth,
   .auth-brand,
   .auth-brand > *,
   .auth-brand > .auth-status,
@@ -449,6 +461,28 @@ $brand-grid: 32px;
 }
 
 // ------------------------------------------------------------- Form panel
+// On a 200%-sized layer, background-position p% puts the glow at (100% - p) of the panel.
+@keyframes auth-glow-drift {
+  0% {
+    background-position:
+      10% 90%,
+      90% 10%,
+      0 0;
+  }
+  50% {
+    background-position:
+      60% 40%,
+      30% 70%,
+      0 0;
+  }
+  100% {
+    background-position:
+      85% 15%,
+      15% 85%,
+      0 0;
+  }
+}
+
 .auth-panel {
   display: flex;
   flex: 1 1 480px;
@@ -457,12 +491,43 @@ $brand-grid: 32px;
   max-width: 100%;
   padding: 24px;
   overflow-y: auto;
+  // Soft cyan glow that slowly drifts; covers the page grid on this side.
+  // Each glow lives on a 200%-sized layer, so moving the layer moves the glow.
+  background:
+    radial-gradient(30% 30% at 50% 50%, rgba(34, 211, 238, 0.16), transparent 70%),
+    radial-gradient(25% 25% at 50% 50%, rgba(8, 145, 178, 0.1), transparent 70%),
+    $white;
+  background-size:
+    200% 200%,
+    200% 200%,
+    auto;
+  animation: auth-glow-drift 16s ease-in-out infinite alternate;
 
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+
+  // Frosted glass card holding the form.
   &__inner {
     @include stack(16px);
     width: 100%;
-    max-width: 440px;
+    max-width: 460px;
     margin: auto 0;
+    padding: 32px 30px;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(22px) saturate(1.4);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 24px 60px rgba(138, 69, 0, 0.16),
+      0 2px 8px rgba(138, 69, 0, 0.06);
+
+    @include down(sm) {
+      padding: 24px 18px;
+      border-radius: 20px;
+    }
   }
 
   &__title {
@@ -806,5 +871,185 @@ $brand-grid: 32px;
     border-radius: 50%;
     background: #e6f6ec;
     color: #157347;
+  }
+}
+
+// ------------------------------------------------------ Form panel motion
+// Fields and buttons rise in one after another; the field being typed in lifts
+// and gently floats; buttons lift, glow and (primary) catch a light sweep.
+// All of it stops under reduced motion.
+// The sign-in card drifts gently; it pauses where it is when hovered.
+@keyframes auth-card-drift {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(4px, -8px);
+  }
+  50% {
+    transform: translate(0, -12px);
+  }
+  75% {
+    transform: translate(-4px, -6px);
+  }
+}
+
+@keyframes auth-btn-shine {
+  from {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(420%) skewX(-20deg);
+  }
+}
+
+.auth-panel {
+  // The card itself floats, and stops (in place) while the mouse is over it
+  // or someone is typing in it.
+  &__inner {
+    animation: auth-card-drift 9s 1s ease-in-out infinite;
+
+    &:hover,
+    &:focus-within {
+      animation-play-state: paused;
+    }
+  }
+
+  // Entrance: the card's blocks, then each row of the form, rise in turn.
+  // Switching screens (sign in → forgot password…) mounts a new form, so it plays again.
+  &__inner > *,
+  form > * {
+    // "backwards", not "both": holding the end frame would block hover/focus transforms.
+    animation: auth-rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+
+  @for $i from 1 through 6 {
+    &__inner > :nth-child(#{$i}) {
+      animation-delay: 0.05s + ($i - 1) * 0.08s;
+    }
+  }
+
+  @for $i from 1 through 10 {
+    form > :nth-child(#{$i}) {
+      animation-delay: 0.15s + ($i - 1) * 0.06s;
+    }
+  }
+
+  @include bubble-fields;
+
+  // ---- Buttons
+  .btn,
+  .auth-sso__button {
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.2s,
+      background-color 0.2s,
+      filter 0.2s;
+
+    &:active:not(:disabled) {
+      transform: translateY(0) scale(0.98);
+    }
+  }
+
+  .btn--primary {
+    position: relative;
+    overflow: hidden;
+
+    // Light sweep, parked off to the left until hover.
+    &::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 30%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+      transform: translateX(-120%) skewX(-20deg);
+      pointer-events: none;
+    }
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow:
+        0 0 0 1px rgba(255, 153, 0, 0.5),
+        0 10px 28px rgba(255, 153, 0, 0.45);
+
+      &::after {
+        animation: auth-btn-shine 0.8s ease-out;
+      }
+    }
+  }
+
+  .auth-sso__button:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 153, 0, 0.45);
+    box-shadow: 0 8px 20px rgba(138, 69, 0, 0.1);
+  }
+
+  .btn--link {
+    transition: color 0.2s, transform 0.2s;
+
+    &:hover {
+      transform: translateX(2px);
+    }
+  }
+
+  // "Become a client" / "Apply as a VA": a bit more lift, and the arrow nudges.
+  .auth-apply__option {
+    > :last-child {
+      transition: transform 0.2s cubic-bezier(0.2, 0.7, 0.2, 1);
+    }
+
+    &:hover,
+    &:focus-visible {
+      border-color: rgba(255, 153, 0, 0.45);
+      box-shadow: 0 10px 24px rgba(138, 69, 0, 0.12);
+      transform: translateY(-2px);
+
+      > :last-child {
+        transform: translateX(3px);
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__inner,
+    &__inner > *,
+    form > *,
+    .field:focus-within > *,
+    .input:focus,
+    .btn--primary:hover::after {
+      animation: none;
+    }
+
+    .btn:hover,
+    .auth-sso__button:hover,
+    .btn--link:hover,
+    .auth-apply__option:hover,
+    .auth-apply__option:hover > :last-child {
+      transform: none;
+    }
+  }
+}
+
+// ------------------------------------- "Become a client" / "Apply as a VA" pop-ups
+// They open, close and style fields like every other pop-up (components/_modal).
+// Their form is one block, so its rows rise in turn here instead.
+.apply-modal {
+  .modal__body > * > * {
+    animation: modal-row-in 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+
+  @for $i from 1 through 12 {
+    .modal__body > * > :nth-child(#{$i}) {
+      animation-delay: 0.18s + ($i - 1) * 0.05s;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .modal__body > * > * {
+      animation: none;
+    }
   }
 }

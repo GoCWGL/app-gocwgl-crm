@@ -110,3 +110,120 @@
   background: $color;
   box-shadow: 0 0 8px $color;
 }
+
+// ------------------------------------------------------- Bubble fields
+// The field being typed in becomes a floating bubble: it rounds into a pill,
+// pops slightly and gets a soft cyan ring and glow on the outside (the app's
+// usual focus color); inside it stays plain white. Its label turns cyan. Used in every pop-up
+// and on the sign-in page.
+// Needs the `field-float` / `bubble-pop` keyframes (abstracts/_keyframes).
+// Outside only: no inset shading, so the inside stays plain white.
+$bubble-shadow:
+  0 0 0 3px rgba(34, 211, 238, 0.22),
+  0 8px 22px rgba(8, 145, 178, 0.14);
+$bubble-spring: cubic-bezier(0.3, 1.5, 0.5, 1);
+
+@mixin bubble-fields {
+  // The float goes on the field's contents, not the field, so it doesn't
+  // replace (and later replay) any entrance animation on the field itself.
+  .field > * {
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .field__label {
+    transition: color 0.2s;
+  }
+
+  .field:focus-within {
+    > * {
+      animation: field-float 2.6s ease-in-out infinite;
+    }
+
+    .field__label {
+      color: $cyan-700;
+    }
+  }
+
+  // Inputs inside a prefix/suffix group or a search box are borderless; the
+  // wrapper is the bubble.
+  .input:not(.input-group .input),
+  .select,
+  .textarea,
+  .input-group,
+  .search-box {
+    transition:
+      border-color 0.2s,
+      border-radius 0.35s $bubble-spring,
+      box-shadow 0.3s;
+  }
+
+  .input:not(.input-group .input),
+  .select,
+  .textarea {
+    &:hover:not(:focus):not(:disabled) {
+      border-color: $line-strong;
+    }
+
+    &:focus {
+      outline: none; // replaced by the cyan ring in the shadow
+      border-color: rgba(34, 211, 238, 0.6);
+      border-radius: 24px; // a full pill at these heights; morphs smoothly from 10px
+      box-shadow: $bubble-shadow;
+      animation: bubble-pop 0.45s $bubble-spring;
+    }
+  }
+
+  // Plain white inside. Only the color, so a select's dropdown arrow (if it's a
+  // background image) is kept.
+  .input:not(.input-group .input):focus,
+  .select:focus,
+  .textarea:focus {
+    background-color: $white;
+  }
+
+  // Multi-line boxes stay rounded rather than a full pill.
+  .textarea:focus {
+    border-radius: 16px;
+  }
+
+  .input-group:focus-within,
+  .search-box:focus-within {
+    border-color: rgba(34, 211, 238, 0.6);
+    border-radius: 24px;
+    box-shadow: $bubble-shadow;
+
+    .input:focus {
+      outline: none;
+    }
+  }
+
+  // A control directly in the field needs both the pop and the float (one
+  // `animation` list per element, so they're combined here).
+  .field:focus-within > .input:focus,
+  .field:focus-within > .select:focus,
+  .field:focus-within > .textarea:focus {
+    animation:
+      bubble-pop 0.45s $bubble-spring,
+      field-float 2.6s ease-in-out infinite;
+  }
+
+  // Keep the SHOW/HIDE chip inside the bubble's rounded end.
+  .password-input:focus-within .password-input__toggle {
+    right: 8px;
+    border-radius: $radius-pill;
+    background: rgba(8, 145, 178, 0.1);
+    color: $cyan-700;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .field:focus-within > *,
+    .input:not(.input-group .input):focus,
+    .select:focus,
+    .textarea:focus,
+    .field:focus-within > .input:focus,
+    .field:focus-within > .select:focus,
+    .field:focus-within > .textarea:focus {
+      animation: none;
+    }
+  }
+}
