@@ -83,6 +83,9 @@ export const listClientProjects = (contactId: string) => get<ClientProjectOut[]>
 export const staffUpdateProject = (id: string, body: ProjectStaffUpdate) => patch<ClientProjectOut>(`/admin/client-projects/${id}`, body);
 /** Staff: every VA this client has, now and before. */
 export const listClientVas = (contactId: string) => get<ClientVaOut[]>(`/admin/contacts/${contactId}/vas`);
+/** Match a VA to a client directly, without a VA request: they join the client's team right away. */
+export const assignClientVa = (contactId: string, vaId: string, hoursPerWeek: 10 | 20 | 40 | null) =>
+  post<ClientVaOut[]>(`/admin/contacts/${contactId}/vas`, { vaId, hoursPerWeek });
 export const listClientVaRequests = (contactId: string) => get<VaRequestOut[]>(`/admin/va-requests?contact_id=${contactId}`);
 export const staffUpdateVaRequest = (id: string, body: VaRequestStaffUpdate) => patch<VaRequestOut>(`/admin/va-requests/${id}`, body);
 export const listAllVaRequests = () => get<VaRequestOut[]>("/admin/va-requests");

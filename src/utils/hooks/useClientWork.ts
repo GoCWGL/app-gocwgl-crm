@@ -77,6 +77,12 @@ export const useStaffUpdateVaRequest = () =>
 const REQUESTS_AND_JOBS = [qk.clientVaRequests, qk.jobPostings];
 export const useClientVas = (contactId: string) =>
   useQuery({ queryKey: [...qk.clientVaRequests, "vas", contactId], queryFn: () => api.listClientVas(contactId), enabled: !!contactId });
+/** Their VA list, the VA's clients and the board all change. */
+export const useAssignClientVa = () =>
+  useApiMutation(
+    (v: { contactId: string; vaId: string; hoursPerWeek: 10 | 20 | 40 | null }) => api.assignClientVa(v.contactId, v.vaId, v.hoursPerWeek),
+    { invalidate: [qk.clientVaRequests, qk.vas] },
+  );
 export const useAllVaRequests = (enabled = true) =>
   useQuery({ queryKey: [...qk.clientVaRequests, "all"], queryFn: api.listAllVaRequests, enabled, refetchInterval: 60_000 });
 export const useStartVaRequestReview = () => useApiMutation(api.startVaRequestReview, { invalidate: REQUESTS_AND_JOBS });

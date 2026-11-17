@@ -1,6 +1,7 @@
 "use client";
 
-import { Avatar, Badge, Icon, LoadState } from "@/components/ui";
+import { useState } from "react";
+import { Avatar, Badge, Button, Icon, LoadState } from "@/components/ui";
 import { formatDuration } from "@/lib/duration";
 import { avatarTone } from "@/lib/tones";
 import { formatRelative, formatShort } from "@/utils/format/dates";
@@ -8,15 +9,20 @@ import { formatCentsExact } from "@/utils/format/money";
 import { useClientVaRequests, useClientVas } from "@/utils/hooks/useClientWork";
 import { requestLoad } from "@/features/portal/components/VaRequestDetails";
 import { isBilledRequest, maintenanceFeeOf } from "@/features/portal/lib/vaAgreement";
-import type { VaRequestOut } from "@/utils/api/models";
+import type { ClientVaOut, VaRequestOut } from "@/utils/api/models";
+import { canWriteCrm } from "@/utils/auth/session";
+import { useMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../state/AdminContext";
+import { MatchVaModal } from "./MatchVaModal";
 
 /**
  * Client profile › VAs: everyone who works with this client now, and who used to, with their rate and hours, and the
  * hours and monthly maintenance fee from the request each one filled (what GoCWGL invoices the client monthly).
  */
-export function ClientVasCard({ contactId }: { contactId: string }) {
+export function ClientVasCard({ contactId, clientName }: { contactId: string; clientName: string }) {
   const { update } = useAdmin();
+  const canWrite = canWriteCrm(useMe().data);
+  const [matching, setMatching] = useState(false);
   const query = useClientVas(contactId);
   const vas = query.data ?? [];
   const active = vas.filter((v) => v.active).length;
@@ -24,10 +30,17 @@ export function ClientVasCard({ contactId }: { contactId: string }) {
   const requests = useClientVaRequests(contactId).data ?? [];
   const requestOf = (vaId: string) =>
     requests.filter((r) => r.matchedVa?.id === vaId).sort((a, b) => (b.matchedAt ?? "").localeCompare(a.matchedAt ?? ""))[0];
-  const billed = vas.filter((v) => v.active).map((v) => requestOf(v.vaId)).filter((r) => r && isBilledRequest(r));
-  const monthlyCents = billed.reduce((n, r) => n + (maintenanceFeeOf(r!).cents ?? 0), 0);
-  const quoted = billed.filter((r) => maintenanceFeeOf(r!).cents == null).length;
-  const noRequest = vas.filter((v) => v.active && !requestOf(v.vaId)).length;
+  // Each active VA's monthly fee: from the request they filled, else from GoCWGL matching them directly (hours chosen).
+  const feeOf = (v: ClientVaOut): { billed: boolean; cents: number | null } => {
+    const r = requestOf(v.vaId);
+    if (r && isBilledRequest(r)) return { billed: true, cents: maintenanceFeeOf(r).cents };
+    if (v.maintenanceFeeCents != null) return { billed: true, cents: v.maintenanceFeeCents };
+    return { billed: false, cents: null };
+  };
+  const billed = vas.filter((v) => v.active).map(feeOf).filter((f) => f.billed);
+  const monthlyCents = billed.reduce((n, f) => n + (f.cents ?? 0), 0);
+  const quoted = billed.filter((f) => f.cents == null).length;
+  const noRequest = vas.filter((v) => v.active && !feeOf(v).billed).length;
 
   return (
     <section className="card vp-card">
@@ -38,8 +51,13 @@ export function ClientVasCard({ contactId }: { contactId: string }) {
         <h3 className="vp-card__title">VAs for this client</h3>
         <span className="vp-card__count">{active}</span>
         {vas.length > active && <span className="text-small">+ {vas.length - active} past</span>}
+        {canWrite && (
+          <Button size="sm" variant="outline" className="vp-card__action" onClick={() => setMatching(true)}>
+            <Icon name="userPlus" size={13} /> Match a VA
+          </Button>
+        )}
       </header>
-      <LoadState query={query} loadingText="Loading their VAs…" isEmpty={!vas.length} empty="No VA works with this client yet. Add the client from a VA’s profile (People › VAs).">
+      <LoadState query={query} loadingText="Loading their VAs…" isEmpty={!vas.length} empty="No VA works with this client yet. Use Match a VA to put one on their team, even without a request.">
         <div className="vp-clist vp-clist--fee" role="table" aria-label="VAs for this client">
           <div className="vp-clist__row vp-clist__row--head vp-clist__row--vas vp-clist__row--fee" role="row">
             <span role="columnheader">VA</span>
@@ -74,7 +92,7 @@ export function ClientVasCard({ contactId }: { contactId: string }) {
                 {v.rateCents != null ? `${formatCentsExact(v.rateCents)}/h` : "—"}
                 <span className="vp-clist__sub">{v.rateCents == null ? "not set" : v.customRate ? "for this client" : "usual rate"}</span>
               </span>
-              <FeeCell r={requestOf(v.vaId)} />
+              <FeeCell r={requestOf(v.vaId)} v={v} />
               <span role="cell" className="vp-clist__cell" data-label="Status">
                 {v.active ? (
                   v.workingNow ? (
@@ -98,17 +116,28 @@ export function ClientVasCard({ contactId }: { contactId: string }) {
             <span className="client-fee-total__note">
               {billed.length} active VA{billed.length === 1 ? "" : "s"}
               {quoted > 0 && ` · ${quoted} open project${quoted === 1 ? "" : "s"} quoted separately`}
-              {noRequest > 0 && ` · ${noRequest} VA${noRequest === 1 ? "" : "s"} added without a request (no fee on file)`}
+              {noRequest > 0 && ` · ${noRequest} VA${noRequest === 1 ? "" : "s"} with no fee on file`}
             </span>
           </div>
         )}
       </LoadState>
+      {matching && <MatchVaModal client={{ id: contactId, name: clientName }} onClose={() => setMatching(false)} />}
     </section>
   );
 }
 
-/** The hours and monthly maintenance fee from the request this VA filled ("—" if they were added without one). */
-function FeeCell({ r }: { r?: VaRequestOut }) {
+/** The hours and monthly maintenance fee: from the request this VA filled, else from matching them directly. */
+function FeeCell({ r, v }: { r?: VaRequestOut; v: ClientVaOut }) {
+  if (!r && v.maintenanceFeeCents != null) {
+    return (
+      <span role="cell" className="vp-clist__cell" data-label="Hours & fee">
+        <span className="vp-clist__fee">{formatCentsExact(v.maintenanceFeeCents)} a month</span>
+        <span className="vp-clist__sub">
+          {v.hoursPerWeek} h a week · matched by GoCWGL
+        </span>
+      </span>
+    );
+  }
   if (!r) {
     return (
       <span role="cell" className="vp-clist__cell" data-label="Hours & fee">

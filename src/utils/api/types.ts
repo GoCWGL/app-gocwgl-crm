@@ -1772,6 +1772,63 @@ export interface paths {
         patch: operations["update_payment_method_api_va_payment_methods__method_id__patch"];
         trace?: never;
     };
+    "/api/va/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Attendance
+         * @description Your clients with their schedules and today's clock-in, and your work days in the range.
+         */
+        get: operations["my_attendance_api_va_attendance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/attendance/clock-in": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Clock In
+         * @description Start your work day for a client. Late when it's past their schedule's start plus the grace time.
+         */
+        post: operations["clock_in_api_va_attendance_clock_in_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/attendance/clock-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Clock Out */
+        post: operations["clock_out_api_va_attendance_clock_out_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/contacts": {
         parameters: {
             query?: never;
@@ -4812,7 +4869,11 @@ export interface paths {
          */
         get: operations["client_vas_api_admin_contacts__contact_id__vas_get"];
         put?: never;
-        post?: never;
+        /**
+         * Assign Client Va
+         * @description Match a VA to this client directly, even without a VA request: they join the client's team right away.
+         */
+        post: operations["assign_client_va_api_admin_contacts__contact_id__vas_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6092,6 +6153,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/attendance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Team Attendance
+         * @description Your VAs: their schedules, who's clocked in today, and on-time, late and absent days in the range.
+         */
+        get: operations["team_attendance_api_portal_attendance_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/attendance/schedules/{va_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Schedule
+         * @description When this VA should work for you. Clock-ins after the start plus the grace time count as late.
+         */
+        put: operations["set_schedule_api_portal_attendance_schedules__va_id__put"];
+        post?: never;
+        /** Clear Schedule */
+        delete: operations["clear_schedule_api_portal_attendance_schedules__va_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/booking/invite/{token}": {
         parameters: {
             query?: never;
@@ -6718,6 +6820,16 @@ export interface components {
              */
             note?: string;
         };
+        /** AssignVaIn */
+        AssignVaIn: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Hoursperweek */
+            hoursPerWeek: (10 | 20 | 40) | null;
+        };
         /** AttemptIn */
         AttemptIn: {
             /** Answers */
@@ -6737,6 +6849,18 @@ export interface components {
             passingRate: number;
             /** Results */
             results: boolean[];
+        };
+        /** AttendanceClient */
+        AttendanceClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
         };
         /** AttendanceIn */
         AttendanceIn: {
@@ -6794,6 +6918,70 @@ export interface components {
             /** Loggedbyname */
             loggedByName: string;
             va: components["schemas"]["AttendanceVa"];
+        };
+        /** AttendanceSummary */
+        AttendanceSummary: {
+            /** Ontime */
+            onTime: number;
+            /** Late */
+            late: number;
+            /** Absent */
+            absent: number;
+            /** Unscheduled */
+            unscheduled: number;
+            /** Averageminuteslate */
+            averageMinutesLate: number;
+            /** Workedseconds */
+            workedSeconds: number;
+        };
+        /** AttendanceTeamVa */
+        AttendanceTeamVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Headline */
+            headline: string;
+        };
+        /** AttendanceToday */
+        AttendanceToday: {
+            /** Id */
+            id: string | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "on_time" | "late" | "unscheduled" | "upcoming" | "missing" | "absent" | "off";
+            /** Clockedin */
+            clockedIn: boolean;
+            /** Scheduledstartat */
+            scheduledStartAt: string | null;
+            /** Scheduledendat */
+            scheduledEndAt: string | null;
+            /** Clockinat */
+            clockInAt: string | null;
+            /** Clockoutat */
+            clockOutAt: string | null;
+            /** Minuteslate */
+            minutesLate: number | null;
+            /** Leftearlyminutes */
+            leftEarlyMinutes: number | null;
+            /** Workedseconds */
+            workedSeconds: number;
+            /** Forgotclockout */
+            forgotClockOut: boolean;
+            /** Nextshiftat */
+            nextShiftAt: string | null;
+            /** Timezone */
+            timezone: string;
         };
         /** AttendanceUpdate */
         AttendanceUpdate: {
@@ -7397,6 +7585,56 @@ export interface components {
              */
             website?: string;
         };
+        /** ClientAttendanceDay */
+        ClientAttendanceDay: {
+            /** Id */
+            id: string | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "on_time" | "late" | "unscheduled" | "upcoming" | "missing" | "absent" | "off";
+            /** Clockedin */
+            clockedIn: boolean;
+            /** Scheduledstartat */
+            scheduledStartAt: string | null;
+            /** Scheduledendat */
+            scheduledEndAt: string | null;
+            /** Clockinat */
+            clockInAt: string | null;
+            /** Clockoutat */
+            clockOutAt: string | null;
+            /** Minuteslate */
+            minutesLate: number | null;
+            /** Leftearlyminutes */
+            leftEarlyMinutes: number | null;
+            /** Workedseconds */
+            workedSeconds: number;
+            /** Forgotclockout */
+            forgotClockOut: boolean;
+            va: components["schemas"]["AttendanceTeamVa"];
+        };
+        /** ClientAttendanceOut */
+        ClientAttendanceOut: {
+            /** Timezone */
+            timezone: string;
+            /** Vas */
+            vas: components["schemas"]["ClientAttendanceVa"][];
+            /** Days */
+            days: components["schemas"]["ClientAttendanceDay"][];
+            summary: components["schemas"]["AttendanceSummary"];
+        };
+        /** ClientAttendanceVa */
+        ClientAttendanceVa: {
+            va: components["schemas"]["AttendanceTeamVa"];
+            schedule: components["schemas"]["ScheduleOut"] | null;
+            today: components["schemas"]["AttendanceToday"];
+        };
         /** ClientBillingOut */
         ClientBillingOut: {
             subscription: components["schemas"]["SubscriptionOut"] | null;
@@ -7528,7 +7766,8 @@ export interface components {
             updatedAt: string;
             /** Completedat */
             completedAt: string | null;
-            va: components["schemas"]["ProjectVa"] | null;
+            /** Vas */
+            vas: components["schemas"]["TaskVa"][];
             /**
              * Messagecount
              * @default 0
@@ -7545,8 +7784,6 @@ export interface components {
             unreadCount?: number;
             /** Clientreadat */
             clientReadAt?: string | null;
-            /** Vareadat */
-            vaReadAt?: string | null;
         };
         /** ClientTicketIn */
         ClientTicketIn: {
@@ -7721,6 +7958,18 @@ export interface components {
             totalSeconds: number;
             /** Lastworkedat */
             lastWorkedAt: string | null;
+            /** Hoursperweek */
+            hoursPerWeek?: number | null;
+            /** Maintenancefeecents */
+            maintenanceFeeCents?: number | null;
+        };
+        /** ClockIn */
+        ClockIn: {
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
         };
         /** ClockInIn */
         ClockInIn: {
@@ -7760,6 +8009,30 @@ export interface components {
              * @default false
              */
             stopRunning?: boolean;
+        };
+        /** ClockInOut */
+        ClockInOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Late */
+            late: boolean;
+            /** Minuteslate */
+            minutesLate: number | null;
+        };
+        /** ClockOutOut */
+        ClockOutOut: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Workedseconds */
+            workedSeconds: number;
+            /** Leftearlyminutes */
+            leftEarlyMinutes: number | null;
         };
         /** CommentIn */
         CommentIn: {
@@ -8009,7 +8282,7 @@ export interface components {
             showCrmPackages?: boolean;
             /**
              * Showfunnelpackages
-             * @default true
+             * @default false
              */
             showFunnelPackages?: boolean;
             /**
@@ -10296,7 +10569,7 @@ export interface components {
             showCrmPackages?: boolean;
             /**
              * Showfunnelpackages
-             * @default true
+             * @default false
              */
             showFunnelPackages?: boolean;
             /**
@@ -10847,8 +11120,10 @@ export interface components {
         };
         /** ProjectClientUpdate */
         ProjectClientUpdate: {
-            /** Vaid */
-            vaId?: string | null;
+            /** Mainvaid */
+            mainVaId?: string | null;
+            /** Backupvaids */
+            backupVaIds?: string[] | null;
             /** Links */
             links?: string[] | null;
             /** Priority */
@@ -10872,8 +11147,10 @@ export interface components {
             details?: string;
             /** Links */
             links?: string[];
-            /** Vaid */
-            vaId?: string | null;
+            /** Mainvaid */
+            mainVaId?: string | null;
+            /** Backupvaids */
+            backupVaIds?: string[];
             /**
              * Priority
              * @default normal
@@ -10931,8 +11208,10 @@ export interface components {
         ProjectStaffUpdate: {
             /** Status */
             status?: ("requested" | "in_progress" | "review" | "done" | "cancelled") | null;
-            /** Vaid */
-            vaId?: string | null;
+            /** Mainvaid */
+            mainVaId?: string | null;
+            /** Backupvaids */
+            backupVaIds?: string[] | null;
             /** Priority */
             priority?: ("low" | "normal" | "high") | null;
             /** Duedate */
@@ -12041,6 +12320,46 @@ export interface components {
             /** Beforeid */
             beforeId?: string | null;
         };
+        /** ScheduleIn */
+        ScheduleIn: {
+            /** Timezone */
+            timezone: string;
+            /**
+             * Starttime
+             * Format: time
+             */
+            startTime: string;
+            /**
+             * Endtime
+             * Format: time
+             */
+            endTime: string;
+            /** Workdays */
+            workDays: number[];
+            /**
+             * Graceminutes
+             * @default 5
+             */
+            graceMinutes?: number;
+        };
+        /** ScheduleOut */
+        ScheduleOut: {
+            /** Timezone */
+            timezone: string;
+            /** Starttime */
+            startTime: string;
+            /** Endtime */
+            endTime: string;
+            /** Workdays */
+            workDays: number[];
+            /** Graceminutes */
+            graceMinutes: number;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
         /** SeenIn */
         SeenIn: {
             /** Menu */
@@ -12743,6 +13062,24 @@ export interface components {
         TaskToggle: {
             /** Done */
             done: boolean;
+        };
+        /** TaskVa */
+        TaskVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Role
+             * @default main
+             * @enum {string}
+             */
+            role?: "main" | "backup";
+            /** Readat */
+            readAt?: string | null;
         };
         /** TeamAttendance */
         TeamAttendance: {
@@ -13563,6 +13900,54 @@ export interface components {
              * @default
              */
             website?: string;
+        };
+        /** VaAttendanceClient */
+        VaAttendanceClient: {
+            client: components["schemas"]["AttendanceClient"];
+            schedule: components["schemas"]["ScheduleOut"] | null;
+            today: components["schemas"]["AttendanceToday"];
+        };
+        /** VaAttendanceDay */
+        VaAttendanceDay: {
+            /** Id */
+            id: string | null;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "on_time" | "late" | "unscheduled" | "upcoming" | "missing" | "absent" | "off";
+            /** Clockedin */
+            clockedIn: boolean;
+            /** Scheduledstartat */
+            scheduledStartAt: string | null;
+            /** Scheduledendat */
+            scheduledEndAt: string | null;
+            /** Clockinat */
+            clockInAt: string | null;
+            /** Clockoutat */
+            clockOutAt: string | null;
+            /** Minuteslate */
+            minutesLate: number | null;
+            /** Leftearlyminutes */
+            leftEarlyMinutes: number | null;
+            /** Workedseconds */
+            workedSeconds: number;
+            /** Forgotclockout */
+            forgotClockOut: boolean;
+            client: components["schemas"]["AttendanceClient"];
+        };
+        /** VaAttendanceOut */
+        VaAttendanceOut: {
+            /** Clients */
+            clients: components["schemas"]["VaAttendanceClient"][];
+            /** Days */
+            days: components["schemas"]["VaAttendanceDay"][];
+            summary: components["schemas"]["AttendanceSummary"];
         };
         /** VaAttendanceStats */
         VaAttendanceStats: {
@@ -14642,7 +15027,8 @@ export interface components {
             updatedAt: string;
             /** Completedat */
             completedAt: string | null;
-            va: components["schemas"]["ProjectVa"] | null;
+            /** Vas */
+            vas: components["schemas"]["TaskVa"][];
             /**
              * Messagecount
              * @default 0
@@ -14659,8 +15045,6 @@ export interface components {
             unreadCount?: number;
             /** Clientreadat */
             clientReadAt?: string | null;
-            /** Vareadat */
-            vaReadAt?: string | null;
             /** Clientname */
             clientName: string;
             /**
@@ -19301,6 +19685,139 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["PaymentMethodOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_attendance_api_va_attendance_get: {
+        parameters: {
+            query: {
+                /** @description First work day (inclusive). */
+                start: string;
+                /** @description Last work day (inclusive). */
+                end: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaAttendanceOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    clock_in_api_va_attendance_clock_in_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClockIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClockInOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    clock_out_api_va_attendance_clock_out_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClockIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClockOutOut"];
                     };
                 };
             };
@@ -29946,6 +30463,53 @@ export interface operations {
             };
         };
     };
+    assign_client_va_api_admin_contacts__contact_id__vas_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssignVaIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Assign Client Va Api Admin Contacts  Contact Id  Vas Post */
+                        data: components["schemas"]["ClientVaOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     admin_counts_api_admin_menu_counts_get: {
         parameters: {
             query?: never;
@@ -33286,6 +33850,135 @@ export interface operations {
                 "application/json": components["schemas"]["SeenIn"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    team_attendance_api_portal_attendance_get: {
+        parameters: {
+            query: {
+                /** @description First work day (inclusive). */
+                start: string;
+                /** @description Last work day (inclusive). */
+                end: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientAttendanceOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_schedule_api_portal_attendance_schedules__va_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ScheduleOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    clear_schedule_api_portal_attendance_schedules__va_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             204: {

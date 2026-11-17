@@ -8,7 +8,7 @@ import { formatShort } from "@/utils/format/dates";
 import { useGiveFeedback, useMyFeedback, useMyVas } from "@/utils/hooks/useFeedback";
 import { usePortal } from "../state/PortalContext";
 
-/** Client portal › VA ratings: star each VA on your team; the history of your ratings. */
+/** Client portal › Ratings: star each VA on your team; the history of your ratings. */
 export function RatingsSection() {
   const { readOnly } = usePortal();
   const vas = useMyVas();

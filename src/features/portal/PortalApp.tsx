@@ -19,13 +19,13 @@ import { PortalSidebar } from "./components/PortalSidebar";
 import { TodoDrawer } from "./components/TodoDrawer";
 import { AccountSection } from "./sections/AccountSection";
 import { AffiliateSection } from "./sections/AffiliateSection";
+import { AttendanceSection } from "./sections/AttendanceSection";
 import { BuildSection } from "./sections/BuildSection";
 import { CrmSection } from "./sections/CrmSection";
 import { DashboardSection } from "./sections/DashboardSection";
 import { FunnelsSection } from "./sections/FunnelsSection";
 import { InvoicesSection } from "./sections/InvoicesSection";
 import { ClientSopsSection, ClientTrainingSection } from "./sections/LearnSections";
-import { LiveWorkSection } from "./sections/LiveWorkSection";
 import { ProjectsSection } from "./sections/ProjectsSection";
 import { RatingsSection } from "./sections/RatingsSection";
 import { SupportSection } from "./sections/SupportSection";
@@ -39,7 +39,7 @@ const SECTIONS: Record<PortalTab, ComponentType> = {
   dashboard: DashboardSection,
   funnels: FunnelsSection,
   crm: CrmSection,
-  live: LiveWorkSection,
+  attendance: AttendanceSection,
   journal: WorkJournalSection,
   team: TeamSection,
   vateam: VaTeamSection,

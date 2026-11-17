@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Avatar, Button, ConfirmDialog, Field, FormError, Icon, Input, LoadState, Modal, SegmentedControl, Select, StatGrid, Textarea } from "@/components/ui";
+import { Avatar, Button, ConfirmDialog, Field, FormError, Icon, Input, LoadState, Modal, SegmentedControl, StatGrid, Textarea } from "@/components/ui";
 import { avatarTone, toneClass } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { ClientProjectOut, TeamVa } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { useSession } from "@/utils/auth/session";
 import { useMarkProjectRead, usePostProjectMessage, useProjectMessages, useProjects, useRequestProject, useUpdateProject, useVaTeam } from "@/utils/hooks/useClientWork";
-import { isOpenProject, PRIORITY, PROJECT_STATUS, type ProjectPriority } from "../lib/projects";
+import { allReadAt, assigneeDetail, assigneeLabel, isOpenProject, PRIORITY, PROJECT_STATUS, vaNames, type ProjectPriority } from "../lib/projects";
+import { assignmentOf, VaAssign, type VaAssignment } from "../components/VaPicker";
 import { LinkInputs } from "../components/TaskLinks";
 import { TaskConversation, UnreadMark } from "../components/TaskConversation";
 import { TaskBar, TaskFilter, TaskSearch, TaskTabs, taskText } from "../components/TaskFilters";
@@ -17,7 +18,7 @@ import { usePortal } from "../state/PortalContext";
 
 type View = "open" | "done" | "cancelled";
 
-/** Client portal › My VA team › Tasks: request a task, pick the VA for it, and follow its status. */
+/** Client portal › My VA team › Tasks: request a task, pick the VAs for it (one or several), and follow its status. */
 export function ProjectsSection() {
   const { readOnly } = usePortal();
   const projects = useProjects();
@@ -31,12 +32,12 @@ export function ProjectsSection() {
   const everything = projects.data ?? [];
   const opened = everything.find((p) => p.id === openId) ?? null;
   // The VAs on their tasks, for the VA filter (A–Z).
-  const vas = [...new Map(everything.filter((p) => p.va).map((p) => [p.va!.id, p.va!])).values()].sort((a, b) => a.name.localeCompare(b.name));
+  const vas = [...new Map(everything.flatMap((p) => p.vas).map((v) => [v.id, v])).values()].sort((a, b) => a.name.localeCompare(b.name));
   const q = search.trim().toLowerCase();
   const all = everything.filter(
     (p) =>
-      (!vaFilter || (vaFilter === "none" ? !p.va : p.va?.id === vaFilter)) &&
-      (!q || taskText(p.title, p.details, p.va?.name, p.requestedByName).includes(q)),
+      (!vaFilter || (vaFilter === "none" ? !p.vas.length : p.vas.some((v) => v.id === vaFilter))) &&
+      (!q || taskText(p.title, p.details, p.vas.map((v) => v.name).join(" "), p.requestedByName).includes(q)),
   );
   const open = all.filter(isOpenProject);
   const done = all.filter((p) => p.status === "done");
@@ -136,7 +137,7 @@ export function ProjectsSection() {
         <div className="card tk-list" role="table" aria-label="Tasks">
           <div className="tk-list__head" role="row">
             <span role="columnheader">Task</span>
-            <span role="columnheader">Assigned VA</span>
+            <span role="columnheader">Assigned to</span>
             <span role="columnheader">Status</span>
             <span role="columnheader">Due</span>
             <span role="columnheader" aria-label="Open" />
@@ -196,10 +197,15 @@ function ProjectRow({ p, onOpen }: { p: ClientProjectOut; onOpen: () => void }) 
         </span>
       </span>
       <span className="tk-row__client" role="cell">
-        {p.va ? (
-          <>
-            <Avatar name={p.va.name} tone={avatarTone(p.va.id)} size="sm" /> {p.va.name}
-          </>
+        {p.vas.length ? (
+          <span className="tk-avatars" title={assigneeDetail(p.vas)}>
+            <span className="tk-avatars__stack">
+              {p.vas.slice(0, 3).map((v) => (
+                <Avatar key={v.id} name={v.name} tone={avatarTone(v.id)} size="sm" />
+              ))}
+            </span>
+            <span className="tk-avatars__names">{assigneeLabel(p.vas)}</span>
+          </span>
         ) : (
           <span className="tk-row__muted">GoCWGL is picking</span>
         )}
@@ -227,7 +233,7 @@ function ProjectRow({ p, onOpen }: { p: ClientProjectOut; onOpen: () => void }) 
   );
 }
 
-/** The full task in a pop-up: what was asked, every link, the VA on it (changeable while open) and cancelling a request. */
+/** The full task in a pop-up: what was asked, every link, the VAs on it (changeable while open) and cancelling a request. */
 function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamVa[]; onClose: () => void }) {
   const { readOnly, notify } = usePortal();
   const update = useUpdateProject();
@@ -246,15 +252,15 @@ function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamV
 
   const actions = canEdit ? (
     <div className="tk-sheet__row">
-      <Field label="VA on this task" htmlFor="pj-va-pick">
-        <Select
-          id="pj-va-pick"
-          value={p.va?.id ?? ""}
-          disabled={update.isPending}
-          onChange={(e) => update.mutate({ id: p.id, body: { vaId: e.target.value || null } }, { onSuccess: () => notify("VA updated.") })}
-          options={[{ value: "", label: "Let GoCWGL choose" }, ...team.map((v) => ({ value: v.vaId, label: v.name }))]}
-        />
-      </Field>
+      <VaAssign
+        team={team}
+        idPrefix="pj-edit"
+        value={assignmentOf(p.vas)}
+        disabled={update.isPending}
+        onChange={(next) =>
+          update.mutate({ id: p.id, body: { mainVaId: next.main, backupVaIds: next.backups } }, { onSuccess: () => notify("VAs on this task updated.") })
+        }
+      />
       {p.status === "requested" && (
         <Button variant="danger" disabled={update.isPending} onClick={() => (update.reset(), setCancelling(true))}>
           Cancel request
@@ -273,7 +279,7 @@ function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamV
       title={p.title}
       footer={
         <>
-          <span className="text-small">Your VA sees exactly what’s here. Status updates show every 30 seconds.</span>
+          <span className="text-small">{p.vas.length > 1 ? "Every VA on it sees" : "Your VA sees"} exactly what’s here. Status updates show every 30 seconds.</span>
           <span className="u-spacer" />
           <Button variant="primary" onClick={onClose}>
             Close
@@ -287,17 +293,18 @@ function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamV
           t={p}
           people={{
             icon: "user",
-            label: "Assigned VA",
-            value: p.va ? p.va.name : "GoCWGL is picking a VA",
+            label: p.vas.length > 1 ? "Main VA and backups" : "Assigned VA",
+            value: assigneeDetail(p.vas),
           }}
           actions={actions}
           emptyDetails="You didn’t add details to this request."
           conversation={
             <TaskConversation
               side="client"
-              otherName={p.va?.name ?? "your VA"}
-              vaName={p.va?.name ?? "your VA"}
-              otherReadAt={p.vaReadAt}
+              otherName={p.vas.length > 1 ? "your VAs" : (p.vas[0]?.name ?? "your VA")}
+              otherPlural={p.vas.length > 1}
+              vaName={p.vas.length ? vaNames(p.vas) : "your VA"}
+              otherReadAt={allReadAt(p.vas)}
               messages={messages}
               send={(body, done) => post.mutate({ id: p.id, body }, { onSuccess: done })}
               sending={post.isPending}
@@ -330,7 +337,7 @@ function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamV
             )
           }
         >
-          “{p.title}” is cancelled and moves to the Cancelled tab. {p.va ? `${p.va.name} won’t work on it.` : ""}
+          “{p.title}” is cancelled and moves to the Cancelled tab. {p.vas.length ? `${vaNames(p.vas)} won’t work on it.` : ""}
         </ConfirmDialog>
       )}
     </Modal>
@@ -343,7 +350,7 @@ function RequestModal({ team, onClose }: { team: TeamVa[]; onClose: () => void }
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [links, setLinks] = useState<string[]>([]);
-  const [vaId, setVaId] = useState(team.length === 1 ? team[0].vaId : "");
+  const [assign, setAssign] = useState<VaAssignment>({ main: team.length === 1 ? team[0].vaId : null, backups: [] });
   const [priority, setPriority] = useState<ProjectPriority>("normal");
   const [dueDate, setDueDate] = useState("");
 
@@ -351,10 +358,14 @@ function RequestModal({ team, onClose }: { team: TeamVa[]; onClose: () => void }
     e.preventDefault();
     if (!title.trim()) return;
     request.mutate(
-      { title: title.trim(), details: details.trim(), links: links.map((l) => l.trim()).filter(Boolean), vaId: vaId || null, priority, dueDate: dueDate || null },
+      { title: title.trim(), details: details.trim(), links: links.map((l) => l.trim()).filter(Boolean), mainVaId: assign.main, backupVaIds: assign.backups, priority, dueDate: dueDate || null },
       {
         onSuccess: () => {
-          notify("Task requested. GoCWGL will confirm it with your VA.");
+          notify(
+            assign.backups.length
+              ? `Task requested with ${assign.backups.length} backup VA${assign.backups.length === 1 ? "" : "s"}.`
+              : "Task requested. GoCWGL will confirm it with your VA.",
+          );
           onClose();
         },
       },
@@ -418,17 +429,10 @@ function RequestModal({ team, onClose }: { team: TeamVa[]; onClose: () => void }
         <section className="vrf-section">
           <header className="vrf-section__head">
             <h3>Who and when</h3>
-            <p>Pick the VA, how urgent it is, and when you need it.</p>
+            <p>Pick the main VA and any backups, how urgent it is, and when you need it.</p>
           </header>
           <div className="vrf-section__body">
-            <Field label="Assign a VA" htmlFor="pj-va">
-              <Select
-                id="pj-va"
-                value={vaId}
-                onChange={(e) => setVaId(e.target.value)}
-                options={[{ value: "", label: "Let GoCWGL choose" }, ...team.map((v) => ({ value: v.vaId, label: v.name + (v.headline ? ` — ${v.headline}` : "") }))]}
-              />
-            </Field>
+            <VaAssign team={team} value={assign} onChange={setAssign} idPrefix="pj-new" />
             <div className="vrf-grid vrf-grid--2">
               <Field label="Priority">
                 <SegmentedControl

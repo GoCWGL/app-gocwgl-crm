@@ -36,17 +36,13 @@ export type PortalState = {
   funnelPackage: string;
   /** CRM page tab ("" = pick by what the client has). Build progress lives here as the "progress" tab. */
   crmView: "" | "builds" | "packages" | "progress";
-  /** VA tracker page tab: the time log, or who's working right now (Live work lives here). */
-  trackerView: "tracker" | "live";
   /** VAs page tab. */
   teamView: "requests" | "matched";
 };
 
-/** Build progress is a tab on the CRM page, and Live work one on the VA tracker: links to them open those tabs. */
+/** Build progress is a tab on the CRM page: links to it open that tab. */
 function withBuildInCrm(s: PortalState): PortalState {
   if (s.tab === "build") return { ...s, tab: "crm", crmView: "progress" };
-  // Live work is a tab on the VA tracker page: links to it (dashboard, emails) open that tab.
-  if (s.tab === "live") return { ...s, tab: "journal", trackerView: "live" };
   return s;
 }
 
@@ -67,7 +63,6 @@ function initialState(params: URLSearchParams | null): PortalState {
     funnelView: "",
     funnelPackage: "",
     teamView: "requests",
-    trackerView: "tracker",
   });
 }
 
@@ -112,8 +107,7 @@ export function PortalProvider({ children }: { children: ReactNode }) {
       update,
       readOnly,
       isOwner,
-      // Opening the VA tracker shows its Tracker tab (Live work links use tab "live", which opens the Live work tab).
-      goTo: (tab) => update(tab === "journal" ? { tab, trackerView: "tracker" } : { tab }),
+      goTo: (tab) => update({ tab }),
       notify: (toast) => update({ toast }),
       openSupport: (draft) => update((s) => ({ tab: "support", support: { ...s.support, view: "requests", ...draft } })),
     }),

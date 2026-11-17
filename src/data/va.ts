@@ -10,6 +10,7 @@ export type VaTab =
   | "clients"
   | "tasks"
   | "time"
+  | "attendance"
   | "invoices"
   | "jobs"
   | "training"
@@ -41,6 +42,11 @@ export const VA_PAGES: Record<VaTab, { title: string; subtitle: string; empty: s
     title: "Time tracker",
     subtitle: "Track your time per client and see your earnings. Your clients see the same time in their VA tracker.",
     empty: "No time logged yet. Your tracked hours will show up here, grouped by client and week.",
+  },
+  attendance: {
+    title: "Attendance",
+    subtitle: "Clock in and out for each client. Your clients see when you start, and whether it's on time for your schedule.",
+    empty: "No clients yet. Once GoCWGL places you with a client, you clock in and out for them here.",
   },
   invoices: {
     title: "Invoices",
@@ -102,6 +108,7 @@ export const VA_NAV: Array<{ title: string; items: Array<{ tab: VaTab; label: st
     items: [
       { tab: "clients", label: "Clients", icon: "briefcase" },
       { tab: "tasks", label: "Tasks", icon: "clipboard" },
+      { tab: "attendance", label: "Attendance", icon: "calendarCheck" },
       { tab: "time", label: "Time tracker", icon: "clock" },
       { tab: "invoices", label: "Invoices", icon: "receipt" },
     ],

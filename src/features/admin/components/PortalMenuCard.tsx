@@ -9,7 +9,7 @@ import { useAdmin } from "../state/AdminContext";
 
 type PackageKey = "showCrmPackages" | "showFunnelPackages" | "showVaPackages";
 
-/** `fallback`: whether it shows before the team has set it (CRM and Funnel do; VA doesn't). */
+/** `fallback`: whether it shows before the team has set it (CRM does; Funnel and VA don't). */
 const PACKAGES: Array<{ key: PackageKey; label: string; menu: string; on: string; off: string; fallback: boolean }> = [
   {
     key: "showCrmPackages",
@@ -24,8 +24,8 @@ const PACKAGES: Array<{ key: PackageKey; label: string; menu: string; on: string
     label: "Funnel packages",
     menu: "Request Funnel",
     on: "They see Request Funnel with the funnel packages and prices.",
-    off: "Hidden: they can’t see the funnel packages or request a new funnel build.",
-    fallback: true,
+    off: "Hidden (the default): they can’t see the funnel packages or request a new funnel build. Funnels they already have still show.",
+    fallback: false,
   },
   {
     key: "showVaPackages",

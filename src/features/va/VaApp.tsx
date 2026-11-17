@@ -17,6 +17,7 @@ import { OpenJobsSection } from "./sections/OpenJobsSection";
 import { ReferralsSection } from "./sections/ReferralsSection";
 import { RequestSupportSection } from "./sections/RequestSupportSection";
 import { AccountSection } from "./sections/AccountSection";
+import { AttendanceSection } from "./sections/AttendanceSection";
 import { ResumeSection } from "./sections/ResumeSection";
 import { SopLibrarySection } from "./sections/SopLibrarySection";
 import { TasksSection } from "./sections/TasksSection";
@@ -64,6 +65,7 @@ const SECTIONS: Record<VaTab, () => React.ReactNode> = {
   dashboard: DashboardSection,
   clients: ClientsSection,
   tasks: TasksSection,
+  attendance: AttendanceSection,
   time: TimeTrackerSection,
   invoices: InvoicesSection,
   jobs: OpenJobsSection,

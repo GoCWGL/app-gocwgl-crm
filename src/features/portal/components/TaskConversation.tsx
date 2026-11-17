@@ -66,6 +66,7 @@ export function TaskConversation({
   readOnly,
   staffViewing,
   otherReadAt,
+  otherPlural,
 }: {
   /** Whose portal this is. */
   side: Side;
@@ -84,6 +85,8 @@ export function TaskConversation({
   staffViewing?: boolean;
   /** When the other side last read the conversation: your messages before then show as read. */
   otherReadAt?: string | null;
+  /** The other side is several people (a task shared by several VAs). */
+  otherPlural?: boolean;
 }) {
   const [draft, setDraft] = useState("");
   const list = useRef<HTMLDivElement>(null);
@@ -140,7 +143,7 @@ export function TaskConversation({
             <span>
               {side === "va"
                 ? `Anything unclear? Ask ${otherName} here; they get it on their Tasks page.`
-                : `When ${otherName} has a question about this task, it shows here and you can answer.`}
+                : `When ${otherName} ${otherPlural ? "have" : "has"} a question about this task, it shows here and you can answer.`}
             </span>
           </div>
         ) : (

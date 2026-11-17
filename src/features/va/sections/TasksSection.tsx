@@ -5,11 +5,13 @@ import { Button, ConfirmDialog, Icon, Input, LoadState, Modal, StatGrid, type Ic
 import { TaskConversation, UnreadMark } from "@/features/portal/components/TaskConversation";
 import { TaskBar, TaskFilter, TaskSearch, TaskTabs, taskText } from "@/features/portal/components/TaskFilters";
 import { TaskSheet, TaskStatus } from "@/features/portal/components/TaskSheet";
-import { isOpenProject, PRIORITY, PROJECT_STATUS } from "@/features/portal/lib/projects";
+import { isOpenProject, PRIORITY, PROJECT_STATUS, vaNames } from "@/features/portal/lib/projects";
 import { toneClass } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { VaTaskOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
+import { useSession } from "@/utils/auth/session";
+import { useMe } from "@/utils/hooks/useUsers";
 import { useMarkVaTaskRead, usePostVaTaskMessage, useUpdateVaTask, useVaTaskMessages, useVaTasks } from "@/utils/hooks/useVaPortal";
 import { useVaAccess } from "../lib/access";
 import { useVa } from "../state/VaContext";
@@ -350,6 +352,7 @@ function StatusPicker({ t }: { t: VaTaskOut }) {
 
 /** One task in the list; clicking it opens the full details. */
 function TaskRow({ t, onOpen }: { t: VaTaskOut; onOpen: () => void }) {
+  const myId = useMyVaId();
   const overdue = isOverdue(t);
   return (
     <div
@@ -391,6 +394,7 @@ function TaskRow({ t, onOpen }: { t: VaTaskOut; onOpen: () => void }) {
       </span>
       <span className="tk-row__client" role="cell">
         <Icon name="building" size={12} /> {t.clientName || "Your client"}
+        {roleNote(t, myId) && <span className="tk-row__muted"> · {roleNote(t, myId)}</span>}
       </span>
       <span role="cell">
         <span className={cn("tk-status", toneClass(PROJECT_STATUS[t.status].tone))}>
@@ -420,6 +424,7 @@ function TaskRow({ t, onOpen }: { t: VaTaskOut; onOpen: () => void }) {
 
 /** A pop-up with everything about one task: the client's full request (details, every link, priority, due date), GoCWGL's note, and the status change. */
 function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean; onClose: () => void }) {
+  const myId = useMyVaId();
   const messages = useVaTaskMessages(t.id);
   const post = usePostVaTaskMessage();
   // Opening the task (or a new message arriving while it's open) reads the conversation.
@@ -448,14 +453,18 @@ function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean
     >
       <TaskSheet
         t={t}
-        people={{ icon: "building", label: "Client", value: t.clientName || "Your client" }}
+        people={{
+          icon: "building",
+          label: "Client",
+          value: `${t.clientName || "Your client"}${roleNote(t, myId) ? ` · ${roleNote(t, myId)}` : ""}`,
+        }}
         actions={readOnly ? undefined : <StatusPicker t={t} />}
         emptyDetails="The client didn’t add details. Ask them in the conversation if anything’s unclear."
         conversation={
           <TaskConversation
             side="va"
             otherName={t.clientName || "the client"}
-            vaName={t.va?.name || "your VA"}
+            vaName={vaNames(t.vas, "your VA")}
             otherReadAt={t.clientReadAt}
             messages={messages}
             send={(body, done) => post.mutate({ id: t.id, body }, { onSuccess: done })}
@@ -469,3 +478,20 @@ function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean
     </Modal>
   );
 }
+
+/** The VA whose portal this is (the VA, or the one staff are viewing as). */
+function useMyVaId(): string {
+  const me = useMe().data;
+  const { viewAsVaId } = useSession();
+  return viewAsVaId || me?.id || "";
+}
+
+/** Your part on a shared task: "you're the backup for Riley", "Ben is your backup", or "" when it's only yours. */
+const roleNote = (t: VaTaskOut, myId: string) => {
+  if (t.vas.length < 2) return "";
+  const me = t.vas.find((v) => v.id === myId);
+  const main = t.vas.find((v) => v.role !== "backup");
+  if (me?.role === "backup") return main ? `you’re the backup for ${main.name}` : "you’re a backup";
+  const backups = t.vas.filter((v) => v.role === "backup" && v.id !== myId);
+  return backups.length ? `${vaNames(backups)} ${backups.length === 1 ? "is your backup" : "are your backups"}` : "";
+};

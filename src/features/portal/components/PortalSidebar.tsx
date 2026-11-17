@@ -105,7 +105,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   // The tab showing on pages that have tabs, so the right entry is marked.
   const crmTab = useCrmTab().tab;
   const funnelTab = useFunnelTab().tab;
-  const viewOf: Partial<Record<PortalTab, string>> = { crm: crmTab, funnels: funnelTab, journal: state.trackerView };
+  const viewOf: Partial<Record<PortalTab, string>> = { crm: crmTab, funnels: funnelTab };
   const isActive = (i: PortalMenuItem) => i.tab === tab && (!i.view || viewOf[tab] === i.view);
   const holds = (f: PortalFlyout, t: PortalTab) => flyoutItems(f).some((i) => i.tab === t);
 
@@ -129,7 +129,6 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const open = (i: PortalMenuItem) => {
     if (i.tab === "crm") update({ tab: "crm", crmView: i.view as "builds" | "packages" | "progress" });
     else if (i.tab === "funnels") update({ tab: "funnels", funnelView: i.view as "builds" | "packages" | "progress" });
-    else if (i.tab === "journal") update({ tab: "journal", trackerView: i.view === "live" ? "live" : "tracker" });
     else update({ tab: i.tab });
   };
 

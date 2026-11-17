@@ -30,6 +30,7 @@ import {
   getSalesStages,
   isOnboardingClient,
   stageOf,
+  businessName,
   subscriptionOf,
 } from "../../lib/contacts";
 import { CallInviteModal } from "../../modals/CallInviteModal";
@@ -159,7 +160,7 @@ function Profile({ c }: { c: ContactOut }) {
           <section className="card vp-card vp-card--flush">
             <ContactOverviewCard contact={c} />
           </section>
-          <ClientVasCard contactId={c.id} />
+          <ClientVasCard contactId={c.id} clientName={businessName(c)} />
           <section className="card vp-card vp-card--flush cw-card">
             <ClientVaWorkCard contactId={c.id} canEdit={canWrite} />
           </section>

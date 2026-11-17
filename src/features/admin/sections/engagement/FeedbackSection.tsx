@@ -111,7 +111,7 @@ export function FeedbackSection() {
                 </span>
                 <span className="text-strong">{rows.length ? "No feedback matches these filters" : "No feedback yet"}</span>
                 <span className="text-small">
-                  {rows.length ? "Try another filter." : "Clients rate the VAs who work with them from VA ratings in their portal."}
+                  {rows.length ? "Try another filter." : "Clients rate the VAs who work with them from Ratings in their portal (under VA)."}
                 </span>
               </div>
             ) : (

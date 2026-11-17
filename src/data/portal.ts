@@ -11,7 +11,7 @@ export type PortalTab =
   | "dashboard"
   | "funnels"
   | "crm"
-  | "live"
+  | "attendance"
   | "journal"
   | "team"
   | "vateam"
@@ -26,7 +26,7 @@ export type PortalTab =
   | "account";
 
 /** Old ?tab= links that point at a page with a new name. */
-export const PORTAL_TAB_ALIASES: Record<string, PortalTab> = { va: "team", invoices: "billing", overview: "dashboard", feedback: "ratings" };
+export const PORTAL_TAB_ALIASES: Record<string, PortalTab> = { va: "team", invoices: "billing", overview: "dashboard", feedback: "ratings", live: "attendance" };
 
 export type FunnelStatus = "live" | "build" | "pay" | "queued" | "quote";
 export type FunnelTypeKey = "lead" | "booking" | "webinar" | "sales" | "membership" | "custom";
@@ -51,12 +51,12 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   dashboard: { title: "Dashboard", subtitle: "Your VA team right now, and everything that needs a look." },
   funnels: { title: "Funnels", subtitle: "The funnels built for you, how they perform, and requests for new ones." },
   crm: { title: "CRM", subtitle: "Your CRM builds, the packages to get one, and the progress on everything GoCWGL is building for you." },
-  live: { title: "Live work", subtitle: "Who on your VA team is working for you right now, and on what." },
+  attendance: { title: "Attendance", subtitle: "When your VAs clock in and out, and whether they're on time for the schedule you set." },
   journal: { title: "VA tracker", subtitle: "Everything your VAs logged for your business, day by day." },
   team: { title: "Request VA", subtitle: "Ask GoCWGL for a VA, and follow each request until you're matched." },
-  vateam: { title: "VA Team", subtitle: "The virtual assistants working with your business right now." },
-  projects: { title: "Tasks", subtitle: "Request a task, pick the VA for it, and follow its status." },
-  ratings: { title: "VA ratings", subtitle: "Rate each VA on your team. Ratings go to GoCWGL and help us support them." },
+  vateam: { title: "Team", subtitle: "The virtual assistants working with your business right now." },
+  projects: { title: "Tasks", subtitle: "Request a task, pick the main VA and any backups, and follow its status." },
+  ratings: { title: "Ratings", subtitle: "Rate each VA on your team. Ratings go to GoCWGL and help us support them." },
   build: { title: "Build progress", subtitle: "Follow along as we build your system." },
   support: { title: "Request support", subtitle: "Ask for changes, report a problem, or message your team." },
   billing: { title: "Invoices", subtitle: "Invoices from your VAs and from GoCWGL." },
@@ -72,7 +72,7 @@ export type PortalMenuItem = {
   tab: PortalTab;
   label: string;
   icon: IconName;
-  view?: "builds" | "packages" | "progress" | "tracker" | "live";
+  view?: "builds" | "packages" | "progress";
   /** Shown only once the client has an active VA: new clients don't see it yet. */
   needsVa?: boolean;
   /** Stands out in the brand orange (Request CRM, Request Funnel). */
@@ -142,16 +142,17 @@ export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
           {
             title: "Your team",
             needsVa: true,
-            items: [page("vateam", "VA Team", "users"), page("projects", "Tasks", "clipboard"), page("ratings", "VA ratings", "star")],
+            items: [page("vateam", "Team", "users"), page("projects", "Tasks", "clipboard")],
           },
           {
             title: "Time & activity",
             needsVa: true,
             items: [
-              page("journal", "VA tracker", "journal", { view: "tracker" }),
-              page("journal", "Live work", "pulse", { key: "live", view: "live" }),
+              page("journal", "VA tracker", "journal"),
+              page("attendance", "Attendance", "calendarCheck"),
             ],
           },
+          { title: "Feedback", needsVa: true, items: [page("ratings", "Ratings", "star")] },
           { title: "Learn", needsVa: true, items: [page("training", "Training", "graduation"), page("sops", "SOPs", "form")] },
         ],
       },

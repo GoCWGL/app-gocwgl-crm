@@ -38,6 +38,7 @@ import { useAdmin } from "../../state/AdminContext";
 import { VaRequestForm } from "@/features/portal/components/VaRequestModal";
 import { ApplicantsModal } from "./ApplicantsModal";
 import { ClientVaRequests, requestStage, requestTab, type BoardTab } from "./ClientVaRequests";
+import { MatchVaModal } from "../../components/MatchVaModal";
 import { JobRequestPage } from "./JobRequestPage";
 import { useAllVaRequests } from "@/utils/hooks/useClientWork";
 
@@ -98,6 +99,8 @@ function JobPostingsBoard() {
   const [filling, setFilling] = useState<JobPostingOut | null>(null);
   const [applicants, setApplicants] = useState<JobPostingOut | null>(null);
   const [creating, setCreating] = useState(false);
+  // Match a VA to a client directly (no request from the client needed).
+  const [matching, setMatching] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState("");
   const move = useUpdateJobPosting();
   const remove = useDeleteJobPosting();
@@ -147,6 +150,11 @@ function JobPostingsBoard() {
           />
           <div className="board__actions">
             <SearchBox label="Search job postings" placeholder="Search title, client or skill" value={search} onChange={setSearch} />
+            {canWrite && (
+              <Button variant="outline" onClick={() => setMatching(true)}>
+                <Icon name="userPlus" size={14} /> Match a VA
+              </Button>
+            )}
             {canWrite && (
               <Button variant="primary" onClick={() => setCreating(true)}>
                 <Icon name="plus" size={14} /> New job posting
@@ -387,6 +395,7 @@ function JobPostingsBoard() {
           }}
         />
       )}
+      {matching && <MatchVaModal onClose={() => setMatching(false)} />}
     </div>
   );
 }

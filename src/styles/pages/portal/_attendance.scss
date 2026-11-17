@@ -1,0 +1,170 @@
+@use "../../abstracts" as *;
+
+// Attendance (VA portal and client portal): clock-in cards and the work-day history.
+
+.att-clients {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+}
+
+.att-heading {
+  margin: 0;
+  color: $ink;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.att-clock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 3px solid $slate-300;
+
+  &.is-in,
+  &.is-on_time {
+    border-top-color: $green-500;
+  }
+
+  &.is-late,
+  &.is-missing {
+    border-top-color: $amber-500;
+  }
+
+  &.is-absent {
+    border-top-color: $red-600;
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__name {
+    color: $ink;
+    font-size: 15px;
+  }
+
+  &__schedule {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: $radius-md;
+    background: $bg-soft;
+    color: $ink-soft;
+    font-size: 13px;
+
+    > .icon,
+    > svg {
+      flex: none;
+      margin-top: 2px;
+      color: $muted;
+    }
+  }
+
+  &__now {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__timer {
+    color: $ink;
+    font-family: $font-mono;
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  &__note {
+    margin: 0;
+
+    b {
+      color: $ink;
+    }
+  }
+
+  &__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: auto;
+  }
+}
+
+.att-table {
+  .is-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__day {
+    color: $ink;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  &__muted {
+    color: $muted;
+    white-space: nowrap;
+  }
+
+  tr.is-absent td {
+    background: rgba(220, 38, 38, 0.035);
+  }
+}
+
+.att-who {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.att-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.att-days-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.att-day-chip {
+  min-width: 52px;
+  padding: 8px 10px;
+  border: 1px solid $line;
+  border-radius: $radius-pill;
+  background: $white;
+  color: $ink-soft;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    border-color: $line-strong;
+  }
+
+  &.is-on {
+    border-color: $orange;
+    background: $orange;
+    color: $on-orange;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $orange;
+    outline-offset: 2px;
+  }
+}

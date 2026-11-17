@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Avatar, Badge, Button, FormError, Icon, Select, Textarea } from "@/components/ui";
-import { isOpenProject, PRIORITY, PROJECT_STATUS, type ProjectStatus } from "@/features/portal/lib/projects";
+import { isOpenProject, PRIORITY, PROJECT_STATUS, assigneeDetail, type ProjectStatus } from "@/features/portal/lib/projects";
 import { avatarTone } from "@/lib/tones";
 import type { ClientProjectOut, VaRequestOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
@@ -102,9 +102,12 @@ function ProjectItem({ p, canEdit }: { p: ClientProjectOut; canEdit: boolean }) 
             {PRIORITY[p.priority].label} priority{p.dueDate ? ` · due ${formatShort(p.dueDate)}` : ""} · {p.requestedByName || "Client"}, {formatShort(p.createdAt)}
           </span>
         </span>
-        {p.va && (
+        {p.vas.length > 0 && (
           <span className="cluster cluster--6 text-small">
-            <Avatar name={p.va.name} tone={avatarTone(p.va.id)} size="sm" /> {p.va.name}
+            {p.vas.slice(0, 3).map((v) => (
+              <Avatar key={v.id} name={v.name} tone={avatarTone(v.id)} size="sm" />
+            ))}{" "}
+            {assigneeDetail(p.vas)}
           </span>
         )}
         <Badge tone={st.tone} dot>

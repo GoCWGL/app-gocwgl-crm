@@ -4,7 +4,7 @@ import type { VaRequestIn, VaRequestOut } from "@/utils/api/models";
  * The VA agreement a client accepts before requesting a VA: a monthly maintenance fee by hours a week (an open
  * project is quoted by GoCWGL). The server keeps the same table and records when they accepted and the fee.
  */
-export const VA_MAINTENANCE_FEE_DOLLARS: Record<10 | 20 | 40, number> = { 10: 20, 20: 40, 40: 80 };
+export const VA_MAINTENANCE_FEE_DOLLARS: Record<10 | 20 | 40, number> = { 10: 10, 20: 20, 40: 40 };
 
 /** "$40 a month", or how an open project is priced. */
 export function maintenanceFeeLabel(hours: number | null | undefined): string {

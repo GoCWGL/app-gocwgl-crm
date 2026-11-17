@@ -14,7 +14,7 @@ import { useMyFeedback } from "@/utils/hooks/useFeedback";
 import { useOverview } from "@/utils/hooks/usePortal";
 import { useMe } from "@/utils/hooks/useUsers";
 import { StateChip, VaPresence } from "../components/VaPresence";
-import { isOpenProject, PROJECT_STATUS } from "../lib/projects";
+import { assigneeLabel, isOpenProject, PROJECT_STATUS } from "../lib/projects";
 import { firstName, hm } from "../lib/vaTeam";
 import { useShowPackages } from "../lib/vaAccess";
 import { usePortal } from "../state/PortalContext";
@@ -83,7 +83,7 @@ export function DashboardSection() {
       </section>
 
       <div className="cp-kpis">
-        <Kpi icon="pulse" tone="green" label="Working now" value={live ? `${live.working} / ${vas.length}` : "–"} onClick={() => goTo("live")} />
+        <Kpi icon="pulse" tone="green" label="Working now" value={live ? `${live.working} / ${vas.length}` : "–"} onClick={() => goTo("attendance")} />
         <Kpi icon="clock" tone="cyan" label="Hours this week" value={live ? hm(live.weekSeconds) : "–"} onClick={() => goTo("journal")} />
         <Kpi
           icon="invoice"
@@ -98,7 +98,7 @@ export function DashboardSection() {
 
       <div className="cp-dash-grid">
         <div className="cp-dash-grid__main">
-          <Panel icon="users" tone="green" title="VA team status" link="Live work" tab="live">
+          <Panel icon="users" tone="green" title="VA team status" link="Attendance" tab="attendance">
             {vas.length ? (
               <ul className="cp-dash-vas">
                 {vas.map((v) => (
@@ -138,7 +138,7 @@ export function DashboardSection() {
                     <span className="stack stack--2 u-grow">
                       <strong>{p.title}</strong>
                       <span className="text-small">
-                        {p.va ? p.va.name : "GoCWGL is picking a VA"}
+                        {assigneeLabel(p.vas)}
                         {p.dueDate ? ` · due ${formatShort(p.dueDate)}` : ""}
                       </span>
                     </span>
