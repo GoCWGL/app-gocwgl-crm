@@ -325,13 +325,91 @@ export const CRM_PACKAGES: Record<
   },
 };
 
-/** Optional extras, quoted per project. */
-export const CRM_ADDONS = [
-  { key: "migration", label: "Data migration", desc: "We move contacts, deals and history from your current CRM or spreadsheets." },
-  { key: "sms", label: "SMS and WhatsApp", desc: "Two-way texting with leads and clients, right from a contact." },
-  { key: "care", label: "Care plan", desc: "Hosting, backups, monitoring and small changes every month." },
-  { key: "training", label: "Extra team training", desc: "More sessions and written guides for new hires." },
+/** "Why own your CRM": the reasons shown above the packages, to show clients what owning one is worth. */
+export const CRM_WHY_OWN = [
+  {
+    key: "own",
+    icon: "shield",
+    title: "It’s yours, not rented",
+    desc: "A rented CRM is a bill that never ends. Yours is an asset: nobody can raise your price, lock a feature behind a higher plan or close your account.",
+  },
+  {
+    key: "fit",
+    icon: "pipeline",
+    title: "Built around how you sell",
+    desc: "No bending your process to fit generic software. Your stages, your records, your automations, set up the way your team already works.",
+  },
+  {
+    key: "seats",
+    icon: "users",
+    title: "No per-seat fees",
+    desc: "Rented CRMs charge for every login, every month. Yours has unlimited logins, so hiring doesn’t make your software bill grow.",
+  },
+  {
+    key: "connected",
+    icon: "bolt",
+    title: "One place for everything",
+    desc: "Funnels, bookings, emails, invoices and your client portal in one system, instead of five tools held together with workarounds.",
+  },
 ] as const;
+
+/**
+ * Rented CRMs the cost comparison uses, at their published list prices (checked November 2026; update them when they
+ * change). Each costs: setup + (flat monthly + per-login monthly × logins) × months.
+ */
+export const CRM_RENTED_OPTIONS = [
+  {
+    key: "hubspot-pro",
+    name: "HubSpot",
+    plan: "Sales Hub Professional",
+    perSeatMonthlyCents: 9_000,
+    flatMonthlyCents: 0,
+    setupCents: 150_000,
+    pricing: "$90 per login a month (yearly plan), plus a $1,500 onboarding fee",
+  },
+  {
+    key: "hubspot-enterprise",
+    name: "HubSpot",
+    plan: "Sales Hub Enterprise",
+    perSeatMonthlyCents: 15_000,
+    flatMonthlyCents: 0,
+    setupCents: 350_000,
+    pricing: "$150 per login a month (yearly plan), plus a $3,500 onboarding fee",
+  },
+  {
+    key: "ghl-unlimited",
+    name: "GoHighLevel",
+    plan: "Unlimited",
+    perSeatMonthlyCents: 0,
+    flatMonthlyCents: 29_700,
+    setupCents: 0,
+    pricing: "$297 a month, plus phone, SMS, email and AI usage billed on top",
+  },
+  {
+    key: "zoho-enterprise",
+    name: "Zoho CRM",
+    plan: "Enterprise",
+    perSeatMonthlyCents: 4_000,
+    flatMonthlyCents: 0,
+    setupCents: 0,
+    pricing: "$40 per login a month (yearly plan), with paid onboarding extra",
+  },
+] as const;
+
+/** The comparison's slider and period choices. */
+export const CRM_COMPARISON = {
+  defaultSeats: 10,
+  maxSeats: 50,
+  periods: [5, 7, 10] as const,
+};
+
+/** What the Custom CRM price pays for, shown under "Why it costs what it does". */
+export const CRM_PRICE_BREAKDOWN = [
+  "Discovery call and a blueprint of every screen and automation",
+  "12–15 weeks of design, building and testing by our team",
+  "Your data moved over, and your branding on your own domain",
+  "Team training and 90 days of priority support after launch",
+];
 
 export const CRM_STEPS = [
   { title: "Discovery call", desc: "We learn how you find, sell to and serve your clients." },

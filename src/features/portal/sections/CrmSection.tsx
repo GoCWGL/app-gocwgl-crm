@@ -1,8 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Badge, Button, Icon, IconTile, LoadState, TabBar, type TabOption } from "@/components/ui";
-import { CRM_ADDONS, CRM_FAQ, CRM_PACKAGES, CRM_STEPS, OFFERED_CRM_PACKAGES, type CrmPackageKey } from "@/data/portal";
+import { Badge, Button, Icon, IconTile, LoadState, SegmentedControl, TabBar, type TabOption } from "@/components/ui";
+import {
+  CRM_FAQ,
+  CRM_PACKAGES,
+  CRM_PRICE_BREAKDOWN,
+  CRM_COMPARISON,
+  CRM_RENTED_OPTIONS,
+  CRM_STEPS,
+  CRM_WHY_OWN,
+  OFFERED_CRM_PACKAGES,
+  type CrmPackageKey,
+} from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
 import type { Tone } from "@/lib/tones";
 import type { ClientCrmRequestOut } from "@/utils/api/models";
@@ -178,6 +188,8 @@ function CrmPackages({ onRequested }: { onRequested: () => void }) {
         </div>
       </section>
 
+      <WhyOwnCrm />
+
       <div className="section-head">
         <div className="stack stack--2">
           <h2 className="section-title">Choose your CRM</h2>
@@ -235,21 +247,6 @@ function CrmPackages({ onRequested }: { onRequested: () => void }) {
       </div>
 
       <section className="card stack stack--10">
-        <div className="stack stack--2">
-          <h2 className="card-title">Add-ons</h2>
-          <span className="text-small">Optional with either package. Your team quotes these with your blueprint.</span>
-        </div>
-        <div className="option-grid">
-          {CRM_ADDONS.map((a) => (
-            <div className="inset" key={a.key}>
-              <span className="text-strong">{a.label}</span>
-              <span className="text-small">{a.desc}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="card stack stack--10">
         <h2 className="card-title">How it works</h2>
         <ol className="crm-steps">
           {CRM_STEPS.map((s, i) => (
@@ -270,6 +267,144 @@ function CrmPackages({ onRequested }: { onRequested: () => void }) {
             <p className="text-small">{f.a}</p>
           </details>
         ))}
+      </section>
+    </>
+  );
+}
+
+/**
+ * Why own a CRM: the hook, the reasons, and what renting a big-name CRM costs over a few years next to a one-time
+ * Custom CRM build, for the team size the client picks.
+ */
+function WhyOwnCrm() {
+  const { defaultSeats, maxSeats, periods } = CRM_COMPARISON;
+  const [seats, setSeats] = useState(defaultSeats);
+  const [years, setYears] = useState<(typeof periods)[number]>(periods[0]);
+  const ownCents = CRM_PACKAGES.custom.priceCents;
+  const rented = CRM_RENTED_OPTIONS.map((o) => {
+    const monthlyCents = o.flatMonthlyCents + o.perSeatMonthlyCents * seats;
+    const totalCents = o.setupCents + monthlyCents * 12 * years;
+    // Months of renting it takes to cost more than the one-time build.
+    const breakEven = Math.ceil(Math.max(0, ownCents - o.setupCents) / monthlyCents);
+    return { ...o, totalCents, breakEven };
+  });
+  const maxCents = Math.max(ownCents, ...rented.map((o) => o.totalCents));
+  const width = (cents: number) => `${Math.max(2, Math.round((cents / maxCents) * 100))}%`;
+  const beaten = rented.filter((o) => o.totalCents > ownCents);
+  const biggest = beaten.reduce<(typeof rented)[number] | null>((a, o) => (!a || o.totalCents > a.totalCents ? o : a), null);
+
+  return (
+    <>
+      <section className="card crm-why">
+        <div className="stack stack--4">
+          <span className="kicker">WHY OWN YOUR CRM</span>
+          <h2 className="crm-why__hook">Stop renting the system your business runs on.</h2>
+          <span className="text-muted">
+            Your CRM holds every lead, every deal and every client you’ve ever won. Most businesses rent it month after month, and
+            pay more every time they hire. Owning it is how bigger companies do it.
+          </span>
+        </div>
+        <div className="crm-why__reasons">
+          {CRM_WHY_OWN.map((r) => (
+            <div className="inset crm-why__reason" key={r.key}>
+              <IconTile size="sm" tone="purple">
+                <Icon name={r.icon} size={15} />
+              </IconTile>
+              <span className="text-strong">{r.title}</span>
+              <span className="text-small">{r.desc}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="card crm-cost">
+        <div className="crm-cost__head">
+          <div className="stack stack--2">
+            <h2 className="card-title">Renting vs owning: HubSpot, GoHighLevel, Zoho and yours</h2>
+            <span className="text-small">Move the slider to your team size and see what each one costs over the years.</span>
+          </div>
+          <SegmentedControl
+            label="Years"
+            size="sm"
+            variant="soft"
+            value={String(years)}
+            onChange={(v) => setYears(Number(v) as typeof years)}
+            options={periods.map((y) => ({ value: String(y), label: `${y} years` }))}
+          />
+        </div>
+        <label className="crm-cost__seats">
+          <span className="text-strong">
+            {seats} team {seats === 1 ? "login" : "logins"}
+          </span>
+          <input
+            type="range"
+            min={1}
+            max={maxSeats}
+            value={seats}
+            onChange={(e) => setSeats(Number(e.target.value))}
+            aria-label="Team logins"
+          />
+        </label>
+        <div className="crm-cost__bars">
+          {rented.map((o) => (
+            <div className="crm-cost__bar" key={o.key}>
+              <div className="crm-cost__bar-head">
+                <span className="text-strong">
+                  {o.name} <span className="text-muted">· {o.plan}</span>
+                </span>
+                <span className="crm-cost__amount crm-cost__amount--rent">{formatCents(o.totalCents)}</span>
+              </div>
+              <div className="crm-cost__track">
+                <span className="crm-cost__fill crm-cost__fill--rent" style={{ width: width(o.totalCents) }} />
+              </div>
+              <span className="text-small">
+                {o.pricing}.{" "}
+                {o.totalCents > ownCents
+                  ? `Costs more than owning after about ${o.breakEven} months.`
+                  : `Costs ${formatCents(ownCents - o.totalCents)} less here, but you never own it and the bill never stops.`}
+              </span>
+            </div>
+          ))}
+          <div className="crm-cost__bar crm-cost__bar--own">
+            <div className="crm-cost__bar-head">
+              <span className="text-strong">
+                Your own CRM <span className="text-muted">· GoCWGL Custom CRM</span>
+              </span>
+              <span className="crm-cost__amount crm-cost__amount--own">{formatCents(ownCents)}</span>
+            </div>
+            <div className="crm-cost__track">
+              <span className="crm-cost__fill crm-cost__fill--own" style={{ width: width(ownCents) }} />
+            </div>
+            <span className="text-small">One-time build, unlimited logins, built for how you work, and yours to keep.</span>
+          </div>
+        </div>
+        <span className={`inset text-small ${biggest ? "inset--brand" : ""}`}>
+          {biggest
+            ? `With ${seats} logins over ${years} years, owning saves about ${formatCents(biggest.totalCents - ownCents)} against ${biggest.name} ${biggest.plan}. And the rented ones keep billing after that, while yours is paid for.`
+            : `Over ${years} years, renting can cost less for a small team. Owning still means no price rises, no per-login fees as you grow, and a system that's yours.`}
+        </span>
+      </section>
+
+      <section className="card crm-cost">
+        <div className="stack stack--2">
+          <h2 className="card-title">Why it costs what it does</h2>
+          <span className="text-small">
+            Big companies pay implementation partners tens of thousands just to set up a CRM they still rent. Your price covers a
+            full build of the same kind of system, sized for your business, and then it’s yours.
+          </span>
+        </div>
+        <ul className="crm-package__includes">
+          {CRM_PRICE_BREAKDOWN.map((item) => (
+            <li key={item}>
+              <Icon name="check" size={14} strokeWidth={2.4} />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+        <span className="text-small text-muted">
+          HubSpot, GoHighLevel and Zoho prices are their published list prices as of November 2026, before taxes, add-ons and usage fees, and they can change. We go through your own numbers
+          on the discovery call.
+        </span>
       </section>
     </>
   );

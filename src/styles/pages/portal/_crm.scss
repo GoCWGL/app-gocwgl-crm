@@ -110,3 +110,106 @@
 .crm-package__note {
   align-self: stretch;
 }
+
+// "Why own your CRM": the hook and the reasons, above the packages.
+.crm-why {
+  @include stack(16px);
+
+  &__hook {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+
+  &__reasons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
+    gap: 10px;
+  }
+
+  &__reason {
+    @include stack(6px);
+    align-items: flex-start;
+  }
+}
+
+// Renting vs owning: the team-size slider and the two cost bars.
+.crm-cost {
+  @include stack(14px);
+
+  &__seats {
+    @include stack(6px);
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #7c4dff;
+    }
+  }
+
+  &__bars {
+    @include stack(14px);
+  }
+
+  &__bar {
+    @include stack(6px);
+  }
+
+  &__bar-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__amount {
+    font-family: $font-mono;
+    font-size: 20px;
+    font-weight: 800;
+
+    &--rent {
+      color: $red-600;
+    }
+
+    &--own {
+      color: $green-500;
+    }
+  }
+
+  &__track {
+    height: 12px;
+    border-radius: 999px;
+    background: $line-faint;
+    overflow: hidden;
+  }
+
+  &__fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    transition: width 0.2s ease;
+
+    &--rent {
+      background: linear-gradient(90deg, #f87171, #dc2626);
+    }
+
+    &--own {
+      background: linear-gradient(90deg, #34d399, #059669);
+    }
+  }
+}
+
+.crm-cost__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+// Their own CRM, set apart from the rented ones.
+.crm-cost__bar--own {
+  padding-top: 12px;
+  border-top: 1px dashed $line-faint;
+}
