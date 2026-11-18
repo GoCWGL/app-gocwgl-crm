@@ -27,6 +27,7 @@ import { useVaRequests } from "@/utils/hooks/useClientWork";
 import { usePortal } from "../state/PortalContext";
 import { useMenuCounts } from "@/utils/hooks/useMenuCounts";
 import { useHasTraining, useHasVaWork, useShowPackages, useVaTools } from "../lib/vaAccess";
+import { useCrmLaunched } from "../sections/CrmAfterLaunch";
 import { useCrmTab } from "../sections/CrmSection";
 import { useFunnelTab } from "../sections/FunnelsSection";
 
@@ -67,7 +68,8 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const vaWork = useHasVaWork();
   // Training appears once GoCWGL assigns the client a training.
   const training = useHasTraining();
-  // Request CRM and Request Funnel (the packages) each show unless the team turned it off for this client.
+  // Request CRM shows unless the team turned it off for this client. The whole Funnel menu (Request Funnel, builds and
+  // Build progress) is hidden until the team turns it on in the client's profile.
   const showCrmPackages = useShowPackages("crm");
   const showFunnelPackages = useShowPackages("funnels");
   // Request VA shows once the team turns the VA packages on, or while they have requests to follow.
@@ -78,12 +80,16 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const hasProjects = vaRequests.some((r) => r.engagement === "project");
   // Time & activity (VA tracker and Attendance) is hidden until a VA request turns on the time tracker or Attendance.
   const tools = useVaTools();
+  // Revisions and New features (CRM menu) open once a CRM build is launched.
+  const crmLaunched = useCrmLaunched();
   const shown = (i: PortalMenuItem, needsVa?: boolean) =>
     !HIDDEN_PORTAL_TABS.has(i.tab) &&
     // Projects sits under "Your team" but also shows before the first VA, so a client can follow a project request.
     (!(needsVa || i.needsVa) || vaWork.has || i.tab === "vaprojects") &&
     (i.tab !== "training" || training.has) &&
-    (i.view !== "packages" || (i.tab === "crm" ? showCrmPackages : showFunnelPackages)) &&
+    (i.tab !== "funnels" || showFunnelPackages) &&
+    ((i.view !== "revisions" && i.view !== "features") || crmLaunched) &&
+    (i.view !== "packages" || i.tab !== "crm" || showCrmPackages) &&
     (i.tab !== "team" || showVaPackages || hasVaRequests) &&
     (i.tab !== "vaprojects" || showVaPackages || hasProjects) &&
     (i.tab !== "journal" || tools.timeTracker) &&
@@ -136,7 +142,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const hidePanel = () => setPanel({ tab, key: null });
 
   const open = (i: PortalMenuItem) => {
-    if (i.tab === "crm") update({ tab: "crm", crmView: i.view as "builds" | "packages" | "progress" });
+    if (i.tab === "crm") update({ tab: "crm", crmView: i.view ?? "builds" });
     else if (i.tab === "funnels") update({ tab: "funnels", funnelView: i.view as "builds" | "packages" | "progress" });
     else update({ tab: i.tab });
   };

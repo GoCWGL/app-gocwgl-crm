@@ -35,7 +35,7 @@ export type PortalState = {
   /** Package to start a new funnel request with (from Get a funnel); "" = let them pick. */
   funnelPackage: string;
   /** CRM page tab ("" = pick by what the client has). Build progress lives here as the "progress" tab. */
-  crmView: "" | "builds" | "packages" | "progress";
+  crmView: "" | "builds" | "packages" | "progress" | "revisions" | "features";
   /** VAs page tab. */
   teamView: "requests" | "matched";
 };

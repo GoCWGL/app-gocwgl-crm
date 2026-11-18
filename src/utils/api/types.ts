@@ -2848,6 +2848,26 @@ export interface paths {
         patch: operations["toggle_task_api_admin_projects__project_id__tasks__task_id__patch"];
         trace?: never;
     };
+    "/api/admin/projects/{project_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Team Complete
+         * @description The team marks a launched build complete (or takes it back). Complete once the client has marked it too.
+         */
+        put: operations["team_complete_api_admin_projects__project_id__complete_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/projects/{project_id}/updates": {
         parameters: {
             query?: never;
@@ -5347,6 +5367,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/builds/{project_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Client Complete
+         * @description The client confirms their launched build is complete. Complete once the team has marked it too.
+         */
+        post: operations["client_complete_api_portal_builds__project_id__complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/crm-requests": {
         parameters: {
             query?: never;
@@ -6978,6 +7018,10 @@ export interface components {
             name: string;
             /** Goal */
             goal: string;
+            /** Menus */
+            menus?: string[];
+            /** Portals */
+            portals?: string[];
             status: components["schemas"]["CrmRequestStatus"];
             /** Projectid */
             projectId: string | null;
@@ -8240,6 +8284,10 @@ export interface components {
             name: string;
             /** Goal */
             goal: string;
+            /** Menus */
+            menus?: string[];
+            /** Portals */
+            portals?: string[];
             status: components["schemas"]["CrmRequestStatus"];
             /** Projectid */
             projectId: string | null;
@@ -8708,6 +8756,14 @@ export interface components {
             /** Text */
             text: string;
         };
+        /**
+         * CompletionIn
+         * @description The team marks a launched build complete (or takes that back).
+         */
+        CompletionIn: {
+            /** Complete */
+            complete: boolean;
+        };
         /** ConditionStep */
         ConditionStep: {
             /** Id */
@@ -9065,6 +9121,10 @@ export interface components {
             name: string;
             /** Goal */
             goal: string;
+            /** Menus */
+            menus?: string[];
+            /** Portals */
+            portals?: string[];
         };
         /** CrmRequestInvoiceOut */
         CrmRequestInvoiceOut: {
@@ -9106,6 +9166,10 @@ export interface components {
             name: string;
             /** Goal */
             goal: string;
+            /** Menus */
+            menus?: string[];
+            /** Portals */
+            portals?: string[];
             status: components["schemas"]["CrmRequestStatus"];
             /** Projectid */
             projectId: string | null;
@@ -11869,6 +11933,15 @@ export interface components {
             status: string;
             /** Progress */
             progress: number;
+            /** Clientcompletedat */
+            clientCompletedAt?: string | null;
+            /** Teamcompletedat */
+            teamCompletedAt?: string | null;
+            /**
+             * Completed
+             * @default false
+             */
+            completed?: boolean;
             /** Phases */
             phases: components["schemas"]["PhaseOut"][];
             /** Updates */
@@ -11955,6 +12028,15 @@ export interface components {
             status: string;
             /** Progress */
             progress: number;
+            /** Clientcompletedat */
+            clientCompletedAt?: string | null;
+            /** Teamcompletedat */
+            teamCompletedAt?: string | null;
+            /**
+             * Completed
+             * @default false
+             */
+            completed?: boolean;
         };
         /** ProjectTemplateOut */
         ProjectTemplateOut: {
@@ -24476,6 +24558,52 @@ export interface operations {
             };
         };
     };
+    team_complete_api_admin_projects__project_id__complete_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompletionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProjectOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     post_update_api_admin_projects__project_id__updates_post: {
         parameters: {
             query?: never;
@@ -32742,6 +32870,48 @@ export interface operations {
                         /** Response My Builds Api Portal Builds Get */
                         data: components["schemas"]["ProjectOut"][];
                     };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_complete_api_portal_builds__project_id__complete_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ProjectOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Error */

@@ -49,6 +49,8 @@ export const setProjectPhases = (projectId: string, phases: PhaseIn[]) =>
   put<ProjectOut>(`/admin/projects/${projectId}/phases`, { phases });
 export const toggleProjectTask = (projectId: string, taskId: string, done: boolean) =>
   patch<ProjectOut>(`/admin/projects/${projectId}/tasks/${taskId}`, { done });
+/** The team marks a launched build complete (or takes it back). It's complete once the client has marked it too. */
+export const setTeamComplete = (projectId: string, complete: boolean) => put<ProjectOut>(`/admin/projects/${projectId}/complete`, { complete });
 export const postProjectUpdate = (projectId: string, text: string) =>
   post<ProjectOut>(`/admin/projects/${projectId}/updates`, { text });
 
@@ -87,6 +89,8 @@ export const createCrmRequest = (body: CrmRequestIn) => post<CrmRequestOut>("/po
 
 /** The client's builds, oldest first. */
 export const listPortalBuilds = () => get<ProjectOut[]>("/portal/builds");
+/** The client confirms their launched build is complete. It's complete once the team has marked it too. */
+export const completePortalBuild = (projectId: string) => post<ProjectOut>(`/portal/builds/${projectId}/complete`);
 
 export const listAssets = (category?: string) => get<FileOut[]>("/portal/assets", { category });
 export const uploadAsset = (file: File, category?: FileCategory) => post<FileOut>("/portal/assets", upload(file, category));

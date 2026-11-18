@@ -72,90 +72,406 @@
   }
 }
 
-.crm-steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-
-  &__step {
-    @include stack(4px);
-    padding: 12px 14px;
-    border: 1px solid rgba(8, 145, 178, 0.15);
-    border-radius: $radius-lg;
-    background: $bg;
-  }
+// ---------------------------------------------------------------- Get a CRM (the CRM offer page)
+.crm-offer {
+  @include stack(40px);
+  --crm-violet: #6d28d9;
 }
 
-.crm-faq {
-  padding: 10px 0;
-  border-bottom: 1px solid $line-faint;
+// Section wrapper with a small eyebrow, a title and a lead line.
+.crm-block {
+  @include stack(18px);
+  scroll-margin-top: 24px;
 
-  &:last-child {
-    border-bottom: 0;
+  &__head {
+    @include stack(6px);
+    max-width: 640px;
   }
 
-  summary {
-    cursor: pointer;
+  &__kicker {
+    @include mono-label(11px, 0.16em, $violet);
+    text-transform: uppercase;
   }
 
-  p {
-    margin: 6px 0 0;
-  }
-}
-
-// "After launch, new features start at $500…" under the Custom CRM list.
-.crm-package__note {
-  align-self: stretch;
-}
-
-// "Why own your CRM": the hook and the reasons, above the packages.
-.crm-why {
-  @include stack(16px);
-
-  &__hook {
+  &__title {
     margin: 0;
     font-size: 24px;
     font-weight: 800;
+    letter-spacing: -0.02em;
     line-height: 1.2;
+    color: $ink;
   }
 
-  &__reasons {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr));
-    gap: 10px;
-  }
-
-  &__reason {
-    @include stack(6px);
-    align-items: flex-start;
+  &__lead {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: $muted;
   }
 }
 
-// Renting vs owning: the team-size slider and the two cost bars.
-.crm-cost {
-  @include stack(14px);
+// Dark hero: the hook, Request a CRM and three quick facts.
+.crm-intro {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(240px, 1fr);
+  gap: 32px;
+  align-items: center;
+  padding: 40px 40px;
+  border-radius: 24px;
+  overflow: hidden;
+  color: $white;
+  background:
+    radial-gradient(600px 300px at 0% 0%, rgba(124, 77, 255, 0.45), transparent 60%),
+    radial-gradient(500px 280px at 100% 100%, rgba(34, 211, 238, 0.28), transparent 60%),
+    linear-gradient(135deg, #0b1424 0%, #17123a 100%);
+  box-shadow: 0 20px 50px rgba(11, 20, 36, 0.22);
 
-  &__seats {
-    @include stack(6px);
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(90deg, transparent, #000 70%);
+  }
 
-    input[type="range"] {
-      width: 100%;
-      accent-color: #7c4dff;
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  @include down(lg) {
+    grid-template-columns: 1fr;
+    padding: 28px 24px;
+  }
+
+  &__copy {
+    @include stack(16px);
+    align-items: flex-start;
+  }
+
+  &__eyebrow {
+    @include row(6px);
+    padding: 5px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: $radius-pill;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #ddd6fe;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: clamp(28px, 3.4vw, 40px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+
+  &__accent {
+    background: linear-gradient(90deg, $orange-light, $orange);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  &__lead {
+    margin: 0;
+    max-width: 560px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.74);
+  }
+
+  &__actions {
+    @include cluster(18px);
+    margin-top: 4px;
+  }
+
+  &__link {
+    @include row(4px);
+    font-size: 14px;
+    font-weight: 700;
+    color: $white;
+    text-decoration: none;
+    opacity: 0.85;
+
+    &:hover {
+      opacity: 1;
     }
   }
 
-  &__bars {
-    @include stack(14px);
+  &__facts {
+    @include stack(10px);
+    margin: 0;
   }
 
-  &__bar {
+  &__fact {
+    padding: 14px 18px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: $radius-2xl;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(6px);
+
+    dt {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    dd {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.68);
+    }
+  }
+}
+
+// The four reasons to own a CRM.
+.crm-why {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: 14px;
+
+  &__card {
+    @include stack(8px);
+    padding: 22px 20px;
+    border: 1px solid $line-faint;
+    border-radius: 18px;
+    background: $white;
+    box-shadow: $shadow-soft;
+    transition:
+      transform 0.18s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      border-color: rgba(124, 77, 255, 0.35);
+      box-shadow: 0 12px 30px rgba(124, 77, 255, 0.12);
+    }
+  }
+
+  &__icon {
+    @include center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 6px;
+    border-radius: 12px;
+    color: $white;
+    background: linear-gradient(135deg, $violet-soft, $violet);
+    box-shadow: 0 6px 16px rgba(124, 77, 255, 0.3);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: $ink;
+  }
+
+  &__desc {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.55;
+    color: $muted;
+  }
+}
+
+// Renting vs owning: controls and savings on the left, the cost of each CRM on the right.
+.crm-cost {
+  display: grid;
+  grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
+  border: 1px solid $line-faint;
+  border-radius: 22px;
+  background: $white;
+  box-shadow: $shadow-card;
+  overflow: hidden;
+
+  @include down(lg) {
+    grid-template-columns: 1fr;
+  }
+
+  &__panel {
+    @include stack(22px);
+    padding: 26px 24px;
+    background: linear-gradient(180deg, #f7f5ff 0%, #f2f8fc 100%);
+    border-right: 1px solid $line-faint;
+
+    @include down(lg) {
+      border-right: 0;
+      border-bottom: 1px solid $line-faint;
+    }
+  }
+
+  &__control {
+    @include stack(10px);
+  }
+
+  &__control-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $muted-light;
+  }
+
+  &__value {
+    font-family: $font-mono;
+    font-size: 28px;
+    font-weight: 800;
+    color: $ink;
+  }
+
+  &__range {
+    --fill: 20%;
+    width: 100%;
+    height: 6px;
+    margin: 6px 0;
+    border-radius: $radius-pill;
+    appearance: none;
+    background: linear-gradient(90deg, $violet-soft var(--fill), rgba(124, 77, 255, 0.15) var(--fill));
+    cursor: pointer;
+
+    &::-webkit-slider-thumb {
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      border: 4px solid $white;
+      border-radius: 50%;
+      background: $violet-soft;
+      box-shadow: 0 2px 8px rgba(124, 77, 255, 0.45);
+    }
+
+    &::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      border: 4px solid $white;
+      border-radius: 50%;
+      background: $violet-soft;
+      box-shadow: 0 2px 8px rgba(124, 77, 255, 0.45);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba(124, 77, 255, 0.5);
+      outline-offset: 6px;
+    }
+  }
+
+  &__scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: $muted-light;
+  }
+
+  &__years {
+    align-self: stretch;
+
+    > * {
+      flex: 1;
+    }
+  }
+
+  &__result {
     @include stack(6px);
+    margin-top: auto;
+    padding: 18px;
+    border-radius: 16px;
+    background: $white;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    box-shadow: $glow-green;
   }
 
-  &__bar-head {
+  &__saving {
+    font-family: $font-mono;
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $green-700;
+  }
+
+  &__note {
+    font-size: 13px;
+    line-height: 1.5;
+    color: $ink-muted;
+
+    &--muted {
+      padding-top: 8px;
+      border-top: 1px solid $line-faint;
+      font-size: 12px;
+      color: $muted-light;
+    }
+  }
+
+  &__list {
+    @include stack(6px);
+    padding: 18px 24px 22px;
+  }
+
+  &__row {
+    display: flex;
+    gap: 14px;
+    padding: 14px 12px;
+    border-radius: 14px;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: $bg-soft;
+    }
+
+    &--own {
+      margin-top: 6px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.07), rgba(16, 185, 129, 0.02));
+
+      &:hover {
+        background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.03));
+      }
+    }
+  }
+
+  &__mark {
+    --mark: #64748b;
+    @include center;
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    color: var(--mark);
+    background: color-mix(in srgb, var(--mark) 12%, white);
+    border: 1px solid color-mix(in srgb, var(--mark) 25%, white);
+
+    &--own {
+      color: $white;
+      background: linear-gradient(135deg, #34d399, #059669);
+      border: 0;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+  }
+
+  &__body {
+    @include stack(7px);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__row-head {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -163,24 +479,34 @@
     flex-wrap: wrap;
   }
 
+  &__name {
+    font-size: 14px;
+    font-weight: 800;
+    color: $ink;
+  }
+
+  &__plan {
+    margin-left: 4px;
+    font-weight: 600;
+    color: $muted-light;
+  }
+
   &__amount {
     font-family: $font-mono;
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 800;
-
-    &--rent {
-      color: $red-600;
-    }
+    color: $ink-soft;
 
     &--own {
-      color: $green-500;
+      font-size: 20px;
+      color: $green-700;
     }
   }
 
   &__track {
-    height: 12px;
-    border-radius: 999px;
-    background: $line-faint;
+    height: 8px;
+    border-radius: $radius-pill;
+    background: #eef2f7;
     overflow: hidden;
   }
 
@@ -188,28 +514,661 @@
     display: block;
     height: 100%;
     border-radius: inherit;
-    transition: width 0.2s ease;
-
-    &--rent {
-      background: linear-gradient(90deg, #f87171, #dc2626);
-    }
+    background: linear-gradient(90deg, #94a3b8, #64748b);
+    transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 
     &--own {
       background: linear-gradient(90deg, #34d399, #059669);
     }
   }
+
+  &__detail {
+    font-size: 12px;
+    color: $muted-light;
+  }
+
+  &__footnote {
+    margin: 10px 12px 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: $muted-light;
+  }
 }
 
-.crm-cost__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+// Small pieces shared by the CRM pages: section labels and round check marks.
+.crm-plan__covers-title {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $muted-light;
+}
+
+.crm-plan__check {
+  @include center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  border-radius: 50%;
+  color: $green-700;
+  background: $green-50;
+}
+
+// How it works: numbered steps joined by a line.
+.crm-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__step {
+    @include stack(6px);
+    position: relative;
+    padding: 20px;
+    border: 1px solid $line-faint;
+    border-radius: 18px;
+    background: $white;
+    box-shadow: $shadow-soft;
+  }
+
+  &__num {
+    @include center;
+    width: 34px;
+    height: 34px;
+    margin-bottom: 8px;
+    border-radius: 50%;
+    font-family: $font-mono;
+    font-weight: 800;
+    color: $white;
+    background: linear-gradient(135deg, $violet-soft, $cyan-600);
+    box-shadow: 0 4px 12px rgba(124, 77, 255, 0.3);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: $ink;
+  }
+
+  &__desc {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: $muted;
+  }
+}
+
+// Questions: two columns of expandable cards.
+.crm-faq {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
   gap: 12px;
-  flex-wrap: wrap;
+  align-items: start;
+
+  &__item {
+    border: 1px solid $line-faint;
+    border-radius: 14px;
+    background: $white;
+    transition: border-color 0.15s ease;
+
+    &[open] {
+      border-color: rgba(124, 77, 255, 0.3);
+
+      svg {
+        transform: rotate(180deg);
+      }
+    }
+
+    summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      color: $ink;
+      cursor: pointer;
+      list-style: none;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+
+      svg {
+        flex: none;
+        color: $muted-light;
+        transition: transform 0.2s ease;
+      }
+    }
+
+    p {
+      margin: 0;
+      padding: 0 18px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: $muted;
+    }
+  }
 }
 
-// Their own CRM, set apart from the rented ones.
-.crm-cost__bar--own {
-  padding-top: 12px;
-  border-top: 1px dashed $line-faint;
+// Closing call to action.
+.crm-cta {
+  @include cluster(20px);
+  justify-content: space-between;
+  padding: 28px 32px;
+  border-radius: 22px;
+  color: $white;
+  background:
+    radial-gradient(400px 200px at 100% 0%, rgba(255, 153, 0, 0.25), transparent 60%),
+    linear-gradient(135deg, #17123a, #0b1424);
+
+  &__title {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  &__text {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.72);
+  }
+}
+
+// ---------------------------------------------------------------- After launch: completion, Revisions, New features
+// A launched CRM the client and the team each mark complete.
+.crm-complete {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(240px, 1fr);
+  gap: 24px;
+  align-items: center;
+  padding: 24px 26px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(8, 145, 178, 0.05));
+
+  @include down(lg) {
+    grid-template-columns: 1fr;
+  }
+
+  &__copy {
+    @include stack(6px);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $ink;
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: $muted;
+  }
+
+  &__steps {
+    @include stack(10px);
+
+    > .btn {
+      align-self: flex-start;
+    }
+  }
+
+  &__step {
+    @include row(10px);
+    align-items: flex-start;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: $white;
+    border: 1px solid $line-faint;
+
+    &.is-done {
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+  }
+
+  &__dot {
+    @include center;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    margin-top: 1px;
+    border-radius: 50%;
+    border: 2px dashed $slate-300;
+    color: $white;
+
+    .is-done & {
+      border: 0;
+      background: $green-500;
+    }
+  }
+}
+
+// Revisions / New features explainer: examples, what we need, and the price.
+.crm-after {
+  @include stack(16px);
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 14px;
+  }
+
+  &__card {
+    @include stack(10px);
+    padding: 20px;
+    border: 1px solid $line-faint;
+    border-radius: 18px;
+    background: $white;
+    box-shadow: $shadow-soft;
+
+    &--price {
+      border-color: rgba(124, 77, 255, 0.25);
+      background: linear-gradient(180deg, #f7f5ff, #ffffff);
+    }
+  }
+
+  &__list {
+    @include stack(8px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      position: relative;
+      padding-left: 16px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: $ink-muted;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: 2px;
+        top: 7px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: $violet-soft;
+      }
+    }
+  }
+
+  &__needs {
+    @include stack(8px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      @include row(10px);
+      align-items: flex-start;
+      font-size: 13px;
+      line-height: 1.45;
+      color: $ink-muted;
+    }
+  }
+
+  &__num {
+    @include center;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+    color: $violet;
+    background: rgba(124, 77, 255, 0.12);
+  }
+
+  &__price {
+    font-family: $font-mono;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $ink;
+
+    small {
+      margin-left: 2px;
+      font-family: $font-sans;
+      font-size: 13px;
+      font-weight: 700;
+      color: $muted-light;
+    }
+  }
+
+  &__status {
+    @include row(6px);
+    align-items: flex-start;
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: $amber-700;
+    background: #fff7e6;
+
+    svg {
+      flex: none;
+      margin-top: 1px;
+    }
+
+    &.is-done {
+      color: $green-700;
+      background: $green-50;
+    }
+  }
+}
+
+// "First year free" pill on the Care plan.
+.crm-plan__care-free {
+  padding: 3px 10px;
+  border-radius: $radius-pill;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: $green-700;
+  background: $green-50;
+}
+
+
+// A rented CRM's brand logo on a white tile.
+.crm-cost__mark--logo {
+  background: $white;
+  border: 1px solid $line-soft;
+  box-shadow: $shadow-soft;
+}
+
+// ---------------------------------------------------------------- The package card (Your build)
+.crm-pkg {
+  border: 1px solid rgba(124, 77, 255, 0.22);
+  border-radius: 24px;
+  background: $white;
+  box-shadow: 0 18px 44px rgba(124, 77, 255, 0.1);
+  overflow: hidden;
+
+  // Header band: name, tagline and quick facts on the left; price and Request on the right.
+  &__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    gap: 28px;
+    align-items: center;
+    padding: 28px 32px;
+    background:
+      radial-gradient(520px 220px at 0% 0%, rgba(124, 77, 255, 0.12), transparent 65%),
+      linear-gradient(180deg, #faf8ff, #ffffff);
+    border-bottom: 1px solid rgba(124, 77, 255, 0.14);
+
+    @include down(lg) {
+      grid-template-columns: 1fr;
+      padding: 24px;
+    }
+  }
+
+  &__intro {
+    @include stack(10px);
+  }
+
+  &__name-row {
+    @include cluster(10px);
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: $ink;
+  }
+
+  &__tag {
+    padding: 4px 10px;
+    border-radius: $radius-pill;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: $orange-ink;
+    background: $peach;
+  }
+
+  &__tagline {
+    margin: 0;
+    max-width: 520px;
+    font-size: 15px;
+    line-height: 1.55;
+    color: $muted;
+  }
+
+  &__facts {
+    @include cluster(8px);
+    margin-top: 4px;
+  }
+
+  &__fact {
+    @include row(6px);
+    padding: 6px 12px;
+    border: 1px solid $line-faint;
+    border-radius: $radius-pill;
+    background: $white;
+    font-size: 12px;
+    font-weight: 700;
+    color: $ink-soft;
+
+    svg {
+      color: $violet;
+    }
+  }
+
+  &__buy {
+    @include stack(10px);
+    padding: 20px;
+    border: 1px solid rgba(124, 77, 255, 0.2);
+    border-radius: 18px;
+    background: $white;
+    box-shadow: 0 10px 28px rgba(11, 20, 36, 0.06);
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $muted-light;
+  }
+
+  &__amount {
+    font-family: $font-mono;
+    font-size: 40px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: $ink;
+  }
+
+  &__fine {
+    font-size: 12px;
+    line-height: 1.45;
+    color: $muted-light;
+    text-align: center;
+  }
+
+  &__body {
+    @include stack(18px);
+    padding: 28px 32px 30px;
+
+    @include down(lg) {
+      padding: 22px 24px 24px;
+    }
+  }
+
+  &__section-title {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $muted-light;
+  }
+
+  // Everything included, in four headed groups.
+  &__groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+    gap: 14px;
+  }
+
+  &__group {
+    @include stack(12px);
+    padding: 18px;
+    border: 1px solid $line-faint;
+    border-radius: 16px;
+    background: $bg-soft;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
+
+    &:hover {
+      border-color: rgba(124, 77, 255, 0.3);
+      background: $white;
+    }
+  }
+
+  &__group-head {
+    @include row(10px);
+  }
+
+  &__group-icon {
+    @include center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    color: $white;
+    background: linear-gradient(135deg, $violet-soft, $violet);
+    box-shadow: 0 4px 12px rgba(124, 77, 255, 0.28);
+  }
+
+  &__group-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: $ink;
+  }
+
+  &__list {
+    @include stack(9px);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      gap: 9px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: $ink-soft;
+    }
+
+    .crm-plan__check {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  // What the price covers, beside the Care plan.
+  &__extras {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 14px;
+  }
+
+  &__extra {
+    @include stack(12px);
+    padding: 20px;
+    border: 1px solid $line-faint;
+    border-radius: 16px;
+    background: $white;
+
+    &--care {
+      border-color: rgba(16, 185, 129, 0.28);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(8, 145, 178, 0.04));
+    }
+  }
+
+  &__covers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 10px 18px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.45;
+      color: $ink-soft;
+    }
+  }
+
+  &__covers-num {
+    @include center;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+    color: $violet;
+    background: rgba(124, 77, 255, 0.12);
+  }
+
+  &__care-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__care-price {
+    font-family: $font-mono;
+    font-size: 24px;
+    font-weight: 800;
+    color: $ink;
+
+    small {
+      margin-left: 4px;
+      font-family: $font-sans;
+      font-size: 13px;
+      font-weight: 700;
+      color: $muted-light;
+    }
+  }
+
+  &__note {
+    @include row(10px);
+    align-items: flex-start;
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: $peach;
+    font-size: 13px;
+    line-height: 1.5;
+    color: $orange-ink;
+
+    svg {
+      flex: none;
+      margin-top: 2px;
+    }
+  }
 }

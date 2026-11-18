@@ -142,6 +142,37 @@ function RequestCard({
         <p className="text-body u-ink crm-request__goal">{r.goal}</p>
       </div>
 
+      {/* The client's starting picture (not final): who logs in, and the menus they imagine. */}
+      {(r.portals?.length || r.menus?.length) ? (
+        <div className="inset stack stack--8">
+          {r.portals?.length ? (
+            <div className="stack stack--4">
+              <span className="kicker kicker--sm kicker--muted">PORTALS · {r.portals.length}</span>
+              <div className="cluster cluster--6">
+                {r.portals.map((x) => (
+                  <span className="tag-chip" key={x}>
+                    {x}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {r.menus?.length ? (
+            <div className="stack stack--4">
+              <span className="kicker kicker--sm kicker--muted">MENUS · {r.menus.length}</span>
+              <div className="cluster cluster--6">
+                {r.menus.map((x) => (
+                  <span className="tag-chip" key={x}>
+                    {x}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          <span className="text-tiny">A starting point from the client, to go through on the discovery call.</span>
+        </div>
+      ) : null}
+
       {/* Whether you've invoiced them yet, for the package they chose. */}
       <RequestInvoiceRow
         invoice={r.invoice ?? null}

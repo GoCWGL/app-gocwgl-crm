@@ -116,3 +116,30 @@
   flex: 0 0 auto;
   width: auto;
 }
+
+// Completion: the client and GoCWGL each mark a launched build complete.
+.build-completion {
+  @include stack(10px);
+  margin-top: 12px;
+
+  &__sides {
+    @include stack(6px);
+  }
+
+  &__side {
+    @include row(8px);
+    align-items: flex-start;
+    font-size: 13px;
+    color: $muted;
+
+    svg {
+      flex: none;
+      margin-top: 2px;
+      color: $amber-500;
+    }
+
+    &.is-done svg {
+      color: $green-500;
+    }
+  }
+}

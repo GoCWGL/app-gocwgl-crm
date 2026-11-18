@@ -21,10 +21,10 @@ const PACKAGES: Array<{ key: PackageKey; label: string; menu: string; on: string
   },
   {
     key: "showFunnelPackages",
-    label: "Funnel packages",
-    menu: "Request Funnel",
-    on: "They see Request Funnel with the funnel packages and prices.",
-    off: "Hidden (the default): they can’t see the funnel packages or request a new funnel build. Funnels they already have still show.",
+    label: "Funnel menu",
+    menu: "The Funnel menu",
+    on: "They see the Funnel menu: Request Funnel with the packages and prices, their funnel builds and Build progress.",
+    off: "Hidden (the default): no Funnel menu in their portal, so no funnel packages, funnel builds or funnel requests.",
     fallback: false,
   },
   {
@@ -37,7 +37,7 @@ const PACKAGES: Array<{ key: PackageKey; label: string; menu: string; on: string
   },
 ];
 
-/** Per-client switches for their portal menu: which packages menus show (Request CRM, Request Funnel, Request VA). */
+/** Per-client switches for their portal menu: Request CRM, the whole Funnel menu, and Request VA. */
 export function PortalMenuCard({ contact: c }: { contact: ContactOut }) {
   const { update } = useAdmin();
   const canWrite = canWriteCrm(useMe().data);
@@ -60,7 +60,7 @@ export function PortalMenuCard({ contact: c }: { contact: ContactOut }) {
         </span>
         <span className="stack stack--2 u-grow">
           <span className="kicker">PORTAL MENU</span>
-          <span className="text-tiny">Choose which packages menus this client sees in their portal.</span>
+          <span className="text-tiny">Choose which menus this client sees in their portal.</span>
         </span>
       </div>
       {PACKAGES.map((p) => {

@@ -19,8 +19,18 @@ export function useHasTraining(): { known: boolean; has: boolean } {
 }
 
 /**
+ * Whether the team turned on the Funnel menu for this client (the client profile's Portal menu switch). Off by
+ * default: until then the whole Funnel menu is hidden and the Funnels page opens the dashboard. `known` is false
+ * while loading.
+ */
+export function useFunnelMenu(): { known: boolean; has: boolean } {
+  const overview = useOverview(30);
+  return { known: overview.isSuccess, has: overview.data?.showFunnelPackages === true };
+}
+
+/**
  * The CRM packages ("Request CRM") show unless the team turned them off for this client; the Funnel packages
- * ("Request Funnel") and VA packages ("Request VA") only once the team turns them on.
+ * ("Request Funnel", with the whole Funnel menu) and VA packages ("Request VA") only once the team turns them on.
  */
 export function useShowPackages(kind: "crm" | "funnels" | "va"): boolean {
   const overview = useOverview(30).data;

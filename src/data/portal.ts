@@ -76,7 +76,7 @@ export type PortalMenuItem = {
   tab: PortalTab;
   label: string;
   icon: IconName;
-  view?: "builds" | "packages" | "progress";
+  view?: "builds" | "packages" | "progress" | CrmAfterLaunchView;
   /** Shown only once the client has an active VA: new clients don't see it yet. */
   needsVa?: boolean;
   /** Stands out in the brand orange (Request CRM, Request Funnel). */
@@ -105,6 +105,9 @@ const page = (tab: PortalTab, label: string, icon: IconName, extra?: Partial<Por
   ...extra,
 });
 
+/** CRM pages that open once a CRM build is launched: change what's built, or ask for something new. */
+export type CrmAfterLaunchView = "revisions" | "features";
+
 /** Build pages (CRM, Funnels) share the same three tabs. */
 const buildPages = (tab: "crm" | "funnels", noun: string, request: string, icon: IconName): PortalMenuItem[] => [
   // First and highlighted: where the client asks for a new one (the packages to pick from).
@@ -127,7 +130,16 @@ export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
         label: "CRM",
         icon: "users",
         description: "Your CRM builds, packages and progress",
-        groups: [{ items: buildPages("crm", "CRM", "Request CRM", "rocket") }],
+        groups: [
+          { items: buildPages("crm", "CRM", "Request CRM", "rocket") },
+          {
+            title: "After launch",
+            items: [
+              page("crm", "Revisions", "edit", { key: "crm-revisions", view: "revisions" }),
+              page("crm", "New features", "bolt", { key: "crm-features", view: "features" }),
+            ],
+          },
+        ],
       },
       {
         key: "funnel-menu",
@@ -277,6 +289,8 @@ export const CRM_PACKAGES: Record<
     tag?: string;
     timeline: string;
     includes: string[];
+    /** `includes` sorted into a few headed groups for the package card (everything in `includes`, once). */
+    groups?: Array<{ title: string; icon: IconName; items: string[] }>;
     /** Shown under the list, e.g. what changes cost after launch. */
     note?: string;
   }
@@ -321,7 +335,46 @@ export const CRM_PACKAGES: Record<
       "Your branding, on your own domain",
       "Team training and 90 days of priority support",
     ],
-    note: "After launch, new features or menus start at $500 each, depending on how complex they are.",
+    groups: [
+      {
+        title: "Sales and contacts",
+        icon: "users",
+        items: [
+          "Contacts, companies and sales pipelines, with tags and notes",
+          "Custom records for your business (jobs, properties, cases, orders…)",
+          "Custom reports and dashboards",
+        ],
+      },
+      {
+        title: "Automation and messaging",
+        icon: "bolt",
+        items: [
+          "Automations, email campaigns, calendar booking and forms",
+          "SMS reminders and call logging",
+          "AI helpers: lead scoring, email drafts and call summaries",
+        ],
+      },
+      {
+        title: "Payments and portals",
+        icon: "card",
+        items: [
+          "Invoicing and online payments",
+          "A client portal for your own customers",
+          "Roles and permissions, with unlimited team logins",
+        ],
+      },
+      {
+        title: "Setup and launch",
+        icon: "rocket",
+        items: [
+          "Integrations with the tools you already use (accounting, Zapier, webhooks, API)",
+          "Data moved over from your current CRM",
+          "Your branding, on your own domain",
+          "Team training and 90 days of priority support",
+        ],
+      },
+    ],
+    note: "Once your CRM is launched and you and GoCWGL both mark it complete, each new feature starts at $100, depending on how complex it is.",
   },
 };
 
@@ -354,12 +407,16 @@ export const CRM_WHY_OWN = [
 ] as const;
 
 /**
- * Rented CRMs the cost comparison uses, at their published list prices (checked November 2026; update them when they
+ * Rented CRMs the cost comparison uses (`logo`: the brand logo beside it, from Simple Icons; without one, the `mark`
+ * initials in `color`), at their published list prices (checked November 2026; update them when they
  * change). Each costs: setup + (flat monthly + per-login monthly × logins) × months.
  */
 export const CRM_RENTED_OPTIONS = [
   {
     key: "hubspot-pro",
+    logo: "hubspot",
+    mark: "HS",
+    color: "#ff7a59",
     name: "HubSpot",
     plan: "Sales Hub Professional",
     perSeatMonthlyCents: 9_000,
@@ -369,6 +426,9 @@ export const CRM_RENTED_OPTIONS = [
   },
   {
     key: "hubspot-enterprise",
+    logo: "hubspot",
+    mark: "HS",
+    color: "#ff7a59",
     name: "HubSpot",
     plan: "Sales Hub Enterprise",
     perSeatMonthlyCents: 15_000,
@@ -378,6 +438,9 @@ export const CRM_RENTED_OPTIONS = [
   },
   {
     key: "ghl-unlimited",
+    logo: "gohighlevel",
+    mark: "HL",
+    color: "#2563eb",
     name: "GoHighLevel",
     plan: "Unlimited",
     perSeatMonthlyCents: 0,
@@ -387,6 +450,9 @@ export const CRM_RENTED_OPTIONS = [
   },
   {
     key: "zoho-enterprise",
+    logo: "zoho",
+    mark: "Z",
+    color: "#e42527",
     name: "Zoho CRM",
     plan: "Enterprise",
     perSeatMonthlyCents: 4_000,
@@ -402,6 +468,24 @@ export const CRM_COMPARISON = {
   maxSeats: 50,
   periods: [5, 7, 10] as const,
 };
+
+/**
+ * The yearly Care plan after launch: keeps the CRM secure and up to date, with unlimited revisions to what's built.
+ * Free for the first `freeYears` after launch, then `priceCents` a year. New features are quoted separately
+ * (`CRM_FEATURE_FROM_CENTS`).
+ */
+export const CRM_CARE_PLAN = {
+  priceCents: 50_000,
+  freeYears: 1,
+  includes: [
+    "Security updates, backups and monitoring",
+    "Code, libraries and hosting kept up to date",
+    "Unlimited revisions to what’s already built",
+  ],
+};
+
+/** New features (new menus, records, integrations, reports) start at this once the CRM is complete. */
+export const CRM_FEATURE_FROM_CENTS = 10_000;
 
 /** What the Custom CRM price pays for, shown under "Why it costs what it does". */
 export const CRM_PRICE_BREAKDOWN = [
@@ -420,12 +504,19 @@ export const CRM_STEPS = [
 
 export const CRM_FAQ = [
   { q: "Do I own my CRM and my data?", a: "Yes. Everything we build and every record in it is yours, and you can export your data at any time." },
-  { q: "Are there monthly fees?", a: "The build is a one-time price. Hosting and ongoing changes can be covered by an optional care plan." },
+  {
+    q: "Are there monthly fees?",
+    a: "No monthly or per-login fees. The build is a one-time price. Your first year after launch is free: security updates, keeping your code up to date, and unlimited revisions. After that, the Care plan is $500 a year.",
+  },
+  {
+    q: "What’s the difference between a revision and a new feature?",
+    a: "A revision changes something already in your CRM: wording, fields, layout, pipeline stages, an automation’s timing. A new feature adds something it doesn’t do yet: a new menu, record type, integration or report. Revisions are unlimited with the Care plan; new features are quoted.",
+  },
   { q: "Can you move my data from my current CRM?", a: "Yes. We import your spreadsheets and move your data over from your current CRM." },
   { q: "Not sure it’s the right fit?", a: "Book a call. We go through what you need on the call, before you pay anything." },
   {
     q: "Can I add features after my CRM is built?",
-    a: "Yes. Once your Custom CRM is live, each new feature or menu starts at $500, depending on how complex it is. We quote it before any work starts.",
+    a: "Yes. Once your CRM is launched and you and GoCWGL both mark it complete, each new feature starts at $100, depending on how complex it is. Request it from New features in the CRM menu and we quote it before any work starts.",
   },
   { q: "How do I pay?", a: "After the call we send you an invoice for the agreed package. It shows up in Invoices." },
 ];

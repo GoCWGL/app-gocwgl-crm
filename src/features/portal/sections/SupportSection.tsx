@@ -20,7 +20,7 @@ import {
 import { CrmBugButtonCard } from "../components/CrmBugButtonCard";
 import { usePortal, type SupportDraft } from "../state/PortalContext";
 
-const TICKET_TONES: Record<string, Tone> = {
+export const TICKET_TONES: Record<string, Tone> = {
   "In progress": "purple",
   New: "cyan",
   "Waiting on client": "amber",
@@ -28,7 +28,7 @@ const TICKET_TONES: Record<string, Tone> = {
   Done: "green",
 };
 
-const TYPE_LABELS: Record<string, string> = { change: "Change request", feature: "New feature", bug: "Bug", question: "Question" };
+export const TYPE_LABELS: Record<string, string> = { change: "Change request", feature: "New feature", bug: "Bug", question: "Question" };
 
 export function SupportSection() {
   const { state, update } = usePortal();
@@ -228,7 +228,7 @@ function RequestsView({ draft, setDraft }: { draft: SupportDraft; setDraft: (p: 
 }
 
 /** A request's conversation with the team (internal team notes are never sent to the portal). */
-function TicketThread({ ticket, readOnly }: { ticket: TicketOut; readOnly: boolean }) {
+export function TicketThread({ ticket, readOnly }: { ticket: TicketOut; readOnly: boolean }) {
   const reply = useReplyPortalTicket();
   const close = useClosePortalTicket();
   const [text, setText] = useState("");

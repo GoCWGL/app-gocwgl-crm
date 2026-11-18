@@ -45,6 +45,10 @@ export const useToggleProjectTask = () =>
   useApiMutation((v: { projectId: string; taskId: string; done: boolean }) => api.toggleProjectTask(v.projectId, v.taskId, v.done), {
     invalidate: (_, v) => projectKeys(v.projectId),
   });
+export const useSetTeamComplete = () =>
+  useApiMutation((v: { projectId: string; complete: boolean }) => api.setTeamComplete(v.projectId, v.complete), {
+    invalidate: (_, v) => projectKeys(v.projectId),
+  });
 export const usePostProjectUpdate = () =>
   useApiMutation((v: { projectId: string; text: string }) => api.postProjectUpdate(v.projectId, v.text), {
     invalidate: (_, v) => projectKeys(v.projectId),
@@ -96,6 +100,7 @@ export const useCommentOnClientEmbed = () =>
 export const usePortalCrmRequests = () => useQuery({ queryKey: qk.portalCrmRequests, queryFn: api.listPortalCrmRequests });
 export const useCreateCrmRequest = () => useApiMutation((v: CrmRequestIn) => api.createCrmRequest(v), { invalidate: [qk.portalCrmRequests] });
 export const usePortalBuilds = () => useQuery({ queryKey: qk.portalBuilds, queryFn: api.listPortalBuilds });
+export const useCompletePortalBuild = () => useApiMutation(api.completePortalBuild, { invalidate: [qk.portalBuilds] });
 export const useAssets = () => useQuery({ queryKey: qk.assets, queryFn: () => api.listAssets() });
 export const useUploadAsset = () =>
   useApiMutation((v: { file: File; category?: FileCategory }) => api.uploadAsset(v.file, v.category), { invalidate: [qk.assets] });

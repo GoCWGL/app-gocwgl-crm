@@ -88,6 +88,7 @@ export type ClockInIn = S["ClockInIn"];
 export type ClockInOut = S["ClockInOut"];
 export type ClockOutOut = S["ClockOutOut"];
 export type CommentIn = S["CommentIn"];
+export type CompletionIn = S["CompletionIn"];
 export type ConditionStep = S["ConditionStep"];
 export type ConfirmationPreviewIn = S["ConfirmationPreviewIn"];
 export type ConfirmationPreviewOut = S["ConfirmationPreviewOut"];

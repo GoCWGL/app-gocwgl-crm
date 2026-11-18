@@ -48,6 +48,7 @@ import { FunnelRequestsPanel, openFunnelRequests } from "./FunnelRequestsPanel";
 import { useAdminFunnels } from "@/utils/hooks/usePortal";
 import { DeleteBuildModal } from "./DeleteBuildModal";
 import { CrmRequestsPanel } from "./CrmRequestsPanel";
+import { BuildCompletion } from "./BuildCompletion";
 
 const statusTone = (status: string) => PROJECT_STATUS_TONES[status as ProjectStatus] ?? "neutral";
 
@@ -178,7 +179,7 @@ export function ProgressSection({ kind }: { kind: BuildKind }) {
                       <span className={cn("project-list__pct", pct === 100 && "u-green")}>{pct}%</span>
                     </div>
                     <ProgressBar value={pct} variant="sweep" size="md" />
-                    <Badge tone={statusTone(status)}>{status}</Badge>
+                    <Badge tone={p?.completed ? "green" : statusTone(status)}>{p?.completed ? "Complete" : status}</Badge>
                   </button>
                 );
               })}
@@ -464,6 +465,7 @@ function ProjectDetails({
           </div>
         )}
         {confirmDelete && <DeleteBuildModal name={name} project={project} otherBuilds={otherBuilds} onClose={() => setConfirmDelete(false)} />}
+        <BuildCompletion project={project} canWrite={isAdmin} />
       </div>
       <FormError error={error} />
 

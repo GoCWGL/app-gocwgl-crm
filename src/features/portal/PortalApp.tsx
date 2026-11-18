@@ -6,7 +6,7 @@ import { useEffect, type ComponentType, type ReactNode } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button, Toast } from "@/components/ui";
 import { HIDDEN_PORTAL_TABS, PORTAL_GROUP_OF, PORTAL_PAGES, VA_ONLY_TABS, type PortalTab } from "@/data/portal";
-import { useHasTraining, useHasVaWork } from "./lib/vaAccess";
+import { useFunnelMenu, useHasTraining, useHasVaWork } from "./lib/vaAccess";
 import { RequireClient, SessionSplash } from "@/utils/auth/guards";
 import { setViewAs, useSession } from "@/utils/auth/session";
 import { useContactsPage } from "@/utils/hooks/useContacts";
@@ -146,10 +146,13 @@ function PortalLayout() {
   const vaWork = useHasVaWork();
   // Training opens once GoCWGL assigns the client a training.
   const training = useHasTraining();
+  // Funnels opens once the team turns on the Funnel menu for this client.
+  const funnelMenu = useFunnelMenu();
   const locked =
     HIDDEN_PORTAL_TABS.has(state.tab) ||
     (vaWork.known && !vaWork.has && VA_ONLY_TABS.has(state.tab)) ||
-    (state.tab === "training" && training.known && !training.has);
+    (state.tab === "training" && training.known && !training.has) ||
+    (state.tab === "funnels" && funnelMenu.known && !funnelMenu.has);
   useEffect(() => {
     if (locked) update({ tab: "dashboard" });
   }, [locked, update]);

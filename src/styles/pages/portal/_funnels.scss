@@ -240,3 +240,59 @@
   gap: 4px 10px;
   align-items: center;
 }
+
+// Request a CRM: "just a starting point" note, portal and menu chips.
+.crm-req-note {
+  @include row(10px);
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid rgba(124, 77, 255, 0.25);
+  border-radius: $radius-lg;
+  background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(8, 145, 178, 0.05));
+  font-size: 13px;
+  line-height: 1.5;
+  color: $ink-muted;
+
+  svg {
+    flex: none;
+    margin-top: 2px;
+    color: $violet;
+  }
+
+  strong {
+    color: $ink;
+  }
+}
+
+.crm-req-portal small {
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.crm-req-chip {
+  padding-right: 6px;
+  cursor: default;
+
+  &__remove {
+    @include button-reset;
+    @include center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: inherit;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+.crm-req-suggest {
+  margin-top: 4px;
+
+  .chip:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
