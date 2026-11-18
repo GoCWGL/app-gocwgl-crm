@@ -32,7 +32,9 @@ export function AssetsSection() {
   const [kind, setKind] = useState<KindFilter>("");
   const [category, setCategory] = useState("");
   // Passwords need "confirm it's you" on this device; it lasts while you're online and locks after 24 hours away.
-  const unlockStatus = useUnlockStatus(ready && !staff);
+  // The VA, or a super admin viewing as them (confirming with their own password); other staff never see passwords.
+  const unlockStatus = useUnlockStatus(ready);
+  const allowed = !!unlockStatus.data?.allowed;
   const lock = useLockAssets();
   const gate = useAssetUnlockGate(unlockStatus.data);
   const unlocked = !!unlockStatus.data?.unlocked;
@@ -79,10 +81,18 @@ export function AssetsSection() {
               <b>{count("note")}</b> notes
             </span>
           </div>
-          {!staff && (
+          {unlockStatus.data && !allowed ? (
+            <div className="ast-lock is-staff">
+              <Icon name="eye" size={14} />
+              <span>You’re viewing as this VA. Only the VA and super admins can view or copy passwords.</span>
+            </div>
+          ) : (
             <div className={cn("ast-lock", unlocked && "is-open")}>
               <Icon name={unlocked ? "check" : "lock"} size={14} />
-              <span>{unlocked ? "Passwords unlocked on this device" : "Passwords locked"}</span>
+              <span>
+                {unlocked ? "Passwords unlocked on this device" : "Passwords locked"}
+                {staff && (unlocked ? " · viewing as this VA" : " · viewing as this VA, confirm with your own password")}
+              </span>
               {unlocked ? (
                 <Button size="sm" variant="link" onClick={() => lock.mutate()} disabled={lock.isPending}>
                   Lock
@@ -137,7 +147,7 @@ export function AssetsSection() {
           <AssetList
             assets={sortByCategory(shown)}
             loadPassword={(id) => gate.guard(async () => (await myAssetPassword(id)).password)}
-            passwordBlocked={staff ? "Passwords are only shown to the VA." : null}
+            passwordBlocked={unlockStatus.data && !allowed ? "Only the VA and super admins can view or copy passwords" : null}
             asideLabel={current ? undefined : "Client"}
             aside={current ? undefined : (a) => (
               <span className="ast-client" title={clientLabel(a.client)}>

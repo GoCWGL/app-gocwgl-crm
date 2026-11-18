@@ -1886,6 +1886,7 @@ export interface paths {
         /**
          * Unlock Assets
          * @description Confirm it's you: your password (or the emailed code), plus your 2-step code if it's on. 5 tries per 15 minutes.
+         *     A super admin viewing as the VA confirms with their own password.
          */
         post: operations["unlock_assets_api_va_assets_unlock_post"];
         /**
@@ -6334,7 +6335,8 @@ export interface paths {
         };
         /**
          * Asset Password
-         * @description The saved password (view-only portal members can't see passwords). Each view is in the audit log.
+         * @description The saved password. View-only portal members can't see passwords, and of the GoCWGL team only super admins
+         *     (in "View as client") can. Each view is in the audit log.
          */
         get: operations["asset_password_api_portal_va_assets__asset_id__password_get"];
         put?: never;
@@ -14001,6 +14003,8 @@ export interface components {
         };
         /** UnlockStatus */
         UnlockStatus: {
+            /** Allowed */
+            allowed: boolean;
             /** Unlocked */
             unlocked: boolean;
             /** Locksafterawayhours */

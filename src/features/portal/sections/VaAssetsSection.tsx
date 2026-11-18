@@ -25,6 +25,7 @@ import type { AssetOut, AssetVa } from "@/utils/api/models";
 import { clientAssetPassword } from "@/utils/api/vaAssets";
 import { useClientAssets, useCreateAsset, useDeleteAsset, useUpdateAsset } from "@/utils/hooks/useVaAssets";
 import { ASSET_KINDS, AssetList, sortByCategory, matchesAsset, type AssetKind } from "../components/AssetList";
+import { isSuperAdmin, useSession } from "@/utils/auth/session";
 import { usePortal } from "../state/PortalContext";
 
 type KindFilter = "" | AssetKind;
@@ -35,6 +36,9 @@ type KindFilter = "" | AssetKind;
  */
 export function VaAssetsSection() {
   const { readOnly } = usePortal();
+  const { user } = useSession();
+  // Of the GoCWGL team, only super admins (in "View as client") can see a client's passwords.
+  const staffBlocked = !!user?.isStaff && !isSuperAdmin(user);
   const data = useClientAssets();
   const assets = data.data?.assets ?? [];
   const vas = data.data?.vas ?? [];
@@ -91,7 +95,13 @@ export function VaAssetsSection() {
           <AssetList
             assets={sortByCategory(shown)}
             loadPassword={async (id) => (await clientAssetPassword(id)).password}
-            passwordBlocked={readOnly ? "Your access to this portal is view-only, so passwords stay hidden." : null}
+            passwordBlocked={
+              staffBlocked
+                ? "Only super admins can view or copy a client’s passwords."
+                : readOnly
+                  ? "Your access to this portal is view-only, so passwords stay hidden."
+                  : null
+            }
             asideLabel="Shared with"
             aside={(a) => <SharedWith ids={a.vaIds} vaById={vaById} />}
             actions={

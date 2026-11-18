@@ -234,16 +234,19 @@ function PasswordField({ id, load, blocked }: { id: string; load: (id: string) =
       <span className={cn("ast-field__value", shown === null && "is-masked")} translate="no" aria-live="polite">
         {error ? error.short : (shown ?? "••••••••••")}
       </span>
-      {!blocked && (
-        <>
-          <IconButton size="sm" ghost label={shown !== null ? "Hide password" : "Show password"} onClick={show} disabled={busy}>
-            <Icon name="eye" size={13} />
-          </IconButton>
-          <IconButton size="sm" ghost label={copied ? "Copied. Clears from the clipboard in 30 seconds" : "Copy password"} onClick={copyIt} disabled={busy}>
-            <Icon name={copied ? "check" : "copy"} size={13} />
-          </IconButton>
-        </>
-      )}
+      {/* Shown greyed out when this person can't see passwords (staff viewing as a VA, view-only members), with the reason on hover. */}
+      <IconButton size="sm" ghost label={blocked ?? (shown !== null ? "Hide password" : "Show password")} onClick={show} disabled={busy || !!blocked}>
+        <Icon name="eye" size={13} />
+      </IconButton>
+      <IconButton
+        size="sm"
+        ghost
+        label={blocked ?? (copied ? "Copied. Clears from the clipboard in 30 seconds" : "Copy password")}
+        onClick={copyIt}
+        disabled={busy || !!blocked}
+      >
+        <Icon name={copied ? "check" : "copy"} size={13} />
+      </IconButton>
     </div>
   );
 }
