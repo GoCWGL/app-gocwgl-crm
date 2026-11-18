@@ -260,7 +260,7 @@ function ClientCard({
               size="sm"
               variant="primary"
               disabled={running || start.isPending}
-              onClick={() => start.mutate({ contactId: c.id, stopRunning: true }, { onSuccess: () => goTo("time") })}
+              onClick={() => start.mutate({ contactId: c.id, stopRunning: true }, { onSuccess: () => goTo("time", c.id) })}
             >
               <Icon name="play" size={12} /> {running ? "Tracking" : "Start timer"}
             </Button>
@@ -272,7 +272,7 @@ function ClientCard({
   );
 }
 
-const money = (cents: number | null | undefined) => (cents != null ? `${formatCentsExact(cents)}/h` : "Not set");
+export const money = (cents: number | null | undefined) => (cents != null ? `${formatCentsExact(cents)}/h` : "Not set");
 
 /** The client's profile, for the VA: contact details, how long they've worked together, their rate and tags. */
 function ClientProfile({
@@ -378,7 +378,7 @@ function ClientProfile({
         </section>
 
         {c.active && (
-          <Button variant="outline" onClick={() => goTo("time")}>
+          <Button variant="outline" onClick={() => goTo("time", c.id)}>
             <Icon name="clock" size={14} /> Open the Time tracker
           </Button>
         )}

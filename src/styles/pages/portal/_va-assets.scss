@@ -453,6 +453,13 @@ $ast-cols: minmax(190px, 1.2fr) minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.75fr
     @include mono-label(10.5px, 0.12em, $muted);
   }
 
+  // The client picked in the menu (VA portal › Active clients).
+  &__name {
+    font-size: 16px;
+    font-weight: 800;
+    color: $ink;
+  }
+
   &__stats {
     display: flex;
     flex-wrap: wrap;

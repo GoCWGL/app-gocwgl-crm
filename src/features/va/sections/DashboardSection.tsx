@@ -58,7 +58,7 @@ export function DashboardSection() {
             </strong>
           </span>
           {running && <span className="va-now__clock">{hms(elapsed)}</span>}
-          <Button variant={running ? "outline" : "primary"} onClick={() => goTo("time")}>
+          <Button variant={running ? "outline" : "primary"} onClick={() => goTo("time", running?.client?.id)}>
             {running ? "Open tracker" : "Start tracking"} <Icon name="arrowRight" size={14} />
           </Button>
         </section>

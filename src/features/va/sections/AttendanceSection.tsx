@@ -8,17 +8,29 @@ import { ATTENDANCE_RANGES, AttendanceDays, useAttendanceRange } from "../compon
 import { useVaAccess } from "../lib/access";
 import { browserZone, minutesLabel, scheduleLabel, statusBadge, timeAt, whenLabel } from "../lib/attendance";
 import { clientLabel, hms, rangeLabel } from "../lib/time";
+import { useVa } from "../state/VaContext";
 
 /**
  * VA portal › Attendance: clock in when you start work for a client and clock out when you stop. Each client sets
- * your schedule; clocking in after its start (plus a few minutes' grace) shows them you were late.
+ * your schedule; clocking in after its start (plus a few minutes' grace) shows them you were late. Shows the client
+ * picked under Active clients in the menu.
  */
 export function AttendanceSection() {
   const { ready } = useVaAccess();
   const { range, setRange, start, end, dates } = useAttendanceRange();
   const data = useMyAttendance(start, end, ready);
-  const clients = data.data?.clients ?? [];
-  const summary = data.data?.summary;
+  // Only the client picked in the menu (all of them until one is picked).
+  const { client } = useVa();
+  const mine = <T extends { client: { id: string } }>(rows: T[]) => (client ? rows.filter((r) => r.client.id === client) : rows);
+  const clients = mine(data.data?.clients ?? []);
+  const days = mine(data.data?.days ?? []);
+  // Counted the same way as the server's summary, for this client's days.
+  const summary = data.data && {
+    onTime: days.filter((d) => d.status === "on_time").length,
+    late: days.filter((d) => d.status === "late").length,
+    absent: days.filter((d) => d.status === "absent").length,
+    workedSeconds: days.reduce((t, d) => t + d.workedSeconds, 0),
+  };
   // Running clock-ins tick forward between refreshes.
   const now = useNow();
   const since = Math.max(0, (now - data.dataUpdatedAt) / 1000);
@@ -59,7 +71,7 @@ export function AttendanceSection() {
 
         <AttendanceDays
           whoLabel="Client"
-          rows={(data.data?.days ?? []).map((d) => ({ ...d, who: { id: d.client.id, name: clientLabel(d.client) } }))}
+          rows={days.map((d) => ({ ...d, who: { id: d.client.id, name: clientLabel(d.client) } }))}
           empty="No work days in this range yet."
         />
       </LoadState>

@@ -65,8 +65,9 @@ export function TasksSection() {
     const d = new Date();
     return iso(new Date(d.getFullYear(), d.getMonth(), d.getDate() + 30));
   });
-  const all = useMemo(() => query.data ?? [], [query.data]);
-  const { goTo } = useVa();
+  // Only the client picked under Active clients in the menu (all of them until one is picked).
+  const { goTo, client: scope } = useVa();
+  const all = useMemo(() => (query.data ?? []).filter((t) => !scope || t.contactId === scope), [query.data, scope]);
   const [timerNote, setTimerNote] = useState("");
   const [client, setClient] = useState("");
   const [search, setSearch] = useState("");
@@ -145,17 +146,19 @@ export function TasksSection() {
         }
         filters={
           <>
-            <TaskFilter
-              icon="building"
-              label="Client"
-              value={picked}
-              onChange={setClient}
-              active={!!picked}
-              options={[
-                { value: "", label: `All clients (${clients.length})` },
-                ...clients.map((c) => ({ value: c.id, label: c.open ? `${c.name} · ${c.open} open` : c.name })),
-              ]}
-            />
+            {!scope && (
+              <TaskFilter
+                icon="building"
+                label="Client"
+                value={picked}
+                onChange={setClient}
+                active={!!picked}
+                options={[
+                  { value: "", label: `All clients (${clients.length})` },
+                  ...clients.map((c) => ({ value: c.id, label: c.open ? `${c.name} · ${c.open} open` : c.name })),
+                ]}
+              />
+            )}
             <TaskFilter
               icon="calendar"
               label="Dates by"

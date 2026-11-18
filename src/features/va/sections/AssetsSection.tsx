@@ -12,6 +12,7 @@ import { useLockAssets, useMyAssets, useUnlockStatus } from "@/utils/hooks/useVa
 import { useAssetUnlockGate } from "../components/AssetUnlock";
 import { useVaAccess } from "../lib/access";
 import { clientLabel } from "../lib/time";
+import { useVa } from "../state/VaContext";
 
 type KindFilter = "" | AssetKind;
 const NO_CATEGORY = "__none";
@@ -24,7 +25,10 @@ const NO_CATEGORY = "__none";
  */
 export function AssetsSection() {
   const { ready, staff } = useVaAccess();
-  const [clientId, setClientId] = useState("");
+  // The client picked under Active clients in the menu; the picker here is only for when none is picked.
+  const { client } = useVa();
+  const [picked, setPicked] = useState("");
+  const clientId = client || picked;
   const data = useMyAssets(clientId, ready);
   const clients = data.data?.clients ?? [];
   const assets = data.data?.assets ?? [];
@@ -39,7 +43,7 @@ export function AssetsSection() {
   const gate = useAssetUnlockGate(unlockStatus.data);
   const unlocked = !!unlockStatus.data?.unlocked;
 
-  const pickClient = (id: string) => (setClientId(id), setCategory(""));
+  const pickClient = (id: string) => (setPicked(id), setCategory(""));
   const categories = categoryCounts(assets);
   const shown = assets.filter(
     (a) => (!kind || a.kind === kind) && (!category || (a.category || NO_CATEGORY) === category) && matchesAsset(a, query),
@@ -54,18 +58,24 @@ export function AssetsSection() {
         <div className="card ast-picker">
           <Avatar name={current ? clientLabel(current) : "All"} tone={current ? avatarTone(current.id) : "slate"} />
           <div className="ast-picker__text">
-            <label htmlFor="ast-client" className="ast-picker__label">
+            <label htmlFor={client ? undefined : "ast-client"} className="ast-picker__label">
               Client
             </label>
-            <Select
-              id="ast-client"
-              value={clientId}
-              onChange={(e) => pickClient(e.target.value)}
-              options={[
-                { value: "", label: `All clients (${total})` },
-                ...clients.map((c) => ({ value: c.id, label: `${clientLabel(c)} (${c.assetCount})` })),
-              ]}
-            />
+            {client ? (
+              <strong className="ast-picker__name">
+                {current ? clientLabel(current) : "This client"}
+              </strong>
+            ) : (
+              <Select
+                id="ast-client"
+                value={clientId}
+                onChange={(e) => pickClient(e.target.value)}
+                options={[
+                  { value: "", label: `All clients (${total})` },
+                  ...clients.map((c) => ({ value: c.id, label: `${clientLabel(c)} (${c.assetCount})` })),
+                ]}
+              />
+            )}
           </div>
           <div className="ast-picker__stats">
             <span>

@@ -9282,3 +9282,109 @@ $pdf-side: #f5f6f8;
   background: $bg;
   color: $ink-soft;
 }
+
+
+// VA portal › (client) › Client details.
+.va-cdp {
+  &__head {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    padding: 18px 20px;
+    border-top: 3px solid var(--client);
+  }
+
+  &__name {
+    color: $ink;
+    font-size: 20px;
+    font-weight: 800;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    @include down(md) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    gap: 16px;
+  }
+
+  &__card {
+    padding: 18px 20px;
+  }
+
+  &__team {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+  }
+
+  &__team-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: $ink;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__team-since {
+    flex: none;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+
+    div {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    dt {
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      gap: 6px;
+      color: $muted;
+      font-size: 13px;
+    }
+
+    dd {
+      overflow: hidden;
+      margin: 0;
+      color: $ink;
+      font-size: 14px;
+      font-weight: 600;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    a {
+      color: $cyan-700;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}

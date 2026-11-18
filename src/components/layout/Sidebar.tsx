@@ -48,10 +48,12 @@ type NavItemProps = {
   lockedHint?: string;
   /** Hover text, e.g. when the label is hidden in an icon-only menu. */
   tooltip?: string;
+  /** Shown after the label (before any count), e.g. a live status icon. Hidden in an icon-only menu. */
+  trailing?: ReactNode;
   className?: string;
 };
 
-export function NavItem({ icon, label, active, onClick, badge, expanded, highlighted, locked, lockedHint, tooltip, className }: NavItemProps) {
+export function NavItem({ icon, label, active, onClick, badge, expanded, highlighted, locked, lockedHint, tooltip, trailing, className }: NavItemProps) {
   const collapsible = expanded !== undefined;
   return (
     <button
@@ -70,6 +72,7 @@ export function NavItem({ icon, label, active, onClick, badge, expanded, highlig
         {locked && lockedHint && <span className="nav-item__hint">{lockedHint}</span>}
       </span>
       {locked && <Icon name="lock" size={13} strokeWidth={2.2} className="nav-item__lock" />}
+      {trailing && <span className="nav-item__trailing">{trailing}</span>}
       {badge && <CountChip tone={badge.tone}>{badge.text}</CountChip>}
       {collapsible && (
         <Icon

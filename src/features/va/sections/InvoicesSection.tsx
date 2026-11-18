@@ -9,6 +9,7 @@ import { formatCentsExact } from "@/utils/format/money";
 import { useMyClients } from "@/utils/hooks/useShifts";
 import { useInvoicesOverview, usePaymentMethods } from "@/utils/hooks/useVaInvoices";
 import { useVaAccess } from "../lib/access";
+import { useVa } from "../state/VaContext";
 import { clientColors, clientLabel, downloadCsv } from "../lib/time";
 import { CreateInvoiceModal } from "./invoices/CreateInvoiceModal";
 import { InvoiceDrawer } from "./invoices/InvoiceDrawer";
@@ -28,7 +29,14 @@ export function InvoicesSection() {
   const [view, setView] = useState<View>("invoices");
   const [creating, setCreating] = useState(false);
   const [openId, setOpenId] = useState("");
-  const d = query.data;
+  // Only the client picked under Active clients in the menu (all of them until one is picked).
+  const { client: scope } = useVa();
+  const d = useMemo(() => {
+    const all = query.data;
+    if (!all || !scope) return all;
+    const mine = <T extends { client?: InvoiceClient | null }>(rows: T[]) => rows.filter((r) => r.client?.id === scope);
+    return { ...all, invoices: mine(all.invoices), byClient: mine(all.byClient), ready: mine(all.ready) };
+  }, [query.data, scope]);
 
   const exportCsv = () =>
     d &&
@@ -78,14 +86,14 @@ export function InvoicesSection() {
         <PaymentDetails />
       ) : (
         <LoadState query={query} loadingText="Loading your invoices…">
-          {d && <Overview d={d} colors={colors} onOpen={setOpenId} onCreate={() => setCreating(true)} />}
+          {d && <Overview d={d} scope={scope} scopeName={clientLabel(clients.data?.clients.find((c) => c.id === scope))} colors={colors} onOpen={setOpenId} onCreate={() => setCreating(true)} />}
         </LoadState>
       )}
 
       {creating && (
         <CreateInvoiceModal
           ready={d?.ready ?? []}
-          clients={clients.data?.clients ?? []}
+          clients={(clients.data?.clients ?? []).filter((c) => !scope || c.id === scope)}
           onClose={() => setCreating(false)}
           onCreated={(id) => {
             setCreating(false);
@@ -104,16 +112,22 @@ export function InvoicesSection() {
 
 function Overview({
   d,
+  scope,
+  scopeName,
   colors,
   onOpen,
   onCreate,
 }: {
   d: InvoicesOverview;
+  /** Client picked in the menu: only their invoices, and no client picker. */
+  scope: string;
+  scopeName: string;
   colors: Map<string, string>;
   onOpen: (id: string) => void;
   onCreate: () => void;
 }) {
-  const [clientId, setClientId] = useState("all");
+  const [picked, setClientId] = useState("all");
+  const clientId = scope || picked;
   const [status, setStatus] = useState<StatusFilter>("all");
   const forClient = <T extends { client?: InvoiceClient | null }>(rows: T[]) => (clientId === "all" ? rows : rows.filter((r) => r.client?.id === clientId));
   const invoices = forClient(d.invoices);
@@ -131,34 +145,36 @@ function Overview({
   // Every client that has invoices or time ready, for the picker.
   const pickable = new Map<string, InvoiceClient>();
   [...d.invoices, ...d.ready].forEach((r) => r.client && pickable.set(r.client.id, r.client));
-  const pickLabel = clientId === "all" ? "All clients" : clientLabel(pickable.get(clientId));
+  const pickLabel = scope ? scopeName : clientId === "all" ? "All clients" : clientLabel(pickable.get(clientId));
   const color = (id?: string) => (id ? (colors.get(id) ?? "#94a3b8") : "#94a3b8");
 
   return (
     <>
-      <Dropdown
-        label="Client"
-        value={clientId}
-        onChange={setClientId}
-        className="tt-pill"
-        items={[
-          { value: "all", label: "All clients", lead: <span className="tt-chip tt-chip--all">ALL</span> },
-          ...[...pickable.values()].map((c) => ({
-            value: c.id,
-            label: clientLabel(c),
-            lead: <span className="tt-dot" style={{ background: color(c.id) }} />,
-          })),
-        ]}
-      >
-        <span className={cn("tt-chip", clientId === "all" && "tt-chip--all")} style={clientId !== "all" ? { background: color(clientId) } : undefined}>
-          {clientId === "all" ? "ALL" : initials(pickLabel)}
-        </span>
-        <span className="tt-pill__text">
-          <span className="tt-pill__kicker">CLIENT</span>
-          <strong>{pickLabel}</strong>
-        </span>
-        <span className="inv-earned-chip">{formatCentsExact(sum("paid"))} earned</span>
-      </Dropdown>
+      {!scope && (
+        <Dropdown
+          label="Client"
+          value={clientId}
+          onChange={setClientId}
+          className="tt-pill"
+          items={[
+            { value: "all", label: "All clients", lead: <span className="tt-chip tt-chip--all">ALL</span> },
+            ...[...pickable.values()].map((c) => ({
+              value: c.id,
+              label: clientLabel(c),
+              lead: <span className="tt-dot" style={{ background: color(c.id) }} />,
+            })),
+          ]}
+        >
+          <span className={cn("tt-chip", clientId === "all" && "tt-chip--all")} style={clientId !== "all" ? { background: color(clientId) } : undefined}>
+            {clientId === "all" ? "ALL" : initials(pickLabel)}
+          </span>
+          <span className="tt-pill__text">
+            <span className="tt-pill__kicker">CLIENT</span>
+            <strong>{pickLabel}</strong>
+          </span>
+          <span className="inv-earned-chip">{formatCentsExact(sum("paid"))} earned</span>
+        </Dropdown>
+      )}
 
       <div className="inv-stats">
         <Stat label="Total earned" value={formatCentsExact(sum("paid"))} note={`${pickLabel} · paid invoices`} tone="green" />

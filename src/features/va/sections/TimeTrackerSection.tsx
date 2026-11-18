@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { MyClientOut, MyShiftOut, ShiftOut } from "@/utils/api/models";
 import { codeSuggestions, EntryLabelChips, ProjectCodeInput, TagPicker, type TagColor, type TimeTag } from "../components/EntryLabels";
 import { useVaAccess } from "../lib/access";
+import { useVa } from "../state/VaContext";
 import { formatCentsExact } from "@/utils/format/money";
 import {
   useAddEntry,
@@ -59,7 +60,10 @@ export function TimeTrackerSection() {
 
 function Tracker({ enabled, readOnly }: { enabled: boolean; readOnly: boolean }) {
   const [rangeKey, setRangeKey] = useState<RangeKey>("week");
-  const [filter, setFilter] = useState<ClientFilter>("all");
+  // The client picked under Active clients in the menu: the log and totals show only their time.
+  const { client: scope } = useVa();
+  const [picked, setFilter] = useState<ClientFilter>("all");
+  const filter = scope || picked;
   const [editing, setEditing] = useState<ShiftOut | "new" | null>(null);
   const range = useMemo(() => rangeFor(rangeKey), [rangeKey]);
   const clients = useMyClients(enabled);
@@ -79,7 +83,7 @@ function Tracker({ enabled, readOnly }: { enabled: boolean; readOnly: boolean })
     return { secs, cents };
   };
 
-  const all = entries.data ?? [];
+  const all = (entries.data ?? []).filter((e) => !scope || e.client?.id === scope);
   const codes = useMemo(() => codeSuggestions(entries.data ?? []), [entries.data]);
   // Tag colors per client, for the chips on each entry.
   const tagColors = useMemo(() => {
@@ -101,10 +105,12 @@ function Tracker({ enabled, readOnly }: { enabled: boolean; readOnly: boolean })
 
   // Today, from the timer's own data (whatever range is picked).
   const shiftDrift = shift.dataUpdatedAt && ticking ? Math.max(0, (now - shift.dataUpdatedAt) / 1000) : 0;
-  const todaySecs = (shift.data?.workedTodaySeconds ?? 0) + shiftDrift;
+  const today = (shift.data?.today ?? []).filter((e) => !scope || e.client?.id === scope);
+  const runningHere = !!running && (!scope || running.client?.id === scope);
+  const todaySecs = (scope ? today.reduce((t, e) => t + e.workedSeconds, 0) : (shift.data?.workedTodaySeconds ?? 0)) + (runningHere ? shiftDrift : 0);
   const todayCents =
-    (shift.data?.today ?? []).reduce((t, e) => t + e.earningsCents, 0) +
-    (running?.billable && running.rateCents ? (shiftDrift * running.rateCents) / 3600 : 0);
+    today.reduce((t, e) => t + e.earningsCents, 0) +
+    (runningHere && running?.billable && running.rateCents ? (shiftDrift * running.rateCents) / 3600 : 0);
 
   // Split by client for the bar.
   const split = new Map<string, { label: string; color: string; secs: number }>();
@@ -188,6 +194,7 @@ function Tracker({ enabled, readOnly }: { enabled: boolean; readOnly: boolean })
         fetchedAt={shift.dataUpdatedAt}
         onManual={() => setEditing("new")}
         codes={codes}
+        scope={scope}
       />
 
       <section className="tt2-log" aria-labelledby="tt2-log-title">
@@ -203,13 +210,15 @@ function Tracker({ enabled, readOnly }: { enabled: boolean; readOnly: boolean })
           </div>
           <div className="tt2-log__controls">
             <SegmentedControl label="Date range" options={RANGES} value={rangeKey} onChange={setRangeKey} size="sm" />
-            <Select
-              size="sm"
-              aria-label="Show time for"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              options={clientItems.map((c) => ({ value: c.value, label: `${c.label} · ${c.meta}` }))}
-            />
+            {!scope && (
+              <Select
+                size="sm"
+                aria-label="Show time for"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                options={clientItems.map((c) => ({ value: c.value, label: `${c.label} · ${c.meta}` }))}
+              />
+            )}
             <Button size="sm" variant="outline" onClick={exportCsv} disabled={!shown.length}>
               <Icon name="download" size={14} /> Export
             </Button>
@@ -321,8 +330,11 @@ function TimerBar({
   fetchedAt,
   onManual,
   codes,
+  scope = "",
 }: {
   codes: string[];
+  /** Client picked in the menu: a new timer starts for them unless another is picked. */
+  scope?: string;
   shift: MyShiftOut | undefined;
   clients: MyClientOut[];
   colors: Map<string, string>;
@@ -354,7 +366,7 @@ function TimerBar({
   const [mode, setMode] = useState<TimerMode>("timer");
   const [planned, setPlanned] = useState(2 * 3600);
   const [tasks, setTasksDone] = useState<string[]>([]);
-  const chosenClient = clientId || active[0]?.id || INTERNAL;
+  const chosenClient = clientId || (active.some((c) => c.id === scope) ? scope : "") || active[0]?.id || INTERNAL;
   const isBillable = billable ?? chosenClient !== INTERNAL;
 
   const elapsed = running ? (onBreak ? running.workedSeconds : running.workedSeconds + Math.max(0, (now - fetchedAt) / 1000)) : 0;
@@ -811,6 +823,8 @@ function EntryModal({
   codes: string[];
   onClose: () => void;
 }) {
+  // A new entry is for the client picked in the menu, if any.
+  const { client: scope } = useVa();
   const add = useAddEntry();
   const save = useUpdateEntry();
   const addTag = useAddClientTag();
@@ -818,7 +832,7 @@ function EntryModal({
   const end = entry?.endedAt ? toLocalParts(entry.endedAt) : { day: start.day, time: "10:00" };
   const running = !!entry && !entry.endedAt;
   const [note, setNote] = useState(entry?.note ?? "");
-  const [clientId, setClientId] = useState(entry ? (entry.client?.id ?? INTERNAL) : (clients.find((c) => c.active)?.id ?? INTERNAL));
+  const [clientId, setClientId] = useState(entry ? (entry.client?.id ?? INTERNAL) : (clients.find((c) => c.active && c.id === scope)?.id ?? clients.find((c) => c.active)?.id ?? INTERNAL));
   const [category, setCategory] = useState(entry?.category ?? WORK_CATEGORIES[0]);
   const [billable, setBillable] = useState(entry?.billable ?? clientId !== INTERNAL);
   const [tags, setTags] = useState<string[]>(entry?.tags ?? []);

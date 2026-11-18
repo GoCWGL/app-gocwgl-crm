@@ -367,6 +367,7 @@ export type TeamOut = S["TeamOut"];
 export type TeamReport = S["TeamReport"];
 export type TeamVa = S["TeamVa"];
 export type TeamVaHours = S["TeamVaHours"];
+export type TeammateOut = S["TeammateOut"];
 export type TemplateIn = S["TemplateIn"];
 export type TemplateKind = S["TemplateKind"];
 export type TemplateOut = S["TemplateOut"];

@@ -729,3 +729,124 @@
     transform: translateX(0);
   }
 }
+
+// VA portal › Active clients: each client shows as a small initials avatar in place of an icon.
+.nav-item__avatar.avatar {
+  width: 22px;
+  height: 22px;
+  font-size: 9.5px;
+}
+
+.nav-panel__head .avatar.nav-panel__icon {
+  margin-top: 0;
+}
+
+// "No active clients yet" under the Active clients heading.
+.sidebar__note {
+  padding: 4px 12px;
+  font-size: 12.5px;
+  color: $muted-light;
+}
+
+@include up(md) {
+  .dual-nav > .sidebar--compact .sidebar__note {
+    display: none;
+  }
+}
+
+// VA portal › Active clients: a ticking clock on the avatar of each client the VA is clocked in for.
+.nav-item__client {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+}
+
+.nav-item__trailing {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-left: auto;
+}
+
+// Client names stay on one line (cut with "…") so the clock and the chevron keep their place.
+.nav-item__client + .nav-item__label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-clock {
+  display: inline-flex;
+  padding: 1px;
+  border-radius: 999px;
+  background: $white;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+  animation: nav-clock-pulse 2s ease-out infinite;
+
+  &__face {
+    fill: #ecfdf5;
+    stroke: #059669;
+    stroke-width: 1.6;
+  }
+
+  &__hand {
+    stroke: #047857;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    transform-origin: 8px 8px;
+
+    &--minute {
+      animation: nav-clock-turn 2s linear infinite;
+    }
+
+    &--hour {
+      animation: nav-clock-turn 24s linear infinite;
+    }
+  }
+
+  // On the avatar: only when the menu is icons only (the label, and the clock after it, are hidden then).
+  &--corner {
+    position: absolute;
+    right: -6px;
+    bottom: -5px;
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &,
+    &__hand--minute,
+    &__hand--hour {
+      animation: none;
+    }
+  }
+}
+
+@keyframes nav-clock-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes nav-clock-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+  }
+}
+
+@include up(md) {
+  .dual-nav > .sidebar--compact {
+    .nav-item__trailing {
+      display: none;
+    }
+
+    .nav-clock--corner {
+      display: inline-flex;
+    }
+  }
+}

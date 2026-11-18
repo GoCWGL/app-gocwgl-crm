@@ -8,6 +8,8 @@ import type { IconName } from "@/components/ui";
 export type VaTab =
   | "dashboard"
   | "clients"
+  /** One client's full details (from their sidebar under Active clients). */
+  | "client"
   | "tasks"
   | "time"
   | "attendance"
@@ -33,6 +35,11 @@ export const VA_PAGES: Record<VaTab, { title: string; subtitle: string; empty: s
     title: "Tasks",
     subtitle: "Tasks your clients asked for and assigned to you. Move each one along as you work on it.",
     empty: "No tasks yet. When a client requests a task and picks you, it shows up here.",
+  },
+  client: {
+    title: "Client details",
+    subtitle: "Everything about this client: how to reach them, your rate, your time and their tags.",
+    empty: "",
   },
   clients: {
     title: "Clients",
@@ -101,23 +108,42 @@ export const VA_PAGES: Record<VaTab, { title: string; subtitle: string; empty: s
   },
 };
 
+/**
+ * Pages for one client. Under "Active clients" the menu lists each client the VA works with now; clicking one opens
+ * its own sidebar with these pages, showing only that client's work.
+ */
+export const VA_CLIENT_NAV: Array<{ title: string; items: Array<{ tab: VaTab; label: string; icon: IconName }> }> = [
+  {
+    title: "Client",
+    items: [{ tab: "client", label: "Client details", icon: "building" }],
+  },
+  {
+    title: "Daily work",
+    items: [
+      { tab: "attendance", label: "Attendance", icon: "calendarCheck" },
+      { tab: "tasks", label: "Tasks", icon: "clipboard" },
+      { tab: "time", label: "Time tracker", icon: "clock" },
+    ],
+  },
+  {
+    title: "Resources",
+    items: [{ tab: "assets", label: "Assets", icon: "lock" }],
+  },
+  {
+    title: "Billing",
+    items: [{ tab: "invoices", label: "Invoices", icon: "receipt" }],
+  },
+];
+export const VA_CLIENT_TABS = new Set<VaTab>(VA_CLIENT_NAV.flatMap((g) => g.items.map((i) => i.tab)));
+
+/** Main menu. The "Active clients" group (one entry per client) sits between Overview and Growth, see VaSidebar. */
 export const VA_NAV: Array<{ title: string; items: Array<{ tab: VaTab; label: string; icon: IconName }> }> = [
   {
     title: "Overview",
     items: [
       { tab: "dashboard", label: "Dashboard", icon: "grid" },
       { tab: "jobs", label: "Open Jobs", icon: "briefcase" },
-    ],
-  },
-  {
-    title: "Work",
-    items: [
       { tab: "clients", label: "Clients", icon: "briefcase" },
-      { tab: "attendance", label: "Attendance", icon: "calendarCheck" },
-      { tab: "tasks", label: "Tasks", icon: "clipboard" },
-      { tab: "assets", label: "Assets", icon: "lock" },
-      { tab: "time", label: "Time tracker", icon: "clock" },
-      { tab: "invoices", label: "Invoices", icon: "receipt" },
     ],
   },
   {

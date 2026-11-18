@@ -2,13 +2,17 @@
 
 import { useEffect } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
-import { VA_PAGES, type VaTab } from "@/data/va";
+import { VA_CLIENT_TABS, VA_PAGES, type VaTab } from "@/data/va";
 import { RequireVa } from "@/utils/auth/guards";
 import { useSession } from "@/utils/auth/session";
 import { usePresenceHeartbeat } from "@/utils/hooks/useUsers";
+import { useMyClients } from "@/utils/hooks/useShifts";
+import { useVaAccess } from "./lib/access";
+import { clientLabel } from "./lib/time";
 import { useSectionChangeSweep } from "@/utils/navigation";
 import { StaffVaBar, StaffVaGate } from "./components/StaffVaGate";
 import { VaSidebar } from "./components/VaSidebar";
+import { ClientDetailsSection } from "./sections/ClientDetailsSection";
 import { ClientsSection } from "./sections/ClientsSection";
 import { DashboardSection } from "./sections/DashboardSection";
 import { FeedbackSection } from "./sections/FeedbackSection";
@@ -40,8 +44,18 @@ export function VaApp() {
 }
 
 function VaLayout() {
-  const { tab } = useVa();
+  const { tab, client, goTo } = useVa();
   const page = VA_PAGES[tab];
+  // A client's pages (Attendance, Tasks, Assets, Time tracker, Invoices) are for one client at a time. Opened
+  // without one (a shortcut or an old link), they go to the first active client.
+  const clients = useMyClients(useVaAccess().ready).data?.clients;
+  const forClient = VA_CLIENT_TABS.has(tab);
+  const firstActive = clients?.find((c) => c.active)?.id;
+  useEffect(() => {
+    if (forClient && !client && firstActive) goTo(tab, firstActive);
+  }, [forClient, client, firstActive, tab, goTo]);
+  const current = forClient ? clients?.find((c) => c.id === client) : undefined;
+  const clientName = current ? clientLabel(current) : "";
   // Online status for the team (not for staff looking at the VA portal).
   const { user } = useSession();
   usePresenceHeartbeat(!!user && !user.isStaff);
@@ -54,8 +68,8 @@ function VaLayout() {
   return (
     <AppShell sidebar={<VaSidebar />}>
       <StaffVaBar />
-      <PageHeader kicker={`VA PORTAL // ${page.title.toUpperCase()}`} title={page.title} subtitle={page.subtitle} />
-      <div className="page-enter" key={tab}>
+      <PageHeader kicker={`VA PORTAL // ${clientName ? `${clientName.toUpperCase()} // ` : ""}${page.title.toUpperCase()}`} title={page.title} subtitle={page.subtitle} />
+      <div className="page-enter" key={`${tab}:${client}`}>
         <Section tab={tab} />
       </div>
     </AppShell>
@@ -64,6 +78,7 @@ function VaLayout() {
 
 const SECTIONS: Record<VaTab, () => React.ReactNode> = {
   dashboard: DashboardSection,
+  client: ClientDetailsSection,
   clients: ClientsSection,
   tasks: TasksSection,
   attendance: AttendanceSection,

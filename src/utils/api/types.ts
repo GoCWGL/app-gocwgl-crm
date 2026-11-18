@@ -10560,6 +10560,8 @@ export interface components {
             lastWorkedAt: string | null;
             /** Tags */
             tags: components["schemas"]["TimeTagOut"][];
+            /** Team */
+            team: components["schemas"]["TeammateOut"][];
         };
         /** MyClientsOut */
         MyClientsOut: {
@@ -13523,6 +13525,28 @@ export interface components {
             seconds: number;
             /** Daysworked */
             daysWorked: number;
+        };
+        /**
+         * TeammateOut
+         * @description A VA on the client's team (VA portal › client details).
+         */
+        TeammateOut: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Headline */
+            headline: string;
+            /**
+             * Since
+             * Format: date-time
+             */
+            since: string;
+            /** You */
+            you: boolean;
         };
         /** TemplateIn */
         TemplateIn: {
