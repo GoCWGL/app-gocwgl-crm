@@ -1,17 +1,28 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Avatar, Badge, Button, ConfirmDialog, FormError, Icon, LoadState, Textarea, type IconName } from "@/components/ui";
+import { Avatar, Badge, Button, ConfirmDialog, Field, FormError, Icon, Input, LoadState, Textarea, type IconName } from "@/components/ui";
 import { VaRequestDetails, requestHours, requestLoad } from "@/features/portal/components/VaRequestDetails";
 import { maintenanceFeeOf } from "@/features/portal/lib/vaAgreement";
+import { RequestComments } from "@/features/portal/components/RequestComments";
 import { VaRequestForm } from "@/features/portal/components/VaRequestModal";
 import { avatarTone, toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { JobPostingOut, VaRequestOut } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
 import { formatRelative, formatShort } from "@/utils/format/dates";
-import { formatCentsExact } from "@/utils/format/money";
-import { useAllVaRequests, useDeleteVaRequest, useSetVaRequestStage, useStaffUpdateVaRequest } from "@/utils/hooks/useClientWork";
+import { centsToDollars, dollarsToCents, formatCents, formatCentsExact } from "@/utils/format/money";
+import { agreementOf } from "@/features/portal/lib/vaAgreement";
+import {
+  useAllVaRequests,
+  useCommentOnRequest,
+  useDeleteVaRequest,
+  useMatchVaRequest,
+  useQuoteRequest,
+  useRequestComments,
+  useSetVaRequestStage,
+  useStaffUpdateVaRequest,
+} from "@/utils/hooks/useClientWork";
 import { useJobPostings } from "@/utils/hooks/useJobPostings";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../../state/AdminContext";
@@ -45,10 +56,13 @@ function Page({ r }: { r: VaRequestOut }) {
   const posting = useJobPostings().data?.find((j) => j.id === r.jobPostingId) ?? null;
   const stage = useSetVaRequestStage();
   const saveNote = useStaffUpdateVaRequest();
+  const match = useMatchVaRequest();
   const [editing, setEditing] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [declining, setDeclining] = useState(false);
   const [note, setNote] = useState(r.teamNote);
+  const comments = useRequestComments(r.id);
+  const comment = useCommentOnRequest();
   // Once posted, the job posting says where it really is (live, interviewing, filled).
   const current = requestStage(r, posting?.status);
   const st = stageBadge(r, current);
@@ -70,7 +84,10 @@ function Page({ r }: { r: VaRequestOut }) {
     { icon: "users", tone: "cyan", label: "Applicants", value: r.jobPostingId ? String(applicants) : "—" },
     { icon: "clock", tone: "purple", label: "Hours", value: requestLoad(r) },
     // What GoCWGL invoices the client each month for this VA.
-    { icon: "invoice", tone: "brand", label: "Maintenance fee", value: maintenanceFeeOf(r).label },
+    r.engagement === "project"
+      ? // An open project has no maintenance fee: its price is the quote the client agrees to.
+        { icon: "invoice", tone: "brand", label: "Quote", value: r.quoteCents == null ? "Not quoted yet" : `${formatCentsExact(r.quoteCents)}${r.quoteAcceptedAt ? " · agreed" : " · waiting"}` }
+      : { icon: "invoice", tone: "brand", label: "Maintenance fee", value: maintenanceFeeOf(r).label },
     { icon: "calendar", tone: "brand", label: "Requested", value: formatShort(r.createdAt) },
     { icon: "radio", tone: "green", label: "In Open jobs", value: posting?.publishedAt && ["live", "interviewing"].includes(posting.status) ? `Since ${formatShort(posting.publishedAt)}` : "No" },
   ];
@@ -132,7 +149,7 @@ function Page({ r }: { r: VaRequestOut }) {
         </div>
       </section>
 
-      <FormError error={stage.error ?? saveNote.error ?? remove.error} />
+      <FormError error={stage.error ?? saveNote.error ?? remove.error ?? match.error} />
 
       <div className="vp-grid">
         <div className="vp-grid__main">
@@ -150,6 +167,16 @@ function Page({ r }: { r: VaRequestOut }) {
             <VaRequestDetails r={r} staff />
           </Card>
 
+          <RequestComments
+            side="staff"
+            comments={comments}
+            send={(body, done) => comment.mutate({ id: r.id, body }, { onSuccess: done })}
+            sending={comment.isPending}
+            sendError={comment.error}
+            closed={r.status === "cancelled"}
+            readOnly={!canWrite}
+          />
+
           <Card icon="users" title="Applicants" count={r.jobPostingId ? applicants : undefined}>
             {r.jobPostingId ? (
               <ApplicantsList
@@ -166,6 +193,8 @@ function Page({ r }: { r: VaRequestOut }) {
         </div>
 
         <aside className="vp-grid__side">
+          {r.engagement === "project" && <QuoteCard r={r} canWrite={canWrite} />}
+
           <Card icon="gauge" title="Status">
             <StatusPanel r={r} current={current} canWrite={canWrite} busy={stage.isPending} onMove={move} />
           </Card>
@@ -207,6 +236,29 @@ function Page({ r }: { r: VaRequestOut }) {
                 {canWrite && (
                   <Button size="sm" variant="outline" onClick={() => setAssigning(true)}>
                     Change VA
+                  </Button>
+                )}
+              </div>
+            ) : r.requestedVa ? (
+              // Another project for a VA who worked with this client before: assign them straight away.
+              <div className="stack stack--10">
+                <div className="mv-strip">
+                  <Avatar name={r.requestedVa.name} tone={avatarTone(r.requestedVa.id)} size="sm" />
+                  <span className="stack stack--0 u-grow">
+                    <strong>{r.requestedVa.name}</strong>
+                    <span className="text-tiny">The client asked for them (worked with them before)</span>
+                  </span>
+                </div>
+                {canWrite && (
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    disabled={match.isPending}
+                    onClick={() =>
+                      match.mutate({ id: r.id, vaId: r.requestedVa!.id }, { onSuccess: () => notify(`${r.requestedVa!.name} is assigned to “${r.role}”.`) })
+                    }
+                  >
+                    <Icon name="userPlus" size={13} /> Assign {r.requestedVa.name.split(" ")[0]}
                   </Button>
                 )}
               </div>
@@ -341,6 +393,83 @@ function JobPostCard({ posting: p }: { posting: JobPostingOut | null }) {
       ) : (
         <p className="vp-empty">Not published yet. It’s made when the request goes Live.</p>
       )}
+    </Card>
+  );
+}
+
+/**
+ * An open project's price: send the client a quote (it shows in the comments); they agree to it in their portal, then
+ * the VA is assigned. A project the client requested can't get a VA before they agree.
+ */
+function QuoteCard({ r, canWrite }: { r: VaRequestOut; canWrite: boolean }) {
+  const { notify } = useAdmin();
+  const quote = useQuoteRequest();
+  const [amount, setAmount] = useState(r.quoteCents != null ? centsToDollars(r.quoteCents) : r.budgetCents != null ? centsToDollars(r.budgetCents) : "");
+  const [quoteNote, setQuoteNote] = useState("");
+  const [editing, setEditing] = useState(r.quoteCents == null);
+  // Projects GoCWGL added for the client don't wait for a quote.
+  const fromClient = !!agreementOf(r).agreementAcceptedAt;
+  const ended = ["declined", "closed", "cancelled", "inactive"].includes(r.status);
+  const locked = !!r.quoteAcceptedAt && !!r.matchedVa;
+  const cents = dollarsToCents(amount);
+  const send = () =>
+    quote.mutate(
+      { id: r.id, amountCents: cents, note: quoteNote.trim() },
+      { onSuccess: () => (notify(`Quote of ${formatCentsExact(cents)} sent to ${r.clientName || "the client"}.`), setQuoteNote(""), setEditing(false)) },
+    );
+  return (
+    <Card icon="invoice" title="Quote">
+      <div className="stack stack--10">
+        <div className="mv-strip">
+          <span className="stack stack--0 u-grow">
+            <strong>{r.quoteCents != null ? formatCentsExact(r.quoteCents) : "Not quoted yet"}</strong>
+            <span className="text-tiny">
+              {r.quoteAcceptedAt
+                ? `Client agreed ${formatShort(r.quoteAcceptedAt)}${r.matchedVa ? "" : ": send the invoice, then assign the VA once it’s paid"}`
+                : r.quoteCents != null
+                  ? `Sent ${formatShort(r.quotedAt!)} · waiting for the client to agree`
+                  : `Client’s budget: ${r.budgetCents != null ? formatCents(r.budgetCents) : "—"}`}
+            </span>
+          </span>
+          {r.quoteAcceptedAt ? (
+            <Badge tone="green" dot>
+              Agreed
+            </Badge>
+          ) : r.quoteCents != null ? (
+            <Badge tone="amber" dot>
+              Waiting
+            </Badge>
+          ) : null}
+        </div>
+        {fromClient && !r.quoteAcceptedAt && !r.matchedVa && (
+          <p className="text-tiny">The VA can be assigned once the client agrees to the quote.</p>
+        )}
+        {canWrite && !ended && !locked && (editing ? (
+          <>
+            <Field label="Price ($)" htmlFor="jr-quote">
+              <Input id="jr-quote" inputMode="decimal" placeholder="500" value={amount} onChange={(e) => setAmount(e.target.value)} />
+            </Field>
+            <Field label="Note for the client" htmlFor="jr-quote-note" hint="What it covers, payment terms… Shown with the quote.">
+              <Textarea id="jr-quote-note" rows={3} maxLength={4000} value={quoteNote} onChange={(e) => setQuoteNote(e.target.value)} />
+            </Field>
+            <FormError error={quote.error} />
+            <span className="cluster cluster--8">
+              <Button size="sm" variant="primary" disabled={!(cents > 0) || quote.isPending} onClick={send}>
+                <Icon name="send" size={13} /> {r.quoteCents != null ? "Send new quote" : "Send quote"}
+              </Button>
+              {r.quoteCents != null && (
+                <Button size="sm" onClick={() => setEditing(false)}>
+                  Cancel
+                </Button>
+              )}
+            </span>
+          </>
+        ) : (
+          <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+            <Icon name="edit" size={13} /> Change the quote
+          </Button>
+        ))}
+      </div>
     </Card>
   );
 }

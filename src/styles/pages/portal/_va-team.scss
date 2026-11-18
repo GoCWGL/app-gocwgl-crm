@@ -1208,8 +1208,12 @@ tr.is-clickable {
 // Hours a week as cards, each with its monthly maintenance fee.
 .vra-hours {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
+
+  @include down(md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
   @include down(sm) {
     grid-template-columns: 1fr;
@@ -4948,4 +4952,122 @@ $tk-cols: minmax(0, 2.4fr) minmax(0, 1.1fr) 140px 130px minmax(150px, auto);
     color: $ink;
     font-size: 18px;
   }
+}
+
+// ------------------------------------------------------------------ VA request comments and an open project's quote
+// The comments on a request sit in its pop-up (and on the admin request page): shorter than a task's conversation.
+.rq-comments.tk-chat {
+  height: 380px;
+  min-height: 300px;
+}
+
+.rq-comments__quote {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 200px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, #fff7ea, $white 80%) !important;
+  color: $ink !important;
+}
+
+.rq-comments__quote-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: $orange-ink;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.rq-comments__quote-amount {
+  color: $ink;
+  font-family: $font-mono;
+  font-size: 20px;
+}
+
+.rq-comments__quote-note {
+  color: $ink-soft;
+  white-space: pre-wrap;
+}
+
+.rq-comments__agreed span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 999px;
+  text-transform: none;
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+}
+
+// The client's quote card in the request pop-up: waiting for a quote, agree to it, or agreed.
+.rq-quote {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid $line-soft;
+  border-radius: 12px;
+  background: $bg-soft;
+
+  &__icon {
+    display: grid;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: 10px;
+    background: $white;
+    color: $muted;
+  }
+
+  &__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    color: $muted;
+    font-size: 12.5px;
+
+    strong {
+      color: $ink;
+      font-size: 14px;
+    }
+  }
+
+  &__amount {
+    font-family: $font-mono;
+  }
+
+  &.is-quoted {
+    border-color: rgba(245, 158, 11, 0.45);
+    background: linear-gradient(120deg, #fff7ea, $white 75%);
+
+    .rq-quote__icon {
+      color: $orange-ink;
+    }
+  }
+
+  &.is-agreed {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: linear-gradient(120deg, rgba(16, 185, 129, 0.07), $white 70%);
+
+    .rq-quote__icon {
+      color: #047857;
+    }
+  }
+}
+
+.rq-comments__next {
+  margin: -2px auto 8px;
+  max-width: 420px;
+  color: $muted;
+  font-size: 12px;
+  text-align: center;
 }

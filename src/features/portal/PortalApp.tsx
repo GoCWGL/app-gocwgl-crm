@@ -31,6 +31,7 @@ import { ProjectsSection } from "./sections/ProjectsSection";
 import { RatingsSection } from "./sections/RatingsSection";
 import { SupportSection } from "./sections/SupportSection";
 import { TeamSection } from "./sections/TeamSection";
+import { VaProjectsSection } from "./sections/VaProjectsSection";
 import { VaTeamSection } from "./sections/VaTeamSection";
 import { WorkJournalSection } from "./sections/WorkJournalSection";
 import { StaffClientBar } from "./components/StaffClientBar";
@@ -45,6 +46,7 @@ const SECTIONS: Record<PortalTab, ComponentType> = {
   journal: WorkJournalSection,
   team: TeamSection,
   vateam: VaTeamSection,
+  vaprojects: VaProjectsSection,
   projects: ProjectsSection,
   ratings: RatingsSection,
   build: BuildSection,

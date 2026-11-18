@@ -1,12 +1,16 @@
 import { Icon, type IconName } from "@/components/ui";
 import type { VaRequestOut } from "@/utils/api/models";
-import { formatShort } from "@/utils/format/dates";
+import { formatLong, formatShort } from "@/utils/format/dates";
+import { formatCents, formatCentsExact } from "@/utils/format/money";
 import { maintenanceFeeOf } from "../lib/vaAgreement";
 
 export const ENGAGEMENT_LABEL: Record<VaRequestOut["engagement"], string> = { part_time: "Part-time", full_time: "Full-time", project: "Open project" };
 
-/** "Mon–Fri, 9:00 AM – 5:00 PM · US Eastern (New York)". */
-export const requestHours = (r: Pick<VaRequestOut, "schedule" | "timezone">) => [r.schedule, r.timezone].filter(Boolean).join(" · ");
+/** "Mon–Fri, 9:00 AM – 5:00 PM · US Eastern (New York)", or an open project's "Open project · due Dec 15, 2026". */
+export const requestHours = (r: Pick<VaRequestOut, "schedule" | "timezone" | "engagement" | "dueDate">) =>
+  r.engagement === "project"
+    ? ["Open project", r.dueDate && `due ${formatLong(r.dueDate)}`].filter(Boolean).join(" · ")
+    : [r.schedule, r.timezone].filter(Boolean).join(" · ");
 
 /** "40 hours a week" or "Open project". */
 export const requestLoad = (r: Pick<VaRequestOut, "engagement" | "hoursPerWeek">) =>
@@ -24,6 +28,12 @@ export function trackingLabel(r: Pick<VaRequestOut, "wantsTimeTracker" | "wantsA
 
 /** The job posting text VAs read, built from the request (matches the server's default; no client name). */
 export function jobDescriptionFrom(r: VaRequestOut): string {
+  if (r.engagement === "project") {
+    // The client's budget is for GoCWGL's quote, not shown to VAs.
+    return [r.overview && `Project details\n${r.overview}`, r.dueDate && `Due date\n${formatLong(r.dueDate)}`, r.important && `Important\n${r.important}`]
+      .filter(Boolean)
+      .join("\n\n");
+  }
   const hours = `${r.timezone ? `${r.schedule} (${r.timezone})` : r.schedule}${r.hoursPerWeek ? `, about ${r.hoursPerWeek} hours a week` : ""}`;
   const list = (title: string, xs: string[]) => (xs.length ? `${title}\n${xs.map((x) => `• ${x}`).join("\n")}` : "");
   return [
@@ -44,26 +54,49 @@ export function jobDescriptionFrom(r: VaRequestOut): string {
  */
 export function VaRequestDetails({ r, staff }: { r: VaRequestOut; staff?: boolean }) {
   const fee = maintenanceFeeOf(r);
+  const project = r.engagement === "project";
   return (
     <div className="rd">
       <div className="rd-facts">
-        <Fact icon="clock" label="Working hours" value={r.schedule || "—"} />
-        <Fact icon="globe" label="Time zone" value={r.timezone || "—"} />
-        <Fact icon="briefcase" label="Commitment" value={requestLoad(r)} />
-        <Fact icon="calendarCheck" label="Time tracking" value={trackingLabel(r)} />
-        {(fee.agreed || staff) && (
-          <Fact
-            icon="invoice"
-            label="Maintenance fee"
-            value={`${fee.label} · ${fee.acceptedAt ? `agreed ${formatShort(fee.acceptedAt)}` : "standard rate, agreement not accepted"}`}
-          />
+        {project ? (
+          <>
+            <Fact icon="briefcase" label="Request" value="Open project" />
+            <Fact icon="invoice" label="Estimated budget" value={r.budgetCents != null ? formatCents(r.budgetCents) : "—"} />
+            <Fact icon="calendar" label="Due date" value={`${formatLong(r.dueDate)} · ends the day after`} />
+            {r.requestedVa && <Fact icon="users" label="Asked for" value={`${r.requestedVa.name} (worked with ${staff ? "this client" : "you"} before)`} />}
+            <Fact
+              icon="invoice"
+              label="Payment"
+              value={
+                r.quoteAcceptedAt
+                  ? `${formatCentsExact(r.quoteCents)} · ${staff ? "client" : "you"} agreed ${formatShort(r.quoteAcceptedAt)}`
+                  : r.quoteCents != null
+                    ? `${formatCentsExact(r.quoteCents)} quoted · waiting for ${staff ? "the client" : "you"} to agree`
+                    : "No maintenance fee · GoCWGL will quote the price"
+              }
+            />
+          </>
+        ) : (
+          <>
+            <Fact icon="clock" label="Working hours" value={r.schedule || "—"} />
+            <Fact icon="globe" label="Time zone" value={r.timezone || "—"} />
+            <Fact icon="briefcase" label="Commitment" value={requestLoad(r)} />
+            <Fact icon="calendarCheck" label="Time tracking" value={trackingLabel(r)} />
+            {(fee.agreed || staff) && (
+              <Fact
+                icon="invoice"
+                label="Maintenance fee"
+                value={`${fee.label} · ${fee.acceptedAt ? `agreed ${formatShort(fee.acceptedAt)}` : "standard rate, agreement not accepted"}`}
+              />
+            )}
+          </>
         )}
       </div>
 
       {r.overview && (
         <section className="rd-block">
           <h4 className="rd-block__title">
-            <Icon name="textLong" size={14} /> Role overview
+            <Icon name="textLong" size={14} /> {project ? "Project details" : "Role overview"}
           </h4>
           <p className="rd-block__text">{r.overview}</p>
         </section>

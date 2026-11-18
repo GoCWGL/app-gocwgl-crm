@@ -245,6 +245,11 @@ function RequestCard({
         <span>
           <Icon name="globe" size={13} /> {requestHours(r)}
         </span>
+        {r.requestedVa && !r.matchedVa && (
+          <span title="The client asked for this VA (worked with them before)">
+            <Icon name="userPlus" size={13} /> Asked for {r.requestedVa.name}
+          </span>
+        )}
       </span>
       {r.overview && <span className="job-card__desc vr-clamp">{r.overview}</span>}
       {stage.error ? <FormError error={stage.error} /> : null}

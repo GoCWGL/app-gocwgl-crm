@@ -5012,6 +5012,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/va-requests/{request_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request Comments */
+        get: operations["request_comments_api_admin_va_requests__request_id__comments_get"];
+        put?: never;
+        /**
+         * Comment On Request
+         * @description Write to the client on their request. They're emailed.
+         */
+        post: operations["comment_on_request_api_admin_va_requests__request_id__comments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-requests/{request_id}/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Quote Request
+         * @description Quote an open project's price. It shows in the request's comments; the client agrees to it before the VA is
+         *     assigned. A new quote replaces the last (and needs agreeing again).
+         */
+        post: operations["quote_request_api_admin_va_requests__request_id__quote_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/contacts/{contact_id}/vas": {
         parameters: {
             query?: never;
@@ -5982,6 +6024,50 @@ export interface paths {
         get: operations["my_request_applicants_api_portal_va_requests__request_id__applicants_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-requests/{request_id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Request Comments
+         * @description The conversation on your request with GoCWGL, oldest first (an open project's quote shows here).
+         */
+        get: operations["my_request_comments_api_portal_va_requests__request_id__comments_get"];
+        put?: never;
+        /**
+         * Comment On My Request
+         * @description Write to GoCWGL about your request. They're emailed.
+         */
+        post: operations["comment_on_my_request_api_portal_va_requests__request_id__comments_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-requests/{request_id}/accept-quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept Quote
+         * @description Agree to GoCWGL's quote for your open project. GoCWGL is told, and assigns your VA.
+         */
+        post: operations["accept_quote_api_portal_va_requests__request_id__accept_quote_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -12183,6 +12269,16 @@ export interface components {
             /** Accepted */
             accepted: string[];
         };
+        /** QuoteIn */
+        QuoteIn: {
+            /** Amountcents */
+            amountCents: number;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
         /** RaiseIn */
         RaiseIn: {
             /**
@@ -12488,6 +12584,40 @@ export interface components {
             appliedAt: string;
             /** Resumeslug */
             resumeSlug: string | null;
+        };
+        /** RequestCommentIn */
+        RequestCommentIn: {
+            /** Body */
+            body: string;
+        };
+        /** RequestCommentOut */
+        RequestCommentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Authorrole
+             * @enum {string}
+             */
+            authorRole: "client" | "staff";
+            /** Authorname */
+            authorName: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "comment" | "quote" | "quote_accepted";
+            /** Amountcents */
+            amountCents: number | null;
+            /** Body */
+            body: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
         };
         /** ResetPasswordRequest */
         ResetPasswordRequest: {
@@ -13302,18 +13432,24 @@ export interface components {
             engagement?: "part_time" | "full_time" | "project";
             /** Hoursperweek */
             hoursPerWeek?: (10 | 20 | 40) | null;
-            /** Schedule */
-            schedule: string;
-            /** Timezone */
-            timezone: string;
+            /**
+             * Schedule
+             * @default
+             */
+            schedule?: string;
+            /**
+             * Timezone
+             * @default
+             */
+            timezone?: string;
             /** Startdate */
             startDate?: string | null;
             /** Overview */
             overview: string;
             /** Responsibilities */
-            responsibilities: string[];
+            responsibilities?: string[];
             /** Musthave */
-            mustHave: string[];
+            mustHave?: string[];
             /** Nicetohave */
             niceToHave?: string[];
             /**
@@ -13321,6 +13457,12 @@ export interface components {
              * @default
              */
             important?: string;
+            /** Budgetcents */
+            budgetCents?: number | null;
+            /** Duedate */
+            dueDate?: string | null;
+            /** Requestedvaid */
+            requestedVaId?: string | null;
             /**
              * Wantstimetracker
              * @default false
@@ -15406,18 +15548,24 @@ export interface components {
             engagement?: "part_time" | "full_time" | "project";
             /** Hoursperweek */
             hoursPerWeek?: (10 | 20 | 40) | null;
-            /** Schedule */
-            schedule: string;
-            /** Timezone */
-            timezone: string;
+            /**
+             * Schedule
+             * @default
+             */
+            schedule?: string;
+            /**
+             * Timezone
+             * @default
+             */
+            timezone?: string;
             /** Startdate */
             startDate?: string | null;
             /** Overview */
             overview: string;
             /** Responsibilities */
-            responsibilities: string[];
+            responsibilities?: string[];
             /** Musthave */
-            mustHave: string[];
+            mustHave?: string[];
             /** Nicetohave */
             niceToHave?: string[];
             /**
@@ -15425,6 +15573,12 @@ export interface components {
              * @default
              */
             important?: string;
+            /** Budgetcents */
+            budgetCents?: number | null;
+            /** Duedate */
+            dueDate?: string | null;
+            /** Requestedvaid */
+            requestedVaId?: string | null;
             /**
              * Wantstimetracker
              * @default false
@@ -15488,6 +15642,26 @@ export interface components {
             niceToHave: string[];
             /** Important */
             important: string;
+            /** Budgetcents */
+            budgetCents?: number | null;
+            /** Duedate */
+            dueDate?: string | null;
+            requestedVa?: components["schemas"]["MatchedVa"] | null;
+            /** Quotecents */
+            quoteCents?: number | null;
+            /** Quotedat */
+            quotedAt?: string | null;
+            /** Quoteacceptedat */
+            quoteAcceptedAt?: string | null;
+            /**
+             * Commentcount
+             * @default 0
+             */
+            commentCount?: number;
+            /** Lastcommentat */
+            lastCommentAt?: string | null;
+            /** Lastcommentfrom */
+            lastCommentFrom?: ("client" | "staff") | null;
             /**
              * Wantstimetracker
              * @default true
@@ -15603,6 +15777,10 @@ export interface components {
             wantsTimeTracker?: boolean | null;
             /** Wantsattendance */
             wantsAttendance?: boolean | null;
+            /** Budgetcents */
+            budgetCents?: number | null;
+            /** Duedate */
+            dueDate?: string | null;
         };
         /** VaRequestStage */
         VaRequestStage: {
@@ -31731,6 +31909,141 @@ export interface operations {
             };
         };
     };
+    request_comments_api_admin_va_requests__request_id__comments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Request Comments Api Admin Va Requests  Request Id  Comments Get */
+                        data: components["schemas"]["RequestCommentOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    comment_on_request_api_admin_va_requests__request_id__comments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestCommentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RequestCommentOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    quote_request_api_admin_va_requests__request_id__quote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QuoteIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     client_vas_api_admin_contacts__contact_id__vas_get: {
         parameters: {
             query?: never;
@@ -34410,6 +34723,137 @@ export interface operations {
                     "application/json": {
                         /** Response My Request Applicants Api Portal Va Requests  Request Id  Applicants Get */
                         data: components["schemas"]["RequestApplicant"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_request_comments_api_portal_va_requests__request_id__comments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Request Comments Api Portal Va Requests  Request Id  Comments Get */
+                        data: components["schemas"]["RequestCommentOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    comment_on_my_request_api_portal_va_requests__request_id__comments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestCommentIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RequestCommentOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    accept_quote_api_portal_va_requests__request_id__accept_quote_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
                     };
                 };
             };

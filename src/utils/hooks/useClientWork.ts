@@ -41,6 +41,12 @@ export const useRequestVa = () => useApiMutation(api.requestVa, { invalidate: [q
 export const useUpdateMyVaRequest = () =>
   useApiMutation((v: { id: string; body: VaRequestIn }) => api.updateMyVaRequest(v.id, v.body), { invalidate: [qk.portalVaRequests] });
 export const useCancelVaRequest = () => useApiMutation(api.cancelVaRequest, { invalidate: [qk.portalVaRequests] });
+/** A request's conversation with GoCWGL, refreshed every 20 s while open so replies and quotes show up. */
+export const useMyRequestComments = (id: string) =>
+  useQuery({ queryKey: [...qk.portalVaRequests, id, "comments"], queryFn: () => api.listMyRequestComments(id), refetchInterval: 20_000 });
+export const useCommentOnMyRequest = () =>
+  useApiMutation((v: { id: string; body: string }) => api.commentOnMyRequest(v.id, v.body), { invalidate: [qk.portalVaRequests] });
+export const useAcceptQuote = () => useApiMutation(api.acceptQuote, { invalidate: [qk.portalVaRequests] });
 
 export const useRequestApplicants = (id: string) =>
   useQuery({ queryKey: [...qk.portalVaRequests, id, "applicants"], queryFn: () => api.requestApplicants(id), enabled: !!id });
@@ -92,6 +98,12 @@ export const useDeclineVaRequest = () =>
   useApiMutation((v: { id: string; note?: string }) => api.declineVaRequest(v.id, v.note), { invalidate: REQUESTS_AND_JOBS });
 export const usePostVaRequest = () =>
   useApiMutation((v: { id: string; body: VaRequestPost }) => api.postVaRequest(v.id, v.body), { invalidate: REQUESTS_AND_JOBS });
+export const useRequestComments = (id: string) =>
+  useQuery({ queryKey: [...qk.clientVaRequests, id, "comments"], queryFn: () => api.listRequestComments(id), refetchInterval: 20_000 });
+export const useCommentOnRequest = () =>
+  useApiMutation((v: { id: string; body: string }) => api.commentOnRequest(v.id, v.body), { invalidate: REQUESTS_AND_JOBS });
+export const useQuoteRequest = () =>
+  useApiMutation((v: { id: string; amountCents: number; note: string }) => api.quoteRequest(v.id, v.amountCents, v.note), { invalidate: REQUESTS_AND_JOBS });
 export const useMatchVaRequest = () =>
   useApiMutation((v: { id: string; vaId: string }) => api.matchVaRequest(v.id, v.vaId), { invalidate: REQUESTS_AND_JOBS });
 export const useSetVaRequestStage = () =>

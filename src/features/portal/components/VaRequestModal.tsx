@@ -7,7 +7,7 @@ import { useContactsPage } from "@/utils/hooks/useContacts";
 import type { JobPostingOut, VaRequestIn, VaRequestOut } from "@/utils/api/models";
 import { centsToDollars, dollarsToCents } from "@/utils/format/money";
 import { useUpdateJobPosting } from "@/utils/hooks/useJobPostings";
-import { useRequestVa, useStaffCreateVaRequest, useStaffUpdateVaRequest, useUpdateMyVaRequest } from "@/utils/hooks/useClientWork";
+import { useRequestVa, useStaffCreateVaRequest, useStaffUpdateVaRequest, useUpdateMyVaRequest, useVaRequests } from "@/utils/hooks/useClientWork";
 import { usePortal } from "../state/PortalContext";
 import { VA_MAINTENANCE_FEE_DOLLARS, maintenanceFeeLabel, type VaRequestWithAgreementIn } from "../lib/vaAgreement";
 
@@ -15,7 +15,7 @@ type Engagement = NonNullable<VaRequestIn["engagement"]>;
 
 type Hours = 10 | 20 | 40;
 
-/** Expected working hours: the only choices a client has. */
+/** Expected working hours: set weekly hours (each with its maintenance fee) or an open project (no maintenance fee; GoCWGL quotes the payment). */
 const LOADS = [
   { value: "10", label: "10 hours a week", engagement: "part_time", hours: 10 },
   { value: "20", label: "20 hours a week", engagement: "part_time", hours: 20 },
@@ -23,8 +23,8 @@ const LOADS = [
   { value: "project", label: "Open project", engagement: "project", hours: null },
 ] as const satisfies ReadonlyArray<{ value: string; label: string; engagement: Engagement; hours: Hours | null }>;
 type LoadKey = (typeof LOADS)[number]["value"];
-/** What a client picks on the VA agreement: set weekly hours, each with its maintenance fee (Open project is staff only). */
-const CLIENT_LOADS = LOADS.filter((l): l is Extract<(typeof LOADS)[number], { hours: Hours }> => l.hours !== null);
+/** The set-hours choices, each with its monthly maintenance fee. */
+const HOURS_LOADS = LOADS.filter((l): l is Extract<(typeof LOADS)[number], { hours: Hours }> => l.hours !== null);
 const DAYS = ["Mon–Fri", "Mon–Sat", "Every day", "Weekends", "Flexible"];
 /** label shown and stored · IANA zones that map to it (to pre-pick the client's own). */
 const ZONES: Array<{ label: string; iana: string[] }> = [
@@ -71,9 +71,21 @@ function ampm(t: string): string {
 }
 
 /** Client portal › VAs › Request a VA: the role they need, sent to GoCWGL to review and post to VAs. */
-export function VaRequestModal({ onClose, onSent }: { onClose: () => void; onSent?: () => void }) {
+export function VaRequestModal({ onClose, onSent, project }: { onClose: () => void; onSent?: () => void; project?: boolean }) {
   const { notify } = usePortal();
-  return <VaRequestForm onClose={onClose} onSent={onSent} notify={notify} />;
+  const pastVas = usePastVas();
+  return <VaRequestForm onClose={onClose} onSent={onSent} notify={notify} pastVas={pastVas} startAsProject={project} />;
+}
+
+/** A VA who worked with the client before (matched to one of their requests): one they can ask for on a project. */
+export type PastVa = { id: string; name: string };
+
+/** Client portal: the VAs matched to the client's requests, now or before (by name only). */
+export function usePastVas(): PastVa[] {
+  const requests = useVaRequests().data ?? [];
+  const byId = new Map<string, string>();
+  for (const r of requests) if (r.matchedVa) byId.set(r.matchedVa.id, r.matchedVa.name);
+  return [...byId].map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
 }
 
 /**
@@ -88,6 +100,8 @@ export function VaRequestForm({
   edit,
   posting,
   onFullView,
+  pastVas = [],
+  startAsProject,
 }: {
   onClose: () => void;
   onSent?: () => void;
@@ -99,6 +113,10 @@ export function VaRequestForm({
   posting?: JobPostingOut | null;
   /** Staff, editing from a job card: open the request's full page. */
   onFullView?: () => void;
+  /** Client: VAs who worked with them before, to ask for one on an open project (otherwise any VA). */
+  pastVas?: PastVa[];
+  /** A new request that starts on Open project (VA › Projects). */
+  startAsProject?: boolean;
 }) {
   const request = useRequestVa();
   const staffCreate = useStaffCreateVaRequest();
@@ -118,7 +136,7 @@ export function VaRequestForm({
   const [to, setTo] = useState(saved?.to ?? "17:00");
   const [zone, setZone] = useState(() => edit?.timezone ?? myZone());
   const savedLoad: LoadKey = edit ? (edit.engagement === "project" ? "project" : (String(edit.hoursPerWeek ?? 40) as "10" | "20" | "40")) : "40";
-  const [loadKey, setLoad] = useState<LoadKey>(savedLoad);
+  const [loadKey, setLoad] = useState<LoadKey>(startAsProject && !edit ? "project" : savedLoad);
   const load = LOADS.find((l) => l.value === loadKey)!;
   // Clients accept the VA agreement (the monthly maintenance fee for the hours) before the form: first thing for a
   // new request, and again when they change the hours on one. Staff don't.
@@ -129,8 +147,6 @@ export function VaRequestForm({
   const [before, setBefore] = useState<{ load: LoadKey; agreed: boolean }>({ load: savedLoad, agreed: false });
   const openAgreement = () => {
     setBefore({ load: loadKey, agreed });
-    // Clients choose set hours only (an older Open project request picks them again).
-    if (loadKey === "project") setLoad("40");
     setAgreed(false);
     setAgreeTried(false);
     setStep("agreement");
@@ -145,6 +161,13 @@ export function VaRequestForm({
   const [must, setMust] = useState<string[]>(() => lines(edit?.mustHave ?? []));
   const [nice, setNice] = useState<string[]>(() => lines(edit?.niceToHave ?? []));
   const [important, setImportant] = useState(edit?.important ?? "");
+  // An open project: the client's estimated budget and due date (GoCWGL quotes the payment).
+  const [budget, setBudget] = useState(edit?.budgetCents != null ? centsToDollars(edit.budgetCents) : "");
+  const [due, setDue] = useState(edit?.dueDate ?? "");
+  const project = load.engagement === "project";
+  // An open project: the VA the client wants ("" = any VA, GoCWGL picks). Admin assigns them, or another VA.
+  const [vaId, setVaId] = useState(edit?.requestedVa?.id ?? "");
+  const vaChoices = edit?.requestedVa && !pastVas.some((v) => v.id === edit.requestedVa!.id) ? [edit.requestedVa, ...pastVas] : pastVas;
   // Whether the VA uses the time tracker and clocks in and out (Attendance). Off by default on a new request; the
   // client's Time & activity menu only shows once a request turns one on.
   const [timeTracker, setTimeTracker] = useState(edit?.wantsTimeTracker ?? false);
@@ -156,18 +179,20 @@ export function VaRequestForm({
   const schedule = flexible ? "Flexible hours" : `${days}, ${ampm(from)} – ${ampm(to)}`;
   const errors = {
     client: !!staff && !edit && !client && "Pick the client this job is for.",
+    budget: project && !(dollarsToCents(budget) > 0) && "Add your estimated budget.",
+    due: project && !due && "Pick when the project is due.",
     pay:
       !!posting &&
       !!payMin.trim() &&
       !!payMax.trim() &&
       dollarsToCents(payMin) > dollarsToCents(payMax) &&
       "The lowest pay is above the highest.",
-    title: !title.trim() && "Add a title for the role.",
-    zone: !zone && "Pick your time zone.",
-    time: !flexible && (!from || !to) && "Pick a start and end time.",
-    overview: !overview.trim() && "Describe the role in a few sentences.",
-    duties: !filled(duties).length && "Add at least one responsibility.",
-    must: !filled(must).length && "Add at least one must-have.",
+    title: !title.trim() && (project ? "Say what the project is." : "Add a title for the role."),
+    zone: !project && !zone && "Pick your time zone.",
+    time: !project && !flexible && (!from || !to) && "Pick a start and end time.",
+    overview: !overview.trim() && (project ? "Describe the project." : "Describe the role in a few sentences."),
+    duties: !project && !filled(duties).length && "Add at least one responsibility.",
+    must: !project && !filled(must).length && "Add at least one must-have.",
   };
   const invalid = Object.values(errors).some(Boolean);
   const err = (k: keyof typeof errors) => (tried && errors[k]) || undefined;
@@ -187,17 +212,35 @@ export function VaRequestForm({
     const body: VaRequestWithAgreementIn = {
       ...(!staff && agreed && { agreementAccepted: true }),
       role: title.trim(),
-      schedule,
-      timezone: zone,
       engagement: load.engagement,
       hoursPerWeek: load.hours,
       overview: overview.trim(),
-      responsibilities: filled(duties),
-      mustHave: filled(must),
-      niceToHave: filled(nice),
       important: important.trim(),
-      wantsTimeTracker: timeTracker,
-      wantsAttendance: attendance,
+      ...(project
+        ? // A project has no working hours, lists or time tracking: just its budget and due date.
+          {
+            schedule: "",
+            timezone: "",
+            responsibilities: [],
+            mustHave: [],
+            niceToHave: [],
+            wantsTimeTracker: false,
+            wantsAttendance: false,
+            budgetCents: dollarsToCents(budget),
+            dueDate: due,
+            requestedVaId: vaId || null,
+          }
+        : {
+            schedule,
+            timezone: zone,
+            responsibilities: filled(duties),
+            mustHave: filled(must),
+            niceToHave: filled(nice),
+            wantsTimeTracker: timeTracker,
+            wantsAttendance: attendance,
+            budgetCents: null,
+            dueDate: null,
+          }),
     };
     const done = (message: string) => {
       notify(message);
@@ -243,7 +286,7 @@ export function VaRequestForm({
         subtitle={
           edit
             ? "The maintenance fee depends on the hours, so accept the VA agreement for the new hours."
-            : "Step 1 of 2 · Choose the hours and accept the VA agreement. Then tell us about the role."
+            : "Step 1 of 2 · Choose the hours or an open project and accept the agreement. Then tell us about it."
         }
         footer={
           <>
@@ -278,6 +321,30 @@ export function VaRequestForm({
     );
   }
 
+  // Set hours or an open project. Staff pick it here; clients set it on the agreement step, so changing it means
+  // accepting the agreement again.
+  const hoursField = staff ? (
+    <Field label="Expected working hours" htmlFor="vr-load" required className="vrf-half">
+      <Select id="vr-load" value={loadKey} onChange={(e) => setLoad(e.target.value as typeof loadKey)} options={LOADS.map((l) => ({ value: l.value, label: l.label }))} />
+    </Field>
+  ) : (
+    <Field label={project ? "Request type" : "Expected working hours"} required>
+      <div className="vra-summary">
+        <Icon name={project ? "briefcase" : "clock"} size={16} className="vra-summary__icon" />
+        <span className="vra-summary__text">
+          <strong>{load.label}</strong>
+          <span>
+            {project ? "No maintenance fee · payment quoted by GoCWGL" : `Maintenance fee: ${maintenanceFeeLabel(load.hours)}`}
+            {agreed && ` · ${project ? "project agreement" : "VA agreement"} accepted`}
+          </span>
+        </span>
+        <Button size="sm" variant="outline" onClick={openAgreement}>
+          Change
+        </Button>
+      </div>
+    </Field>
+  );
+
   return (
     <Modal
       open
@@ -294,6 +361,8 @@ export function VaRequestForm({
           ? `${edit.clientName || "Client"}’s request. Changes show on their VAs page${edit.jobPostingId ? " and in the job post VAs see" : ""}.`
           : staff
           ? "Same form clients use. It’s added to the client’s VA requests, and VAs can apply once it’s live."
+          : project
+          ? "Step 2 of 2 · Tell us about the project. We’ll review it and quote the payment."
           : "Step 2 of 2 · Tell us about the role. We’ll review it and match you with a trained VA."
       }
       footer={
@@ -330,110 +399,122 @@ export function VaRequestForm({
           </Section>
         )}
 
-        <Section title="Role" desc="What you’re hiring for.">
-          <Field label="Title" htmlFor="vr-title" required error={err("title")}>
-            <Input id="vr-title" value={title} maxLength={160} placeholder="e.g. Executive Assistant" aria-invalid={!!err("title")} onChange={(e) => setTitle(e.target.value)} autoFocus />
+        <Section title={project ? "Project" : "Role"} desc={project ? "What you need done, your budget and when it’s due." : "What you’re hiring for."}>
+          <Field label={project ? "What project" : "Title"} htmlFor="vr-title" required error={err("title")}>
+            <Input
+              id="vr-title"
+              value={title}
+              maxLength={160}
+              placeholder={project ? "e.g. Rebuild our booking website" : "e.g. Executive Assistant"}
+              aria-invalid={!!err("title")}
+              onChange={(e) => setTitle(e.target.value)}
+              autoFocus
+            />
           </Field>
-          <Field label="Role overview" htmlFor="vr-overview" required error={err("overview")}>
+          <Field label={project ? "Details" : "Role overview"} htmlFor="vr-overview" required error={err("overview")}>
             <Textarea
               id="vr-overview"
-              rows={4}
+              rows={project ? 5 : 4}
               maxLength={5000}
               value={overview}
               aria-invalid={!!err("overview")}
-              placeholder="What the role is for and what success looks like."
+              placeholder={project ? "What the project involves, what you have already, and what done looks like." : "What the role is for and what success looks like."}
               onChange={(e) => setOverview(e.target.value)}
             />
           </Field>
-        </Section>
-
-        <Section title="Schedule" desc="When the VA works, in your time zone.">
-          <Field label="Days" required error={err("time")}>
-            <div className="vrf-chips" role="radiogroup" aria-label="Days">
-              {DAYS.map((d) => (
-                <button key={d} type="button" role="radio" aria-checked={days === d} className={days === d ? "is-on" : ""} onClick={() => setDays(d)}>
-                  {d}
-                </button>
-              ))}
+          {project && (
+            <div className="vrf-grid vrf-grid--2">
+              <Field label="Estimated budget ($)" htmlFor="vr-budget" required error={err("budget")} hint="GoCWGL quotes the payment after review.">
+                <Input id="vr-budget" inputMode="decimal" placeholder="500" value={budget} aria-invalid={!!err("budget")} onChange={(e) => setBudget(e.target.value)} />
+              </Field>
+              <Field label="Due date" htmlFor="vr-due" required error={err("due")}>
+                <Input id="vr-due" type="date" value={due} aria-invalid={!!err("due")} onChange={(e) => setDue(e.target.value)} />
+              </Field>
             </div>
-          </Field>
-          <div className={`vrf-grid${flexible ? " vrf-grid--1" : ""}`}>
-            {!flexible && (
-              <>
-                <Field label="Start" htmlFor="vr-from">
-                  <Input id="vr-from" type="time" value={from} onChange={(e) => setFrom(e.target.value)} />
-                </Field>
-                <Field label="End" htmlFor="vr-to">
-                  <Input id="vr-to" type="time" value={to} onChange={(e) => setTo(e.target.value)} />
-                </Field>
-              </>
-            )}
-            <Field label="Time zone" htmlFor="vr-zone" required error={err("zone")} className="vrf-grid__wide">
+          )}
+          {project && !staff && vaChoices.length > 0 && (
+            <Field label="VA for this project" htmlFor="vr-va" hint="Ask for a VA who worked with you before, or let GoCWGL pick. We assign the VA once the project is approved.">
               <Select
-                id="vr-zone"
-                value={zone}
-                aria-invalid={!!err("zone")}
-                onChange={(e) => setZone(e.target.value)}
-                placeholder="Choose a time zone"
-                options={ZONES.some((z) => z.label === zone) || !zone ? ZONES.map((z) => z.label) : [zone, ...ZONES.map((z) => z.label)]}
+                id="vr-va"
+                value={vaId}
+                onChange={(e) => setVaId(e.target.value)}
+                options={[{ value: "", label: "Any VA · GoCWGL picks the right person" }, ...vaChoices.map((v) => ({ value: v.id, label: `${v.name} · worked with you before` }))]}
               />
             </Field>
-          </div>
-          {staff ? (
-            <Field label="Expected working hours" htmlFor="vr-load" required className="vrf-half">
-              <Select id="vr-load" value={loadKey} onChange={(e) => setLoad(e.target.value as typeof loadKey)} options={LOADS.map((l) => ({ value: l.value, label: l.label }))} />
-            </Field>
-          ) : (
-            // Set on the agreement step: changing them means accepting the agreement for the new hours.
-            <Field label="Expected working hours" required>
-              <div className="vra-summary">
-                <Icon name="clock" size={16} className="vra-summary__icon" />
-                <span className="vra-summary__text">
-                  <strong>{load.label}</strong>
-                  <span>
-                    Maintenance fee: {maintenanceFeeLabel(load.hours)}
-                    {agreed && " · VA agreement accepted"}
-                  </span>
-                </span>
-                <Button size="sm" variant="outline" onClick={openAgreement}>
-                  Change
-                </Button>
-              </div>
-            </Field>
           )}
+          {project && hoursField}
         </Section>
 
-        <Section title="Time tracking" desc="Off unless you need it. Turn on what you want and it’s added to your menu (Time & activity) and your VA’s.">
-          <ToolRow
-            icon="clock"
-            title="Time tracker"
-            hint="Your VA tracks the time they spend on your work. You see it in VA tracker."
-            checked={timeTracker}
-            onChange={setTimeTracker}
-          />
-          <ToolRow
-            icon="calendarCheck"
-            title="Attendance"
-            hint="Your VA clocks in and out, so you see when they start and whether it’s on time for your schedule."
-            checked={attendance}
-            onChange={setAttendance}
-          />
-        </Section>
+        {!project && (
+          <>
+            <Section title="Schedule" desc="When the VA works, in your time zone.">
+              <Field label="Days" required error={err("time")}>
+                <div className="vrf-chips" role="radiogroup" aria-label="Days">
+                  {DAYS.map((d) => (
+                    <button key={d} type="button" role="radio" aria-checked={days === d} className={days === d ? "is-on" : ""} onClick={() => setDays(d)}>
+                      {d}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+              <div className={`vrf-grid${flexible ? " vrf-grid--1" : ""}`}>
+                {!flexible && (
+                  <>
+                    <Field label="Start" htmlFor="vr-from">
+                      <Input id="vr-from" type="time" value={from} onChange={(e) => setFrom(e.target.value)} />
+                    </Field>
+                    <Field label="End" htmlFor="vr-to">
+                      <Input id="vr-to" type="time" value={to} onChange={(e) => setTo(e.target.value)} />
+                    </Field>
+                  </>
+                )}
+                <Field label="Time zone" htmlFor="vr-zone" required error={err("zone")} className="vrf-grid__wide">
+                  <Select
+                    id="vr-zone"
+                    value={zone}
+                    aria-invalid={!!err("zone")}
+                    onChange={(e) => setZone(e.target.value)}
+                    placeholder="Choose a time zone"
+                    options={ZONES.some((z) => z.label === zone) || !zone ? ZONES.map((z) => z.label) : [zone, ...ZONES.map((z) => z.label)]}
+                  />
+                </Field>
+              </div>
+              {hoursField}
+            </Section>
 
-        <Section title="Responsibilities & experience" desc="One item per line. Press Enter to add another.">
-          <BulletField label="Key responsibilities" required items={duties} onChange={setDuties} error={err("duties")} placeholder="e.g. Answer and sort the patient inbox" />
-          <BulletField label="Must-have experience" required items={must} onChange={setMust} error={err("must")} placeholder="e.g. 2+ years as a virtual assistant" />
-          <BulletField label="Good to have experience" items={nice} onChange={setNice} placeholder="e.g. Dental or medical office experience" />
-        </Section>
+            <Section title="Time tracking" desc="Off unless you need it. Turn on what you want and it’s added to your menu (Time & activity) and your VA’s.">
+              <ToolRow
+                icon="clock"
+                title="Time tracker"
+                hint="Your VA tracks the time they spend on your work. You see it in VA tracker."
+                checked={timeTracker}
+                onChange={setTimeTracker}
+              />
+              <ToolRow
+                icon="calendarCheck"
+                title="Attendance"
+                hint="Your VA clocks in and out, so you see when they start and whether it’s on time for your schedule."
+                checked={attendance}
+                onChange={setAttendance}
+              />
+            </Section>
 
-        <Section title="Important" desc="Deal-breakers or anything the VA must know.">
+            <Section title="Responsibilities & experience" desc="One item per line. Press Enter to add another.">
+              <BulletField label="Key responsibilities" required items={duties} onChange={setDuties} error={err("duties")} placeholder="e.g. Answer and sort the patient inbox" />
+              <BulletField label="Must-have experience" required items={must} onChange={setMust} error={err("must")} placeholder="e.g. 2+ years as a virtual assistant" />
+              <BulletField label="Good to have experience" items={nice} onChange={setNice} placeholder="e.g. Dental or medical office experience" />
+            </Section>
+          </>
+        )}
+
+        <Section title="Important" desc={project ? "Must-haves, tools, access or anything the VA must know." : "Deal-breakers or anything the VA must know."}>
           <Textarea
             id="vr-important"
             aria-label="Important"
             rows={3}
             maxLength={3000}
             value={important}
-            placeholder="e.g. Camera on for the daily stand-up, backup internet, fluent English."
+            placeholder={project ? "e.g. Keep our current links, use our brand colors, test on mobile." : "e.g. Camera on for the daily stand-up, backup internet, fluent English."}
             onChange={(e) => setImportant(e.target.value)}
           />
         </Section>
@@ -469,78 +550,116 @@ function VaAgreement({
   onAgree: (agreed: boolean) => void;
   error?: string;
 }) {
-  const load = CLIENT_LOADS.find((l) => l.value === loadKey) ?? CLIENT_LOADS[CLIENT_LOADS.length - 1];
+  const load = LOADS.find((l) => l.value === loadKey) ?? LOADS[2];
   return (
     <div className="vrf">
-      <Section title="Hours a week" desc="How much your VA works for you. The monthly maintenance fee depends on it (your VA’s pay is separate).">
+      <Section title="Hours a week" desc="How much your VA works for you, or a one-off open project. Set hours have a monthly maintenance fee (your VA’s pay is separate).">
         <div className="vra-hours" role="radiogroup" aria-label="Hours a week">
-          {CLIENT_LOADS.map((l) => (
+          {LOADS.map((l) => (
             <button key={l.value} type="button" role="radio" aria-checked={l.value === loadKey} className={l.value === loadKey ? "is-on" : ""} onClick={() => onLoad(l.value)}>
               <span className="vra-hours__label">{l.label}</span>
-              <span className="vra-hours__fee">${VA_MAINTENANCE_FEE_DOLLARS[l.hours]} / month fee</span>
+              <span className="vra-hours__fee">{l.hours ? `$${VA_MAINTENANCE_FEE_DOLLARS[l.hours]} / month fee` : "No maintenance fee"}</span>
             </button>
           ))}
         </div>
       </Section>
 
-      <Section title="VA agreement" desc="Please read it before you request a VA.">
-        <div className="vra-doc" tabIndex={0} aria-label="VA agreement">
-          <h4>Monthly maintenance fee</h4>
-          <p>
-            Each VA you request comes with a monthly maintenance fee paid to GoCWGL, set by the hours they work for you. The fee is
-            not your VA’s pay: their salary is separate (see “Your VA’s pay” below).
-          </p>
-          <table className="vra-fees">
-            <tbody>
-              {CLIENT_LOADS.map((l) => (
-                <tr key={l.value} className={l.value === loadKey ? "is-on" : undefined}>
-                  <td>{l.label}</td>
-                  <td>${VA_MAINTENANCE_FEE_DOLLARS[l.hours]} a month</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <h4>What the fee is for</h4>
-          <p>The fee includes:</p>
-          <ul>
-            <li>Keeping your VA active with your business.</li>
-            <li>Ongoing training for your VA in the latest technology, including AI tools.</li>
-            <li>Our team’s activity cost in supporting you and your VA.</li>
-          </ul>
-          <h4>Your VA’s pay</h4>
-          <p>
-            The maintenance fee does <strong>not</strong> include your VA’s salary. You pay your VA separately, for the hours they
-            work, <strong>directly to your VA’s own payment method</strong>. Your VA sends you their invoices, and you’ll find them
-            in your portal. GoCWGL doesn’t collect, hold or pass on your VA’s pay.
-          </p>
-          <h4>Billing</h4>
-          <p>
-            GoCWGL invoices only the maintenance fee, monthly, and you’ll find those invoices in the Invoices menu. Your VA’s invoices for
-            their hours are separate and are paid to your VA.
-          </p>
-          <h4>When to pay</h4>
-          <p>
-            Pay every invoice <strong>within 3 business days of the invoice date</strong>: GoCWGL’s maintenance fee invoices and
-            your VA’s invoices for their hours alike.
-          </p>
-          <h4>Changing the hours</h4>
-          <p>If you change the hours on your request, the fee changes with them and you’ll be asked to accept this agreement again.</p>
-        </div>
-        <Field error={error}>
-          <Checkbox
-            brand
-            checked={agreed}
-            aria-invalid={!!error}
-            onChange={(e) => onAgree(e.target.checked)}
-            label={
-              <>
-                I’ve read the VA agreement and agree to the <strong>${VA_MAINTENANCE_FEE_DOLLARS[load.hours]} monthly maintenance fee</strong> for{" "}
-                {load.hours} hours a week. I understand it doesn’t include my VA’s salary, which I pay directly to my VA’s payment method, and that I pay each invoice within 3 business days of its date.
-              </>
-            }
-          />
-        </Field>
-      </Section>
+      {!load.hours ? (
+        <Section title="Project agreement" desc="Please read it before you request a project.">
+          <div className="vra-doc" tabIndex={0} aria-label="Project agreement">
+            <h4>No maintenance fee</h4>
+            <p>
+              An open project is one piece of work with a due date, not set weekly hours, so there’s <strong>no monthly maintenance
+              fee</strong>.
+            </p>
+            <h4>The payment is quoted by GoCWGL</h4>
+            <p>
+              Tell us what the project is, its details, your estimated budget and when it’s due. GoCWGL reviews it and sends you a
+              quote for the payment. Your budget helps us scope the work; the quote is the price. Once you agree to it, GoCWGL
+              sends you the invoice, and assigns your VA as soon as it’s paid.
+            </p>
+            <h4>When to pay</h4>
+            <p>
+              Pay each project invoice <strong>within 3 business days of the invoice date</strong>. You’ll find them in the Invoices menu.
+            </p>
+            <h4>Changing to set hours</h4>
+            <p>If you change your request to set weekly hours, the VA agreement and its monthly maintenance fee apply, and you’ll be asked to accept it.</p>
+          </div>
+          <Field error={error}>
+            <Checkbox
+              brand
+              checked={agreed}
+              aria-invalid={!!error}
+              onChange={(e) => onAgree(e.target.checked)}
+              label={
+                <>
+                  I’ve read the project agreement. I understand there’s <strong>no maintenance fee</strong>, that GoCWGL quotes the payment
+                  for the project, and that I pay each invoice within 3 business days of its date.
+                </>
+              }
+            />
+          </Field>
+        </Section>
+      ) : (
+          <Section title="VA agreement" desc="Please read it before you request a VA.">
+            <div className="vra-doc" tabIndex={0} aria-label="VA agreement">
+              <h4>Monthly maintenance fee</h4>
+              <p>
+                Each VA you request comes with a monthly maintenance fee paid to GoCWGL, set by the hours they work for you. The fee is
+                not your VA’s pay: their salary is separate (see “Your VA’s pay” below).
+              </p>
+              <table className="vra-fees">
+                <tbody>
+                  {HOURS_LOADS.map((l) => (
+                    <tr key={l.value} className={l.value === loadKey ? "is-on" : undefined}>
+                      <td>{l.label}</td>
+                      <td>${VA_MAINTENANCE_FEE_DOLLARS[l.hours]} a month</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <h4>What the fee is for</h4>
+              <p>The fee includes:</p>
+              <ul>
+                <li>Keeping your VA active with your business.</li>
+                <li>Ongoing training for your VA in the latest technology, including AI tools.</li>
+                <li>Our team’s activity cost in supporting you and your VA.</li>
+              </ul>
+              <h4>Your VA’s pay</h4>
+              <p>
+                The maintenance fee does <strong>not</strong> include your VA’s salary. You pay your VA separately, for the hours they
+                work, <strong>directly to your VA’s own payment method</strong>. Your VA sends you their invoices, and you’ll find them
+                in your portal. GoCWGL doesn’t collect, hold or pass on your VA’s pay.
+              </p>
+              <h4>Billing</h4>
+              <p>
+                GoCWGL invoices only the maintenance fee, monthly, and you’ll find those invoices in the Invoices menu. Your VA’s invoices for
+                their hours are separate and are paid to your VA.
+              </p>
+              <h4>When to pay</h4>
+              <p>
+                Pay every invoice <strong>within 3 business days of the invoice date</strong>: GoCWGL’s maintenance fee invoices and
+                your VA’s invoices for their hours alike.
+              </p>
+              <h4>Changing the hours</h4>
+              <p>If you change the hours on your request, the fee changes with them and you’ll be asked to accept this agreement again.</p>
+            </div>
+            <Field error={error}>
+              <Checkbox
+                brand
+                checked={agreed}
+                aria-invalid={!!error}
+                onChange={(e) => onAgree(e.target.checked)}
+                label={
+                  <>
+                    I’ve read the VA agreement and agree to the <strong>${VA_MAINTENANCE_FEE_DOLLARS[load.hours]} monthly maintenance fee</strong> for{" "}
+                    {load.hours} hours a week. I understand it doesn’t include my VA’s salary, which I pay directly to my VA’s payment method, and that I pay each invoice within 3 business days of its date.
+                  </>
+                }
+              />
+            </Field>
+          </Section>
+      )}
     </div>
   );
 }

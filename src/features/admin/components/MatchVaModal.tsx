@@ -16,7 +16,7 @@ const HOURS: Array<{ value: Exclude<HoursChoice, "">; label: string }> = [
   { value: "10", label: "10 hours a week" },
   { value: "20", label: "20 hours a week" },
   { value: "40", label: "40 hours a week (full time)" },
-  { value: "project", label: "Open project (fee quoted)" },
+  { value: "project", label: "Open project (no maintenance fee)" },
 ];
 /** "$20 a month". */
 const feeLabel = (dollars: number | null) => (dollars == null ? "" : `${"$"}${dollars} a month`);
@@ -157,7 +157,7 @@ export function MatchVaModal({ client, onClose }: { client?: { id: string; name:
             </Field>
             <div className="mv-fee" aria-live="polite">
               <span className="mv-fee__label">Monthly maintenance fee</span>
-              <strong className="mv-fee__value">{fee != null ? feeLabel(fee) : hours === "project" ? "Quoted by GoCWGL" : "Pick the hours"}</strong>
+              <strong className="mv-fee__value">{fee != null ? feeLabel(fee) : hours === "project" ? "No maintenance fee" : "Pick the hours"}</strong>
               <span className="text-tiny">Paid to GoCWGL. The VA’s pay is separate.</span>
             </div>
           </div>

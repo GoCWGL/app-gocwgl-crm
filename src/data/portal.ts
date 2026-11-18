@@ -16,6 +16,7 @@ export type PortalTab =
   | "journal"
   | "team"
   | "vateam"
+  | "vaprojects"
   | "projects"
   | "ratings"
   | "build"
@@ -57,6 +58,7 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   journal: { title: "VA tracker", subtitle: "Everything your VAs logged for your business, day by day." },
   team: { title: "Request VA", subtitle: "Ask GoCWGL for a VA, and follow each request until you're matched." },
   vateam: { title: "Team", subtitle: "The virtual assistants working with your business right now." },
+  vaprojects: { title: "Projects", subtitle: "Your open projects: requested, in progress with a VA, and completed." },
   projects: { title: "Tasks", subtitle: "Request a task, pick the main VA and any backups, and follow its status." },
   ratings: { title: "Ratings", subtitle: "Rate each VA on your team. Ratings go to GoCWGL and help us support them." },
   build: { title: "Build progress", subtitle: "Follow along as we build your system." },
@@ -144,7 +146,7 @@ export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
           {
             title: "Your team",
             needsVa: true,
-            items: [page("vateam", "Team", "users"), page("projects", "Tasks", "clipboard"), page("assets", "Assets", "lock")],
+            items: [page("vateam", "Team", "users"), page("vaprojects", "Projects", "folder"), page("projects", "Tasks", "clipboard"), page("assets", "Assets", "lock")],
           },
           {
             title: "Time & activity",
@@ -351,8 +353,8 @@ export const CRM_FAQ = [
 ];
 
 
-/** Pages a client only gets once they have an active VA. */
-export const VA_ONLY_TABS = new Set<PortalTab>(PORTAL_MENU_PAGES.filter((p) => p.needsVa).map((p) => p.item.tab));
+/** Pages a client only gets once they have an active VA (Projects, under "Your team", shows before: project requests). */
+export const VA_ONLY_TABS = new Set<PortalTab>(PORTAL_MENU_PAGES.filter((p) => p.needsVa && p.item.tab !== "vaprojects").map((p) => p.item.tab));
 
 /** Pages switched off for now: not in the menu, and links to them open the dashboard. */
 export const HIDDEN_PORTAL_TABS = new Set<PortalTab>(["affiliate"]);

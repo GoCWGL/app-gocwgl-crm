@@ -6,11 +6,14 @@ import { avatarTone } from "@/lib/tones";
 import type { Tone } from "@/lib/tones";
 import type { TeamVa, VaRequestOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
-import { useCancelVaRequest, useVaRequests, useVaTeam } from "@/utils/hooks/useClientWork";
+import { useSession } from "@/utils/auth/session";
+import { formatCentsExact } from "@/utils/format/money";
+import { useAcceptQuote, useCancelVaRequest, useCommentOnMyRequest, useMyRequestComments, useVaRequests, useVaTeam } from "@/utils/hooks/useClientWork";
+import { RequestComments } from "../components/RequestComments";
 import { requestHours, requestLoad, VaRequestDetails } from "../components/VaRequestDetails";
 import { ApplicantsReview } from "../components/ApplicantsReview";
 import { VaProfileModal } from "../components/VaProfileModal";
-import { VaRequestForm, VaRequestModal } from "../components/VaRequestModal";
+import { usePastVas, VaRequestForm, VaRequestModal } from "../components/VaRequestModal";
 import { StateChip, VaPresence } from "../components/VaPresence";
 import { firstName, hm } from "../lib/vaTeam";
 import { useShowPackages, useVaTools } from "../lib/vaAccess";
@@ -18,7 +21,7 @@ import { usePortal } from "../state/PortalContext";
 
 const since = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 
-const REQUEST_STATUS: Record<VaRequestOut["status"], { label: string; tone: Tone }> = {
+export const REQUEST_STATUS: Record<VaRequestOut["status"], { label: string; tone: Tone }> = {
   new: { label: "Sent", tone: "slate" },
   reviewing: { label: "In review", tone: "sky" },
   approved: { label: "Approved", tone: "green" },
@@ -148,6 +151,9 @@ export function TeamSection() {
   );
 }
 
+/** "40 hours a week · Mon–Fri, 9:00 AM – 5:00 PM · US Eastern", or "Open project · due Dec 15, 2026". */
+const requestSummary = (r: VaRequestOut) => (r.engagement === "project" ? requestHours(r) : `${requestLoad(r)} · ${requestHours(r)}`);
+
 /** The road from request to VA, as the client sees it. */
 const STAGES: Array<{ label: string; reached: Array<VaRequestOut["status"]> }> = [
   { label: "Sent", reached: ["new", "reviewing", "approved", "posted", "interviewing", "matched"] },
@@ -174,7 +180,7 @@ function RequestList({ requests, onOpen }: { requests: VaRequestOut[]; onOpen: (
                 <span className="rq-row__main">
                   <strong className="rq-row__title">{r.role}</strong>
                   <span className="rq-row__meta">
-                    {requestLoad(r)} · {requestHours(r)}
+                    {requestSummary(r)}
                   </span>
                 </span>
                 <span className="rq-row__extra">
@@ -203,9 +209,13 @@ function RequestList({ requests, onOpen }: { requests: VaRequestOut[]; onOpen: (
 }
 
 /** One request: progress, what's happening, the matched VA or applicants, every detail, and edit / cancel. */
-function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => void }) {
+export function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => void }) {
   const { readOnly, notify } = usePortal();
+  const { viewAsClientId } = useSession();
+  const comments = useMyRequestComments(r.id);
+  const comment = useCommentOnMyRequest();
   const cancel = useCancelVaRequest();
+  const pastVas = usePastVas();
   const st = REQUEST_STATUS[r.status];
   const [profile, setProfile] = useState(false);
   const [reviewing, setReviewing] = useState(false);
@@ -218,7 +228,7 @@ function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => void }) 
   const canEdit = !readOnly && (r.status === "new" || r.status === "reviewing");
   const canCancel = !readOnly && ["new", "reviewing", "approved"].includes(r.status);
 
-  if (editing) return <VaRequestForm edit={r} notify={notify} onClose={() => setEditing(false)} />;
+  if (editing) return <VaRequestForm edit={r} notify={notify} pastVas={pastVas} onClose={() => setEditing(false)} />;
 
   return (
     <Modal
@@ -227,7 +237,7 @@ function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => void }) 
       titleId={`rq-${r.id}`}
       kicker="VA REQUEST"
       title={r.role}
-      subtitle={`${requestLoad(r)} · ${requestHours(r)} · requested ${formatShort(r.createdAt)}`}
+      subtitle={`${requestSummary(r)} · requested ${formatShort(r.createdAt)}`}
       width={720}
       className="rq-popup"
       footer={
@@ -254,7 +264,13 @@ function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => void }) 
           </Badge>
           <p className={`rq-card__status is-${r.status}`}>
             <span className="rq-card__status-dot" aria-hidden="true" />
-            {STATUS_TEXT[r.status]}
+            {r.engagement === "project" && r.status === "inactive"
+              ? "This project has ended."
+              : r.engagement === "project" && r.quoteAcceptedAt && !r.matchedVa && !ended
+                ? "You agreed to the price. GoCWGL sends your invoice; your VA is assigned once it’s paid."
+                : r.engagement === "project" && r.quoteCents != null && !r.quoteAcceptedAt && !ended
+                  ? "GoCWGL sent your quote. Agree to the price to go ahead."
+                  : STATUS_TEXT[r.status]}
             {who && <span className="rq-card__when">{who}</span>}
           </p>
         </div>
@@ -318,7 +334,20 @@ function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => void }) 
           </p>
         )}
 
+        {r.engagement === "project" && !ended && <QuoteCard r={r} />}
+
         <VaRequestDetails r={r} />
+
+        <RequestComments
+          side="client"
+          comments={comments}
+          send={(body, done) => comment.mutate({ id: r.id, body }, { onSuccess: done })}
+          sending={comment.isPending}
+          sendError={comment.error}
+          closed={r.status === "cancelled"}
+          readOnly={readOnly}
+          staffViewing={!!viewAsClientId}
+        />
       </div>
 
       {confirmCancel && (
@@ -339,6 +368,75 @@ function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => void }) 
       )}
       {reviewing && <ApplicantsReview r={r} onClose={() => setReviewing(false)} />}
     </Modal>
+  );
+}
+
+/** An open project's price: waiting for GoCWGL's quote, the quote to agree to, or agreed (then GoCWGL assigns the VA). */
+function QuoteCard({ r }: { r: VaRequestOut }) {
+  const { readOnly, notify } = usePortal();
+  const accept = useAcceptQuote();
+  const [confirming, setConfirming] = useState(false);
+  const amount = formatCentsExact(r.quoteCents);
+  const state = r.quoteAcceptedAt ? "agreed" : r.quoteCents != null ? "quoted" : "waiting";
+  return (
+    <div className={`rq-quote is-${state}`}>
+      <span className="rq-quote__icon" aria-hidden="true">
+        <Icon name={state === "agreed" ? "circleCheck" : "invoice"} size={17} />
+      </span>
+      <span className="rq-quote__text">
+        {state === "waiting" ? (
+          <>
+            <strong>Waiting for your quote</strong>
+            <span>GoCWGL reviews your project and posts the price in the comments below. Ask anything there meanwhile.</span>
+          </>
+        ) : state === "quoted" ? (
+          <>
+            <strong>
+              GoCWGL quoted <span className="rq-quote__amount">{amount}</span>
+            </strong>
+            <span>Agree to the price and GoCWGL sends you the invoice. Once it’s paid, we assign your VA. Questions? Ask in the comments first.</span>
+          </>
+        ) : (
+          <>
+            <strong>
+              You agreed to <span className="rq-quote__amount">{amount}</span>
+            </strong>
+            <span>
+              Agreed {formatShort(r.quoteAcceptedAt!)}.{" "}
+              {r.matchedVa
+                ? `${r.matchedVa.name} is on it.`
+                : "GoCWGL will send you the invoice (you’ll find it in Invoices). Once it’s paid, we assign your VA to the project."}
+            </span>
+          </>
+        )}
+      </span>
+      {state === "quoted" && !readOnly && (
+        <Button variant="primary" onClick={() => setConfirming(true)}>
+          <Icon name="check" size={14} /> Agree to {amount}
+        </Button>
+      )}
+      {confirming && (
+        <ConfirmDialog
+          title={`Agree to ${amount} for “${r.role}”?`}
+          confirmLabel={`Agree to ${amount}`}
+          icon="check"
+          pending={accept.isPending}
+          error={accept.error}
+          onConfirm={() =>
+            accept.mutate(r.id, {
+              onSuccess: () => {
+                notify(`You agreed to ${amount}. GoCWGL will send you the invoice, and assign your VA once it’s paid.`);
+                setConfirming(false);
+              },
+            })
+          }
+          onClose={() => setConfirming(false)}
+        >
+          GoCWGL then sends you the invoice for {amount}, which you’ll find in Invoices. Once it’s paid, we assign a VA to your
+          project. Pay each invoice within 3 business days of its date.
+        </ConfirmDialog>
+      )}
+    </div>
   );
 }
 

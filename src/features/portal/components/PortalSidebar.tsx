@@ -72,15 +72,20 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const showFunnelPackages = useShowPackages("funnels");
   // Request VA shows once the team turns the VA packages on, or while they have requests to follow.
   const showVaPackages = useShowPackages("va");
-  const hasVaRequests = (useVaRequests().data ?? []).some((r) => r.status !== "cancelled");
+  const vaRequests = useVaRequests().data ?? [];
+  const hasVaRequests = vaRequests.some((r) => r.status !== "cancelled");
+  // Projects shows with Request VA, or while the client has project requests to follow.
+  const hasProjects = vaRequests.some((r) => r.engagement === "project");
   // Time & activity (VA tracker and Attendance) is hidden until a VA request turns on the time tracker or Attendance.
   const tools = useVaTools();
   const shown = (i: PortalMenuItem, needsVa?: boolean) =>
     !HIDDEN_PORTAL_TABS.has(i.tab) &&
-    (!(needsVa || i.needsVa) || vaWork.has) &&
+    // Projects sits under "Your team" but also shows before the first VA, so a client can follow a project request.
+    (!(needsVa || i.needsVa) || vaWork.has || i.tab === "vaprojects") &&
     (i.tab !== "training" || training.has) &&
     (i.view !== "packages" || (i.tab === "crm" ? showCrmPackages : showFunnelPackages)) &&
     (i.tab !== "team" || showVaPackages || hasVaRequests) &&
+    (i.tab !== "vaprojects" || showVaPackages || hasProjects) &&
     (i.tab !== "journal" || tools.timeTracker) &&
     (i.tab !== "attendance" || tools.attendance);
   const groups = PORTAL_MENU.map((g) => ({

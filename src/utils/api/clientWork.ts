@@ -9,6 +9,7 @@ import type {
   AttemptOut,
   ClientProjectOut,
   TaskMessageOut,
+  RequestCommentOut,
   ClientVaInvoice,
   ClientVaInvoiceDetail,
   JournalEntry,
@@ -60,6 +61,10 @@ export const requestVa = (body: VaRequestIn) => post<VaRequestOut>("/portal/va-r
 /** Edit your request while it's New or In review. */
 export const updateMyVaRequest = (id: string, body: VaRequestIn) => put<VaRequestOut>(`/portal/va-requests/${id}`, body);
 export const cancelVaRequest = (id: string) => post<VaRequestOut>(`/portal/va-requests/${id}/cancel`);
+/** The conversation on a request with GoCWGL (an open project's quote shows in it). */
+export const listMyRequestComments = (id: string) => get<RequestCommentOut[]>(`/portal/va-requests/${id}/comments`);
+export const commentOnMyRequest = (id: string, body: string) => post<RequestCommentOut>(`/portal/va-requests/${id}/comments`, { body });
+export const acceptQuote = (id: string) => post<VaRequestOut>(`/portal/va-requests/${id}/accept-quote`);
 
 export const requestApplicants = (id: string) => get<RequestApplicant[]>(`/portal/va-requests/${id}/applicants`);
 export const hireApplicant = (id: string, vaId: string, note: string) => post<VaRequestOut>(`/portal/va-requests/${id}/hire`, { vaId, note });
@@ -94,6 +99,10 @@ export const approveVaRequest = (id: string, note?: string) => post<VaRequestOut
 export const declineVaRequest = (id: string, note?: string) => post<VaRequestOut>(`/admin/va-requests/${id}/decline`, note === undefined ? {} : { note });
 export const postVaRequest = (id: string, body: VaRequestPost) => post<VaRequestOut>(`/admin/va-requests/${id}/post`, body);
 export const matchVaRequest = (id: string, vaId: string) => post<VaRequestOut>(`/admin/va-requests/${id}/match`, { vaId });
+export const listRequestComments = (id: string) => get<RequestCommentOut[]>(`/admin/va-requests/${id}/comments`);
+export const commentOnRequest = (id: string, body: string) => post<RequestCommentOut>(`/admin/va-requests/${id}/comments`, { body });
+export const quoteRequest = (id: string, amountCents: number, note: string) =>
+  post<VaRequestOut>(`/admin/va-requests/${id}/quote`, { amountCents, note });
 export const setVaRequestStage = (id: string, body: VaRequestStage) => post<VaRequestOut>(`/admin/va-requests/${id}/stage`, body);
 export const staffCreateVaRequest = (body: StaffVaRequestIn) => post<VaRequestOut>("/admin/va-requests", body);
 export const deleteVaRequest = (id: string) => del(`/admin/va-requests/${id}`);
