@@ -58,7 +58,7 @@ export const VA_PAGES: Record<VaTab, { title: string; subtitle: string; empty: s
   },
   assets: {
     title: "Assets",
-    subtitle: "Logins, links and notes your clients shared with you. Copy what you need; passwords stay hidden until you ask.",
+    subtitle: "Logins, links and notes for your clients: the ones they shared with you, and ones you add for them and your teammates.",
     empty: "Nothing shared with you yet. When a client shares a login or link with you, it shows up here.",
   },
   invoices: {

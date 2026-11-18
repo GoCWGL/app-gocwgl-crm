@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Icon, IconButton, IconTile, type IconName } from "@/components/ui";
+import { Button, Icon, IconButton, IconTile, Modal, type IconName } from "@/components/ui";
 import type { Tone } from "@/lib/tones";
 import { cn, copyToClipboard } from "@/lib/utils";
 import type { AssetOut } from "@/utils/api/models";
 import { errorMessage, isApiError } from "@/utils/errors";
+import { formatShortDateTime } from "@/utils/format/dates";
 
 /** What both portals get for an asset (the client also gets who can see it). */
 export type AssetBase = Omit<AssetOut, "vaIds">;
@@ -70,9 +71,27 @@ type AssetListProps<T extends AssetBase> = {
   actions?: (asset: T) => ReactNode;
 };
 
-/** The assets list: one row per login, link or note, with name, username, password and category columns. */
+/**
+ * The assets list: one row per login, link or note, with name, username, password and category columns. Clicking a
+ * name opens its full details.
+ */
 export function AssetList<T extends AssetBase>({ assets, loadPassword, passwordBlocked, asideLabel, aside, actions }: AssetListProps<T>) {
+  const [openId, setOpenId] = useState<string | null>(null);
+  // Follows the list, so an edit shows straight away and a deleted asset closes it.
+  const open = assets.find((a) => a.id === openId) ?? null;
   return (
+    <>
+    {open && (
+      <AssetDetails
+        asset={open}
+        loadPassword={loadPassword}
+        passwordBlocked={passwordBlocked}
+        asideLabel={asideLabel}
+        aside={aside?.(open)}
+        actions={actions?.(open)}
+        onClose={() => setOpenId(null)}
+      />
+    )}
     <div className="ast-table" role="table" aria-label="Assets">
       <div className="ast-table__head" role="row">
         <span role="columnheader">Name</span>
@@ -85,9 +104,117 @@ export function AssetList<T extends AssetBase>({ assets, loadPassword, passwordB
         </span>
       </div>
       {assets.map((a) => (
-        <AssetRow key={a.id} asset={a} loadPassword={loadPassword} passwordBlocked={passwordBlocked} aside={aside?.(a)} actions={actions?.(a)} />
+        <AssetRow
+          key={a.id}
+          asset={a}
+          loadPassword={loadPassword}
+          passwordBlocked={passwordBlocked}
+          aside={aside?.(a)}
+          actions={actions?.(a)}
+          onOpen={() => setOpenId(a.id)}
+        />
       ))}
     </div>
+    </>
+  );
+}
+
+/** One asset in full: everything about it, with the password masked until asked for (same rules as the list). */
+function AssetDetails<T extends AssetBase>({
+  asset,
+  loadPassword,
+  passwordBlocked,
+  asideLabel,
+  aside,
+  actions,
+  onClose,
+}: {
+  asset: T;
+  loadPassword: (id: string) => Promise<string>;
+  passwordBlocked?: string | null;
+  asideLabel?: string;
+  aside?: ReactNode;
+  actions?: ReactNode;
+  onClose: () => void;
+}) {
+  const kind = ASSET_KINDS[asset.kind];
+  const none = <span className="ast-row__none">—</span>;
+  return (
+    <Modal
+      open
+      onClose={onClose}
+      titleId="asset-details"
+      kicker={kind.label.toUpperCase()}
+      title={asset.title}
+      subtitle={asset.category || undefined}
+      media={
+        <IconTile tone={kind.tone}>
+          <Icon name={kind.icon} size={18} />
+        </IconTile>
+      }
+      width={560}
+      footer={
+        <>
+          {/* Edit / delete close the details first, so their own pop-up isn't stacked on it. */}
+          {actions && (
+            <span className="ast-details__actions" onClickCapture={onClose}>
+              {actions}
+            </span>
+          )}
+          <span className="u-spacer" />
+          <Button onClick={onClose}>Close</Button>
+        </>
+      }
+    >
+      <dl className="ast-details">
+        {asset.kind !== "note" && (
+          <>
+            <dt>{asset.kind === "login" ? "Website" : "Web address"}</dt>
+            <dd>
+              {asset.url ? (
+                <a className="ast-details__url" href={asset.url} target="_blank" rel="noopener noreferrer">
+                  {asset.url} <Icon name="arrowRight" size={11} />
+                </a>
+              ) : (
+                none
+              )}
+            </dd>
+          </>
+        )}
+        {asset.kind === "login" && (
+          <>
+            <dt>Username</dt>
+            <dd>{asset.username ? <CopyField label="Username" value={asset.username} /> : none}</dd>
+            <dt>Password</dt>
+            <dd>{asset.hasPassword ? <PasswordField id={asset.id} load={loadPassword} blocked={passwordBlocked} /> : none}</dd>
+          </>
+        )}
+        <dt>Category</dt>
+        <dd>{asset.category ? <span className="ast-chip">{asset.category}</span> : none}</dd>
+        {aside && asideLabel && (
+          <>
+            <dt>{asideLabel}</dt>
+            <dd>{aside}</dd>
+          </>
+        )}
+        <dt>Notes</dt>
+        <dd>{asset.notes ? <p className="ast-details__notes">{asset.notes}</p> : none}</dd>
+        {asset.addedByName && (
+          <>
+            <dt>Added by</dt>
+            <dd>
+              {asset.addedByName}
+              {asset.addedByVa && " (VA)"} · {formatShortDateTime(asset.createdAt)}
+            </dd>
+          </>
+        )}
+        <dt>Last changed</dt>
+        <dd>
+          {formatShortDateTime(asset.updatedAt)}
+          {asset.updatedByName && ` by ${asset.updatedByName}`}
+        </dd>
+      </dl>
+    </Modal>
   );
 }
 
@@ -97,12 +224,14 @@ function AssetRow<T extends AssetBase>({
   passwordBlocked,
   aside,
   actions,
+  onOpen,
 }: {
   asset: T;
   loadPassword: (id: string) => Promise<string>;
   passwordBlocked?: string | null;
   aside?: ReactNode;
   actions?: ReactNode;
+  onOpen: () => void;
 }) {
   const kind = ASSET_KINDS[asset.kind];
   const [notesOpen, setNotesOpen] = useState(false);
@@ -114,13 +243,20 @@ function AssetRow<T extends AssetBase>({
           <Icon name={kind.icon} size={15} />
         </IconTile>
         <div className="ast-row__titles">
-          <strong className="ast-row__title">{asset.title}</strong>
+          <button type="button" className="ast-row__title" onClick={onOpen} aria-haspopup="dialog">
+            {asset.title}
+          </button>
           {asset.url ? (
             <a className="ast-row__url" href={asset.url} target="_blank" rel="noopener noreferrer">
               {hostOf(asset.url)} <Icon name="arrowRight" size={11} />
             </a>
           ) : (
             <span className="ast-row__url is-muted">{kind.label}</span>
+          )}
+          {asset.addedByVa && asset.addedByName && (
+            <span className="ast-row__by" title={`Added by ${asset.addedByName}`}>
+              <Icon name="user" size={11} /> Added by {asset.addedByName}
+            </span>
           )}
         </div>
       </div>

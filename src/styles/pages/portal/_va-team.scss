@@ -1366,6 +1366,60 @@ tr.is-clickable {
   }
 }
 
+// Request a VA › Time tracking: time tracker and Attendance, each on or off.
+.vrf-tool {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid $line;
+  border-radius: $radius-md;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+
+  &.is-on {
+    border-color: rgba(255, 153, 0, 0.4);
+    background: rgba(255, 153, 0, 0.06);
+  }
+
+  &__icon {
+    flex: none;
+    color: $muted;
+
+    .is-on > & {
+      color: #c2410c;
+    }
+  }
+
+  &__text {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    font-size: 13px;
+
+    strong {
+      color: $ink;
+      font-size: 13.5px;
+    }
+
+    span {
+      color: $muted;
+    }
+  }
+
+  &__state {
+    flex: none;
+    color: $muted;
+    font-size: 12px;
+    font-weight: 700;
+
+    .is-on > & {
+      color: #c2410c;
+    }
+  }
+}
+
 .vrf-half {
   max-width: calc(50% - 6px);
 

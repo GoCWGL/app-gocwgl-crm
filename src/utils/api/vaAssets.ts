@@ -1,5 +1,5 @@
 import { del, get, patch, post } from "./client";
-import type { AssetIn, AssetOut, AssetPassword, AssetUpdate, ClientAssetsOut, UnlockIn, UnlockStatus, VaAssetsOut } from "./models";
+import type { AssetIn, AssetOut, AssetPassword, AssetUpdate, ClientAssetsOut, UnlockIn, UnlockStatus, VaAssetIn, VaAssetOut, VaAssetsOut } from "./models";
 
 // Client portal › VA › Assets: logins, links and notes, and which VAs can see each one.
 export const clientAssets = () => get<ClientAssetsOut>("/portal/va-assets");
@@ -12,6 +12,11 @@ export const clientAssetPassword = (id: string) => get<AssetPassword>(`/portal/v
 /** All your shared assets, or one client's (the server refuses a client you don't work for). */
 export const myAssets = (clientId?: string) => get<VaAssetsOut>("/va/assets", { client_id: clientId || undefined });
 export const myAssetPassword = (id: string) => get<AssetPassword>(`/va/assets/${id}/password`);
+/** Add one for a client you work for (they see it too); pick teammates on their team who can see it. */
+export const addMyAsset = (body: VaAssetIn) => post<VaAssetOut>("/va/assets", body);
+/** Only assets you added. */
+export const updateMyAsset = (id: string, body: AssetUpdate) => patch<VaAssetOut>(`/va/assets/${id}`, body);
+export const deleteMyAsset = (id: string) => del(`/va/assets/${id}`);
 
 // VA portal › Assets: confirm it's you on this device before passwords show (locks after 24 hours away).
 export const unlockStatus = () => get<UnlockStatus>("/va/assets/unlock");

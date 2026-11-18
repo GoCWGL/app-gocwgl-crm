@@ -403,6 +403,7 @@ export type UserOut = S["UserOut"];
 export type VaApplicationAnswers = S["VaApplicationAnswers"];
 export type VaApplicationIn = S["VaApplicationIn"];
 export type VaAssetClient = S["VaAssetClient"];
+export type VaAssetIn = S["VaAssetIn"];
 export type VaAssetOut = S["VaAssetOut"];
 export type VaAssetsOut = S["VaAssetsOut"];
 export type VaAttendanceClient = S["VaAttendanceClient"];

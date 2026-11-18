@@ -12,6 +12,16 @@ export const requestHours = (r: Pick<VaRequestOut, "schedule" | "timezone">) => 
 export const requestLoad = (r: Pick<VaRequestOut, "engagement" | "hoursPerWeek">) =>
   r.engagement !== "project" && r.hoursPerWeek ? `${r.hoursPerWeek} hours a week` : ENGAGEMENT_LABEL[r.engagement];
 
+/** "Time tracker and Attendance", "Attendance only", "Not needed"… (what the client wants the VA to use). */
+export function trackingLabel(r: Pick<VaRequestOut, "wantsTimeTracker" | "wantsAttendance">): string {
+  const tracker = r.wantsTimeTracker !== false;
+  const attendance = r.wantsAttendance !== false;
+  if (tracker && attendance) return "Time tracker and Attendance";
+  if (tracker) return "Time tracker only";
+  if (attendance) return "Attendance only";
+  return "Not needed";
+}
+
 /** The job posting text VAs read, built from the request (matches the server's default; no client name). */
 export function jobDescriptionFrom(r: VaRequestOut): string {
   const hours = `${r.timezone ? `${r.schedule} (${r.timezone})` : r.schedule}${r.hoursPerWeek ? `, about ${r.hoursPerWeek} hours a week` : ""}`;
@@ -40,6 +50,7 @@ export function VaRequestDetails({ r, staff }: { r: VaRequestOut; staff?: boolea
         <Fact icon="clock" label="Working hours" value={r.schedule || "—"} />
         <Fact icon="globe" label="Time zone" value={r.timezone || "—"} />
         <Fact icon="briefcase" label="Commitment" value={requestLoad(r)} />
+        <Fact icon="calendarCheck" label="Time tracking" value={trackingLabel(r)} />
         {(fee.agreed || staff) && (
           <Fact
             icon="invoice"

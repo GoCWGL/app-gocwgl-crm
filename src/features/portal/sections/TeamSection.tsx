@@ -13,7 +13,7 @@ import { VaProfileModal } from "../components/VaProfileModal";
 import { VaRequestForm, VaRequestModal } from "../components/VaRequestModal";
 import { StateChip, VaPresence } from "../components/VaPresence";
 import { firstName, hm } from "../lib/vaTeam";
-import { useShowPackages } from "../lib/vaAccess";
+import { useShowPackages, useVaTools } from "../lib/vaAccess";
 import { usePortal } from "../state/PortalContext";
 
 const since = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric" });
@@ -344,6 +344,7 @@ function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => void }) 
 
 export function TeamCard({ va }: { va: TeamVa }) {
   const { goTo, readOnly } = usePortal();
+  const timeTracker = useVaTools().timeTracker;
   const state = va.workingNow ? "working" : "offline";
   const extra = va.skills.length - 5;
   const [profile, setProfile] = useState(false);
@@ -403,9 +404,11 @@ export function TeamCard({ va }: { va: TeamVa }) {
 
       <footer className="tc-card__foot">
         <div className="tc-card__links">
-          <button type="button" className="rq-link" onClick={() => goTo("journal")}>
-            VA tracker
-          </button>
+          {timeTracker && (
+            <button type="button" className="rq-link" onClick={() => goTo("journal")}>
+              VA tracker
+            </button>
+          )}
           <button type="button" className="rq-link" onClick={() => setProfile(true)}>
             Profile
           </button>

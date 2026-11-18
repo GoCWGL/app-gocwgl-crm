@@ -33,6 +33,8 @@ export function DashboardSection() {
   const ticking = shift.data?.state === "working";
   const elapsed = running ? running.workedSeconds + (ticking && shift.dataUpdatedAt ? Math.max(0, (now - shift.dataUpdatedAt) / 1000) : 0) : 0;
   const dash = (v: string) => (va ? v : "–");
+  // The timer card only when a client uses the time tracker (turned on in their VA request), or one is running.
+  const tracker = clients.data?.clients.find((c) => c.active && c.wantsTimeTracker);
 
   return (
     <div className="page-stack">
@@ -46,7 +48,7 @@ export function DashboardSection() {
         ]}
       />
 
-      {va && (
+      {va && (running || tracker) && (
         <section className={`card va-now${running ? " is-running" : ""}`}>
           <IconTile tone={running ? "green" : "slate"} size="lg">
             <Icon name="clock" size={20} />
@@ -58,7 +60,7 @@ export function DashboardSection() {
             </strong>
           </span>
           {running && <span className="va-now__clock">{hms(elapsed)}</span>}
-          <Button variant={running ? "outline" : "primary"} onClick={() => goTo("time", running?.client?.id)}>
+          <Button variant={running ? "outline" : "primary"} onClick={() => goTo("time", running?.client?.id ?? tracker?.id)}>
             {running ? "Open tracker" : "Start tracking"} <Icon name="arrowRight" size={14} />
           </Button>
         </section>
@@ -67,8 +69,8 @@ export function DashboardSection() {
       <section className="card stack stack--10">
         <span className="kicker">JUMP TO</span>
         <div className="va-shortcuts">
-          {SHORTCUTS.map((tab) => (
-            <button key={tab} type="button" className="va-shortcut" onClick={() => goTo(tab)}>
+          {SHORTCUTS.filter((tab) => tab !== "time" || tracker).map((tab) => (
+            <button key={tab} type="button" className="va-shortcut" onClick={() => goTo(tab, tab === "time" ? tracker?.id : undefined)}>
               <IconTile tone="brand" size="sm">
                 <Icon name={ICON_FOR[tab]} size={14} strokeWidth={1.9} />
               </IconTile>

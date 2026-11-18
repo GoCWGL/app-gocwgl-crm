@@ -1,6 +1,6 @@
 "use client";
 
-import { useClientTrainings, useVaTeam } from "@/utils/hooks/useClientWork";
+import { useClientTrainings, useVaRequests, useVaTeam } from "@/utils/hooks/useClientWork";
 import { useOverview } from "@/utils/hooks/usePortal";
 
 /**
@@ -27,4 +27,16 @@ export function useShowPackages(kind: "crm" | "funnels" | "va"): boolean {
   if (kind === "va") return overview?.showVaPackages === true;
   if (kind === "funnels") return overview?.showFunnelPackages === true;
   return overview?.showCrmPackages !== false;
+}
+
+/**
+ * Whether the client wants the time tracker (VA tracker) and Attendance: on when any of their VA requests (not
+ * cancelled, declined or inactive) turned it on. Off by default, so the Time & activity menu stays hidden until then.
+ */
+export function useVaTools(): { timeTracker: boolean; attendance: boolean } {
+  const requests = (useVaRequests().data ?? []).filter((r) => !["cancelled", "declined", "inactive"].includes(r.status));
+  return {
+    timeTracker: requests.some((r) => r.wantsTimeTracker === true),
+    attendance: requests.some((r) => r.wantsAttendance === true),
+  };
 }

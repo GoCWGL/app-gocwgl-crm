@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import * as api from "@/utils/api/vaAssets";
-import type { AssetIn, AssetUpdate, UnlockIn } from "@/utils/api/models";
+import type { AssetIn, AssetUpdate, UnlockIn, VaAssetIn } from "@/utils/api/models";
 import { qk } from "./keys";
 import { useApiMutation } from "./mutation";
 
@@ -21,6 +21,11 @@ export const useMyAssets = (clientId: string, enabled = true) =>
     // Logins aren't kept around once you leave the page.
     gcTime: 0,
   });
+
+export const useAddMyAsset = () => useApiMutation((body: VaAssetIn) => api.addMyAsset(body), { invalidate: [qk.vaAssets] });
+export const useUpdateMyAsset = () =>
+  useApiMutation((v: { id: string; body: AssetUpdate }) => api.updateMyAsset(v.id, v.body), { invalidate: [qk.vaAssets] });
+export const useDeleteMyAsset = () => useApiMutation(api.deleteMyAsset, { invalidate: [qk.vaAssets] });
 
 /** Whether this device can show passwords. Checked again every minute (it locks after 24 hours away). */
 export const useUnlockStatus = (enabled = true) =>

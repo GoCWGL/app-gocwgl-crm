@@ -8,7 +8,7 @@ import logoMark from "@/assets/images/logo-mark.png";
 import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
 import { Avatar, Icon } from "@/components/ui";
 import { MyAvatar } from "@/features/account/ProfilePhoto";
-import { VA_CLIENT_NAV, VA_CLIENT_TABS, VA_NAV } from "@/data/va";
+import { VA_CLIENT_NAV, VA_CLIENT_TABS, VA_NAV, type VaTab } from "@/data/va";
 import { avatarTone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import { useMe } from "@/utils/hooks/useUsers";
@@ -189,7 +189,7 @@ export function VaSidebar() {
               </button>
             </div>
             <div className="nav-panel__nav">
-              {VA_CLIENT_NAV.map((group) => (
+              {clientNav(openClient, clockedIn.has(openClient.id)).map((group) => (
                 <SidebarGroup key={group.title} title={group.title}>
                   {group.items.map((item) => (
                     <NavItem
@@ -209,6 +209,15 @@ export function VaSidebar() {
       )}
     </div>
   );
+}
+
+/**
+ * This client's pages: Time tracker and Attendance only when the client turned them on in a VA request (off by
+ * default). Attendance stays while they're clocked in for the client, so they can still clock out.
+ */
+function clientNav(c: { wantsTimeTracker?: boolean; wantsAttendance?: boolean }, clockedIn: boolean) {
+  const hidden = new Set<VaTab>([...(c.wantsTimeTracker ? [] : ["time" as const]), ...(c.wantsAttendance || clockedIn ? [] : ["attendance" as const])]);
+  return VA_CLIENT_NAV.map((g) => ({ ...g, items: g.items.filter((i) => !hidden.has(i.tab)) })).filter((g) => g.items.length);
 }
 
 /** A clock with turning hands next to a client (on their avatar when the menu is icons only) while the VA is clocked in for them. Gone once they clock out. */

@@ -256,14 +256,17 @@ function ClientCard({
             <Button size="sm" variant="outline" onClick={onProfile}>
               View profile
             </Button>
-            <Button
-              size="sm"
-              variant="primary"
-              disabled={running || start.isPending}
-              onClick={() => start.mutate({ contactId: c.id, stopRunning: true }, { onSuccess: () => goTo("time", c.id) })}
-            >
-              <Icon name="play" size={12} /> {running ? "Tracking" : "Start timer"}
-            </Button>
+            {/* Not for a client who doesn't use the time tracker (their choice on the VA request). */}
+            {c.wantsTimeTracker && (
+              <Button
+                size="sm"
+                variant="primary"
+                disabled={running || start.isPending}
+                onClick={() => start.mutate({ contactId: c.id, stopRunning: true }, { onSuccess: () => goTo("time", c.id) })}
+              >
+                <Icon name="play" size={12} /> {running ? "Tracking" : "Start timer"}
+              </Button>
+            )}
           </span>
         )}
       </footer>
@@ -377,7 +380,7 @@ function ClientProfile({
           )}
         </section>
 
-        {c.active && (
+        {c.active && c.wantsTimeTracker && (
           <Button variant="outline" onClick={() => goTo("time", c.id)}>
             <Icon name="clock" size={14} /> Open the Time tracker
           </Button>

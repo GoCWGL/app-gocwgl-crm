@@ -26,7 +26,7 @@ import { useMe } from "@/utils/hooks/useUsers";
 import { useVaRequests } from "@/utils/hooks/useClientWork";
 import { usePortal } from "../state/PortalContext";
 import { useMenuCounts } from "@/utils/hooks/useMenuCounts";
-import { useHasTraining, useHasVaWork, useShowPackages } from "../lib/vaAccess";
+import { useHasTraining, useHasVaWork, useShowPackages, useVaTools } from "../lib/vaAccess";
 import { useCrmTab } from "../sections/CrmSection";
 import { useFunnelTab } from "../sections/FunnelsSection";
 
@@ -73,12 +73,16 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   // Request VA shows once the team turns the VA packages on, or while they have requests to follow.
   const showVaPackages = useShowPackages("va");
   const hasVaRequests = (useVaRequests().data ?? []).some((r) => r.status !== "cancelled");
+  // Time & activity (VA tracker and Attendance) is hidden until a VA request turns on the time tracker or Attendance.
+  const tools = useVaTools();
   const shown = (i: PortalMenuItem, needsVa?: boolean) =>
     !HIDDEN_PORTAL_TABS.has(i.tab) &&
     (!(needsVa || i.needsVa) || vaWork.has) &&
     (i.tab !== "training" || training.has) &&
     (i.view !== "packages" || (i.tab === "crm" ? showCrmPackages : showFunnelPackages)) &&
-    (i.tab !== "team" || showVaPackages || hasVaRequests);
+    (i.tab !== "team" || showVaPackages || hasVaRequests) &&
+    (i.tab !== "journal" || tools.timeTracker) &&
+    (i.tab !== "attendance" || tools.attendance);
   const groups = PORTAL_MENU.map((g) => ({
     ...g,
     items: g.items

@@ -16,7 +16,7 @@ import { useMe } from "@/utils/hooks/useUsers";
 import { StateChip, VaPresence } from "../components/VaPresence";
 import { assigneeLabel, isOpenProject, PROJECT_STATUS } from "../lib/projects";
 import { firstName, hm } from "../lib/vaTeam";
-import { useShowPackages } from "../lib/vaAccess";
+import { useShowPackages, useVaTools } from "../lib/vaAccess";
 import { usePortal } from "../state/PortalContext";
 import { TwoStepReminder } from "@/features/account/TwoStepReminder";
 
@@ -30,6 +30,8 @@ function greeting() {
 /** Client portal › Dashboard: the VA team's status right now, and everything that needs a look. */
 export function DashboardSection() {
   const { goTo } = usePortal();
+  // Attendance and VA tracker are hidden when the client doesn't use them; the KPIs open the team instead.
+  const tools = useVaTools();
   // "Request a VA" only once the team turns on the VA packages for this client.
   const showVaPackages = useShowPackages("va");
   const me = useMe().data;
@@ -83,8 +85,8 @@ export function DashboardSection() {
       </section>
 
       <div className="cp-kpis">
-        <Kpi icon="pulse" tone="green" label="Working now" value={live ? `${live.working} / ${vas.length}` : "–"} onClick={() => goTo("attendance")} />
-        <Kpi icon="clock" tone="cyan" label="Hours this week" value={live ? hm(live.weekSeconds) : "–"} onClick={() => goTo("journal")} />
+        <Kpi icon="pulse" tone="green" label="Working now" value={live ? `${live.working} / ${vas.length}` : "–"} onClick={() => goTo(tools.attendance ? "attendance" : "vateam")} />
+        <Kpi icon="clock" tone="cyan" label="Hours this week" value={live ? hm(live.weekSeconds) : "–"} onClick={() => goTo(tools.timeTracker ? "journal" : "vateam")} />
         <Kpi
           icon="invoice"
           tone={overdue ? "red" : pending.length ? "amber" : "slate"}

@@ -1842,7 +1842,12 @@ export interface paths {
          */
         get: operations["my_assets_api_va_assets_get"];
         put?: never;
-        post?: never;
+        /**
+         * Add My Asset
+         * @description Add a login, link or note for one of your clients. The client sees it in their Assets; pick the teammates on
+         *     their team who can see it too.
+         */
+        post: operations["add_my_asset_api_va_assets_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1917,6 +1922,27 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/va/assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete My Asset */
+        delete: operations["delete_my_asset_api_va_assets__asset_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update My Asset
+         * @description Change an asset you added (the ones a client shared with you are theirs to change).
+         */
+        patch: operations["update_my_asset_api_va_assets__asset_id__patch"];
         trace?: never;
     };
     "/api/admin/contacts": {
@@ -7050,6 +7076,16 @@ export interface components {
             /** Updatedbyname */
             updatedByName: string;
             /**
+             * Addedbyname
+             * @default
+             */
+            addedByName?: string;
+            /**
+             * Addedbyva
+             * @default false
+             */
+            addedByVa?: boolean;
+            /**
              * Createdat
              * Format: date-time
              */
@@ -10562,6 +10598,16 @@ export interface components {
             tags: components["schemas"]["TimeTagOut"][];
             /** Team */
             team: components["schemas"]["TeammateOut"][];
+            /**
+             * Wantstimetracker
+             * @default false
+             */
+            wantsTimeTracker?: boolean;
+            /**
+             * Wantsattendance
+             * @default false
+             */
+            wantsAttendance?: boolean;
         };
         /** MyClientsOut */
         MyClientsOut: {
@@ -12990,6 +13036,16 @@ export interface components {
              */
             important?: string;
             /**
+             * Wantstimetracker
+             * @default false
+             */
+            wantsTimeTracker?: boolean;
+            /**
+             * Wantsattendance
+             * @default false
+             */
+            wantsAttendance?: boolean;
+            /**
              * Agreementaccepted
              * @default false
              */
@@ -14250,6 +14306,51 @@ export interface components {
             company: string;
             /** Assetcount */
             assetCount: number;
+            /** Team */
+            team?: components["schemas"]["AssetVa"][];
+        };
+        /** VaAssetIn */
+        VaAssetIn: {
+            /**
+             * Kind
+             * @default login
+             * @enum {string}
+             */
+            kind?: "login" | "link" | "note";
+            /** Title */
+            title: string;
+            /**
+             * Category
+             * @default
+             */
+            category?: string;
+            /**
+             * Url
+             * @default
+             */
+            url?: string;
+            /**
+             * Username
+             * @default
+             */
+            username?: string;
+            /**
+             * Password
+             * @default
+             */
+            password?: string;
+            /**
+             * Notes
+             * @default
+             */
+            notes?: string;
+            /** Vaids */
+            vaIds?: string[];
+            /**
+             * Clientid
+             * Format: uuid
+             */
+            clientId: string;
         };
         /** VaAssetOut */
         VaAssetOut: {
@@ -14278,6 +14379,16 @@ export interface components {
             /** Updatedbyname */
             updatedByName: string;
             /**
+             * Addedbyname
+             * @default
+             */
+            addedByName?: string;
+            /**
+             * Addedbyva
+             * @default false
+             */
+            addedByVa?: boolean;
+            /**
              * Createdat
              * Format: date-time
              */
@@ -14288,6 +14399,13 @@ export interface components {
              */
             updatedAt: string;
             client: components["schemas"]["AssetClient"];
+            /**
+             * Mine
+             * @default false
+             */
+            mine?: boolean;
+            /** Vaids */
+            vaIds?: string[];
         };
         /** VaAssetsOut */
         VaAssetsOut: {
@@ -14973,6 +15091,16 @@ export interface components {
              */
             important?: string;
             /**
+             * Wantstimetracker
+             * @default false
+             */
+            wantsTimeTracker?: boolean;
+            /**
+             * Wantsattendance
+             * @default false
+             */
+            wantsAttendance?: boolean;
+            /**
              * Agreementaccepted
              * @default false
              */
@@ -15025,6 +15153,16 @@ export interface components {
             niceToHave: string[];
             /** Important */
             important: string;
+            /**
+             * Wantstimetracker
+             * @default true
+             */
+            wantsTimeTracker?: boolean;
+            /**
+             * Wantsattendance
+             * @default true
+             */
+            wantsAttendance?: boolean;
             /**
              * Status
              * @enum {string}
@@ -15126,6 +15264,10 @@ export interface components {
             niceToHave?: string[] | null;
             /** Important */
             important?: string | null;
+            /** Wantstimetracker */
+            wantsTimeTracker?: boolean | null;
+            /** Wantsattendance */
+            wantsAttendance?: boolean | null;
         };
         /** VaRequestStage */
         VaRequestStage: {
@@ -20278,6 +20420,50 @@ export interface operations {
             };
         };
     };
+    add_my_asset_api_va_assets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VaAssetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaAssetOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     my_asset_password_api_va_assets__asset_id__password_get: {
         parameters: {
             query?: never;
@@ -20437,6 +20623,90 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_my_asset_api_va_assets__asset_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_my_asset_api_va_assets__asset_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaAssetOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
             };
             /** @description Error */
             default: {

@@ -145,6 +145,10 @@ export function VaRequestForm({
   const [must, setMust] = useState<string[]>(() => lines(edit?.mustHave ?? []));
   const [nice, setNice] = useState<string[]>(() => lines(edit?.niceToHave ?? []));
   const [important, setImportant] = useState(edit?.important ?? "");
+  // Whether the VA uses the time tracker and clocks in and out (Attendance). Off by default on a new request; the
+  // client's Time & activity menu only shows once a request turns one on.
+  const [timeTracker, setTimeTracker] = useState(edit?.wantsTimeTracker ?? false);
+  const [attendance, setAttendance] = useState(edit?.wantsAttendance ?? false);
   const [tried, setTried] = useState(false);
 
   const filled = (xs: string[]) => xs.map((x) => x.trim()).filter(Boolean);
@@ -192,6 +196,8 @@ export function VaRequestForm({
       mustHave: filled(must),
       niceToHave: filled(nice),
       important: important.trim(),
+      wantsTimeTracker: timeTracker,
+      wantsAttendance: attendance,
     };
     const done = (message: string) => {
       notify(message);
@@ -397,6 +403,23 @@ export function VaRequestForm({
           )}
         </Section>
 
+        <Section title="Time tracking" desc="Off unless you need it. Turn on what you want and it’s added to your menu (Time & activity) and your VA’s.">
+          <ToolRow
+            icon="clock"
+            title="Time tracker"
+            hint="Your VA tracks the time they spend on your work. You see it in VA tracker."
+            checked={timeTracker}
+            onChange={setTimeTracker}
+          />
+          <ToolRow
+            icon="calendarCheck"
+            title="Attendance"
+            hint="Your VA clocks in and out, so you see when they start and whether it’s on time for your schedule."
+            checked={attendance}
+            onChange={setAttendance}
+          />
+        </Section>
+
         <Section title="Responsibilities & experience" desc="One item per line. Press Enter to add another.">
           <BulletField label="Key responsibilities" required items={duties} onChange={setDuties} error={err("duties")} placeholder="e.g. Answer and sort the patient inbox" />
           <BulletField label="Must-have experience" required items={must} onChange={setMust} error={err("must")} placeholder="e.g. 2+ years as a virtual assistant" />
@@ -518,6 +541,33 @@ function VaAgreement({
           />
         </Field>
       </Section>
+    </div>
+  );
+}
+
+/** One yes/no choice on the request (time tracker, Attendance). */
+function ToolRow({
+  icon,
+  title,
+  hint,
+  checked,
+  onChange,
+}: {
+  icon: "clock" | "calendarCheck";
+  title: string;
+  hint: string;
+  checked: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  return (
+    <div className={`vrf-tool${checked ? " is-on" : ""}`}>
+      <Icon name={icon} size={16} className="vrf-tool__icon" />
+      <span className="vrf-tool__text">
+        <strong>{title}</strong>
+        <span>{hint}</span>
+      </span>
+      <span className="vrf-tool__state">{checked ? "Yes" : "No"}</span>
+      <Toggle checked={checked} onChange={onChange} label={title} />
     </div>
   );
 }
