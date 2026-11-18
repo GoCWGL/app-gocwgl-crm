@@ -1,5 +1,6 @@
 import { api, apiUrl, del, download, get, patch, post, put } from "./client";
 import type {
+  AgreementOut,
   TaskMessageOut,
   InactiveAskOut,
   JournalEntryIn,
@@ -26,6 +27,10 @@ export const applyForJob = (id: string, note: string) => post<MyApplication>(`/v
 export const withdrawApplication = (id: string) => del(`/va/jobs/${id}/apply`);
 export const listVaSops = () => get<SopOut[]>("/va/sops");
 export const getMyRatings = () => get<MyFeedbackOut>("/va/feedback");
+/** Your VA agreement, and per client when your full rate starts. */
+export const getMyAgreement = () => get<AgreementOut>("/va/agreement");
+/** Agree to it, for one of your clients or in general (contactId null). */
+export const acceptMyAgreement = (contactId: string | null) => post<AgreementOut>("/va/agreement/accept", { contactId });
 export const getMyReferrals = () => get<MyReferralsOut>("/va/referrals");
 /** Claim a referral bonus once it's earned (the VA they referred has 30 days with 8+ hours); GoCWGL's team is notified. */
 export const claimReferral = (id: string) => post<MyReferralOut>(`/va/referrals/${id}/claim`);

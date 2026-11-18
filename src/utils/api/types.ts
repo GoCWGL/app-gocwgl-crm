@@ -1433,6 +1433,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/va/agreement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Agreement Get
+         * @description VA portal › Dashboard: your VA agreement, and for each client when your full rate starts.
+         */
+        get: operations["my_agreement_get_api_va_agreement_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/agreement/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * My Agreement Accept
+         * @description Agree to the VA agreement (for one of your clients, or in general).
+         */
+        post: operations["my_agreement_accept_api_va_agreement_accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/va/resume": {
         parameters: {
             query?: never;
@@ -4341,6 +4381,46 @@ export interface paths {
         patch: operations["set_va_client_rate_api_admin_vas__va_id__clients__contact_id__patch"];
         trace?: never;
     };
+    "/api/admin/vas/{va_id}/agreement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Va Agreement
+         * @description The VA agreement for this VA: whether they agreed, and per client the 6-month window and what they keep.
+         */
+        get: operations["get_va_agreement_api_admin_vas__va_id__agreement_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/vas/{va_id}/agreement/send": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send Va Agreement
+         * @description Email the VA agreement to the VA (only the VA: never the client). They agree to it on their VA dashboard.
+         */
+        post: operations["send_va_agreement_api_admin_vas__va_id__agreement_send_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/va-referrals": {
         parameters: {
             query?: never;
@@ -7200,6 +7280,67 @@ export interface components {
             customBonusCents?: number | null;
             /** Vabonuscents */
             vaBonusCents?: number | null;
+        };
+        /** AgreementAcceptIn */
+        AgreementAcceptIn: {
+            /** Contactid */
+            contactId?: string | null;
+        };
+        /** AgreementClient */
+        AgreementClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+        };
+        /** AgreementClientOut */
+        AgreementClientOut: {
+            client: components["schemas"]["AgreementClient"];
+            /**
+             * Startedat
+             * Format: date-time
+             */
+            startedAt: string;
+            /**
+             * Monitoringendson
+             * Format: date
+             */
+            monitoringEndsOn: string;
+            /** Inmonitoring */
+            inMonitoring: boolean;
+            /** Ratecents */
+            rateCents: number | null;
+            /** Takehomecents */
+            takeHomeCents: number | null;
+            /** Acceptedat */
+            acceptedAt: string | null;
+            /** Sentat */
+            sentAt: string | null;
+        };
+        /** AgreementOut */
+        AgreementOut: {
+            /** Feecents */
+            feeCents: number;
+            /** Months */
+            months: number;
+            /** Acceptedat */
+            acceptedAt: string | null;
+            /** Sentat */
+            sentAt: string | null;
+            /** Clients */
+            clients: components["schemas"]["AgreementClientOut"][];
+            /** Pending */
+            pending: boolean;
+        };
+        /** AgreementSendIn */
+        AgreementSendIn: {
+            /** Contactid */
+            contactId?: string | null;
         };
         /** AnswerOut */
         AnswerOut: {
@@ -14739,6 +14880,8 @@ export interface components {
              * @default
              */
             about?: string;
+            /** Agreementacceptedat */
+            agreementAcceptedAt?: string | null;
         };
         /** VaApplicationIn */
         VaApplicationIn: {
@@ -14795,6 +14938,11 @@ export interface components {
              * @default
              */
             about?: string;
+            /**
+             * Agreementaccepted
+             * @default false
+             */
+            agreementAccepted?: boolean;
             /** Captchatoken */
             captchaToken?: string | null;
             /**
@@ -19803,6 +19951,81 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["MyReferralOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_agreement_get_api_va_agreement_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgreementOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_agreement_accept_api_va_agreement_accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgreementAcceptIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgreementOut"];
                     };
                 };
             };
@@ -29705,6 +29928,94 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["VaDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_va_agreement_api_admin_vas__va_id__agreement_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgreementOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    send_va_agreement_api_admin_vas__va_id__agreement_send_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                va_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgreementSendIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgreementOut"];
                     };
                 };
             };

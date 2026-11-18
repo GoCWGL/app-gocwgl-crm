@@ -31,11 +31,15 @@ export const qk = {
   vaClientSops: ["va", "client-sops"] as const,
   vaRatings: ["va", "feedback"] as const,
   myReferrals: ["va", "referrals"] as const,
+  /** VA portal › Dashboard: the VA agreement. */
+  myAgreement: ["va", "agreement"] as const,
   journal: ["va", "journal"] as const,
   resume: ["va", "resume"] as const,
   vaInvoices: ["va", "invoices"] as const,
   payMethods: ["va", "payment-methods"] as const,
   va: (id: string) => ["vas", "one", id] as const,
+  /** Under "vas": changing a VA's clients refreshes it too. */
+  vaAgreement: (id: string) => ["vas", "agreement", id] as const,
 
   contacts: ["contacts"] as const,
   contact: (id: string) => ["contacts", "one", id] as const,

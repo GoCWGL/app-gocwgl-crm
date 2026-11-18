@@ -13,7 +13,8 @@ import { formatCentsExact } from "@/utils/format/money";
 import { useContactsPage } from "@/utils/hooks/useContacts";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useVaReferrals } from "@/utils/hooks/useAffiliates";
-import { useInviteVa, useSetVaClientRate, useSetVaClients, useVa } from "@/utils/hooks/useVas";
+import { useInviteVa, useSendVaAgreement, useSetVaClientRate, useSetVaClients, useVa, useVaAgreement } from "@/utils/hooks/useVas";
+import { formatDay, VaAgreementTerms } from "../../../va/components/VaAgreementTerms";
 import { contactName } from "../../lib/contacts";
 import { LOGIN_STATUS, rateText, VA_STATUS, vaRate } from "../../lib/vas";
 import { hasSchool, jobDates, schoolDates, schoolTitle } from "../../../va/lib/resumeFormat";
@@ -349,6 +350,7 @@ function Profile({ va }: { va: VaDetailOut }) {
           {(va.referral || canEditReferral) && (
             <ReferralCard referral={va.referral ?? null} onOpenReferrer={openReferrer} onLink={canEditReferral ? () => setLinkingReferral(true) : undefined} />
           )}
+          <AgreementProfileCard va={va} canSend={canWrite} />
           <ResumeLinkCard va={va} />
           {resumeFacts.length > 0 && (
             <ProfileCard icon="textLong" title="From their resume">
@@ -613,6 +615,98 @@ function LinkReferralFor({ va, onClose }: { va: VaDetailOut; onClose: () => void
   const existing = list.data?.find((r) => r.id === va.referral?.id) ?? null;
   if (va.referral && !existing) return null; // still loading the referral to edit
   return <VaReferralModal referral={existing} forVaId={va.id} onClose={onClose} />;
+}
+
+/**
+ * The VA agreement (GoCWGL keeps $1/hr for the first 6 months with each client): whether the VA agreed, and per
+ * client the monitoring period, what they keep, and a button to email it to them. Never shown to the client.
+ */
+function AgreementProfileCard({ va, canSend }: { va: VaDetailOut; canSend: boolean }) {
+  const { notify } = useAdmin();
+  const query = useVaAgreement(va.id);
+  const send = useSendVaAgreement();
+  const [reading, setReading] = useState(false);
+  const a = query.data;
+  const sendIt = (contactId: string | null, to: string) =>
+    send.mutate({ id: va.id, contactId }, { onSuccess: () => notify(`Agreement emailed to ${va.fullName}${to ? ` for ${to}` : ""}.`) });
+
+  return (
+    <ProfileCard
+      icon="clipboard"
+      title="VA agreement"
+      action={a && <Badge tone={a.pending ? "orange" : "green"}>{a.pending ? "Waiting" : "Agreed"}</Badge>}
+    >
+      {!a ? (
+        <span className="vp-empty">{query.isError ? "Couldn’t load the agreement." : "Loading…"}</span>
+      ) : (
+        <>
+          <span className="text-small">
+            First {a.months} months with each client: GoCWGL keeps {formatCentsExact(a.feeCents)}/hr. Only your team and the VA see this; the client is never told.
+          </span>
+          <dl className="vp-details">
+            <div className="vp-details__row">
+              <dt>
+                <Icon name="circleCheck" size={14} />
+                Agreed
+              </dt>
+              <dd>
+                {a.acceptedAt ? formatShort(a.acceptedAt) : "Not yet"}
+                {va.application?.agreementAcceptedAt && <span className="text-small"> on their application</span>}
+              </dd>
+            </div>
+            {a.sentAt && (
+              <div className="vp-details__row">
+                <dt>
+                  <Icon name="send" size={14} />
+                  Last emailed
+                </dt>
+                <dd>{formatShort(a.sentAt)}</dd>
+              </div>
+            )}
+          </dl>
+          {a.clients.length > 0 && (
+            <div className="va-agreement-rows">
+              {a.clients.map((c) => {
+                const name = c.client.company || c.client.name;
+                return (
+                  <div key={c.client.id} className="va-agreement-row">
+                    <span className="va-agreement-row__who">
+                      <strong>{name}</strong>
+                      <span className="text-small">
+                        {c.inMonitoring
+                          ? `Keeps ${c.takeHomeCents == null ? "—" : formatCentsExact(c.takeHomeCents)}/hr until ${formatDay(c.monitoringEndsOn)}`
+                          : `Full rate since ${formatDay(c.monitoringEndsOn)}`}
+                      </span>
+                      <span className="text-small">
+                        {c.acceptedAt ? `Agreed ${formatShort(c.acceptedAt)}` : c.sentAt ? `Emailed ${formatShort(c.sentAt)}, not agreed yet` : "Not agreed yet"}
+                      </span>
+                    </span>
+                    {canSend && !c.acceptedAt && (
+                      <Button size="sm" variant="outline" onClick={() => sendIt(c.client.id, name)} disabled={send.isPending}>
+                        <Icon name="send" size={12} /> {c.sentAt ? "Resend" : "Send"}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          <FormError error={send.error} />
+          {reading && <VaAgreementTerms feeCents={a.feeCents} months={a.months} />}
+          <span className="cluster cluster--6">
+            {canSend && (
+              <Button size="sm" variant={a.acceptedAt ? "outline" : "primary"} onClick={() => sendIt(null, "")} disabled={send.isPending}>
+                <Icon name="send" size={12} /> Send agreement
+              </Button>
+            )}
+            <Button size="sm" variant="link" onClick={() => setReading((v) => !v)} aria-expanded={reading}>
+              <Icon name="eye" size={12} /> {reading ? "Hide" : "Read it"}
+            </Button>
+          </span>
+        </>
+      )}
+    </ProfileCard>
+  );
 }
 
 /** The VA's resume page: the link clients open, so the team can share it too. */

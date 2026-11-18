@@ -11,6 +11,7 @@ import { useOpenJobs } from "@/utils/hooks/useVaPortal";
 import { clientLabel, hms, rangeFor } from "../lib/time";
 import { useVa } from "../state/VaContext";
 import { TwoStepReminder } from "@/features/account/TwoStepReminder";
+import { AgreementCard } from "../components/AgreementCard";
 
 /** The pages a VA opens most, as shortcuts on the dashboard. */
 const SHORTCUTS: VaTab[] = ["time", "clients", "tasks", "jobs", "training", "support"];
@@ -39,6 +40,7 @@ export function DashboardSection() {
   return (
     <div className="page-stack">
       <TwoStepReminder onSetUp={() => goTo("account")} />
+      <AgreementCard show="pending" />
       <StatGrid
         items={[
           { label: "Active clients", value: dash(String(clients.data?.clients.filter((c) => c.active).length ?? 0)), tone: "cyan" },
@@ -47,6 +49,8 @@ export function DashboardSection() {
           { label: "Open jobs", value: dash(String(jobs.data?.length ?? 0)), tone: "orange" },
         ]}
       />
+
+      <AgreementCard show="signed" />
 
       {va && (running || tracker) && (
         <section className={`card va-now${running ? " is-running" : ""}`}>

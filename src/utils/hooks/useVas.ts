@@ -23,3 +23,6 @@ export const useSetVaClientRate = () =>
 export const useCreateVa = () => useApiMutation(api.createVa, { invalidate: [qk.vas] });
 export const useInviteVa = () => useApiMutation(api.inviteVa, { invalidate: [qk.vas] });
 export const useRevokeVaInvitation = () => useApiMutation(api.revokeVaInvitation, { invalidate: [qk.vas] });
+export const useVaAgreement = (id: string) => useQuery({ queryKey: qk.vaAgreement(id), queryFn: () => api.getVaAgreement(id), enabled: !!id });
+export const useSendVaAgreement = () =>
+  useApiMutation((v: { id: string; contactId: string | null }) => api.sendVaAgreement(v.id, v.contactId), { invalidate: [qk.vas] });

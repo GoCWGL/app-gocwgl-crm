@@ -1,0 +1,480 @@
+@use "../abstracts" as *;
+
+// =============================================================================
+// The VA agreement: the document (Apply as a VA, VA dashboard, People › VAs),
+// the VA dashboard card with its client tiles, and the admin client rows.
+// =============================================================================
+
+// ------------------------------------------------------------------ Document
+.agr-doc {
+  @include stack(14px);
+  position: relative;
+  padding: 18px 18px 16px;
+  border: 1px solid $line-soft;
+  border-radius: $radius-xl;
+  background:
+    linear-gradient(180deg, rgba(227, 246, 250, 0.55), rgba(255, 255, 255, 0) 120px),
+    $white;
+  color: $ink-soft;
+  overflow: hidden;
+
+  // Thin brand rule along the top, like a letterhead.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: $grad-progress;
+  }
+
+  &__head {
+    @include stack(4px);
+  }
+
+  &__eyebrow {
+    @include mono-label(10px, 0.14em, $cyan-700);
+  }
+
+  &__title {
+    margin: 0;
+    color: $ink;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+  }
+}
+
+// Three key figures under the title.
+.agr-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+
+  // Phones: one figure per row, label left and number right.
+  @include down(sm) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+
+    .agr-facts__item {
+      flex-direction: row;
+      align-items: baseline;
+      justify-content: space-between;
+      padding: 8px 12px;
+    }
+  }
+
+  &__item {
+    @include stack(2px);
+    padding: 10px 12px;
+    border: 1px solid $line-faint;
+    border-radius: $radius-lg;
+    background: $white;
+
+    dt {
+      color: $muted-light;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    dd {
+      margin: 0;
+      color: $ink;
+      font-family: $font-mono;
+      font-size: 18px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+
+      small {
+        color: $muted;
+        font-family: $font-sans;
+        font-size: 12px;
+        font-weight: 600;
+      }
+    }
+
+    &:first-child dd {
+      color: $orange-ink;
+    }
+  }
+}
+
+.agr-clauses {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.agr-clause {
+  display: flex;
+  gap: 12px;
+  padding: 10px 4px;
+  border-top: 1px dashed $line-faint;
+
+  &:first-child {
+    border-top: 0;
+  }
+
+  &__icon {
+    @include center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: $radius-md;
+    background: $cyan-50;
+    color: $cyan-700;
+  }
+
+  // The confidential clause stands out a little.
+  &:last-child &__icon {
+    background: $peach;
+    color: $orange-ink;
+  }
+
+  &__body {
+    @include stack(2px);
+    min-width: 0;
+  }
+
+  &__title {
+    @include row(8px);
+    color: $ink;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  &__num {
+    color: $muted-light;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  &__text {
+    font-size: 13px;
+    line-height: 1.55;
+  }
+}
+
+// On the application: the document scrolls inside the form.
+.va-agreement-scroll {
+  max-height: 260px;
+  overflow-y: auto;
+  border-radius: $radius-xl;
+}
+
+// --------------------------------------------------------- Dashboard card
+.agr {
+  @include card($radius-2xl, 20px 22px);
+  @include stack(16px);
+  min-width: 0;
+
+  &--pending {
+    border-color: rgba(255, 153, 0, 0.35);
+    background:
+      radial-gradient(120% 140px at 0% 0%, rgba(255, 153, 0, 0.08), transparent 70%),
+      $white;
+    box-shadow: $shadow-card, 0 0 0 4px rgba(255, 153, 0, 0.06);
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  &__seal {
+    @include center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: $radius-lg;
+    background: $grad-orange;
+    color: $on-orange;
+    box-shadow: $glow-orange-soft;
+
+    &--done {
+      background: linear-gradient(135deg, $green-500, $green-700);
+      color: $white;
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.25);
+    }
+  }
+
+  &__heading {
+    @include stack(3px);
+    flex: 1 1 260px;
+    min-width: 0;
+  }
+
+  &__kicker {
+    @include row(7px);
+    @include mono-label(10px, 0.12em, $orange-ink);
+
+    &--muted {
+      color: $muted-light;
+    }
+  }
+
+  &__pulse {
+    @include dot(7px, $orange);
+    animation: agr-pulse 1.8s ease-in-out infinite;
+  }
+
+  &__title {
+    margin: 0;
+    color: $ink;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
+
+  &__sub {
+    color: $muted;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  &__private {
+    @include row(6px);
+    padding: 5px 10px;
+    border: 1px solid $line-soft;
+    border-radius: $radius-pill;
+    background: $bg-soft;
+    color: $ink-muted;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  // Document on the left, clients and sign-off on the right.
+  &__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+    gap: 16px;
+    align-items: start;
+
+    @include down(lg) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__side {
+    @include stack(14px);
+    position: sticky;
+    top: 16px;
+
+    @include down(lg) {
+      position: static;
+    }
+  }
+
+  &__label {
+    @include mono-label(10px, 0.12em, $muted-light);
+  }
+
+  &__tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+    gap: 10px;
+  }
+
+  &__empty {
+    @include row(8px);
+    padding: 12px 14px;
+    border: 1px dashed $line;
+    border-radius: $radius-lg;
+    color: $muted;
+    font-size: 13px;
+  }
+}
+
+@keyframes agr-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 153, 0, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 0 5px rgba(255, 153, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agr__pulse {
+    animation: none;
+  }
+}
+
+// The sign-off box.
+.agr-sign {
+  @include stack(10px);
+  padding: 14px;
+  border: 1px solid rgba(255, 153, 0, 0.3);
+  border-radius: $radius-xl;
+  background: linear-gradient(180deg, rgba(255, 241, 220, 0.6), $white);
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+// ---------------------------------------------------------------- Client tile
+.agr-tile {
+  @include stack(10px);
+  padding: 12px 14px;
+  border: 1px solid $line-soft;
+  border-radius: $radius-xl;
+  background: $white;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    border-color: $line-strong;
+    box-shadow: $shadow-soft;
+  }
+
+  &__top {
+    @include row(10px);
+  }
+
+  &__avatar {
+    @include center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-md;
+    background: $grad-cyan;
+    color: $white;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  &__who {
+    @include stack(1px);
+    flex: 1;
+    min-width: 0;
+
+    strong {
+      @include truncate;
+      color: $ink;
+      font-size: 14px;
+    }
+
+    span {
+      color: $muted-light;
+      font-size: 12px;
+    }
+  }
+
+  &__chip {
+    flex: none;
+    padding: 3px 9px;
+    border-radius: $radius-pill;
+    font-size: 11px;
+    font-weight: 800;
+
+    &.is-monitoring {
+      background: $peach;
+      color: $orange-ink;
+    }
+
+    &.is-full {
+      background: $green-50;
+      color: $green-700;
+    }
+  }
+
+  &__bar {
+    height: 6px;
+    border-radius: $radius-pill;
+    background: $bg-tint;
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: $grad-progress;
+    }
+  }
+
+  &__pay {
+    @include row(12px);
+    padding-top: 2px;
+  }
+
+  &__arrow {
+    flex: none;
+    color: $slate-300;
+  }
+
+  &__rate {
+    @include stack(1px);
+
+    small {
+      color: $muted-light;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    strong {
+      color: $ink;
+      font-family: $font-mono;
+      font-size: 17px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    em {
+      color: $muted-light;
+      font-family: $font-sans;
+      font-size: 12px;
+      font-style: normal;
+      font-weight: 600;
+    }
+
+    &--next strong {
+      color: $green-700;
+    }
+  }
+}
+
+// ------------------------------------------------- Admin › VA profile rows
+.va-agreement-rows {
+  display: grid;
+  gap: 8px;
+}
+
+.va-agreement-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 10px 12px;
+  border: 1px solid $line-soft;
+  border-radius: $radius-lg;
+  background: $white;
+
+  &__who {
+    display: grid;
+    flex: 1 1 180px;
+    gap: 2px;
+    min-width: 0;
+
+    strong {
+      color: $ink;
+      font-size: 14px;
+    }
+  }
+}
+
+.agr-tile__rate strong.agr-tile__unset {
+  color: $muted-light;
+  font-family: $font-sans;
+  font-size: 13px;
+}

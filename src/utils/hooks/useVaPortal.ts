@@ -30,6 +30,11 @@ export const useUpdateVaTask = () =>
 export const useOpenJobs = (enabled = true) => useQuery({ queryKey: qk.vaJobs, queryFn: api.listOpenJobs, enabled, refetchInterval: 120_000 });
 export const useVaSops = (enabled = true) => useQuery({ queryKey: qk.vaSops, queryFn: api.listVaSops, enabled });
 export const useMyRatings = (enabled = true) => useQuery({ queryKey: qk.vaRatings, queryFn: api.getMyRatings, enabled });
+export const useMyAgreement = (enabled = true) => useQuery({ queryKey: qk.myAgreement, queryFn: api.getMyAgreement, enabled });
+export const useAcceptAgreement = () => {
+  const qc = useQueryClient();
+  return useApiMutation(api.acceptMyAgreement, { onSuccess: (data) => qc.setQueryData(qk.myAgreement, data) });
+};
 export const useMyReferrals = (enabled = true) => useQuery({ queryKey: qk.myReferrals, queryFn: api.getMyReferrals, enabled });
 export const useClaimReferral = () => useApiMutation(api.claimReferral, { invalidate: [qk.myReferrals] });
 export const useResume = (enabled = true) => useQuery({ queryKey: qk.resume, queryFn: api.getResume, enabled });
