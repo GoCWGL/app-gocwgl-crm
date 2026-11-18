@@ -3,9 +3,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRef, useState, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, Checkbox, Field, FormError, Icon, IconTile, Input, Modal, Select, Textarea, type IconName } from "@/components/ui";
+import { Button, Field, FormError, Icon, IconTile, Input, Modal, Select, Textarea, type IconName } from "@/components/ui";
 import { browserZone, zoneOptions } from "@/features/booking/zones";
-import { VaAgreementTerms } from "@/features/va/components/VaAgreementTerms";
 import { isEmail } from "@/lib/utils";
 import { applyAsClient, applyAsVa } from "@/utils/api/applications";
 import { fieldErrors } from "@/utils/errors";
@@ -309,7 +308,6 @@ function VaApplyModal({ onClose }: { onClose: () => void }) {
     heard: "",
     referrer: "",
     about: "",
-    agreed: false,
   });
   const set = (patch: Partial<typeof f>) => setF((d) => ({ ...d, ...patch }));
   const send = useMutation({ mutationFn: applyAsVa, onSettled: bot.reset });
@@ -321,7 +319,7 @@ function VaApplyModal({ onClose }: { onClose: () => void }) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setTried(true);
-    if (!f.first.trim() || !isEmail(f.email) || !rateOk || !portfolioOk || !f.experience.trim() || !f.agreed || !bot.ready) return;
+    if (!f.first.trim() || !isEmail(f.email) || !rateOk || !portfolioOk || !f.experience.trim() || !bot.ready) return;
     send.mutate({
       firstName: f.first.trim(),
       lastName: f.last.trim(),
@@ -336,7 +334,6 @@ function VaApplyModal({ onClose }: { onClose: () => void }) {
       portfolioUrl: f.portfolio.trim(),
       heardFrom: heardFromValue(f.heard, f.referrer),
       about: f.about.trim(),
-      agreementAccepted: f.agreed,
       captchaToken: bot.token,
       website: honeypot.current,
     });
@@ -409,23 +406,6 @@ function VaApplyModal({ onClose }: { onClose: () => void }) {
         />
         <Field label="Anything else?" htmlFor="va-about">
           <Textarea id="va-about" rows={3} value={f.about} onChange={(e) => set({ about: e.target.value })} />
-        </Field>
-
-        <span className="kicker kicker--sm">VA AGREEMENT</span>
-        <div className="va-agreement-scroll" tabIndex={0} aria-label="GoCWGL VA agreement">
-          <VaAgreementTerms />
-        </div>
-        <Field
-          htmlFor="va-agree"
-          error={(tried && !f.agreed && "Read and agree to the VA agreement to apply.") || api.agreementAccepted}
-        >
-          <Checkbox
-            id="va-agree"
-            brand
-            checked={f.agreed}
-            onChange={(e) => set({ agreed: e.target.checked })}
-            label="I’ve read the GoCWGL VA agreement and I agree to it."
-          />
         </Field>
         <Honeypot onChange={(v) => (honeypot.current = v)} />
         {bot.widget}
