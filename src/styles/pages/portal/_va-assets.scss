@@ -1,0 +1,552 @@
+@use "../../abstracts" as *;
+
+// Assets (client portal › VA › Assets and VA portal › Assets): logins, links and notes shared with VAs.
+
+.ast-search {
+  flex: 1 1 260px;
+  max-width: 360px;
+}
+
+// One list: a column header, then one row per asset (sorted so each category's assets sit together).
+$ast-cols: minmax(190px, 1.2fr) minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.75fr) 130px 96px;
+
+.ast-table {
+  @include card($radius-xl, 0);
+  overflow: hidden;
+  // Lay the rows out by the list's own width (the page can be narrow beside a sidebar on a wide screen).
+  container: ast-list / inline-size;
+
+  &__head {
+    display: grid;
+    grid-template-columns: $ast-cols;
+    gap: 16px;
+    padding: 10px 18px;
+    border-bottom: 1px solid $line;
+    background: $white;
+    color: $muted;
+    font-family: $font-mono;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+
+    > :first-child {
+      padding-left: 44px;
+    }
+
+    @container ast-list (max-width: 880px) {
+      display: none;
+    }
+  }
+}
+
+// The client an asset belongs to (VA portal).
+.ast-client {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  color: $ink-soft;
+  font-size: 12.5px;
+
+  > span:last-child {
+    @include truncate;
+  }
+}
+
+.ast-row {
+  display: grid;
+  grid-template-columns: $ast-cols;
+  grid-template-areas: "main user pass category aside actions" "notes notes notes notes notes notes";
+  align-items: center;
+  column-gap: 16px;
+  padding: 10px 18px;
+  transition: background 0.15s ease;
+
+  & + & {
+    border-top: 1px solid $line-faint;
+  }
+
+  &:hover,
+  &.is-open {
+    background: rgba($cyan-50, 0.55);
+  }
+
+  &__main {
+    grid-area: main;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  &__titles {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  &__title {
+    @include truncate;
+    color: $ink;
+    font-size: 14px;
+    font-weight: 650;
+  }
+
+  &__url {
+    @include truncate;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    max-width: 100%;
+    color: $cyan-700;
+    font-size: 12.5px;
+    text-decoration: none;
+
+    &:hover {
+      color: $cyan-800;
+      text-decoration: underline;
+    }
+
+    &.is-muted {
+      color: $muted;
+    }
+  }
+
+  &__cell {
+    min-width: 0;
+
+    &:nth-of-type(2) {
+      grid-area: user;
+    }
+
+    &:nth-of-type(3) {
+      grid-area: pass;
+    }
+  }
+
+  &__none {
+    color: $muted-light;
+  }
+
+  &__category {
+    grid-area: category;
+    min-width: 0;
+
+    .ast-chip {
+      @include truncate;
+      display: inline-block;
+      max-width: 100%;
+    }
+  }
+
+  &__aside {
+    grid-area: aside;
+    min-width: 0;
+  }
+
+  &__actions {
+    grid-area: actions;
+    display: flex;
+    justify-content: flex-end;
+    gap: 2px;
+
+    .is-active {
+      color: $cyan-700;
+      background: $cyan-50;
+    }
+  }
+
+  &__notes {
+    grid-area: notes;
+    margin: 10px 0 2px 44px;
+    padding: 10px 12px;
+    border-left: 3px solid $cyan-200;
+    border-radius: $radius-sm;
+    background: $white;
+    color: $ink-soft;
+    font-size: 13px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  // Narrow list: name and buttons on top, then labelled username / password / category lines.
+  @container ast-list (max-width: 880px) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "main actions" "user user" "pass pass" "category category" "aside aside" "notes notes";
+    row-gap: 6px;
+    padding: 12px 16px;
+
+    &__cell,
+    &__category {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-left: 44px;
+
+      &::before {
+        content: attr(data-label);
+        flex: none;
+        width: 72px;
+        color: $muted;
+        font-size: 12px;
+      }
+    }
+
+    &__aside {
+      padding-left: 44px;
+
+      &:empty {
+        display: none;
+      }
+    }
+
+    &__notes {
+      margin-left: 0;
+    }
+  }
+}
+
+// A username or password: plain text with copy (and show) buttons beside it.
+.ast-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  min-width: 0;
+
+  &__value {
+    @include truncate;
+    margin-right: 4px;
+    color: $ink;
+    font-family: $font-mono;
+    font-size: 12.5px;
+
+    &.is-masked {
+      color: $ink-muted;
+      letter-spacing: 0.12em;
+    }
+  }
+
+  .icon-btn {
+    opacity: 0.45;
+    transition: opacity 0.15s ease;
+  }
+
+  &--secret &__value {
+    min-width: 90px;
+  }
+
+  &.is-error &__value {
+    color: $red-600;
+    font-family: $font-sans;
+  }
+}
+
+.ast-row:hover .ast-field .icon-btn,
+.ast-field .icon-btn:focus-visible {
+  opacity: 1;
+}
+
+// Who can see it (client portal).
+.ast-shared {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: $ink-soft;
+  font-size: 12.5px;
+  white-space: nowrap;
+
+  &.is-none {
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: $radius-pill;
+    background: $bg-soft;
+    color: $muted;
+  }
+}
+
+.ast-avatars {
+  display: inline-flex;
+
+  .avatar + .avatar {
+    margin-left: -8px;
+  }
+}
+
+.ast-chip {
+  padding: 3px 10px;
+  border-radius: $radius-pill;
+  background: $bg-soft;
+  color: $muted;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.ast-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 44px 24px;
+  text-align: center;
+
+  h3 {
+    margin: 6px 0 0;
+    color: $ink;
+    font-size: 17px;
+  }
+
+  p {
+    max-width: 440px;
+    margin: 0 0 8px;
+    color: $muted;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+}
+
+.ast-empty-line {
+  margin: 0;
+  padding: 28px;
+  border: 1px dashed $line-strong;
+  border-radius: $radius-xl;
+  color: $muted;
+  text-align: center;
+}
+
+// ------------------------------------------------------------------ Add / edit pop-up
+.ast-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+
+  @include down(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ast-pass {
+  display: flex;
+  gap: 8px;
+
+  > .password-input {
+    flex: 1;
+  }
+}
+
+.ast-share {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+  }
+
+  &__none {
+    margin: 0;
+    padding: 12px;
+    border-radius: $radius-md;
+    background: $bg-soft;
+  }
+}
+
+.ast-va-pick {
+  @include button-reset;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid $line;
+  border-radius: $radius-md;
+  background: $white;
+  text-align: left;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+
+  &:hover {
+    border-color: $cyan-300;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &.is-on {
+    border-color: $cyan-600;
+    background: $cyan-50;
+  }
+
+  &__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+
+    strong {
+      @include truncate;
+      color: $ink;
+      font-size: 13px;
+    }
+
+    span {
+      @include truncate;
+      color: $muted;
+      font-size: 11.5px;
+    }
+  }
+
+  &__check {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid $line-strong;
+    border-radius: 5px;
+    color: $white;
+  }
+
+  &.is-on &__check {
+    border-color: $cyan-600;
+    background: $cyan-600;
+  }
+}
+
+// ------------------------------------------------------------------ VA portal: client picker and categories
+.ast-picker {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  padding: 14px 18px;
+
+  &__text {
+    display: flex;
+    flex: 1 1 260px;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 380px;
+  }
+
+  &__label {
+    @include mono-label(10.5px, 0.12em, $muted);
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin-left: auto;
+    color: $muted;
+    font-size: 13px;
+
+    b {
+      color: $ink;
+      font-size: 15px;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+.ast-cats {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 2px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+
+  &__chip {
+    @include button-reset;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid $line;
+    border-radius: $radius-pill;
+    background: $white;
+    color: $ink-soft;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
+
+    span {
+      padding: 0 6px;
+      border-radius: $radius-pill;
+      background: $bg-soft;
+      color: $muted;
+      font-family: $font-mono;
+      font-size: 11px;
+    }
+
+    &:hover {
+      border-color: $cyan-300;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &.is-on {
+      border-color: $ink;
+      background: $ink;
+      color: $white;
+
+      span {
+        background: rgba($white, 0.18);
+        color: $white;
+      }
+    }
+  }
+}
+
+// Whether passwords are unlocked on this device (VA portal).
+.ast-lock {
+  display: inline-flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: $radius-md;
+  background: $bg-soft;
+  color: $ink-soft;
+  font-size: 13px;
+
+  > .icon,
+  > svg {
+    color: $muted;
+  }
+
+  .btn {
+    margin-left: auto;
+  }
+
+  &.is-open {
+    background: $green-50;
+    color: $green-700;
+
+    > .icon,
+    > svg {
+      color: $green-700;
+    }
+  }
+}

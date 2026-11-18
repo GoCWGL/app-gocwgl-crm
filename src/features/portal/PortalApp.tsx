@@ -20,6 +20,7 @@ import { TodoDrawer } from "./components/TodoDrawer";
 import { AccountSection } from "./sections/AccountSection";
 import { AffiliateSection } from "./sections/AffiliateSection";
 import { AttendanceSection } from "./sections/AttendanceSection";
+import { VaAssetsSection } from "./sections/VaAssetsSection";
 import { BuildSection } from "./sections/BuildSection";
 import { CrmSection } from "./sections/CrmSection";
 import { DashboardSection } from "./sections/DashboardSection";
@@ -40,6 +41,7 @@ const SECTIONS: Record<PortalTab, ComponentType> = {
   funnels: FunnelsSection,
   crm: CrmSection,
   attendance: AttendanceSection,
+  assets: VaAssetsSection,
   journal: WorkJournalSection,
   team: TeamSection,
   vateam: VaTeamSection,

@@ -1829,6 +1829,95 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/va/assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Assets
+         * @description Assets your clients shared with you: all of them, or one client's (`client_id`, one of your current clients).
+         */
+        get: operations["my_assets_api_va_assets_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/assets/{asset_id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Asset Password
+         * @description A shared asset's password. Needs this device unlocked (`/va/assets/unlock`), which lasts while you're online and
+         *     locks after 24 hours away. Each view is in the audit log; at most 20 a minute and 300 a day.
+         */
+        get: operations["my_asset_password_api_va_assets__asset_id__password_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/assets/unlock": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Unlock Status
+         * @description Whether this device can show passwords, and how you'd confirm it's you.
+         */
+        get: operations["unlock_status_api_va_assets_unlock_get"];
+        put?: never;
+        /**
+         * Unlock Assets
+         * @description Confirm it's you: your password (or the emailed code), plus your 2-step code if it's on. 5 tries per 15 minutes.
+         */
+        post: operations["unlock_assets_api_va_assets_unlock_post"];
+        /**
+         * Lock Assets
+         * @description Lock passwords on this device now.
+         */
+        delete: operations["lock_assets_api_va_assets_unlock_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/assets/unlock/email-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Unlock Email Code
+         * @description Email a 6-digit code (for accounts without a password). 3 per 10 minutes.
+         */
+        post: operations["unlock_email_code_api_va_assets_unlock_email_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/contacts": {
         parameters: {
             query?: never;
@@ -6194,6 +6283,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/va-assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Assets
+         * @description Your assets, who each one is shared with, and your VAs.
+         */
+        get: operations["list_assets_api_portal_va_assets_get"];
+        put?: never;
+        /**
+         * Create Asset
+         * @description Save a login, link or note. Only the VAs you pick can see it (and only while they work for you).
+         */
+        post: operations["create_asset_api_portal_va_assets_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Asset */
+        delete: operations["delete_asset_api_portal_va_assets__asset_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Asset */
+        patch: operations["update_asset_api_portal_va_assets__asset_id__patch"];
+        trace?: never;
+    };
+    "/api/portal/va-assets/{asset_id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Asset Password
+         * @description The saved password (view-only portal members can't see passwords). Each view is in the audit log.
+         */
+        get: operations["asset_password_api_portal_va_assets__asset_id__password_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/booking/invite/{token}": {
         parameters: {
             query?: never;
@@ -6819,6 +6970,131 @@ export interface components {
              * @default
              */
             note?: string;
+        };
+        /** AssetClient */
+        AssetClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+        };
+        /** AssetIn */
+        AssetIn: {
+            /**
+             * Kind
+             * @default login
+             * @enum {string}
+             */
+            kind?: "login" | "link" | "note";
+            /** Title */
+            title: string;
+            /**
+             * Category
+             * @default
+             */
+            category?: string;
+            /**
+             * Url
+             * @default
+             */
+            url?: string;
+            /**
+             * Username
+             * @default
+             */
+            username?: string;
+            /**
+             * Password
+             * @default
+             */
+            password?: string;
+            /**
+             * Notes
+             * @default
+             */
+            notes?: string;
+            /** Vaids */
+            vaIds?: string[];
+        };
+        /** AssetOut */
+        AssetOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "login" | "link" | "note";
+            /** Title */
+            title: string;
+            /** Category */
+            category: string;
+            /** Url */
+            url: string;
+            /** Username */
+            username: string;
+            /** Haspassword */
+            hasPassword: boolean;
+            /** Notes */
+            notes: string;
+            /** Updatedbyname */
+            updatedByName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Vaids */
+            vaIds: string[];
+        };
+        /** AssetPassword */
+        AssetPassword: {
+            /** Password */
+            password: string;
+        };
+        /** AssetUpdate */
+        AssetUpdate: {
+            /** Kind */
+            kind?: ("login" | "link" | "note") | null;
+            /** Title */
+            title?: string | null;
+            /** Category */
+            category?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Username */
+            username?: string | null;
+            /** Password */
+            password?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Vaids */
+            vaIds?: string[] | null;
+        };
+        /** AssetVa */
+        AssetVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Headline */
+            headline: string;
         };
         /** AssignVaIn */
         AssignVaIn: {
@@ -7584,6 +7860,13 @@ export interface components {
              * @default
              */
             website?: string;
+        };
+        /** ClientAssetsOut */
+        ClientAssetsOut: {
+            /** Assets */
+            assets: components["schemas"]["AssetOut"][];
+            /** Vas */
+            vas: components["schemas"]["AssetVa"][];
         };
         /** ClientAttendanceDay */
         ClientAttendanceDay: {
@@ -13707,6 +13990,31 @@ export interface components {
              */
             value?: string;
         };
+        /** UnlockIn */
+        UnlockIn: {
+            /** Password */
+            password?: string | null;
+            /** Mfacode */
+            mfaCode?: string | null;
+            /** Emailcode */
+            emailCode?: string | null;
+        };
+        /** UnlockStatus */
+        UnlockStatus: {
+            /** Unlocked */
+            unlocked: boolean;
+            /** Locksafterawayhours */
+            locksAfterAwayHours: number;
+            /** Unlockedat */
+            unlockedAt: string | null;
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "password" | "email";
+            /** Needsmfacode */
+            needsMfaCode: boolean;
+        };
         /** UpdateIn */
         UpdateIn: {
             /** Text */
@@ -13900,6 +14208,65 @@ export interface components {
              * @default
              */
             website?: string;
+        };
+        /** VaAssetClient */
+        VaAssetClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+            /** Assetcount */
+            assetCount: number;
+        };
+        /** VaAssetOut */
+        VaAssetOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "login" | "link" | "note";
+            /** Title */
+            title: string;
+            /** Category */
+            category: string;
+            /** Url */
+            url: string;
+            /** Username */
+            username: string;
+            /** Haspassword */
+            hasPassword: boolean;
+            /** Notes */
+            notes: string;
+            /** Updatedbyname */
+            updatedByName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            client: components["schemas"]["AssetClient"];
+        };
+        /** VaAssetsOut */
+        VaAssetsOut: {
+            /** Clients */
+            clients: components["schemas"]["VaAssetClient"][];
+            /** Assets */
+            assets: components["schemas"]["VaAssetOut"][];
         };
         /** VaAttendanceClient */
         VaAttendanceClient: {
@@ -19829,6 +20196,219 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
                 };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_assets_api_va_assets_get: {
+        parameters: {
+            query?: {
+                client_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaAssetsOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_asset_password_api_va_assets__asset_id__password_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AssetPassword"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unlock_status_api_va_assets_unlock_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["UnlockStatus"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unlock_assets_api_va_assets_unlock_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UnlockIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["UnlockStatus"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    lock_assets_api_va_assets_unlock_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unlock_email_code_api_va_assets_unlock_email_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Error */
             default: {
@@ -33986,6 +34566,207 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_assets_api_portal_va_assets_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientAssetsOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_asset_api_portal_va_assets_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AssetOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_asset_api_portal_va_assets__asset_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_asset_api_portal_va_assets__asset_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AssetOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    asset_password_api_portal_va_assets__asset_id__password_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AssetPassword"];
+                    };
+                };
             };
             /** @description Validation Error */
             422: {

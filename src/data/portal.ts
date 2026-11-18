@@ -12,6 +12,7 @@ export type PortalTab =
   | "funnels"
   | "crm"
   | "attendance"
+  | "assets"
   | "journal"
   | "team"
   | "vateam"
@@ -52,6 +53,7 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   funnels: { title: "Funnels", subtitle: "The funnels built for you, how they perform, and requests for new ones." },
   crm: { title: "CRM", subtitle: "Your CRM builds, the packages to get one, and the progress on everything GoCWGL is building for you." },
   attendance: { title: "Attendance", subtitle: "When your VAs clock in and out, and whether they're on time for the schedule you set." },
+  assets: { title: "Assets", subtitle: "Logins, links and notes your VAs need. You choose which VA can see each one." },
   journal: { title: "VA tracker", subtitle: "Everything your VAs logged for your business, day by day." },
   team: { title: "Request VA", subtitle: "Ask GoCWGL for a VA, and follow each request until you're matched." },
   vateam: { title: "Team", subtitle: "The virtual assistants working with your business right now." },
@@ -142,7 +144,7 @@ export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
           {
             title: "Your team",
             needsVa: true,
-            items: [page("vateam", "Team", "users"), page("projects", "Tasks", "clipboard")],
+            items: [page("vateam", "Team", "users"), page("projects", "Tasks", "clipboard"), page("assets", "Assets", "lock")],
           },
           {
             title: "Time & activity",

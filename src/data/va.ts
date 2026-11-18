@@ -11,6 +11,7 @@ export type VaTab =
   | "tasks"
   | "time"
   | "attendance"
+  | "assets"
   | "invoices"
   | "jobs"
   | "training"
@@ -47,6 +48,11 @@ export const VA_PAGES: Record<VaTab, { title: string; subtitle: string; empty: s
     title: "Attendance",
     subtitle: "Clock in and out for each client. Your clients see when you start, and whether it's on time for your schedule.",
     empty: "No clients yet. Once GoCWGL places you with a client, you clock in and out for them here.",
+  },
+  assets: {
+    title: "Assets",
+    subtitle: "Logins, links and notes your clients shared with you. Copy what you need; passwords stay hidden until you ask.",
+    empty: "Nothing shared with you yet. When a client shares a login or link with you, it shows up here.",
   },
   invoices: {
     title: "Invoices",
@@ -107,8 +113,9 @@ export const VA_NAV: Array<{ title: string; items: Array<{ tab: VaTab; label: st
     title: "Work",
     items: [
       { tab: "clients", label: "Clients", icon: "briefcase" },
-      { tab: "tasks", label: "Tasks", icon: "clipboard" },
       { tab: "attendance", label: "Attendance", icon: "calendarCheck" },
+      { tab: "tasks", label: "Tasks", icon: "clipboard" },
+      { tab: "assets", label: "Assets", icon: "lock" },
       { tab: "time", label: "Time tracker", icon: "clock" },
       { tab: "invoices", label: "Invoices", icon: "receipt" },
     ],
