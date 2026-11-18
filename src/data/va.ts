@@ -14,6 +14,8 @@ export type VaTab =
   | "time"
   | "attendance"
   | "assets"
+  /** One client's SOPs, shared with you (from their sidebar). */
+  | "client-sops"
   | "invoices"
   | "jobs"
   | "training"
@@ -61,6 +63,11 @@ export const VA_PAGES: Record<VaTab, { title: string; subtitle: string; empty: s
     subtitle: "Logins, links and notes for your clients: the ones they shared with you, and ones you add for them and your teammates.",
     empty: "Nothing shared with you yet. When a client shares a login or link with you, it shows up here.",
   },
+  "client-sops": {
+    title: "SOPs",
+    subtitle: "How this client likes things done: the SOPs they shared with you.",
+    empty: "No SOPs from this client yet. When they share one with you, it shows up here.",
+  },
   invoices: {
     title: "Invoices",
     subtitle: "Monthly statements built from your billable hours and rates.",
@@ -88,7 +95,7 @@ export const VA_PAGES: Record<VaTab, { title: string; subtitle: string; empty: s
   },
   sops: {
     title: "SOP library",
-    subtitle: "Step-by-step guides for the work you do.",
+    subtitle: "Step-by-step guides for the work you do: SOPs your clients shared with you, and guides from GoCWGL.",
     empty: "No SOPs yet. Standard operating procedures shared with you will show up here.",
   },
   account: {
@@ -127,7 +134,10 @@ export const VA_CLIENT_NAV: Array<{ title: string; items: Array<{ tab: VaTab; la
   },
   {
     title: "Resources",
-    items: [{ tab: "assets", label: "Assets", icon: "lock" }],
+    items: [
+      { tab: "assets", label: "Assets", icon: "lock" },
+      { tab: "client-sops", label: "SOPs", icon: "clipboard" },
+    ],
   },
   {
     title: "Billing",

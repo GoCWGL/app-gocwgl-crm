@@ -1,0 +1,70 @@
+@use "../../abstracts" as *;
+
+// Client SOPs (client portal › SOPs › Your SOPs, and the VA portal's "From your clients"): a card that opens the SOP,
+// with who can see it and the edit buttons along the bottom.
+.csop {
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  cursor: default;
+
+  &:hover {
+    background: $white;
+  }
+
+  &__open {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 14px;
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: #fbfcfd;
+    }
+
+    &:disabled {
+      cursor: progress;
+    }
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 44px;
+    padding: 6px 10px 6px 14px;
+    border-top: 1px solid $line-soft;
+  }
+}
+
+// The document picker in the SOP form.
+.csop-file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px dashed $line;
+  border-radius: $radius-lg;
+  background: $bg-soft;
+  color: $ink-soft;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $muted;
+  }
+}
+
+#csop-file:focus-visible + .csop-file,
+.csop-file:has(+ #csop-file:focus-visible) {
+  outline: 2px solid $orange;
+  outline-offset: 2px;
+}

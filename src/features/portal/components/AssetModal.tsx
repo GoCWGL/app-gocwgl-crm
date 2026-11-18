@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
-import { Avatar, Button, Field, FormError, Icon, IconButton, IconTile, Input, Modal, PasswordInput, SegmentedControl, Textarea } from "@/components/ui";
-import { avatarTone } from "@/lib/tones";
-import { cn, generatePassword, normalizeUrl } from "@/lib/utils";
+import { Button, Field, FormError, Icon, IconButton, IconTile, Input, Modal, PasswordInput, SegmentedControl, Textarea } from "@/components/ui";
+import { generatePassword, normalizeUrl } from "@/lib/utils";
 import type { AssetIn, AssetVa } from "@/utils/api/models";
 import { ASSET_KINDS, type AssetBase, type AssetKind } from "./AssetList";
+import { VaSharePicker } from "./VaSharePicker";
 
 /** What the form saves: everything but the password, which is added only when it changes (see `password`). */
 export type AssetSave = Omit<AssetIn, "password"> & { password?: string };
@@ -60,8 +60,6 @@ export function AssetModal({
   const [vaIds, setVaIds] = useState<string[]>(asset?.vaIds ?? []);
   const link = normalizeUrl(url);
   const error = !title.trim() ? "Give it a name." : kind === "link" && !link ? "Add the link’s web address." : "";
-  const allOn = vas.length > 0 && vas.every((v) => vaIds.includes(v.id));
-  const toggle = (id: string) => setVaIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -194,35 +192,7 @@ export function AssetModal({
         </Field>
 
         <Field label={copy.shareLabel}>
-          {vas.length ? (
-            <div className="ast-share">
-              <div className="ast-share__head">
-                <span className="text-small">{vaIds.length ? `${vaIds.length} of ${vas.length} ${copy.people}` : copy.onlyYou}</span>
-                <button type="button" className="btn btn--link" onClick={() => setVaIds(allOn ? [] : vas.map((v) => v.id))}>
-                  {allOn ? "Clear" : "Select all"}
-                </button>
-              </div>
-              <div className="ast-share__list" role="group" aria-label={copy.shareLabel}>
-                {vas.map((v) => {
-                  const on = vaIds.includes(v.id);
-                  return (
-                    <button key={v.id} type="button" className={cn("ast-va-pick", on && "is-on")} aria-pressed={on} onClick={() => toggle(v.id)}>
-                      <Avatar name={v.name} tone={avatarTone(v.id)} size="sm" />
-                      <span className="ast-va-pick__text">
-                        <strong>{v.name}</strong>
-                        {v.headline && <span>{v.headline}</span>}
-                      </span>
-                      <span className="ast-va-pick__check" aria-hidden="true">
-                        {on && <Icon name="check" size={12} />}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <p className="text-small ast-share__none">{copy.nobody}</p>
-          )}
+          <VaSharePicker vas={vas} value={vaIds} onChange={setVaIds} label={copy.shareLabel} people={copy.people} onlyYou={copy.onlyYou} nobody={copy.nobody} />
         </Field>
         {error && title && (
           <span className="form-error" role="alert">

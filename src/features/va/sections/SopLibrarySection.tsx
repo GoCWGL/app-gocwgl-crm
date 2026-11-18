@@ -7,12 +7,18 @@ import type { UseQueryResult } from "@tanstack/react-query";
 import type { SopOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { useVaSops } from "@/utils/hooks/useVaPortal";
+import { SharedSops } from "./SharedSopsSection";
 
-/** VA portal › SOP library: published step-by-step guides for VAs. */
+/** VA portal › SOP library: SOPs your clients shared with you (once there are any), then GoCWGL's guides for VAs. */
 export function SopLibrarySection() {
   const va = useVaAccess().ready;
   const query = useVaSops(va);
-  return <SopLibrary query={query} />;
+  return (
+    <div className="page-stack">
+      <SharedSops hideWhenEmpty />
+      <SopLibrary query={query} />
+    </div>
+  );
 }
 
 /** Searchable SOP cards with a step-by-step reader (VA portal and client portal). */
@@ -96,7 +102,11 @@ export function SopLibrary({ query }: { query: UseQueryResult<SopOut[]> }) {
   );
 }
 
-function SopReader({ sop, onClose }: { sop: SopOut; onClose: () => void }) {
+/** What the reader shows: a GoCWGL SOP, or a client's written one (its `url` is the walkthrough video). */
+export type SopReadable = Pick<SopOut, "title" | "category" | "summary" | "steps" | "body"> & { videoUrl?: string };
+
+/** A written SOP: the walkthrough video, numbered steps and notes. `kicker` names where it's from. */
+export function SopReader({ sop, onClose, kicker }: { sop: SopReadable; onClose: () => void; kicker?: string }) {
   return (
     <Modal
       open
@@ -104,7 +114,7 @@ function SopReader({ sop, onClose }: { sop: SopOut; onClose: () => void }) {
       width={640}
       onClose={onClose}
       titleId="va-sop"
-      kicker={`SOP${sop.category ? ` · ${sop.category.toUpperCase()}` : ""}`}
+      kicker={`${kicker ?? "SOP"}${sop.category ? ` · ${sop.category.toUpperCase()}` : ""}`}
       title={sop.title}
       subtitle={sop.summary || undefined}
       media={

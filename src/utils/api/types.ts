@@ -1292,6 +1292,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/va/client-sops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Client Sops For Me
+         * @description SOPs your clients shared with you: all of them, or one client's (`client_id`, one of your current clients).
+         */
+        get: operations["client_sops_for_me_api_va_client_sops_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/client-sops/{sop_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Client Sop File
+         * @description An uploaded SOP a client shared with you.
+         */
+        get: operations["client_sop_file_api_va_client_sops__sop_id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/va/jobs": {
         parameters: {
             query?: never;
@@ -6093,6 +6133,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/my-sops": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Sops
+         * @description Your own SOPs, who each one is shared with, and your VAs.
+         */
+        get: operations["my_sops_api_portal_my_sops_get"];
+        put?: never;
+        /**
+         * Add My Sop
+         * @description Write an SOP (steps and notes) or add a link to one (Google Docs, Notion, Loom…). Only the VAs you pick can
+         *     see it, and only while they work for you.
+         */
+        post: operations["add_my_sop_api_portal_my_sops_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/my-sops/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload My Sop
+         * @description Upload a document (PDF, Word, PowerPoint, Excel, an image or a video) as an SOP. The name defaults to the file's.
+         */
+        post: operations["upload_my_sop_api_portal_my_sops_upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/my-sops/{sop_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete My Sop */
+        delete: operations["delete_my_sop_api_portal_my_sops__sop_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update My Sop */
+        patch: operations["update_my_sop_api_portal_my_sops__sop_id__patch"];
+        trace?: never;
+    };
+    "/api/portal/my-sops/{sop_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Sop File */
+        get: operations["my_sop_file_api_portal_my_sops__sop_id__file_get"];
+        /**
+         * Replace My Sop File
+         * @description Upload a new version of an uploaded SOP.
+         */
+        put: operations["replace_my_sop_file_api_portal_my_sops__sop_id__file_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/va-resumes/{va_id}": {
         parameters: {
             query?: never;
@@ -7400,6 +7524,11 @@ export interface components {
             /** Steps */
             steps?: (components["schemas"]["ActionStep"] | components["schemas"]["ConditionStep"])[] | null;
         };
+        /** Body_replace_my_sop_file_api_portal_my_sops__sop_id__file_put */
+        Body_replace_my_sop_file_api_portal_my_sops__sop_id__file_put: {
+            /** File */
+            file: string;
+        };
         /** Body_set_default_thumbnail_api_admin_trainings_default_thumbnail_put */
         Body_set_default_thumbnail_api_admin_trainings_default_thumbnail_put: {
             /**
@@ -7443,6 +7572,31 @@ export interface components {
             /** File */
             file: string;
             category?: components["schemas"]["FileCategory"] | null;
+        };
+        /** Body_upload_my_sop_api_portal_my_sops_upload_post */
+        Body_upload_my_sop_api_portal_my_sops_upload_post: {
+            /** File */
+            file: string;
+            /**
+             * Title
+             * @default
+             */
+            title?: string;
+            /**
+             * Category
+             * @default
+             */
+            category?: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary?: string;
+            /**
+             * Vaids
+             * @default []
+             */
+            vaIds?: string[];
         };
         /** Body_upload_resume_document_api_va_resume_documents_post */
         Body_upload_resume_document_api_va_resume_documents_post: {
@@ -8105,6 +8259,114 @@ export interface components {
             unreadCount?: number;
             /** Clientreadat */
             clientReadAt?: string | null;
+        };
+        /** ClientSopIn */
+        ClientSopIn: {
+            /**
+             * Kind
+             * @default written
+             * @enum {string}
+             */
+            kind?: "written" | "link";
+            /** Title */
+            title: string;
+            /**
+             * Category
+             * @default
+             */
+            category?: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary?: string;
+            /** Steps */
+            steps?: string[];
+            /**
+             * Body
+             * @default
+             */
+            body?: string;
+            /**
+             * Url
+             * @default
+             */
+            url?: string;
+            /** Vaids */
+            vaIds?: string[];
+        };
+        /**
+         * ClientSopKind
+         * @description How a client's own SOP is kept.
+         * @enum {string}
+         */
+        ClientSopKind: "written" | "file" | "link";
+        /** ClientSopOut */
+        ClientSopOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["ClientSopKind"];
+            /** Title */
+            title: string;
+            /** Category */
+            category: string;
+            /** Summary */
+            summary: string;
+            /** Steps */
+            steps: string[];
+            /** Body */
+            body: string;
+            /** Url */
+            url: string;
+            /** Hasfile */
+            hasFile: boolean;
+            /** Filename */
+            fileName: string;
+            /** Filesize */
+            fileSize: number;
+            /** Filetype */
+            fileType: string;
+            /** Updatedbyname */
+            updatedByName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /** Vaids */
+            vaIds: string[];
+        };
+        /** ClientSopUpdate */
+        ClientSopUpdate: {
+            /** Title */
+            title?: string | null;
+            /** Category */
+            category?: string | null;
+            /** Summary */
+            summary?: string | null;
+            /** Steps */
+            steps?: string[] | null;
+            /** Body */
+            body?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Vaids */
+            vaIds?: string[] | null;
+        };
+        /** ClientSopsOut */
+        ClientSopsOut: {
+            /** Sops */
+            sops: components["schemas"]["ClientSopOut"][];
+            /** Vas */
+            vas: components["schemas"]["SopVa"][];
         };
         /** ClientTicketIn */
         ClientTicketIn: {
@@ -12844,6 +13106,18 @@ export interface components {
          * @enum {string}
          */
         SopAudience: "client" | "va";
+        /** SopClient */
+        SopClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+        };
         /** SopIn */
         SopIn: {
             /** Title */
@@ -12931,6 +13205,18 @@ export interface components {
             body?: string | null;
             /** Videourl */
             videoUrl?: string | null;
+        };
+        /** SopVa */
+        SopVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Headline */
+            headline: string;
         };
         /** StaffInvite */
         StaffInvite: {
@@ -14519,6 +14805,55 @@ export interface components {
             /** Ratecents */
             rateCents?: number | null;
         };
+        /** VaClientSopOut */
+        VaClientSopOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["ClientSopKind"];
+            /** Title */
+            title: string;
+            /** Category */
+            category: string;
+            /** Summary */
+            summary: string;
+            /** Steps */
+            steps: string[];
+            /** Body */
+            body: string;
+            /** Url */
+            url: string;
+            /** Hasfile */
+            hasFile: boolean;
+            /** Filename */
+            fileName: string;
+            /** Filesize */
+            fileSize: number;
+            /** Filetype */
+            fileType: string;
+            /** Updatedbyname */
+            updatedByName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            client: components["schemas"]["SopClient"];
+        };
+        /** VaClientSopsOut */
+        VaClientSopsOut: {
+            /** Clients */
+            clients: components["schemas"]["VaSopClient"][];
+            /** Sops */
+            sops: components["schemas"]["VaClientSopOut"][];
+        };
         /** VaClientsIn */
         VaClientsIn: {
             /** Contactids */
@@ -15422,6 +15757,20 @@ export interface components {
              * @default
              */
             country?: string;
+        };
+        /** VaSopClient */
+        VaSopClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+            /** Sopcount */
+            sopCount: number;
         };
         /**
          * VaStatus
@@ -18900,6 +19249,90 @@ export interface operations {
                         /** Response Va Sop Library Api Va Sops Get */
                         data: components["schemas"]["SopOut"][];
                     };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_sops_for_me_api_va_client_sops_get: {
+        parameters: {
+            query?: {
+                client_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaClientSopsOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_sop_file_api_va_client_sops__sop_id__file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Error */
@@ -34308,6 +34741,297 @@ export interface operations {
                         /** Response Client Sop Library Api Portal Sops Get */
                         data: components["schemas"]["SopOut"][];
                     };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_sops_api_portal_my_sops_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientSopsOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_my_sop_api_portal_my_sops_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientSopIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientSopOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    upload_my_sop_api_portal_my_sops_upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_my_sop_api_portal_my_sops_upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientSopOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_my_sop_api_portal_my_sops__sop_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_my_sop_api_portal_my_sops__sop_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientSopUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientSopOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_sop_file_api_portal_my_sops__sop_id__file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    replace_my_sop_file_api_portal_my_sops__sop_id__file_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sop_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_replace_my_sop_file_api_portal_my_sops__sop_id__file_put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientSopOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Error */

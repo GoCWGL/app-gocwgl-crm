@@ -1,8 +1,7 @@
 "use client";
 
-import { SopLibrary } from "@/features/va/sections/SopLibrarySection";
 import { TrainingList } from "@/features/va/sections/TrainingSection";
-import { useClientSops, useClientTrainings } from "@/utils/hooks/useClientWork";
+import { useClientTrainings } from "@/utils/hooks/useClientWork";
 import { usePortal } from "../state/PortalContext";
 
 /** Client portal › Training: GoCWGL lessons for clients (same player and quizzes as the VA portal). */
@@ -11,7 +10,5 @@ export function ClientTrainingSection() {
   return <TrainingList query={useClientTrainings()} audience="client" readOnly={readOnly} />;
 }
 
-/** Client portal › SOPs: published client guides. */
-export function ClientSopsSection() {
-  return <SopLibrary query={useClientSops()} />;
-}
+/** Client portal › SOPs: your own SOPs for your VAs, and the GoCWGL guides. */
+export { ClientSopsSection } from "./ClientSopsSection";

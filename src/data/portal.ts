@@ -63,7 +63,7 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   support: { title: "Request support", subtitle: "Ask for changes, report a problem, or message your team." },
   billing: { title: "Invoices", subtitle: "Invoices from your VAs and from GoCWGL." },
   training: { title: "Training", subtitle: "Short lessons from GoCWGL on getting the most from your VA team." },
-  sops: { title: "SOPs", subtitle: "Step-by-step guides from GoCWGL." },
+  sops: { title: "SOPs", subtitle: "Your own SOPs for your VAs, and step-by-step guides from GoCWGL." },
   affiliate: { title: "Affiliate", subtitle: "Your referral ID, the businesses you referred, and your bonuses." },
   account: { title: "Account", subtitle: "Your profile, alerts, password & 2-step verification, and who can see this portal." },
 };

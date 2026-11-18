@@ -147,7 +147,7 @@ function EmptyAssets({ onAdd }: { onAdd?: () => void }) {
 }
 
 /** The VAs who can see an asset; one a VA added is also seen by that VA (`addedBy`), whoever it's shared with. */
-function SharedWith({ ids, vaById, addedBy }: { ids: string[]; vaById: Map<string, AssetVa>; addedBy?: string }) {
+export function SharedWith({ ids, vaById, addedBy }: { ids: string[]; vaById: Map<string, AssetVa>; addedBy?: string }) {
   const people = ids.map((id) => vaById.get(id)).filter((v): v is AssetVa => !!v);
   if (!people.length)
     return (
