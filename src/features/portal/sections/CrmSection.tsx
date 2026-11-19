@@ -305,6 +305,13 @@ function WhyOwnCrm() {
  * Renting vs owning: what HubSpot, GoHighLevel and Zoho cost over the years for the client's team size, next to the
  * one-time Custom CRM build.
  */
+/** A break-even month count as years, e.g. 20 → "~1.7 years", 24 → "~2 years", 8 → "under a year". */
+function breakEvenYears(months: number) {
+  if (months < 12) return "under a year";
+  const y = Math.round((months / 12) * 10) / 10;
+  return `~${y} ${y === 1 ? "year" : "years"}`;
+}
+
 function CostComparison() {
   const { defaultSeats, maxSeats, periods } = CRM_COMPARISON;
   const [seats, setSeats] = useState(defaultSeats);
@@ -375,7 +382,8 @@ function CostComparison() {
                 <span className="crm-cost__label">You save up to</span>
                 <span className="crm-cost__saving">{formatCents(biggest.totalCents - ownCents)}</span>
                 <span className="crm-cost__note">
-                  against {biggest.name} {biggest.plan}, and it pays for itself in about {biggest.breakEven} months.
+                  against {biggest.name} {biggest.plan}, and it pays for itself in{" "}
+                  <strong className="crm-cost__payback">{breakEvenYears(biggest.breakEven)}</strong>.
                 </span>
               </>
             ) : (
@@ -409,10 +417,14 @@ function CostComparison() {
                 <div className="crm-cost__track">
                   <span className="crm-cost__fill" style={{ width: width(o.totalCents) }} />
                 </div>
-                <span className="crm-cost__detail">
-                  {o.pricing}
-                  {o.totalCents > ownCents && Number.isFinite(o.breakEven) && <> · costs more than owning after ~{o.breakEven} months</>}
-                </span>
+                <span className="crm-cost__detail">{o.pricing}</span>
+                {o.totalCents > ownCents && Number.isFinite(o.breakEven) && (
+                  <span className="crm-cost__breakeven">
+                    <Icon name="clock" size={13} strokeWidth={2.4} />
+                    Costs more than owning {o.breakEven < 12 ? "within" : "after"}{" "}
+                    <strong>{o.breakEven < 12 ? "the first year" : breakEvenYears(o.breakEven)}</strong>
+                  </span>
+                )}
               </div>
             </div>
           ))}

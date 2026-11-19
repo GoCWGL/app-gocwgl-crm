@@ -527,6 +527,35 @@
     color: $muted-light;
   }
 
+  // Break-even badge: when renting overtakes the cost of owning, in years.
+  &__breakeven {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    padding: 4px 10px;
+    border-radius: $radius-pill;
+    font-size: 12px;
+    font-weight: 600;
+    color: #9a3412;
+    background: #fff7ed;
+    border: 1px solid #fed7aa;
+
+    strong {
+      font-weight: 800;
+      color: #c2410c;
+    }
+  }
+
+  &__payback {
+    white-space: nowrap;
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-weight: 800;
+    color: $green-700;
+    background: rgba(16, 185, 129, 0.12);
+  }
+
   &__footnote {
     margin: 10px 12px 0;
     font-size: 11px;
