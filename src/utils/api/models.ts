@@ -75,6 +75,7 @@ export type ClientBillingOut = S["ClientBillingOut"];
 export type ClientCrmRequestInvoiceOut = S["ClientCrmRequestInvoiceOut"];
 export type ClientCrmRequestOut = S["ClientCrmRequestOut"];
 export type ClientEarnings = S["ClientEarnings"];
+export type ClientMarkPaidIn = S["ClientMarkPaidIn"];
 export type ClientMessageIn = S["ClientMessageIn"];
 export type ClientProjectOut = S["ClientProjectOut"];
 export type ClientSopIn = S["ClientSopIn"];

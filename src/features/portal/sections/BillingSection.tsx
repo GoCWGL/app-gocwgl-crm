@@ -8,6 +8,7 @@ import type { InvoiceOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
 import { useDownloadInvoicePdf, usePortalBilling } from "@/utils/hooks/useBilling";
+import { ClientMarkPaid } from "../components/ClientMarkPaid";
 import { PayConfirmModal } from "../components/PayConfirmModal";
 import { SubscriptionCard } from "../components/SubscriptionCard";
 import { usePortal } from "../state/PortalContext";
@@ -55,7 +56,7 @@ export function BillingSection() {
         ]}
       />
       <p className="text-muted">
-        Pay a pending invoice through Wise with Pay now, or by bank transfer. Your GoCWGL team marks it as paid once it arrives. No card is saved.
+        Pay a pending invoice through Wise with Pay now, or by bank transfer. Then choose Mark as paid, and your GoCWGL team verifies it once it arrives. No card is saved.
       </p>
       <FormError error={pdf.error} />
 
@@ -86,16 +87,23 @@ export function BillingSection() {
                   <td>{describe(iv)}</td>
                   <td className="data-table__mono">{formatCentsExact(iv.totalCents, iv.currency)}</td>
                   <td>
-                    <Badge tone={INVOICE_TONES[iv.status] ?? "neutral"}>{STATUS_LABELS[iv.status] ?? iv.status}</Badge>
-                    {isOpen(iv.status) && (
+                    {isOpen(iv.status) && iv.clientPaidAt ? (
+                      <Badge tone="sky">Awaiting verification</Badge>
+                    ) : (
+                      <Badge tone={INVOICE_TONES[iv.status] ?? "neutral"}>{iv.status === "Paid" ? "Paid · verified" : (STATUS_LABELS[iv.status] ?? iv.status)}</Badge>
+                    )}
+                    {isOpen(iv.status) && !iv.clientPaidAt && (
                       <span className="text-small tx-status-note">
-                        Already paid? It can take up to 24 hours to verify your payment. Once it’s verified, this changes to Paid.
+                        Already paid? Choose Mark as paid. It can take up to 24 hours to verify your payment; once it’s verified, this changes to Paid.
                       </span>
                     )}
                   </td>
                   <td className="data-table__actions">
                     {/* Builds and the hosting plan are paid with their Wise link; for anything else, the team sends payment details. */}
-                    {isOpen(iv.status) && !readOnly && (
+                    {isOpen(iv.status) && (
+                      <ClientMarkPaid kind="gocwgl" invoice={{ ...iv, amountCents: iv.totalCents }} readOnly={readOnly} />
+                    )}
+                    {isOpen(iv.status) && !readOnly && !iv.clientPaidAt && (
                       iv.paymentUrl ? (
                         <>
                           <Button variant="primary" size="sm" aria-haspopup="dialog" onClick={() => setPaying({ invoice: iv, start: "confirm" })}>

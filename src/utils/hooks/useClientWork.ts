@@ -58,6 +58,8 @@ export const useClientVaResume = (vaId: string) =>
 export const useVaInvoicesForClient = () => useQuery({ queryKey: qk.portalVaInvoices, queryFn: api.listVaInvoices });
 export const useVaInvoiceForClient = (id: string) =>
   useQuery({ queryKey: [...qk.portalVaInvoices, id], queryFn: () => api.getVaInvoice(id), enabled: !!id });
+export const useMarkVaInvoicePaid = () => useApiMutation(api.markVaInvoicePaid, { invalidate: [qk.portalVaInvoices] });
+export const useUnmarkVaInvoicePaid = () => useApiMutation(api.unmarkVaInvoicePaid, { invalidate: [qk.portalVaInvoices] });
 
 export const useClientTrainings = () => useQuery({ queryKey: qk.portalTrainings, queryFn: api.listClientTrainings });
 export const useSubmitClientQuiz = () =>

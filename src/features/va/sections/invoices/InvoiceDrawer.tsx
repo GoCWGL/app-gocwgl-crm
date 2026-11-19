@@ -3,7 +3,7 @@
 import { BillingBreakdown, invoiceTotals } from "../../components/BillingBreakdown";
 import { AmountDue } from "../../components/AmountDue";
 import { useTrainingPeriod } from "../../components/TrainingFeeCountdown";
-import { MarkPaidButton } from "./MarkPaid";
+import { ClientPaidNotice, MarkPaidButton, invoiceBadge } from "./MarkPaid";
 import { PaymentLines } from "./PaymentLines";
 import { useState } from "react";
 import { Badge, Button, FormError, Icon, LoadState, Modal } from "@/components/ui";
@@ -12,7 +12,7 @@ import { formatLong, formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
 import { useDeleteInvoice, useInvoice, useSetInvoiceStatus } from "@/utils/hooks/useVaInvoices";
 import { clientLabel } from "../../lib/time";
-import { STATUS, hoursLabel, lineLabel, shownLines, signed, kindLabel, periodLabel } from "./shared";
+import { hoursLabel, lineLabel, shownLines, signed, kindLabel, periodLabel } from "./shared";
 
 /** One invoice as the client sees it, with what can be done next (send, mark paid, delete a draft, print). */
 export function InvoiceDrawer({ id, onClose }: { id: string; onClose: () => void }) {
@@ -60,7 +60,7 @@ export function InvoiceDrawer({ id, onClose }: { id: string; onClose: () => void
                 <Icon name="send" size={13} /> Mark as sent
               </Button>
             )}
-            {inv.status === "sent" && <MarkPaidButton invoice={inv} size="md" label="Mark as paid" />}
+            {inv.status === "sent" && !inv.clientPaidAt && <MarkPaidButton invoice={inv} size="md" label="Mark as paid" />}
             {inv.status === "paid" && (
               <Button variant="outline" disabled={status.isPending} onClick={() => set("sent")}>
                 Mark unpaid
@@ -72,7 +72,12 @@ export function InvoiceDrawer({ id, onClose }: { id: string; onClose: () => void
     >
       <FormError error={status.error ?? remove.error} />
       <LoadState query={query} loadingText="Loading invoice…">
-        {inv && <InvoiceDoc inv={inv} />}
+        {inv && (
+          <div className="stack stack--16">
+            <ClientPaidNotice invoice={inv} />
+            <InvoiceDoc inv={inv} />
+          </div>
+        )}
       </LoadState>
     </Modal>
   );
@@ -87,8 +92,8 @@ function InvoiceDoc({ inv }: { inv: VaInvoiceDetail }) {
           <span className="invoice-doc__title">INVOICE</span>
           <span className="invoice-doc__number">{inv.number}</span>
         </span>
-        <Badge tone={STATUS[inv.status].tone} dot>
-          {STATUS[inv.status].label}
+        <Badge tone={invoiceBadge(inv).tone} dot>
+          {invoiceBadge(inv).label}
           {inv.status === "paid" && inv.paidAt ? ` · ${formatShort(inv.paidAt)}` : ""}
         </Badge>
       </header>

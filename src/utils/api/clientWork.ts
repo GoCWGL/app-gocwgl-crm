@@ -75,6 +75,9 @@ export const clientVaResumeDocPath = (vaId: string, docId: string) => `/portal/v
 
 export const listVaInvoices = () => get<ClientVaInvoice[]>("/portal/va-invoices");
 export const getVaInvoice = (id: string) => get<ClientVaInvoiceDetail>(`/portal/va-invoices/${id}`);
+/** The client says they paid (the VA verifies it), or takes it back. */
+export const markVaInvoicePaid = (v: { id: string; note?: string }) => post<ClientVaInvoiceDetail>(`/portal/va-invoices/${v.id}/paid`, { note: v.note ?? "" });
+export const unmarkVaInvoicePaid = (id: string) => del<ClientVaInvoiceDetail>(`/portal/va-invoices/${id}/paid`);
 
 // Client portal › Training and SOPs.
 export const listClientTrainings = () => get<VaTrainingOut[]>("/portal/trainings").then(withTrainingDefaults);

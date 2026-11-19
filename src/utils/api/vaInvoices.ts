@@ -21,6 +21,8 @@ export const createInvoice = (body: VaInvoiceIn) => post<VaInvoiceDetail>("/va/i
 export const getInvoice = (id: string) => get<VaInvoiceDetail>(`/va/invoices/${id}`);
 export const updateInvoice = (id: string, body: VaInvoiceUpdate) => patch<VaInvoiceDetail>(`/va/invoices/${id}`, body);
 export const setInvoiceStatus = (id: string, status: "draft" | "sent" | "paid") => post<VaInvoiceDetail>(`/va/invoices/${id}/status`, { status });
+/** The client marked it paid but the money isn't in: back to waiting for payment. */
+export const rejectClientPaid = (id: string) => del<VaInvoiceDetail>(`/va/invoices/${id}/client-paid`);
 export const deleteInvoice = (id: string) => del(`/va/invoices/${id}`);
 
 // Payment details.

@@ -1816,6 +1816,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/va/invoices/{invoice_id}/client-paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Reject Client Paid
+         * @description The client marked it paid but the payment hasn't come in: it goes back to waiting for payment.
+         */
+        delete: operations["reject_client_paid_api_va_invoices__invoice_id__client_paid_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/va/payment-methods": {
         parameters: {
             query?: never;
@@ -2671,6 +2691,26 @@ export interface paths {
         /** Mark Paid */
         post: operations["mark_paid_api_admin_invoices__invoice_id__mark_paid_post"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/invoices/{invoice_id}/client-paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Reject Client Paid
+         * @description The client marked it paid but the payment hasn't come in: it goes back to waiting for payment.
+         */
+        delete: operations["reject_client_paid_api_admin_invoices__invoice_id__client_paid_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -5728,6 +5768,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/billing/invoices/{invoice_id}/paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark My Invoice Paid
+         * @description You paid it (outside the app): GoCWGL is told, checks the payment came in, and marks it verified.
+         */
+        post: operations["mark_my_invoice_paid_api_portal_billing_invoices__invoice_id__paid_post"];
+        /**
+         * Unmark My Invoice Paid
+         * @description Marked paid by mistake (before GoCWGL verified it).
+         */
+        delete: operations["unmark_my_invoice_paid_api_portal_billing_invoices__invoice_id__paid_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/billing/subscription/cancel": {
         parameters: {
             query?: never;
@@ -6126,6 +6190,30 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-invoices/{invoice_id}/paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark My Va Invoice Paid
+         * @description You paid it: your VA is told, checks the payment came in, and marks it verified.
+         */
+        post: operations["mark_my_va_invoice_paid_api_portal_va_invoices__invoice_id__paid_post"];
+        /**
+         * Unmark My Va Invoice Paid
+         * @description Marked paid by mistake (before your VA verified it).
+         */
+        delete: operations["unmark_my_va_invoice_paid_api_portal_va_invoices__invoice_id__paid_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -8525,6 +8613,14 @@ export interface components {
              */
             periodEnd: string;
         };
+        /** ClientMarkPaidIn */
+        ClientMarkPaidIn: {
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
         /** ClientMessageIn */
         ClientMessageIn: {
             /** Text */
@@ -8760,6 +8856,13 @@ export interface components {
             sentAt: string | null;
             /** Paidat */
             paidAt: string | null;
+            /** Clientpaidat */
+            clientPaidAt?: string | null;
+            /**
+             * Clientpaidnote
+             * @default
+             */
+            clientPaidNote?: string;
             va: components["schemas"]["ProjectVa"];
         };
         /** ClientVaInvoiceDetail */
@@ -8796,6 +8899,13 @@ export interface components {
             sentAt: string | null;
             /** Paidat */
             paidAt: string | null;
+            /** Clientpaidat */
+            clientPaidAt?: string | null;
+            /**
+             * Clientpaidnote
+             * @default
+             */
+            clientPaidNote?: string;
             va: components["schemas"]["ProjectVa"];
             /** Lines */
             lines: components["schemas"]["ClientVaInvoiceLine"][];
@@ -10466,6 +10576,13 @@ export interface components {
             sentAt: string | null;
             /** Paidat */
             paidAt: string | null;
+            /** Clientpaidat */
+            clientPaidAt?: string | null;
+            /**
+             * Clientpaidnote
+             * @default
+             */
+            clientPaidNote?: string;
             /**
              * Createdat
              * Format: date-time
@@ -13778,6 +13895,13 @@ export interface components {
             createdAt: string;
             /** Note */
             note: string;
+            /** Clientpaidat */
+            clientPaidAt?: string | null;
+            /**
+             * Clientpaidnote
+             * @default
+             */
+            clientPaidNote?: string;
             /** Paymentlabel */
             paymentLabel: string;
             client: components["schemas"]["InvoiceClient"] | null;
@@ -13838,6 +13962,13 @@ export interface components {
             createdAt: string;
             /** Note */
             note: string;
+            /** Clientpaidat */
+            clientPaidAt?: string | null;
+            /**
+             * Clientpaidnote
+             * @default
+             */
+            clientPaidNote?: string;
             /** Paymentlabel */
             paymentLabel: string;
             client: components["schemas"]["InvoiceClient"] | null;
@@ -15870,6 +16001,13 @@ export interface components {
             createdAt: string;
             /** Note */
             note: string;
+            /** Clientpaidat */
+            clientPaidAt?: string | null;
+            /**
+             * Clientpaidnote
+             * @default
+             */
+            clientPaidNote?: string;
             /** Paymentlabel */
             paymentLabel: string;
             client: components["schemas"]["InvoiceClient"] | null;
@@ -15961,6 +16099,13 @@ export interface components {
             createdAt: string;
             /** Note */
             note: string;
+            /** Clientpaidat */
+            clientPaidAt?: string | null;
+            /**
+             * Clientpaidnote
+             * @default
+             */
+            clientPaidNote?: string;
             /** Paymentlabel */
             paymentLabel: string;
             client: components["schemas"]["InvoiceClient"] | null;
@@ -21450,6 +21595,48 @@ export interface operations {
             };
         };
     };
+    reject_client_paid_api_va_invoices__invoice_id__client_paid_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaInvoiceDetail"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     list_payment_methods_api_va_payment_methods_get: {
         parameters: {
             query?: never;
@@ -24498,6 +24685,48 @@ export interface operations {
         };
     };
     mark_paid_api_admin_invoices__invoice_id__mark_paid_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvoiceOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reject_client_paid_api_admin_invoices__invoice_id__client_paid_delete: {
         parameters: {
             query?: never;
             header?: never;
@@ -34513,6 +34742,94 @@ export interface operations {
             };
         };
     };
+    mark_my_invoice_paid_api_portal_billing_invoices__invoice_id__paid_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientMarkPaidIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvoiceOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unmark_my_invoice_paid_api_portal_billing_invoices__invoice_id__paid_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvoiceOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     cancel_my_subscription_api_portal_billing_subscription_cancel_post: {
         parameters: {
             query?: never;
@@ -35544,6 +35861,94 @@ export interface operations {
         };
     };
     my_va_invoice_api_portal_va_invoices__invoice_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientVaInvoiceDetail"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    mark_my_va_invoice_paid_api_portal_va_invoices__invoice_id__paid_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ClientMarkPaidIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ClientVaInvoiceDetail"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unmark_my_va_invoice_paid_api_portal_va_invoices__invoice_id__paid_delete: {
         parameters: {
             query?: never;
             header?: never;

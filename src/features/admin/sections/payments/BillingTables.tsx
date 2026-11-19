@@ -10,6 +10,7 @@ import {
   useCancelSubscription,
   useInvoices,
   useMarkInvoicePaid,
+  useRejectClientPaid,
   useSendInvoice,
   useSubscriptions,
   useUpdateSubscription,
@@ -61,11 +62,12 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
   const voidInv = useVoidInvoice();
   const busy = updateSub.isPending || cancelSub.isPending;
   // Invoice actions lock only their own row, so one slow email never freezes the whole table.
-  const invoiceActions = [send, markPaid, voidInv];
+  const rejectPaid = useRejectClientPaid();
+  const invoiceActions = [send, markPaid, voidInv, rejectPaid];
   const rowBusy = (id: string) => invoiceActions.some((m) => m.isPending && m.variables === id);
   const pendingLabel = (m: { isPending: boolean; variables?: string }, id: string, idle: string, working: string) =>
     m.isPending && m.variables === id ? working : idle;
-  const error = updateSub.error ?? cancelSub.error ?? send.error ?? markPaid.error ?? voidInv.error;
+  const error = updateSub.error ?? cancelSub.error ?? send.error ?? markPaid.error ?? voidInv.error ?? rejectPaid.error;
 
   return (
     <section className="card card--flat board" aria-label="Billing">
@@ -233,6 +235,8 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
               {invoices.map((iv) => {
                 const c = contactOf(iv.contactId);
                 const isOpen = iv.status === "Sent" || iv.status === "Overdue";
+                // The client marked it paid in their portal: check the money came in, then verify (or Not received).
+                const toVerify = isOpen && !!iv.clientPaidAt;
                 return (
                   <tr key={iv.id}>
                     <td>
@@ -247,9 +251,16 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
                     <td>{iv.dueDate ? formatShort(iv.dueDate) : "—"}</td>
                     <td>
                       <div className="stack stack--2">
-                        <Badge tone={INVOICE_TONES[iv.status as InvoiceStatus] ?? "neutral"} dot>
-                          {iv.status}
-                        </Badge>
+                        {toVerify ? (
+                          <Badge tone="sky" dot>
+                            Client paid {formatShort(iv.clientPaidAt)} · verify
+                          </Badge>
+                        ) : (
+                          <Badge tone={INVOICE_TONES[iv.status as InvoiceStatus] ?? "neutral"} dot>
+                            {iv.status === "Paid" ? "Paid · verified" : iv.status}
+                          </Badge>
+                        )}
+                        {toVerify && iv.clientPaidNote && <span className="text-small">Ref: {iv.clientPaidNote}</span>}
                         {isOpen && iv.lastEmailedAt && (
                           <span className="text-small">
                             {iv.remindersSent ? `${iv.remindersSent} follow-up${iv.remindersSent === 1 ? "" : "s"} · ` : ""}
@@ -286,9 +297,22 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
                           className="row-action row-action--green"
                           title="Payment received (Wise, bank transfer, cash…): marks it paid and emails the client a thank-you"
                           disabled={rowBusy(iv.id)}
-                          onClick={() => markPaid.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} marked as paid.`) })}
+                          onClick={() => markPaid.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} ${toVerify ? "verified" : "marked"} as paid.`) })}
                         >
-                          {pendingLabel(markPaid, iv.id, "Mark paid", "Saving…")}
+                          {pendingLabel(markPaid, iv.id, toVerify ? "Verify payment" : "Mark paid", "Saving…")}
+                        </button>
+                      )}
+                      {canWrite && toVerify && (
+                        <button
+                          type="button"
+                          className="row-action"
+                          title="The client marked it paid but the money hasn't come in: back to waiting for payment"
+                          disabled={rowBusy(iv.id)}
+                          onClick={() =>
+                            rejectPaid.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} is back to waiting for payment. ${c.name} can mark it paid again.`) })
+                          }
+                        >
+                          {pendingLabel(rejectPaid, iv.id, "Not received", "Saving…")}
                         </button>
                       )}
                       {canWrite && (iv.status === "Sent" || iv.status === "Overdue") && (

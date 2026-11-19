@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Icon } from "@/components/ui";
+import { Badge, Button, Icon } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { formatLong, formatShort, todayIso } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
@@ -10,7 +10,7 @@ import { useVaAccess } from "../lib/access";
 import { clientLabel } from "../lib/time";
 import { useVa } from "../state/VaContext";
 import { InvoiceDrawer } from "../sections/invoices/InvoiceDrawer";
-import { MarkPaidButton, TRACKING_NOTE, isOverdue, unpaidInvoices } from "../sections/invoices/MarkPaid";
+import { MarkPaidButton, TRACKING_NOTE, isOverdue, toVerify, unpaidInvoices } from "../sections/invoices/MarkPaid";
 
 /**
  * VA portal › Dashboard: the daily payment check. Every sent invoice that isn't marked paid yet, highlighted at the top
@@ -75,7 +75,15 @@ export function UnpaidInvoicesCard() {
                   {i.sentAt ? ` · sent ${formatShort(i.sentAt)}` : ""}
                 </span>
               </span>
-              <span className="pay-check__due">{i.dueDate ? `${overdue ? "Overdue since" : "Due"} ${formatShort(i.dueDate)}` : "No due date"}</span>
+              <span className="pay-check__due">
+                {toVerify(i) ? (
+                  <Badge tone="amber">Client marked paid {formatShort(i.clientPaidAt)}</Badge>
+                ) : i.dueDate ? (
+                  `${overdue ? "Overdue since" : "Due"} ${formatShort(i.dueDate)}`
+                ) : (
+                  "No due date"
+                )}
+              </span>
               <strong className="pay-check__amt">{formatCentsExact(i.amountCents)}</strong>
               <span className="pay-check__actions">
                 <Button size="sm" variant="outline" onClick={() => setOpenId(i.id)}>

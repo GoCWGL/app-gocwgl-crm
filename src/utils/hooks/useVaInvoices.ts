@@ -24,6 +24,7 @@ export const useUpdateInvoice = () =>
 export const useSetInvoiceStatus = () =>
   useApiMutation((v: { id: string; status: "draft" | "sent" | "paid" }) => api.setInvoiceStatus(v.id, v.status), { invalidate: KEYS });
 export const useDeleteInvoice = () => useApiMutation(api.deleteInvoice, { invalidate: KEYS });
+export const useRejectClientPaid = () => useApiMutation(api.rejectClientPaid, { invalidate: KEYS });
 
 export const usePaymentMethods = (enabled = true) => useQuery({ queryKey: qk.payMethods, queryFn: api.listPaymentMethods, enabled });
 export const useAddPaymentMethod = () => useApiMutation(api.addPaymentMethod, { invalidate: [qk.payMethods] });

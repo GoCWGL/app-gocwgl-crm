@@ -27,6 +27,7 @@ export const useDeleteInvoice = () => useApiMutation(api.deleteInvoice, { invali
 export const useSendInvoice = () => useApiMutation(api.sendInvoice, { invalidate: BILLING_KEYS });
 export const useMarkInvoicePaid = () => useApiMutation(api.markInvoicePaid, { invalidate: BILLING_KEYS });
 export const useVoidInvoice = () => useApiMutation(api.voidInvoice, { invalidate: BILLING_KEYS });
+export const useRejectClientPaid = () => useApiMutation(api.rejectClientPaid, { invalidate: BILLING_KEYS });
 
 // ------------------------------------------------------------------ Payment options
 export const usePaymentOptions = () =>
@@ -40,3 +41,5 @@ export const useDeletePaymentOption = () => useApiMutation(api.deletePaymentOpti
 export const usePortalBilling = () => useQuery({ queryKey: qk.portalBilling, queryFn: api.getPortalBilling });
 export const useCancelMySubscription = () => useApiMutation(api.cancelMySubscription, { invalidate: [qk.portalBilling] });
 export const useDownloadInvoicePdf = () => useApiMutation(api.downloadInvoicePdf);
+export const useMarkMyInvoicePaid = () => useApiMutation(api.markMyInvoicePaid, { invalidate: [qk.portalBilling] });
+export const useUnmarkMyInvoicePaid = () => useApiMutation(api.unmarkMyInvoicePaid, { invalidate: [qk.portalBilling] });

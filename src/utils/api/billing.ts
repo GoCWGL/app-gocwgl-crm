@@ -32,6 +32,11 @@ export const updateInvoice = (id: string, body: InvoiceUpdate) => patch<InvoiceO
 export const deleteInvoice = (id: string) => del(`/admin/invoices/${id}`);
 export const sendInvoice = (id: string) => post<InvoiceOut>(`/admin/invoices/${id}/send`);
 export const markInvoicePaid = (id: string) => post<InvoiceOut>(`/admin/invoices/${id}/mark-paid`);
+/** The client marked it paid but the money isn't in: back to waiting for payment. */
+export const rejectClientPaid = (id: string) => del<InvoiceOut>(`/admin/invoices/${id}/client-paid`);
+/** Portal: the client says they paid (GoCWGL verifies it), or takes it back. */
+export const markMyInvoicePaid = (v: { id: string; note?: string }) => post<InvoiceOut>(`/portal/billing/invoices/${v.id}/paid`, { note: v.note ?? "" });
+export const unmarkMyInvoicePaid = (id: string) => del<InvoiceOut>(`/portal/billing/invoices/${id}/paid`);
 export const voidInvoice = (id: string) => post<InvoiceOut>(`/admin/invoices/${id}/void`);
 
 // ------------------------------------------------------------------ Payment options (saved prices with their payment links)

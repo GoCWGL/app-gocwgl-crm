@@ -14,7 +14,7 @@ import { clientColors, clientLabel, downloadCsv } from "../lib/time";
 import { TrainingFeeCountdown } from "../components/TrainingFeeCountdown";
 import { CreateInvoiceModal } from "./invoices/CreateInvoiceModal";
 import { InvoiceDrawer } from "./invoices/InvoiceDrawer";
-import { MarkPaidButton, TRACKING_NOTE, isOverdue } from "./invoices/MarkPaid";
+import { MarkPaidButton, NotReceivedButton, TRACKING_NOTE, invoiceBadge, isOverdue, toVerify } from "./invoices/MarkPaid";
 import { PaymentDetails } from "./invoices/PaymentDetails";
 import { STATUS, hoursLabel, initials, periodLabel, type InvoiceStatus } from "./invoices/shared";
 
@@ -327,10 +327,12 @@ function InvoiceRow({ i, color, onOpen }: { i: VaInvoiceRow; color: string; onOp
         {i.status === "paid" && i.paidAt ? `Paid ${formatShort(i.paidAt)}` : i.dueDate ? formatShort(i.dueDate) : "—"}
       </td>
       <td>
-        <Badge tone={overdue ? "red" : STATUS[i.status].tone}>{overdue ? "Overdue" : STATUS[i.status].label}</Badge>
+        <Badge tone={invoiceBadge(i).tone}>{invoiceBadge(i).label}</Badge>
+        {i.clientPaidNote && toVerify(i) && <span className="text-small">Ref: {i.clientPaidNote}</span>}
       </td>
       <td className="is-num">
         <span className="inv-actions">
+          {toVerify(i) && <NotReceivedButton invoice={i} />}
           {i.status === "sent" && <MarkPaidButton invoice={i} />}
           <Button size="sm" variant="outline" onClick={onOpen}>
             View

@@ -12,6 +12,8 @@ import { formatCentsExact } from "@/utils/format/money";
 import { usePortalBilling } from "@/utils/hooks/useBilling";
 import { useVaInvoiceForClient, useVaInvoicesForClient, useVaTeam } from "@/utils/hooks/useClientWork";
 import { MonthlyBillingNote } from "../components/ClientVaAgreement";
+import { ClientMarkPaid } from "../components/ClientMarkPaid";
+import { usePortal } from "../state/PortalContext";
 import { hm } from "../lib/vaTeam";
 import { BillingSection } from "./BillingSection";
 
@@ -44,6 +46,7 @@ export function InvoicesSection() {
 }
 
 function VaInvoices() {
+  const { readOnly } = usePortal();
   const query = useVaInvoicesForClient();
   const [openId, setOpenId] = useState("");
   const rows = query.data ?? [];
@@ -71,6 +74,7 @@ function VaInvoices() {
                 <th>Hours</th>
                 <th>Amount</th>
                 <th>Status</th>
+                <th className="data-table__actions" />
               </tr>
             </thead>
             <tbody>
@@ -95,6 +99,9 @@ function VaInvoices() {
                   <td>
                     <InvoiceBadge i={i} />
                   </td>
+                  <td className="data-table__actions" onClick={(e) => e.stopPropagation()}>
+                    {i.status === "sent" && !i.clientPaidAt && <ClientMarkPaid kind="va" vaName={i.va.name} invoice={i} readOnly={readOnly} />}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -107,7 +114,13 @@ function VaInvoices() {
 }
 
 function InvoiceBadge({ i }: { i: ClientVaInvoice }) {
-  if (i.status === "paid") return <Badge tone="green" dot>Paid {i.paidAt ? formatShort(i.paidAt) : ""}</Badge>;
+  if (i.status === "paid") return <Badge tone="green" dot>Paid · verified {i.paidAt ? formatShort(i.paidAt) : ""}</Badge>;
+  if (i.clientPaidAt)
+    return (
+      <Badge tone="sky" dot>
+        Awaiting verification
+      </Badge>
+    );
   const late = i.dueDate && i.dueDate < new Date().toISOString().slice(0, 10);
   return (
     <Badge tone={late ? "red" : "amber"} dot>
@@ -118,6 +131,7 @@ function InvoiceBadge({ i }: { i: ClientVaInvoice }) {
 }
 
 function VaInvoiceModal({ id, onClose }: { id: string; onClose: () => void }) {
+  const { readOnly } = usePortal();
   const q = useVaInvoiceForClient(id);
   const inv = q.data;
   return (
@@ -132,8 +146,9 @@ function VaInvoiceModal({ id, onClose }: { id: string; onClose: () => void }) {
       subtitle={inv ? `${inv.va.name} · ${formatShort(inv.periodStart)} – ${formatShort(inv.periodEnd)}` : undefined}
       footer={
         <>
+          {inv?.status === "sent" && <ClientMarkPaid kind="va" vaName={inv.va.name} invoice={inv} readOnly={readOnly} size="md" />}
           <span className="u-spacer" />
-          <Button variant="primary" onClick={onClose}>
+          <Button variant={inv?.status === "sent" && !inv.clientPaidAt && !readOnly ? "outline" : "primary"} onClick={onClose}>
             Done
           </Button>
         </>

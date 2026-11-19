@@ -105,7 +105,14 @@ export function VaInvoicesTable({ onMessage }: { onMessage: (message: string) =>
 }
 
 function StatusBadge({ i }: { i: StaffVaInvoiceRow }) {
-  if (i.status === "paid") return <Badge tone="green" dot>Paid {i.paidAt ? formatShort(i.paidAt) : ""}</Badge>;
+  if (i.status === "paid") return <Badge tone="green" dot>Paid · verified {i.paidAt ? formatShort(i.paidAt) : ""}</Badge>;
+  // The client says they paid; the VA verifies it once the money is in their account.
+  if (i.clientPaidAt)
+    return (
+      <Badge tone="sky" dot>
+        Client paid {formatShort(i.clientPaidAt)} · VA to verify
+      </Badge>
+    );
   const late = i.dueDate && i.dueDate < new Date().toISOString().slice(0, 10);
   return (
     <Badge tone={late ? "red" : "amber"} dot>

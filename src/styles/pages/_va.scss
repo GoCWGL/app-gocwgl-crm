@@ -10038,3 +10038,47 @@ $pdf-side: #f5f6f8;
     color: $orange-ink;
   }
 }
+
+// Client portal: an invoice the client marked paid, waiting for the VA / GoCWGL to verify the payment.
+.client-paid {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+
+  &__wait {
+    color: $muted;
+  }
+}
+
+// VA invoice drawer: the client marked it paid; check the money, then Verify payment or Not received.
+.client-paid-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 153, 0, 0.45);
+  border-left: 5px solid $orange;
+  border-radius: $radius-md;
+  background: linear-gradient(90deg, $peach, $white 70%);
+
+  > svg {
+    flex: none;
+    color: $orange-ink;
+  }
+
+  &__body {
+    display: grid;
+    flex: 1 1 240px;
+    gap: 2px;
+    color: $ink;
+    font-size: 14px;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
