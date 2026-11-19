@@ -36,6 +36,11 @@ export function VaAgreementTerms({ feeCents = AGREEMENT_FEE_CENTS, months = AGRE
       text: `Your invoice to the client adds up your hours at your full rate, then takes off ${fee} for each hour. For example, ${hours} hours at ${formatCentsExact(example)} an hour is ${formatCentsExact(example * hours)}, less ${formatCentsExact(feeCents * hours)}, so you’re paid ${formatCentsExact((example - feeCents) * hours)}.`,
     },
     {
+      icon: "receipt",
+      title: "Invoice through GoCWGL.com",
+      text: "Send every invoice to your client through GoCWGL.com, not through a third-party app (such as PayPal, Wise, Upwork or Fiverr invoicing). This lets GoCWGL monitor your hours and invoices and support you and your client if anything comes up.",
+    },
+    {
       icon: "trendUp",
       title: "Your full rate",
       text: `After ${months} months with no issues, nothing comes off: your invoices are at your full hourly rate (${formatCentsExact(example)} in the example) for that client.`,

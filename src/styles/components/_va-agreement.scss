@@ -444,6 +444,222 @@
   }
 }
 
+// ------------------------------------------- Client portal › VA on the team
+// One VA on the client's agreement card: who, the six-month training track, and the bill now and after.
+.cva-tile {
+  --cva-accent: #{$orange};
+  --cva-accent-soft: #{$peach};
+  --cva-accent-ink: #{$orange-ink};
+
+  @include stack(14px);
+  position: relative;
+  padding: 16px;
+  border: 1px solid $line-soft;
+  border-radius: $radius-2xl;
+  background: $white;
+  box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04);
+  overflow: hidden;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+  // A thin accent along the top edge: orange while training, green after.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: linear-gradient(90deg, var(--cva-accent), color-mix(in srgb, var(--cva-accent) 35%, transparent));
+  }
+
+  &:hover {
+    border-color: $line-strong;
+    box-shadow: $shadow-card;
+    transform: translateY(-1px);
+  }
+
+  &.is-full {
+    --cva-accent: #{$green-500};
+    --cva-accent-soft: #{$green-50};
+    --cva-accent-ink: #{$green-700};
+  }
+
+  &__head {
+    @include row(12px);
+  }
+
+  &__avatar {
+    @include center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: $grad-cyan;
+    box-shadow: 0 0 0 3px $white, 0 0 0 4px $line-soft;
+    color: $white;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  &__who {
+    @include stack(2px);
+    flex: 1;
+    min-width: 0;
+
+    strong {
+      @include truncate;
+      color: $ink;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    span {
+      color: $muted-light;
+      font-size: 12px;
+    }
+  }
+
+  &__status {
+    @include row(6px);
+    flex: none;
+    padding: 4px 10px;
+    border-radius: $radius-pill;
+    background: var(--cva-accent-soft);
+    color: var(--cva-accent-ink);
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--cva-accent);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--cva-accent) 22%, transparent);
+  }
+
+  &__track {
+    @include stack(8px);
+  }
+
+  &__track-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    color: $muted-light;
+    font-size: 12px;
+
+    strong {
+      color: $ink;
+      font-weight: 700;
+    }
+  }
+
+  &__steps {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+
+  &__step {
+    height: 6px;
+    border-radius: $radius-pill;
+    background: $bg-tint;
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--cva-accent);
+    }
+  }
+
+  &__bill {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 0;
+    border: 1px solid $line-faint;
+    border-radius: $radius-lg;
+    background: $bg-soft;
+
+    &--single {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__col {
+    @include stack(6px);
+    padding: 12px 14px;
+    min-width: 0;
+
+    & + & {
+      border-left: 1px solid $line-faint;
+    }
+
+    dt {
+      @include row(5px);
+      color: $muted-light;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    dd {
+      @include stack(3px);
+      margin: 0;
+    }
+
+    &--next .cva-tile__amount {
+      color: $green-700;
+    }
+  }
+
+  &__amount {
+    color: $ink;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+
+    small {
+      margin-left: 4px;
+      color: $muted-light;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    &--unset {
+      color: $muted-light;
+      font-size: 14px;
+      font-weight: 600;
+    }
+  }
+
+  &__extra {
+    @include row(4px);
+    color: $muted;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  @include down(sm) {
+    &__bill {
+      grid-template-columns: 1fr;
+    }
+
+    &__col + &__col {
+      border-left: 0;
+      border-top: 1px solid $line-faint;
+    }
+  }
+}
+
 // ------------------------------------------------- Admin › VA profile rows
 .va-agreement-rows {
   display: grid;

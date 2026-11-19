@@ -17,8 +17,8 @@ import { ApplicantsReview } from "../components/ApplicantsReview";
 import { VaProfileModal } from "../components/VaProfileModal";
 import { usePastVas, VaRequestForm, VaRequestModal } from "../components/VaRequestModal";
 import { StateChip, VaPresence } from "../components/VaPresence";
-import { firstName, hm } from "../lib/vaTeam";
-import { useShowPackages, useVaTools } from "../lib/vaAccess";
+import { hm } from "../lib/vaTeam";
+import { useShowPackages } from "../lib/vaAccess";
 import { usePortal } from "../state/PortalContext";
 
 const since = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric" });
@@ -445,89 +445,101 @@ function QuoteCard({ r }: { r: VaRequestOut }) {
   );
 }
 
+/** One VA on the client's team: who they are, their hours and the client's rating, their skills, and their full profile. */
 export function TeamCard({ va }: { va: TeamVa }) {
-  const { goTo, readOnly } = usePortal();
-  const timeTracker = useVaTools().timeTracker;
   const state = va.workingNow ? "working" : "offline";
-  const extra = va.skills.length - 5;
+  const extra = va.skills.length - 6;
   const [profile, setProfile] = useState(false);
+  // The profile pop-up renders beside the card, not inside it: the card lifts on hover (a transform), which would
+  // make the pop-up's fixed position follow the card and flicker.
   return (
-    <article className="tc-card">
-      <header className="tc-card__head">
-        <VaPresence id={va.vaId} name={va.name} state={state} size="lg" />
-        <div className="stack stack--2 u-grow">
+    <>
+      <article className="tc-card">
+        <div className="tc-card__cover" aria-hidden="true" />
+        <header className="tc-card__head">
+          <VaPresence id={va.vaId} name={va.name} state={state} size="xl" />
+          <StateChip state={state} />
+        </header>
+
+        <div className="tc-card__id">
           <h3 className="tc-card__name">{va.name}</h3>
-          <span className="tc-card__role">{va.headline || "Virtual assistant"}</span>
-        </div>
-        <StateChip state={state} />
-      </header>
-
-      <div className="tc-card__meta">
-        {va.location && (
-          <span>
-            <Icon name="globe" size={12} /> {va.location}
+          <span className="tc-card__role">
+            {va.headline || "Virtual assistant"}
           </span>
-        )}
-        <span>
-          <Icon name="calendar" size={12} /> With you since {since(va.since)}
-        </span>
-      </div>
-
-      <dl className="tc-card__stats">
-        <div>
-          <dt>This month</dt>
-          <dd>{hm(va.monthSeconds)}</dd>
-        </div>
-        <div>
-          <dt>All time</dt>
-          <dd>{hm(va.totalSeconds)}</dd>
-        </div>
-        <div>
-          <dt>Your rating</dt>
-          <dd>
-            {va.myRating != null ? (
-              <>
-                <Icon name="star" size={12} className="tc-card__star" /> {va.myRating.toFixed(1)}
-              </>
-            ) : (
-              <span className="tc-card__muted">—</span>
+          <div className="tc-card__meta">
+            {va.location && (
+              <span>
+                <Icon name="globe" size={12} /> {va.location}
+              </span>
             )}
-          </dd>
+            <span>
+              <Icon name="calendar" size={12} /> With you since{" "}
+              {since(va.since)}
+            </span>
+          </div>
         </div>
-      </dl>
 
-      {va.skills.length > 0 && (
-        <ul className="tc-card__skills">
-          {va.skills.slice(0, 5).map((s) => (
-            <li key={s}>{s}</li>
-          ))}
-          {extra > 0 && <li className="is-more">+{extra}</li>}
-        </ul>
-      )}
+        <dl className="tc-card__stats">
+          <div>
+            <dt>
+              <Icon name="clock" size={12} /> This month
+            </dt>
+            <dd>{hm(va.monthSeconds)}</dd>
+          </div>
+          <div>
+            <dt>
+              <Icon name="trendUp" size={12} /> All time
+            </dt>
+            <dd>{hm(va.totalSeconds)}</dd>
+          </div>
+          <div>
+            <dt>
+              <Icon name="star" size={12} /> Your rating
+            </dt>
+            <dd>
+              {va.myRating != null ? (
+                <>
+                  {va.myRating.toFixed(1)}
+                  <small>/ 5</small>
+                </>
+              ) : (
+                <span className="tc-card__muted">—</span>
+              )}
+            </dd>
+          </div>
+        </dl>
 
-      <footer className="tc-card__foot">
-        <div className="tc-card__links">
-          {timeTracker && (
-            <button type="button" className="rq-link" onClick={() => goTo("journal")}>
-              VA tracker
-            </button>
-          )}
-          <button type="button" className="rq-link" onClick={() => setProfile(true)}>
-            Profile
-          </button>
-          {!readOnly && (
-            <button type="button" className="rq-link" onClick={() => goTo("ratings")}>
-              Rate {firstName(va.name)}
-            </button>
-          )}
-        </div>
-        {!readOnly && (
-          <Button size="sm" variant="outline" onClick={() => goTo("projects")}>
-            <Icon name="plus" size={13} /> Task
-          </Button>
+        {va.skills.length > 0 && (
+          <div className="tc-card__skills-wrap">
+            <span className="tc-card__label">Skills</span>
+            <ul className="tc-card__skills">
+              {va.skills.slice(0, 6).map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+              {extra > 0 && <li className="is-more">+{extra} more</li>}
+            </ul>
+          </div>
         )}
-      </footer>
-      {profile && <VaProfileModal vaId={va.vaId} name={va.name} resumeSlug={va.resumeSlug} onClose={() => setProfile(false)} />}
-    </article>
+
+        <footer className="tc-card__foot">
+          <Button
+            variant="outline"
+            className="tc-card__profile"
+            onClick={() => setProfile(true)}
+          >
+            <Icon name="user" size={14} /> View full profile
+            <Icon name="arrowRight" size={14} className="tc-card__go" />
+          </Button>
+        </footer>
+      </article>
+      {profile && (
+        <VaProfileModal
+          vaId={va.vaId}
+          name={va.name}
+          resumeSlug={va.resumeSlug}
+          onClose={() => setProfile(false)}
+        />
+      )}
+    </>
   );
 }

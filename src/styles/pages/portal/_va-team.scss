@@ -1575,7 +1575,7 @@ tr.is-clickable {
   border-radius: 16px;
   background: $white;
   box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04), 0 8px 24px rgba(11, 20, 36, 0.04);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 
   &:hover {
     border-color: #d6e2ee;
@@ -1584,29 +1584,74 @@ tr.is-clickable {
 }
 
 .tc-card {
+  position: relative;
+  gap: 14px;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  // A soft brand band behind the avatar.
+  &__cover {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 64px;
+    background:
+      radial-gradient(120% 140% at 100% 0%, rgba(255, 153, 0, 0.16), transparent 55%),
+      linear-gradient(120deg, $cyan-50, #eef4ff 60%, $peach);
+    border-bottom: 1px solid $line-faint;
+  }
+
   &__head {
+    position: relative;
     display: flex;
-    align-items: center;
-    gap: 14px;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+
+    .presence {
+      padding: 3px;
+      border-radius: 50%;
+      background: $white;
+      box-shadow: 0 4px 14px rgba(11, 20, 36, 0.1);
+    }
+
+    .status-chip {
+      align-self: flex-start;
+      margin-top: -6px;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(6px);
+      box-shadow: 0 1px 2px rgba(11, 20, 36, 0.06);
+    }
+  }
+
+  &__id {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
   }
 
   &__name {
     margin: 0;
     color: $ink;
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
 
   &__role {
-    color: $muted;
+    color: $cyan-700;
     font-size: 13px;
+    font-weight: 600;
   }
 
   &__meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px 16px;
+    gap: 6px 14px;
+    margin-top: 8px;
     color: $muted;
     font-size: 12.5px;
 
@@ -1620,47 +1665,72 @@ tr.is-clickable {
   &__stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
     margin: 0;
-    padding: 12px 0;
-    border-top: 1px solid #eef2f7;
-    border-bottom: 1px solid #eef2f7;
 
     > div {
       display: flex;
       flex-direction: column;
-      gap: 3px;
-
-      & + div {
-        padding-left: 14px;
-        border-left: 1px solid #eef2f7;
-      }
+      gap: 4px;
+      padding: 10px 12px;
+      border: 1px solid #eef2f7;
+      border-radius: 12px;
+      background: #f8fafc;
+      min-width: 0;
     }
 
     dt {
-      color: $muted;
-      font-size: 11.5px;
-      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      color: $muted-light;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
     dd {
       display: inline-flex;
-      align-items: center;
-      gap: 5px;
+      align-items: baseline;
+      gap: 3px;
       margin: 0;
       color: $ink;
-      font-size: 17px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-    }
-  }
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
 
-  &__star {
-    color: #f59e0b;
-    fill: #f59e0b;
+      small {
+        color: $muted-light;
+        font-size: 12px;
+        font-weight: 600;
+      }
+    }
+
+    > div:last-child dt svg {
+      color: #f59e0b;
+      fill: #f59e0b;
+    }
   }
 
   &__muted {
     color: #b6c2d1;
+  }
+
+  &__skills-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__label {
+    color: $muted-light;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
   }
 
   &__skills {
@@ -1672,32 +1742,37 @@ tr.is-clickable {
     list-style: none;
 
     li {
-      padding: 3px 9px;
-      border: 1px solid #e6edf5;
-      border-radius: 6px;
-      background: #f8fafc;
-      color: $ink-soft;
+      padding: 4px 10px;
+      border-radius: $radius-pill;
+      background: $cyan-50;
+      color: $cyan-800;
       font-size: 12px;
       font-weight: 600;
 
       &.is-more {
+        background: #f1f5f9;
         color: $muted;
       }
     }
   }
 
   &__foot {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
     margin-top: auto;
+    padding-top: 2px;
   }
 
-  &__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 14px;
+  &__profile.btn {
+    width: 100%;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  &__go {
+    transition: transform 0.2s ease;
+  }
+
+  &__profile:hover &__go {
+    transform: translateX(2px);
   }
 }
 

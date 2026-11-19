@@ -89,8 +89,14 @@ export function ClientVaAgreementTerms({ hours }: { hours?: number | null }) {
       <h4>Your VA’s pay</h4>
       <p>
         The maintenance fee does <strong>not</strong> include your VA’s salary. You pay your VA separately, for the hours they work,{" "}
-        <strong>directly to your VA’s own payment method</strong>. Your VA sends you their invoices, and you’ll find them in your
-        portal. GoCWGL doesn’t collect, hold or pass on your VA’s pay.
+        <strong>directly to your VA’s own payment method</strong>. GoCWGL doesn’t collect, hold or pass on your VA’s pay.
+      </p>
+      <h4>Your VA’s invoices come through GoCWGL.com</h4>
+      <p>
+        Your VA sends every invoice <strong>through GoCWGL.com</strong>, not through a third-party app (such as PayPal, Wise, Upwork or
+        Fiverr invoicing). You’ll find them in your portal. This lets GoCWGL see your VA’s hours and invoices, so we can
+        monitor their work, check their invoices are right and step in if anything looks off. If your VA asks you to pay an invoice sent
+        any other way, please let us know through Request support.
       </p>
       <h4>Billing</h4>
       <p>
@@ -162,24 +168,6 @@ function progress(since: string, endsOn: string): { share: number; month: number
   const end = new Date(`${endsOn}T00:00:00Z`).getTime();
   const share = end > start ? Math.min(1, Math.max(0, (Date.now() - start) / (end - start))) : 1;
   return { share, month: Math.min(VA_TRAINING_MONTHS, Math.floor(share * VA_TRAINING_MONTHS) + 1) };
-}
-
-/** "$45/mo" (+ "$1/hr"), or "Not set" when there's no maintenance fee on file. */
-function Fee({ cents, hourly }: { cents: number | null; hourly?: number | null }) {
-  if (cents == null && !hourly) return <strong className="agr-tile__unset">Not set</strong>;
-  return (
-    <strong>
-      {cents != null ? formatCentsExact(cents) : "—"}
-      <em>/mo</em>
-      {hourly ? (
-        <>
-          {" "}
-          + {formatCentsExact(hourly)}
-          <em>/hr</em>
-        </>
-      ) : null}
-    </strong>
-  );
 }
 
 /**
@@ -263,57 +251,115 @@ export function ClientVaAgreementCard() {
   );
 }
 
-/** One VA: where they are in the first 6 months, what GoCWGL bills for them now, and after. */
+/** "Dwayne G" → "DG". */
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("");
+
+/** Whole days from now until a date-only value (0 once it's passed). */
+const daysUntil = (iso: string) => Math.max(0, Math.ceil((new Date(`${iso}T00:00:00Z`).getTime() - Date.now()) / 86_400_000));
+
+/** A monthly amount: "$45.00 / month", or "Not set" when there's no maintenance fee on file. */
+function Monthly({ cents }: { cents: number | null }) {
+  if (cents == null) return <span className="cva-tile__amount cva-tile__amount--unset">Not set</span>;
+  return (
+    <span className="cva-tile__amount">
+      {formatCentsExact(cents)}
+      <small>/ month</small>
+    </span>
+  );
+}
+
+/**
+ * One VA: where they are in the first 6 months (a six-step track and the day it ends), and what GoCWGL bills for them
+ * now and after.
+ */
 function VaTile({ va, requests }: { va: TeamVa; requests: VaRequestOut[] }) {
   const t = termsOf(va, requests);
   const inTraining = trainingFeeActive(t.hourlyCents, t.endsOn);
   const p = inTraining && t.endsOn ? progress(va.since, t.endsOn) : null;
   return (
-    <div className={cn("agr-tile", !inTraining && "agr-tile--full")}>
-      <div className="agr-tile__top">
-        <span className="agr-tile__avatar" aria-hidden="true">
-          {va.name.slice(0, 1).toUpperCase()}
+    <article className={cn("cva-tile", p ? "is-training" : "is-full")}>
+      <header className="cva-tile__head">
+        <span className="cva-tile__avatar" aria-hidden="true">
+          {initials(va.name)}
         </span>
-        <span className="agr-tile__who">
+        <span className="cva-tile__who">
           <strong>{va.name}</strong>
           <span>Matched {formatShort(va.since)}</span>
         </span>
-        <span className={cn("agr-tile__chip", inTraining ? "is-monitoring" : "is-full")}>
-          {p ? `Month ${p.month} of ${VA_TRAINING_MONTHS}` : "Maintenance fee only"}
+        <span className="cva-tile__status">
+          <span className="cva-tile__dot" aria-hidden="true" />
+          {p ? "Training period" : "Maintenance only"}
         </span>
-      </div>
-      {p && (
-        <div
-          className="agr-tile__bar"
-          role="progressbar"
-          aria-label={`First ${VA_TRAINING_MONTHS} months with ${va.name}`}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={Math.round(p.share * 100)}
-        >
-          <span style={{ width: `${Math.max(4, p.share * 100)}%` }} />
+      </header>
+
+      {p && t.endsOn && (
+        <div className="cva-tile__track">
+          <div className="cva-tile__track-head">
+            <span>
+              Month <strong>{p.month}</strong> of {VA_TRAINING_MONTHS}
+            </span>
+            <span>{daysUntil(t.endsOn)} days left</span>
+          </div>
+          <div
+            className="cva-tile__steps"
+            role="progressbar"
+            aria-label={`First ${VA_TRAINING_MONTHS} months with ${va.name}`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(p.share * 100)}
+          >
+            {Array.from({ length: VA_TRAINING_MONTHS }, (_, i) => {
+              const fill = Math.min(1, Math.max(0, p.share * VA_TRAINING_MONTHS - i));
+              return (
+                <span key={i} className="cva-tile__step">
+                  <span style={{ width: `${fill > 0 ? Math.max(12, fill * 100) : 0}%` }} />
+                </span>
+              );
+            })}
+          </div>
         </div>
       )}
-      <div className="agr-tile__pay">
-        {inTraining && t.endsOn ? (
+
+      <dl className={cn("cva-tile__bill", !p && "cva-tile__bill--single")}>
+        {p && t.endsOn ? (
           <>
-            <span className="agr-tile__rate">
-              <small>Now</small>
-              <Fee cents={t.monthlyCents} hourly={t.hourlyCents} />
-            </span>
-            <Icon name="arrowRight" size={14} className="agr-tile__arrow" />
-            <span className="agr-tile__rate agr-tile__rate--next">
-              <small>From {formatDay(t.endsOn)}</small>
-              <Fee cents={t.monthlyCents} />
-            </span>
+            <div className="cva-tile__col">
+              <dt>Now · training</dt>
+              <dd>
+                <Monthly cents={t.monthlyCents} />
+                {t.hourlyCents ? (
+                  <span className="cva-tile__extra">
+                    + {formatCentsExact(t.hourlyCents)} / VA hour
+                  </span>
+                ) : null}
+              </dd>
+            </div>
+            <div className="cva-tile__col cva-tile__col--next">
+              <dt>After training</dt>
+              <dd>
+                <Monthly cents={t.monthlyCents} />
+                <span className="cva-tile__extra">
+                  <Icon name="calendar" size={11} /> From {formatDay(t.endsOn)}
+                </span>
+              </dd>
+            </div>
           </>
         ) : (
-          <span className="agr-tile__rate agr-tile__rate--next">
-            <small>{t.acceptedAt ? `Agreed ${formatShort(t.acceptedAt)}` : "Maintenance fee"}</small>
-            <Fee cents={t.monthlyCents} />
-          </span>
+          <div className="cva-tile__col cva-tile__col--next">
+            <dt>{t.acceptedAt ? `Agreed ${formatShort(t.acceptedAt)}` : "Maintenance fee"}</dt>
+            <dd>
+              <Monthly cents={t.monthlyCents} />
+              <span className="cva-tile__extra">Training period complete</span>
+            </dd>
+          </div>
         )}
-      </div>
-    </div>
+      </dl>
+    </article>
   );
 }
