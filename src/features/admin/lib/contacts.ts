@@ -1,39 +1,22 @@
-import { STAGE_COLORS, TAG_COLORS, type CoreStage } from "@/data/admin";
+import { TAG_COLORS, type CoreStage } from "@/data/admin";
 import type { Tone } from "@/lib/tones";
-import type { ContactOut, PipelineOut, SubscriptionOut } from "@/utils/api/models";
+import type { ContactOut, SubscriptionOut } from "@/utils/api/models";
 import { formatCall } from "@/utils/format/dates";
 import { formatPerInterval } from "@/utils/format/money";
 
 export type StageInfo = { label: string; tone: Tone };
 
-const DEFAULT_STAGES: Record<CoreStage, StageInfo> = {
+/** Each sales stage of a contact (their `stage`): its name and color. */
+export const SALES_STAGES: Record<CoreStage, StageInfo> = {
   lead: { label: "New lead", tone: "cyan" },
   booked: { label: "Call booked", tone: "amber" },
   paid: { label: "Paid subscriber", tone: "green" },
   lost: { label: "Lost", tone: "slate" },
 };
 
-/** The built-in sales pipeline (its stages are the contacts' `stage`). */
-export function salesPipeline(pipelines: PipelineOut[] | undefined): PipelineOut | undefined {
-  return pipelines?.find((p) => p.isSystem);
-}
-
-/** Name and color of each sales stage (they can be renamed / recolored in the pipeline editor). */
-export function getSalesStages(pipelines: PipelineOut[] | undefined): Record<CoreStage, StageInfo> {
-  const map = { ...DEFAULT_STAGES };
-  salesPipeline(pipelines)?.stages.forEach((st) => {
-    if (st.key in map) map[st.key as CoreStage] = { label: st.name, tone: stageTone(st.color) };
-  });
-  return map;
-}
-
 /** Stage info for any stage string the API sends (unknown ones fall back to "lead"). */
 export function stageOf(stages: Record<CoreStage, StageInfo>, stage: string): StageInfo {
   return stages[stage as CoreStage] ?? stages.lead;
-}
-
-export function stageTone(colorIndex: number): Tone {
-  return (STAGE_COLORS[colorIndex] ?? STAGE_COLORS[0]).tone;
 }
 
 export function tagTone(tag: { color: number }): Tone {

@@ -8,10 +8,10 @@ import { cn, percent } from "@/lib/utils";
 import { addDaysIso, formatRelative, formatShort, formatTime, getTimeZone, isoDateIn, todayIso } from "@/utils/format/dates";
 import { formatCents } from "@/utils/format/money";
 import { useBookings } from "@/utils/hooks/useCalendar";
-import { usePipelines, useSalesBoard } from "@/utils/hooks/useContacts";
+import { useAllContacts } from "@/utils/hooks/useContacts";
 import { useActivity, useDashboard } from "@/utils/hooks/useReporting";
 import { usePresence } from "@/utils/hooks/useUsers";
-import { contactName, getSalesStages, stageOf } from "../../lib/contacts";
+import { contactName, SALES_STAGES, stageOf } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
 
 const deltaText = (d: number | null | undefined) => (d === null || d === undefined ? "no earlier data" : `${d >= 0 ? "+" : ""}${d}% vs previous 30 days`);
@@ -19,8 +19,9 @@ const deltaText = (d: number | null | undefined) => (d === null || d === undefin
 export function DashboardSection() {
   const { goTo, update, openContacts } = useAdmin();
   const dashboard = useDashboard(30);
-  const board = useSalesBoard();
-  const stages = getSalesStages(usePipelines().data);
+  // Every contact (archived ones are left out), for the leads waiting on a call.
+  const all = useAllContacts();
+  const stages = SALES_STAGES;
   const today = todayIso();
   // Fixed once per visit so the query key stays stable.
   const [window7] = useState(() => {
@@ -34,7 +35,7 @@ export function DashboardSection() {
   if (dashboard.isError) return <ErrorState error={dashboard.error} onRetry={dashboard.refetch} />;
   const d = dashboard.data;
 
-  const contacts = board.data ?? [];
+  const contacts = all.data ?? [];
   const count = (stage: string) => d.stages[stage] ?? 0;
   const total = CORE_STAGES.reduce((n, st) => n + count(st), 0);
   const paid = count("paid");
@@ -54,7 +55,7 @@ export function DashboardSection() {
       tone: "green",
       footer: (
         <>
-          <strong>{paid}</strong> paid clients in the pipeline
+          <strong>{paid}</strong> paid clients
         </>
       ),
     },
@@ -104,8 +105,8 @@ export function DashboardSection() {
     { label: "Paid subscription", pct: d.conversion.lead_to_paid_pct, color: "#1F9D57" },
   ];
 
-  const attention: Array<{ label: string; n: number; warn: boolean; tab: AdminTab; billingView?: "inv" }> = [
-    { label: "Leads waiting 2+ days for a call", n: staleLeads, warn: true, tab: "pipeline" },
+  const attention: Array<{ label: string; n: number; warn: boolean; tab: AdminTab; billingView?: "inv"; allContacts?: boolean }> = [
+    { label: "Leads waiting 2+ days for a call", n: staleLeads, warn: true, tab: "clients", allContacts: true },
     { label: "Booked calls with no time set", n: unscheduled, warn: true, tab: "calendar" },
     { label: "Calls scheduled today", n: callsToday, warn: false, tab: "calendar" },
     { label: "Overdue invoices", n: d.overdue_invoices.count, warn: true, tab: "payments", billingView: "inv" },
@@ -155,10 +156,10 @@ export function DashboardSection() {
         <section className="card dash-snapshot">
           <div className="card__header">
             <div className="stack stack--2">
-              <h2 className="card-title">Pipeline snapshot</h2>
+              <h2 className="card-title">Sales snapshot</h2>
               <span className="text-small">Where every signup is right now</span>
             </div>
-            <Button variant="secondary" size="sm" onClick={() => goTo("pipeline")}>
+            <Button variant="secondary" size="sm" onClick={() => openContacts("all")}>
               Open
             </Button>
           </div>
@@ -239,7 +240,7 @@ export function DashboardSection() {
             {attention.map((a) => {
               const tone: Tone = a.n > 0 && a.warn ? "amber" : a.n > 0 ? "cyan" : "green";
               return (
-                <button type="button" className="attention-row" key={a.label} onClick={() => (a.billingView ? update({ tab: a.tab, billingView: a.billingView }) : goTo(a.tab))}>
+                <button type="button" className="attention-row" key={a.label} onClick={() => (a.allContacts ? openContacts("all") : a.billingView ? update({ tab: a.tab, billingView: a.billingView }) : goTo(a.tab))}>
                   <span className={cn("attention-row__count", toneClass(tone))}>{a.n}</span>
                   <span className="u-grow u-semibold">{a.label}</span>
                   <Icon name="chevronRight" size={14} className="u-muted" />

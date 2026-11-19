@@ -99,7 +99,7 @@ export function ScheduledCalls() {
 
       <section className="card card--flat">
         <h3 className="card-title">Needs a time</h3>
-        <p className="text-muted">Marked “Call booked” in the pipeline but no time picked yet.</p>
+        <p className="text-muted">Marked “Call booked” but no time picked yet.</p>
         <div>
           {unscheduled.map((c) => (
             <div className="list-row u-semibold" key={c.id}>

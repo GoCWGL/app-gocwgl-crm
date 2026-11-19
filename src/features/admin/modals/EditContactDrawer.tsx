@@ -7,7 +7,7 @@ import { avatarTone, toneClass } from "@/lib/tones";
 import { cn, copyToClipboard, isEmail } from "@/lib/utils";
 import * as contactsApi from "@/utils/api/contacts";
 import * as billingApi from "@/utils/api/billing";
-import type { ContactOut, PipelineDetail } from "@/utils/api/models";
+import type { ContactOut } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
 import { formatShort } from "@/utils/format/dates";
 import { formatPerInterval } from "@/utils/format/money";
@@ -16,9 +16,7 @@ import { useSubscriptions } from "@/utils/hooks/useBilling";
 import {
   useArchiveContact,
   useContact,
-  useCustomPipelineDetails,
   useDeleteContact,
-  usePipelines,
   useTags,
   useUnarchiveContact,
 } from "@/utils/hooks/useContacts";
@@ -37,9 +35,8 @@ import {
   CONTACT_STATUS,
   contactName,
   contactStatus,
-  getSalesStages,
+  SALES_STAGES,
   isOnboardingClient,
-  salesPipeline,
   subscriptionOf,
   type ContactStatus,
 } from "../lib/contacts";
@@ -65,39 +62,30 @@ type Draft = {
   /** Paid clients: moved from Onboarding to Active. */
   onboarded: boolean;
   tags: string[];
-  /** Stage id in each custom pipeline ("" = not in it). */
-  other: Record<string, string>;
 };
 
 export function EditContactDrawer() {
   const { state, update } = useAdmin();
   const id = state.editContactId;
   const contact = useContact(id);
-  const pipelines = useCustomPipelineDetails();
   if (!id) return null;
   const onClose = () => update({ editContactId: "", editContactFocusNotes: false });
-  if (!contact.data || pipelines.isPending) {
+  if (!contact.data) {
     return (
       <Modal open variant="drawer" width={520} onClose={onClose} titleId="ec-title" kicker="EDIT PROFILE" title="Contact">
         {contact.isError ? <FormError error={contact.error} /> : <Loading text="Loading contact…" />}
       </Modal>
     );
   }
-  return <EditContactForm key={contact.data.id} contact={contact.data} pipelines={pipelines.data} onClose={onClose} />;
+  return <EditContactForm key={contact.data.id} contact={contact.data} onClose={onClose} />;
 }
 
-function stageInPipeline(p: PipelineDetail, contactId: string): string {
-  return p.items?.find((i) => i.contactId === contactId)?.stageId ?? "";
-}
-
-function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactOut; pipelines: PipelineDetail[]; onClose: () => void }) {
+function EditContactForm({ contact: c, onClose }: { contact: ContactOut; onClose: () => void }) {
   const { update, openMediaFolder } = useAdmin();
   const canWrite = canWriteCrm(useMe().data);
   const subs = useSubscriptions(c.id).data;
   const sub = subscriptionOf(subs, c.id);
-  const allPipelines = usePipelines().data;
-  const sales = salesPipeline(allPipelines);
-  const stages = getSalesStages(allPipelines);
+  const stages = SALES_STAGES;
   const tags = useTags().data ?? [];
   const links = useClientLinks(c.id).data;
   const folder = useMediaFolders().data?.find((f) => f.contactId === c.id);
@@ -118,14 +106,13 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
     paused: sub?.status === "Paused",
     onboarded: !!c.onboardedAt,
     tags: c.tags.map((t) => t.id),
-    other: Object.fromEntries(pipelines.map((p) => [p.id, stageInPipeline(p, c.id)])),
   });
   const [error, setError] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [inviting, setInviting] = useState(false);
   const [linksCopied, setLinksCopied] = useState(false);
 
-  // One save = the contact itself, then the subscription pause and custom pipeline moves that changed.
+  // One save = the contact itself, then the subscription pause if it changed.
   const save = useApiMutation(
     async (d: Draft) => {
       await contactsApi.updateContact(c.id, {
@@ -143,14 +130,8 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
       if (sub && d.paused !== wasPaused) {
         await billingApi.updateSubscription(sub.id, { status: d.paused ? "Paused" : "Active" });
       }
-      for (const p of pipelines) {
-        const before = stageInPipeline(p, c.id);
-        const after = d.other[p.id] ?? "";
-        if (after && after !== before) await contactsApi.movePipelineItem(p.id, { contactId: c.id, stageId: after });
-        else if (!after && before) await contactsApi.removePipelineItem(p.id, c.id);
-      }
     },
-    { invalidate: [qk.contacts, qk.salesBoard, qk.pipelines, qk.tags, qk.subscriptions, ["dashboard"]] },
+    { invalidate: [qk.contacts, qk.tags, qk.subscriptions, ["dashboard"]] },
   );
 
   const set = (patch: Partial<Draft>) => {
@@ -180,7 +161,7 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
         ? draft.paused
           ? "Their subscription will be paused. They appear under Contacts › Inactive."
           : "Marked as lost. They appear under Contacts › Inactive."
-        : "Leads are people who have not paid yet. Move them through the pipeline as they progress.";
+        : "Leads are people who have not paid yet. Change their stage as they progress.";
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -349,7 +330,7 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
             ))}
           </div>
         </Field>
-        <Field label={`${sales?.name ?? "Sales pipeline"} stage`} htmlFor="ec-stage">
+        <Field label="Sales stage" htmlFor="ec-stage">
           <Select
             id="ec-stage"
             className="u-strong"
@@ -361,17 +342,6 @@ function EditContactForm({ contact: c, pipelines, onClose }: { contact: ContactO
             }}
           />
         </Field>
-        {pipelines.map((p) => (
-          <Field key={p.id} label={`${p.name} stage`} htmlFor={`ec-pl-${p.id}`}>
-            <Select
-              id={`ec-pl-${p.id}`}
-              value={draft.other[p.id] ?? ""}
-              placeholder="Not in this pipeline"
-              options={p.stages.map((s) => ({ value: s.id, label: s.name }))}
-              onChange={(e) => set({ other: { ...draft.other, [p.id]: e.target.value } })}
-            />
-          </Field>
-        ))}
         <span className="text-small">{statusHint}</span>
       </div>
 

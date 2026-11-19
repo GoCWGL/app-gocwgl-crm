@@ -9,14 +9,14 @@ import type { ContactOut } from "@/utils/api/models";
 import { formatShort, getTimeZone, isoDateIn, addDaysIso, todayIso } from "@/utils/format/dates";
 import { useSubscriptions } from "@/utils/hooks/useBilling";
 import { canWriteCrm } from "@/utils/auth/session";
-import { useAllContacts, usePipelines, useTags } from "@/utils/hooks/useContacts";
+import { useAllContacts, useTags } from "@/utils/hooks/useContacts";
 import { useMe } from "@/utils/hooks/useUsers";
 import {
   CONTACT_STATUS,
   callText,
   contactName,
   contactStatus,
-  getSalesStages,
+  SALES_STAGES,
   isActiveClient,
   isInactiveClient,
   isOnboardingClient,
@@ -75,7 +75,7 @@ function ClientList() {
   const subsQuery = useSubscriptions();
   const subscriptions = subsQuery.data;
   const tags = useTags().data ?? [];
-  const stages = getSalesStages(usePipelines().data);
+  const stages = SALES_STAGES;
   const contacts: ContactOut[] = [...(active.data ?? []), ...(contactView === "inactive" ? (archived.data ?? []) : [])];
 
   // Onboarding: paid, current clients the team hasn't moved to Active yet.

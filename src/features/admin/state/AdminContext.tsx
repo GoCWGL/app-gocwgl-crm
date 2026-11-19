@@ -5,7 +5,7 @@ import type { BillingView } from "../sections/payments/BillingTables";
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
 import { HIDDEN_TABS, type AdminTab, type ContactView, type SettingsTab } from "@/data/admin";
 
-/** The email composer can be prefilled from other pages (pipeline cards, progress). */
+/** The email composer can be prefilled from other pages (contacts, progress). */
 export type ComposerDraft = {
   mode: "one" | "tag" | "stage";
   /** Contact id (mode "one"), tag id (mode "tag") or stage (mode "stage"). */
@@ -67,7 +67,7 @@ export type AdminState = {
 };
 
 const TABS: AdminTab[] = [
-  "dashboard", "clients", "vas", "tags", "pipeline", "calendar", "bonuses", "payments", "products", "progress", "funnels", "media",
+  "dashboard", "clients", "vas", "tags", "calendar", "bonuses", "payments", "products", "progress", "funnels", "media",
   "email", "forms", "surveys", "automation", "reporting", "bugs", "status", "training", "sops", "clientStatus", "clientTraining", "clientSops", "support", "feedback", "jobs",
   "settings",
 ];

@@ -23,7 +23,7 @@ export const usePreviewConfirmation = () =>
   useApiMutation((v: { id: string; body: ConfirmationPreviewIn }) => api.previewConfirmation(v.id, v.body));
 
 /** Bookings change contacts (stage, call time) and the dashboard too. */
-const BOOKING_KEYS = [qk.bookings, qk.contacts, qk.salesBoard, ["dashboard"], qk.activity];
+const BOOKING_KEYS = [qk.bookings, qk.contacts, ["dashboard"], qk.activity];
 export const useBookings = (range: { start?: string; end?: string } = {}) =>
   useQuery({ queryKey: [...qk.bookings, range], queryFn: () => api.listBookings(range) });
 export const useCreateBooking = () => useApiMutation((v: AdminBookingIn) => api.createBooking(v), { invalidate: BOOKING_KEYS });

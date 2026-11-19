@@ -6,10 +6,10 @@ import { CORE_STAGES, LEAD_SOURCES, type CoreStage, type LeadSource } from "@/da
 import { copyToClipboard, generatePassword, isEmail } from "@/lib/utils";
 import { isStaffAdmin } from "@/utils/auth/session";
 import { errorMessage, fieldErrors, hasCode } from "@/utils/errors";
-import { useCreateContact, usePipelines, useTags } from "@/utils/hooks/useContacts";
+import { useCreateContact, useTags } from "@/utils/hooks/useContacts";
 import { useMe } from "@/utils/hooks/useUsers";
 import { TagPicker } from "../components/TagPicker";
-import { getSalesStages } from "../lib/contacts";
+import { SALES_STAGES } from "../lib/contacts";
 import { useAdmin } from "../state/AdminContext";
 
 type Draft = {
@@ -45,7 +45,7 @@ export function AddClientModal() {
 
 function AddClientForm({ onClose }: { onClose: () => void }) {
   const { update } = useAdmin();
-  const stages = getSalesStages(usePipelines().data);
+  const stages = SALES_STAGES;
   const tags = useTags().data ?? [];
   const create = useCreateContact();
   const isAdmin = isStaffAdmin(useMe().data);
@@ -181,7 +181,7 @@ function AddClientForm({ onClose }: { onClose: () => void }) {
         <Field label="Lead source" htmlFor="ac-source">
           <Select id="ac-source" value={draft.source} options={LEAD_SOURCES} onChange={(e) => set({ source: e.target.value as LeadSource })} />
         </Field>
-        <Field label="Pipeline stage" htmlFor="ac-stage">
+        <Field label="Sales stage" htmlFor="ac-stage">
           <Select
             id="ac-stage"
             value={draft.stage}

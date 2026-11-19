@@ -15,6 +15,7 @@ import type {
   JournalEntry,
   LiveOut,
   NextInvoiceOut,
+  VaAgreementOut,
   ProjectClientUpdate,
   ProjectIn,
   ProjectStaffUpdate,
@@ -59,6 +60,9 @@ export const listProjectMessages = (id: string) => get<TaskMessageOut[]>(`/porta
 export const markProjectMessagesRead = (id: string) => post<void>(`/portal/projects/${id}/messages/read`);
 export const postProjectMessage = (id: string, body: string) => post<TaskMessageOut>(`/portal/projects/${id}/messages`, { body });
 
+/** Whether the client ticked that they understand the VA agreement (VA › Agreement); needed before their first VA request. */
+export const getMyVaAgreement = () => get<VaAgreementOut>("/portal/va-agreement");
+export const acceptMyVaAgreement = () => post<VaAgreementOut>("/portal/va-agreement/accept", {});
 export const listVaRequests = () => get<VaRequestOut[]>("/portal/va-requests");
 export const requestVa = (body: VaRequestIn) => post<VaRequestOut>("/portal/va-requests", body);
 /** Edit your request while it's New or In review. */

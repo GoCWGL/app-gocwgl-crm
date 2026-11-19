@@ -18,6 +18,7 @@ import { FunnelRequestDrawer } from "./components/FunnelRequestDrawer";
 import { PortalSidebar } from "./components/PortalSidebar";
 import { TodoDrawer } from "./components/TodoDrawer";
 import { AccountSection } from "./sections/AccountSection";
+import { AgreementSection } from "./sections/AgreementSection";
 import { AffiliateSection } from "./sections/AffiliateSection";
 import { AttendanceSection } from "./sections/AttendanceSection";
 import { VaAssetsSection } from "./sections/VaAssetsSection";
@@ -45,6 +46,7 @@ const SECTIONS: Record<PortalTab, ComponentType> = {
   assets: VaAssetsSection,
   journal: WorkJournalSection,
   team: TeamSection,
+  agreement: AgreementSection,
   vateam: VaTeamSection,
   vaprojects: VaProjectsSection,
   projects: ProjectsSection,

@@ -7,7 +7,7 @@ import { useContactsPage } from "@/utils/hooks/useContacts";
 import type { JobPostingOut, VaRequestIn, VaRequestOut } from "@/utils/api/models";
 import { centsToDollars, dollarsToCents } from "@/utils/format/money";
 import { useUpdateJobPosting } from "@/utils/hooks/useJobPostings";
-import { useRequestVa, useStaffCreateVaRequest, useStaffUpdateVaRequest, useUpdateMyVaRequest, useVaRequests } from "@/utils/hooks/useClientWork";
+import { useMyVaAgreement, useRequestVa, useStaffCreateVaRequest, useStaffUpdateVaRequest, useUpdateMyVaRequest, useVaRequests } from "@/utils/hooks/useClientWork";
 import { usePortal } from "../state/PortalContext";
 import { ClientVaAgreementTerms } from "./ClientVaAgreement";
 import {
@@ -78,8 +78,42 @@ function ampm(t: string): string {
 
 /** Client portal › VAs › Request a VA: the role they need, sent to GoCWGL to review and post to VAs. */
 export function VaRequestModal({ onClose, onSent, project }: { onClose: () => void; onSent?: () => void; project?: boolean }) {
-  const { notify } = usePortal();
+  const { notify, goTo } = usePortal();
   const pastVas = usePastVas();
+  // Before their first request the client confirms they understand the VA agreement on its own page (VA › Agreement).
+  const agreement = useMyVaAgreement();
+  if (agreement.isSuccess && !agreement.data.acceptedAt) {
+    return (
+      <Modal
+        open
+        width={480}
+        onClose={onClose}
+        titleId="request-va-agreement"
+        title="Read the VA agreement first"
+        subtitle="Before you request your first VA, read the GoCWGL VA agreement and confirm you understand it."
+        footer={
+          <>
+            <span className="u-spacer" />
+            <Button onClick={onClose}>Cancel</Button>
+            <Button
+              variant="primary"
+              onClick={() => {
+                onClose();
+                goTo("agreement");
+              }}
+            >
+              Open the agreement <Icon name="arrowRight" size={14} />
+            </Button>
+          </>
+        }
+      >
+        <p className="text-small">
+          It covers the monthly maintenance fee, the training fee for your VA’s first months, your VA’s pay, billing and when to pay.
+          You can come back to it anytime under VA › Agreement.
+        </p>
+      </Modal>
+    );
+  }
   return <VaRequestForm onClose={onClose} onSent={onSent} notify={notify} pastVas={pastVas} startAsProject={project} />;
 }
 

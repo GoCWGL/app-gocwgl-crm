@@ -11,7 +11,7 @@ import { useChangeMenuAccess } from "@/utils/hooks/useUsers";
 /** null = every menu. */
 export type MenuAccess = MenuKey[] | null;
 
-/** "Every menu", "3 of 14 menus: Contacts, Pipeline, Calendar". */
+/** "Every menu", "3 of 14 menus: Contacts, Calendar, Billing". */
 export function menuAccessLabel(access: string[] | null | undefined): string {
   if (access == null) return "Every menu";
   const names = VISIBLE_MENUS.filter((m) => access.includes(m.key)).map((m) => m.label);
@@ -22,7 +22,6 @@ export function menuAccessLabel(access: string[] | null | undefined): string {
 const MENU_LOOK: Record<MenuKey, { icon: IconName; tone: Tone }> = {
   dashboard: { icon: "grid", tone: "cyan" },
   contacts: { icon: "users", tone: "purple" },
-  pipeline: { icon: "pipeline", tone: "pink" },
   calendar: { icon: "calendar", tone: "orange" },
   payments: { icon: "invoice", tone: "green" },
   affiliates: { icon: "gift", tone: "amber" },

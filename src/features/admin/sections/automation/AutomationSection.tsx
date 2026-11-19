@@ -6,11 +6,11 @@ import type { Automation } from "@/data/admin";
 import { cn } from "@/lib/utils";
 import { canWriteCrm } from "@/utils/auth/session";
 import { useCalendars } from "@/utils/hooks/useCalendar";
-import { usePipelines, useTags } from "@/utils/hooks/useContacts";
+import { useTags } from "@/utils/hooks/useContacts";
 import { useAutomations, useDeleteAutomation, useTemplates, useUpdateAutomation } from "@/utils/hooks/useMarketing";
 import { useMe } from "@/utils/hooks/useUsers";
 import { automationToDraft, stepMeta, triggerText, type OptionContext } from "../../lib/automation";
-import { getSalesStages } from "../../lib/contacts";
+import { SALES_STAGES } from "../../lib/contacts";
 import { AutomationBuilder } from "./AutomationBuilder";
 
 export function AutomationSection() {
@@ -24,7 +24,7 @@ export function AutomationSection() {
   const ctx: OptionContext = {
     templates: useTemplates().data ?? [],
     tags: useTags().data ?? [],
-    stages: getSalesStages(usePipelines().data),
+    stages: SALES_STAGES,
     calendars: useCalendars().data ?? [],
   };
 

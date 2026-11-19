@@ -54,7 +54,7 @@ export function AffiliatesTable({ onOpen }: { onOpen: (a: AffiliateOut) => void 
             ? "No affiliates match your search."
             : filter === "removed"
               ? "No one has been removed from the program."
-              : "No affiliates yet. Clients join once they reach the Paid subscriber stage of your sales pipeline."
+              : "No affiliates yet. Clients join once they reach the Paid subscriber stage."
         }
       >
         <div className="table-scroll">

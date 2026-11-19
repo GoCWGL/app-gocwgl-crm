@@ -15,6 +15,7 @@ export type PortalTab =
   | "assets"
   | "journal"
   | "team"
+  | "agreement"
   | "vateam"
   | "vaprojects"
   | "projects"
@@ -57,6 +58,7 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   assets: { title: "Assets", subtitle: "Logins, links and notes your VAs need. You choose which VA can see each one." },
   journal: { title: "VA tracker", subtitle: "Everything your VAs logged for your business, day by day." },
   team: { title: "Request VA", subtitle: "Ask GoCWGL for a VA, and follow each request until you're matched." },
+  agreement: { title: "Agreement", subtitle: "Your GoCWGL VA agreement: the maintenance and training fees, billing and when to pay. Come back anytime to check it." },
   vateam: { title: "Team", subtitle: "The virtual assistants working with your business right now." },
   vaprojects: { title: "Projects", subtitle: "Your open projects: requested, in progress with a VA, and completed." },
   projects: { title: "Tasks", subtitle: "Request a task, pick the main VA and any backups, and follow its status." },
@@ -154,7 +156,7 @@ export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
         icon: "briefcase",
         description: "Your virtual assistant team and their work",
         groups: [
-          { title: "Hiring", items: [page("team", "Request VA", "briefcase")] },
+          { title: "Hiring", items: [page("team", "Request VA", "briefcase"), page("agreement", "Agreement", "shield")] },
           {
             title: "Your team",
             needsVa: true,

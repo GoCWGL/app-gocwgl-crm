@@ -98,7 +98,7 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
           },
           {
             title: "Engagement",
-            items: [item("surveys", "Surveys", "survey"), item("pipeline", "Pipeline", "pipeline")],
+            items: [item("surveys", "Surveys", "survey")],
           },
         ],
       },

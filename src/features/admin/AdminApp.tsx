@@ -35,7 +35,6 @@ import { FormsSection } from "./sections/forms/FormsSection";
 import { MediaSection } from "./sections/media/MediaSection";
 import { PaymentsSection } from "./sections/payments/PaymentsSection";
 import { ProductsSection } from "./sections/payments/ProductsSection";
-import { PipelineSection } from "./sections/pipeline/PipelineSection";
 import { NewBuildModal } from "./sections/progress/NewBuildModal";
 import { ProgressSection } from "./sections/progress/ProgressSection";
 import { ReportingSection } from "./sections/reporting/ReportingSection";
@@ -54,7 +53,6 @@ const SECTIONS: Record<AdminTab, ComponentType> = {
   clients: ClientsSection,
   vas: VasSection,
   tags: TagsSection,
-  pipeline: PipelineSection,
   calendar: CalendarSection,
   bonuses: ReferralBonusSection,
   payments: PaymentsSection,

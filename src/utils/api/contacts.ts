@@ -4,10 +4,6 @@ import type {
   ContactCreate,
   ContactOut,
   ContactUpdate,
-  PipelineCreate,
-  PipelineDetail,
-  PipelineOut,
-  PipelineUpdate,
   PortalLoginOut,
   Stage,
   TagOut,
@@ -56,21 +52,6 @@ export const listTags = () => get<TagWithCount[]>("/admin/tags");
 export const createTag = (body: { name: string; color: number }) => post<TagOut>("/admin/tags", body);
 export const updateTag = (id: string, body: { name?: string; color?: number }) => patch<TagOut>(`/admin/tags/${id}`, body);
 export const deleteTag = (id: string) => del(`/admin/tags/${id}`);
-
-// ------------------------------------------------------------------ Sales board
-export const getSalesBoard = () => get<ContactOut[]>("/admin/sales-board");
-export const moveSalesCard = (contactId: string, body: { stage: Stage; beforeId?: string | null }) =>
-  post<void>(`/admin/sales-board/${contactId}/move`, body);
-
-// ------------------------------------------------------------------ Custom pipelines
-export const listPipelines = () => get<PipelineOut[]>("/admin/pipelines");
-export const getPipeline = (id: string) => get<PipelineDetail>(`/admin/pipelines/${id}`);
-export const createPipeline = (body: PipelineCreate) => post<PipelineOut>("/admin/pipelines", body);
-export const updatePipeline = (id: string, body: PipelineUpdate) => patch<PipelineOut>(`/admin/pipelines/${id}`, body);
-export const deletePipeline = (id: string) => del(`/admin/pipelines/${id}`);
-export const movePipelineItem = (id: string, body: { contactId: string; stageId: string; beforeId?: string | null }) =>
-  post<void>(`/admin/pipelines/${id}/move`, body);
-export const removePipelineItem = (id: string, contactId: string) => del(`/admin/pipelines/${id}/items/${contactId}`);
 
 // ------------------------------------------------------------------ Team notes (staff only; never shown in the client portal)
 export const listContactNotes = (contactId: string) => get<ContactNoteOut[]>(`/admin/contacts/${contactId}/notes`);

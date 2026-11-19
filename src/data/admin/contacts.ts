@@ -1,8 +1,8 @@
 import type { Tone } from "@/lib/tones";
 
 // =============================================================================
-// Contact, tag and pipeline options for the admin CRM (pure UI constants).
-// Contacts, tags and pipelines themselves come from the API.
+// Contact and tag options for the admin CRM (pure UI constants).
+// Contacts and tags themselves come from the API.
 // =============================================================================
 
 export type CoreStage = "lead" | "booked" | "paid" | "lost";
@@ -56,15 +56,3 @@ export const TAG_COLORS: Array<{ name: string; tone: Tone }> = [
   { name: "Pink", tone: "pink" },
 ];
 
-// ---------------------------------------------------------------- Pipelines
-/** Colors a pipeline stage can have, in the order of the color picker (the API stores the index). */
-export const STAGE_COLORS: Array<{ name: string; tone: Tone }> = [
-  { name: "Cyan", tone: "cyan" },
-  { name: "Amber", tone: "amber" },
-  { name: "Green", tone: "green" },
-  { name: "Gray", tone: "slate" },
-  { name: "Purple", tone: "purple" },
-  { name: "Pink", tone: "pink" },
-  { name: "Teal", tone: "teal" },
-  { name: "Orange", tone: "orange" },
-];

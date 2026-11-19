@@ -205,7 +205,7 @@ export function FormBuilder({ draft, onChange, onClose }: FormBuilderProps) {
               <Field label="Button text" htmlFor="fm-btn">
                 <Input id="fm-btn" size="sm" value={draft.button} onChange={(e) => set({ button: e.target.value })} />
               </Field>
-              <Field label="Add to pipeline stage" htmlFor="fm-stage">
+              <Field label="Add at stage" htmlFor="fm-stage">
                 <Select id="fm-stage" size="sm" value={draft.stage} onChange={(e) => set({ stage: e.target.value as LeadForm["stage"] })}>
                   <option value="lead">New lead</option>
                   <option value="booked">Call booked</option>

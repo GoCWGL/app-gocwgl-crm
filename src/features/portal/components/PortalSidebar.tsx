@@ -72,7 +72,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   // Build progress) is hidden until the team turns it on in the client's profile.
   const showCrmPackages = useShowPackages("crm");
   const showFunnelPackages = useShowPackages("funnels");
-  // Request VA shows once the team turns the VA packages on, or while they have requests to follow.
+  // Request VA shows unless the team turned the VA packages off, or while they have requests to follow.
   const showVaPackages = useShowPackages("va");
   const vaRequests = useVaRequests().data ?? [];
   const hasVaRequests = vaRequests.some((r) => r.status !== "cancelled");

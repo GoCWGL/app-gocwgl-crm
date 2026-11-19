@@ -1,6 +1,7 @@
 "use client";
 
-import { FormError, Icon, Toggle } from "@/components/ui";
+import { Badge, FormError, Icon, Toggle } from "@/components/ui";
+import { formatShort } from "@/utils/format/dates";
 import type { ContactOut, ContactUpdate } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
 import { useUpdateContact } from "@/utils/hooks/useContacts";
@@ -9,7 +10,7 @@ import { useAdmin } from "../state/AdminContext";
 
 type PackageKey = "showCrmPackages" | "showFunnelPackages" | "showVaPackages";
 
-/** `fallback`: whether it shows before the team has set it (CRM does; Funnel and VA don't). */
+/** `fallback`: whether it shows before the team has set it (CRM and VA do; Funnel doesn't). */
 const PACKAGES: Array<{ key: PackageKey; label: string; menu: string; on: string; off: string; fallback: boolean }> = [
   {
     key: "showCrmPackages",
@@ -31,9 +32,9 @@ const PACKAGES: Array<{ key: PackageKey; label: string; menu: string; on: string
     key: "showVaPackages",
     label: "VA packages",
     menu: "Request VA",
-    on: "They see Request VA and can ask GoCWGL for a VA.",
-    off: "Hidden (the default): they can’t request a VA. Requests they already sent still show.",
-    fallback: false,
+    on: "They see Request VA (the default) and can ask GoCWGL for a VA.",
+    off: "Hidden: they can’t request a VA. Requests they already sent still show.",
+    fallback: true,
   },
 ];
 
@@ -75,6 +76,18 @@ export function PortalMenuCard({ contact: c }: { contact: ContactOut }) {
           </div>
         );
       })}
+      {/* The VA agreement: the client ticks that they understand it (VA › Agreement) before their first VA request. */}
+      <div className="cluster cluster--nowrap portal-menu-row">
+        <span className="stack stack--2 u-grow">
+          <span className="text-small u-strong">VA agreement</span>
+          <span className="text-tiny">
+            {c.vaAgreementAcceptedAt
+              ? `Confirmed ${formatShort(c.vaAgreementAcceptedAt)}. They can request a VA while VA packages is on.`
+              : "Not confirmed yet. They confirm it on VA › Agreement before their first VA request."}
+          </span>
+        </span>
+        <Badge tone={c.vaAgreementAcceptedAt ? "green" : "slate"}>{c.vaAgreementAcceptedAt ? "Confirmed" : "Pending"}</Badge>
+      </div>
       <FormError error={save.error} />
     </div>
   );

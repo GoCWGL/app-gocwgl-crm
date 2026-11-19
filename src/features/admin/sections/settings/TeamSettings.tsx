@@ -141,7 +141,7 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
       )}
 
       <span className="text-small">
-        Super Admin: everything · Admin: everything except managing admins · Sales: contacts, pipeline, calendar and email · Viewer: read only.
+        Super Admin: everything · Admin: everything except managing admins · Sales: contacts, calendar and email · Viewer: read only.
         Use Menus to limit which pages someone can open.
       </span>
     </div>
@@ -151,7 +151,7 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
 const ROLE_HELP: Record<StaffRole, string> = {
   super_admin: "Everything, including who is an admin or super admin.",
   admin: "Everything except adding, changing or removing admins and super admins.",
-  sales: "Contacts, pipeline, calendar, email and payments. No settings or team.",
+  sales: "Contacts, calendar, email and payments. No settings or team.",
   viewer: "Can look at everything but can’t change anything.",
 };
 

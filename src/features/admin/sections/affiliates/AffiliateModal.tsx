@@ -130,7 +130,7 @@ export function AffiliateModal({ contactId, canManage, onClose }: { contactId: s
               <dl className="payout-details affiliate-facts">
                 <dt>Referral ID</dt>
                 <dd className="data-table__mono">{formatReferralCode(a.referralCode)}</dd>
-                <dt>Pipeline stage</dt>
+                <dt>Sales stage</dt>
                 <dd>{a.stage === "paid" ? "Paid subscriber" : a.stage}</dd>
                 <dt>Payout</dt>
                 <dd>

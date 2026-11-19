@@ -8,9 +8,8 @@ import { cn, percent } from "@/lib/utils";
 import type { CustomRange, DashboardNumbers, DashboardRange } from "@/utils/api/reporting";
 import { addDaysIso, formatLong, formatShort, todayIso } from "@/utils/format/dates";
 import { formatCents } from "@/utils/format/money";
-import { usePipelines } from "@/utils/hooks/useContacts";
 import { useDashboard } from "@/utils/hooks/useReporting";
-import { getSalesStages } from "../../lib/contacts";
+import { SALES_STAGES } from "../../lib/contacts";
 import { useAdmin } from "../../state/AdminContext";
 import { TeamReport } from "./TeamReport";
 
@@ -73,7 +72,7 @@ function byWeek(perDay: Array<{ date: string; n: number }>): Map<string, number>
 
 type ReportView = "team" | "sales";
 
-/** Reports: the team (hours, billing, no-shows) and sales (signups, conversion, pipeline). */
+/** Reports: the team (hours, billing, no-shows) and sales (signups, conversion, stages). */
 export function ReportingSection() {
   const [view, setView] = useState<ReportView>("team");
   return (
@@ -86,7 +85,7 @@ export function ReportingSection() {
             onChange={setView}
             options={[
               { value: "team", label: "Team", hint: "Hours, billing, no-shows", icon: "users", tone: "cyan" },
-              { value: "sales", label: "Sales & signups", hint: "Leads, conversion, pipeline", icon: "trendUp", tone: "orange" },
+              { value: "sales", label: "Sales & signups", hint: "Leads, conversion, stages", icon: "trendUp", tone: "orange" },
             ]}
           />
         </div>
@@ -204,8 +203,8 @@ function Report({ d, start, end }: { d: DashboardNumbers; start: string; end: st
         <ReportCard title="Where signups came from" subtitle="Lead source">
           <Sources sources={d.sources} />
         </ReportCard>
-        <ReportCard title="Pipeline today" subtitle="Every contact by sales stage" className="report-grid__wide">
-          <Pipeline stages={d.stages} />
+        <ReportCard title="Sales stages today" subtitle="Every contact by sales stage" className="report-grid__wide">
+          <StageBar stages={d.stages} />
         </ReportCard>
         <ReportCard title="Needs attention" subtitle="Right now" className="report-grid__wide">
           <Attention d={d} />
@@ -321,9 +320,9 @@ function Sources({ sources }: { sources: Array<{ source: string; count: number }
   );
 }
 
-/** One bar split by stage (in the pipeline's own stage colors), with a labelled legend. */
-function Pipeline({ stages: counts }: { stages: Record<string, number> }) {
-  const stages = getSalesStages(usePipelines().data);
+/** One bar split by stage (in each stage's color), with a labelled legend. */
+function StageBar({ stages: counts }: { stages: Record<string, number> }) {
+  const stages = SALES_STAGES;
   const rows = CORE_STAGES.map((st) => ({ key: st, label: stages[st].label, tone: stages[st].tone, n: counts[st] ?? 0 }));
   const total = rows.reduce((n, r) => n + r.n, 0);
   if (!total) return <p className="report-empty">No contacts yet.</p>;

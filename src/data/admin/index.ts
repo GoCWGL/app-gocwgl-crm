@@ -13,7 +13,6 @@ export type AdminTab =
   | "clients"
   | "vas"
   | "tags"
-  | "pipeline"
   | "calendar"
   | "bonuses"
   | "payments"
@@ -70,7 +69,6 @@ export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> 
   clients: { title: "Clients", subtitle: "Every lead and client captured from your landing page." },
   vas: { title: "VAs", subtitle: "Your virtual assistants, the clients they support and their portal." },
   tags: { title: "Tags", subtitle: "Create and manage the tags you use on your contacts." },
-  pipeline: { title: "Pipeline", subtitle: "Move each lead from signup to paid subscriber." },
   calendar: { title: "Calendar", subtitle: "Discovery calls booked by your leads." },
   bonuses: { title: "Referral bonus", subtitle: "Every referral and its bonus: what to pay, what's pending and what's paid." },
   payments: { title: "Billing & invoices", subtitle: "Subscriptions, invoices and each month’s client invoices. Clients pay through each payment link." },
@@ -79,7 +77,7 @@ export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> 
   progress: { title: "CRM Requests", subtitle: "Build progress: track the system you’re building for each paid client and share the progress with them." },
   funnels: { title: "Funnel Requests", subtitle: "Funnels clients asked for from their portal: what they want, whether it’s paid, and a way to start the build." },
   media: { title: "CRM Requests", subtitle: "Client media: one folder per client. Files your clients upload from their portal land here." },
-  email: { title: "Email", subtitle: "Send emails to one contact, a tag or a whole pipeline stage." },
+  email: { title: "Email", subtitle: "Send emails to one contact, a tag or everyone in a stage." },
   forms: { title: "Forms", subtitle: "Build forms for your landing pages. Every submission lands in your CRM." },
   surveys: { title: "Surveys", subtitle: "Build surveys and quizzes with your own questions, then embed them on any page." },
   automation: { title: "Automation", subtitle: "Workflows that run when a lead signs up, books or pays." },
@@ -111,7 +109,6 @@ export const CONTACT_VIEWS: Record<ContactView, { title: string; subtitle: strin
 export type MenuKey =
   | "dashboard"
   | "contacts"
-  | "pipeline"
   | "calendar"
   | "payments"
   | "affiliates"
@@ -128,7 +125,6 @@ export const MENUS: Array<{ key: MenuKey; label: string }> = [
   { key: "dashboard", label: "Dashboard › Overview" },
   { key: "reporting", label: "Dashboard › Reports" },
   { key: "contacts", label: "Contacts & Clients" },
-  { key: "pipeline", label: "Pipeline" },
   { key: "calendar", label: "Calendar" },
   { key: "progress", label: "CRM Requests › Build progress" },
   { key: "media", label: "CRM Requests › Client media" },
@@ -156,7 +152,6 @@ export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
   // No menu of its own yet: whoever can use Contacts & Clients sees VAs.
   vas: "contacts",
   tags: "contacts",
-  pipeline: "pipeline",
   calendar: "calendar",
   bonuses: "affiliates",
   payments: "payments",

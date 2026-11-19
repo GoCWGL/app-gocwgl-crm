@@ -94,7 +94,7 @@ export const ACTION_TYPES: Record<
   wait: { label: "Wait", short: "Wait", field: "delay", fieldLabel: "Wait for", icon: "clock", tone: "amber" },
   tag: { label: "Add tag", short: "Add tag", field: "tag", fieldLabel: "Tag to add", icon: "tag", tone: "purple" },
   removeTag: { label: "Remove tag", short: "Remove tag", field: "tag", fieldLabel: "Tag to remove", icon: "tagMinus", tone: "pink" },
-  stage: { label: "Move pipeline stage", short: "Move stage", field: "stage", fieldLabel: "Move contact to", icon: "pipeline", tone: "orange" },
+  stage: { label: "Move to a stage", short: "Move stage", field: "stage", fieldLabel: "Move contact to", icon: "pipeline", tone: "orange" },
   notify: { label: "Notify my team", short: "Notify", field: "text", fieldLabel: "Notification", placeholder: "What should the team see?", icon: "bell", tone: "lime" },
 };
 
@@ -107,7 +107,7 @@ export const TRIGGER_TYPES: Record<TriggerType, { label: string; field?: OptionS
   booked: { label: "A call is booked", field: "calendar", fieldLabel: "On calendar" },
   paid: { label: "A payment is received" },
   tagAdded: { label: "A tag is added to a contact", field: "tag", fieldLabel: "Tag" },
-  stageChanged: { label: "A contact moves pipeline stage", field: "stage", fieldLabel: "Moved to" },
+  stageChanged: { label: "A contact moves stage", field: "stage", fieldLabel: "Moved to" },
   noBooking: { label: "A lead has not booked a call", field: "delay", fieldLabel: "After" },
 };
 
@@ -115,7 +115,7 @@ export type ConditionType = "tag" | "stage" | "opened" | "booked" | "paid";
 
 export const CONDITION_TYPES: Record<ConditionType, { label: string; field?: OptionSource }> = {
   tag: { label: "Contact has tag", field: "tag" },
-  stage: { label: "Contact is in pipeline stage", field: "stage" },
+  stage: { label: "Contact is in stage", field: "stage" },
   // Open tracking isn't built yet (backend F-5): this condition is always "no" for now.
   opened: { label: "Contact opened email (coming soon)", field: "template" },
   booked: { label: "Contact has booked a call" },

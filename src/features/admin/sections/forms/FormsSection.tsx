@@ -7,10 +7,10 @@ import { formUrl } from "@/features/public/links";
 import { cn, copyToClipboard } from "@/lib/utils";
 import { canWriteCrm } from "@/utils/auth/session";
 import { useCreateForm, useDeleteForm, useForms, useUpdateForm } from "@/utils/hooks/useForms";
-import { usePipelines, useTags } from "@/utils/hooks/useContacts";
+import { useTags } from "@/utils/hooks/useContacts";
 import { useMe } from "@/utils/hooks/useUsers";
 import { draftToForm, formToDraft, newFieldId } from "@/utils/mappers/forms";
-import { getSalesStages, stageOf } from "../../lib/contacts";
+import { SALES_STAGES, stageOf } from "../../lib/contacts";
 import { embedCode } from "../../lib/forms";
 import { FormBuilder } from "./FormBuilder";
 import { FormSubmissionsDrawer } from "./FormSubmissionsDrawer";
@@ -34,7 +34,7 @@ export function FormsSection() {
   const canWrite = canWriteCrm(useMe().data);
   const query = useForms();
   const tags = useTags().data ?? [];
-  const stages = getSalesStages(usePipelines().data);
+  const stages = SALES_STAGES;
   const create = useCreateForm();
   const update = useUpdateForm();
   const remove = useDeleteForm();
@@ -66,7 +66,7 @@ export function FormsSection() {
       <div className="section-head">
         <div className="stack stack--2">
           <h2 className="section-title">Your forms</h2>
-          <span className="text-muted">Every submission becomes a contact in Clients and the Pipeline</span>
+          <span className="text-muted">Every submission becomes a contact, at the stage you choose</span>
         </div>
         {canWrite && (
           <Button variant="primary" size="lg" onClick={() => setDraft(blankForm())}>

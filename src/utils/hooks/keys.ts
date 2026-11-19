@@ -50,9 +50,6 @@ export const qk = {
   portalLogin: (id: string) => ["contacts", "portal-login", id] as const,
   contactNotes: (id: string) => ["contacts", "notes", id] as const,
   tags: ["tags"] as const,
-  salesBoard: ["sales-board"] as const,
-  pipelines: ["pipelines"] as const,
-  pipeline: (id: string) => ["pipelines", id] as const,
 
   calendars: ["calendars"] as const,
   bookings: ["bookings"] as const,
@@ -142,6 +139,7 @@ export const qk = {
   portalMySops: ["portal", "my-sops"] as const,
   clientProjects: ["client-projects"] as const,
   portalVaRequests: ["portal", "va-requests"] as const,
+  portalVaAgreement: ["portal", "va-agreement"] as const,
   portalVaResumes: ["portal", "va-resumes"] as const,
   clientVaRequests: ["va-requests"] as const,
 };

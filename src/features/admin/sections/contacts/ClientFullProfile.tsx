@@ -10,7 +10,7 @@ import { canWriteCrm } from "@/utils/auth/session";
 import { formatShort } from "@/utils/format/dates";
 import { formatPerInterval } from "@/utils/format/money";
 import { useSubscriptions } from "@/utils/hooks/useBilling";
-import { useContact, usePipelines } from "@/utils/hooks/useContacts";
+import { useContact } from "@/utils/hooks/useContacts";
 import { useClientLinks, useMediaFolders } from "@/utils/hooks/useDelivery";
 import { useCanUseMenu, useMe } from "@/utils/hooks/useUsers";
 import { ClientEmbedsCard } from "../../components/ClientEmbedsCard";
@@ -27,7 +27,7 @@ import {
   callText,
   contactName,
   contactStatus,
-  getSalesStages,
+  SALES_STAGES,
   isOnboardingClient,
   stageOf,
   businessName,
@@ -59,7 +59,7 @@ function Profile({ c }: { c: ContactOut }) {
   const canWrite = canWriteCrm(useMe().data);
   const subs = useSubscriptions(c.id).data;
   const sub = subscriptionOf(subs, c.id);
-  const stages = getSalesStages(usePipelines().data);
+  const stages = SALES_STAGES;
   const stage = stageOf(stages, c.stage);
   const onboarding = isOnboardingClient(c, subs);
   const statusKey = onboarding ? "onboarding" : contactStatus(c.stage, sub?.status === "Paused", !!c.archivedAt);

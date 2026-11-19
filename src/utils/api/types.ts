@@ -2184,43 +2184,6 @@ export interface paths {
         patch: operations["edit_note_api_admin_contacts__contact_id__notes__note_id__patch"];
         trace?: never;
     };
-    "/api/admin/sales-board": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Sales Board
-         * @description All contacts in board order; group by `stage` on the client.
-         */
-        get: operations["sales_board_api_admin_sales_board_get"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/sales-board/{contact_id}/move": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Move Sales Card */
-        post: operations["move_sales_card_api_admin_sales_board__contact_id__move_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/admin/tags": {
         parameters: {
             query?: never;
@@ -2256,77 +2219,6 @@ export interface paths {
         head?: never;
         /** Update Tag */
         patch: operations["update_tag_api_admin_tags__tag_id__patch"];
-        trace?: never;
-    };
-    "/api/admin/pipelines": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** List Pipelines */
-        get: operations["list_pipelines_api_admin_pipelines_get"];
-        put?: never;
-        /** Create Pipeline */
-        post: operations["create_pipeline_api_admin_pipelines_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/pipelines/{pipeline_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get Pipeline */
-        get: operations["get_pipeline_api_admin_pipelines__pipeline_id__get"];
-        put?: never;
-        post?: never;
-        /** Delete Pipeline */
-        delete: operations["delete_pipeline_api_admin_pipelines__pipeline_id__delete"];
-        options?: never;
-        head?: never;
-        /** Update Pipeline */
-        patch: operations["update_pipeline_api_admin_pipelines__pipeline_id__patch"];
-        trace?: never;
-    };
-    "/api/admin/pipelines/{pipeline_id}/move": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /** Move Pipeline Item */
-        post: operations["move_pipeline_item_api_admin_pipelines__pipeline_id__move_post"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/admin/pipelines/{pipeline_id}/items/{contact_id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Remove Pipeline Item */
-        delete: operations["remove_pipeline_item_api_admin_pipelines__pipeline_id__items__contact_id__delete"];
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/admin/calendars": {
@@ -6240,6 +6132,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/va-agreement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Va Agreement
+         * @description Whether the client has ticked that they understand the VA agreement (VA › Agreement).
+         */
+        get: operations["my_va_agreement_api_portal_va_agreement_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-agreement/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept My Va Agreement
+         * @description Tick "I've read and understand the VA agreement". Needed before the client's first VA request; can't be undone.
+         */
+        post: operations["accept_my_va_agreement_api_portal_va_agreement_accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/va-requests": {
         parameters: {
             query?: never;
@@ -9353,9 +9285,11 @@ export interface components {
             showFunnelPackages?: boolean;
             /**
              * Showvapackages
-             * @default false
+             * @default true
              */
             showVaPackages?: boolean;
+            /** Vaagreementacceptedat */
+            vaAgreementAcceptedAt?: string | null;
         };
         /** ContactReferrerIn */
         ContactReferrerIn: {
@@ -11264,7 +11198,7 @@ export interface components {
         /** MenuAccessChange */
         MenuAccessChange: {
             /** Menuaccess */
-            menuAccess?: ("dashboard" | "contacts" | "pipeline" | "calendar" | "payments" | "affiliates" | "progress" | "media" | "email" | "forms" | "surveys" | "automation" | "reporting" | "bugs")[] | null;
+            menuAccess?: ("dashboard" | "contacts" | "calendar" | "payments" | "affiliates" | "progress" | "media" | "email" | "forms" | "surveys" | "automation" | "reporting" | "bugs")[] | null;
         };
         /** MessageOut */
         MessageOut: {
@@ -11735,7 +11669,7 @@ export interface components {
             showFunnelPackages?: boolean;
             /**
              * Showvapackages
-             * @default false
+             * @default true
              */
             showVaPackages?: boolean;
         };
@@ -12002,84 +11936,6 @@ export interface components {
         PhasesIn: {
             /** Phases */
             phases: components["schemas"]["PhaseIn"][];
-        };
-        /** PipelineCreate */
-        PipelineCreate: {
-            /** Name */
-            name: string;
-            /** Stages */
-            stages: components["schemas"]["StageInput"][];
-        };
-        /** PipelineDetail */
-        PipelineDetail: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Issystem */
-            isSystem: boolean;
-            /** Stages */
-            stages: components["schemas"]["StageOut"][];
-            /** Items */
-            items?: components["schemas"]["PipelineItemOut"][];
-        };
-        /** PipelineItemOut */
-        PipelineItemOut: {
-            /**
-             * Contactid
-             * Format: uuid
-             */
-            contactId: string;
-            /**
-             * Stageid
-             * Format: uuid
-             */
-            stageId: string;
-            /** Position */
-            position: number;
-        };
-        /** PipelineMove */
-        PipelineMove: {
-            /**
-             * Contactid
-             * Format: uuid
-             */
-            contactId: string;
-            /**
-             * Stageid
-             * Format: uuid
-             */
-            stageId: string;
-            /** Beforeid */
-            beforeId?: string | null;
-        };
-        /** PipelineOut */
-        PipelineOut: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Issystem */
-            isSystem: boolean;
-            /** Stages */
-            stages: components["schemas"]["StageOut"][];
-        };
-        /** PipelineUpdate */
-        PipelineUpdate: {
-            /** Name */
-            name?: string | null;
-            /** Stages */
-            stages?: components["schemas"]["StageInput"][] | null;
         };
         /** PortalAffiliateOut */
         PortalAffiliateOut: {
@@ -13537,12 +13393,6 @@ export interface components {
          * @enum {string}
          */
         RunStatus: "active" | "waiting" | "completed" | "cancelled" | "failed";
-        /** SalesMove */
-        SalesMove: {
-            stage: components["schemas"]["Stage"];
-            /** Beforeid */
-            beforeId?: string | null;
-        };
         /** ScheduleIn */
         ScheduleIn: {
             /** Timezone */
@@ -13865,7 +13715,7 @@ export interface components {
              */
             role?: "super_admin" | "admin" | "sales" | "viewer";
             /** Menuaccess */
-            menuAccess?: ("dashboard" | "contacts" | "pipeline" | "calendar" | "payments" | "affiliates" | "progress" | "media" | "email" | "forms" | "surveys" | "automation" | "reporting" | "bugs")[] | null;
+            menuAccess?: ("dashboard" | "contacts" | "calendar" | "payments" | "affiliates" | "progress" | "media" | "email" | "forms" | "surveys" | "automation" | "reporting" | "bugs")[] | null;
         };
         /** StaffMessageIn */
         StaffMessageIn: {
@@ -14116,40 +13966,10 @@ export interface components {
         };
         /**
          * Stage
-         * @description Core stages of the built-in sales pipeline.
+         * @description Where a contact is in sales: a new lead, a call booked, a paid client or lost.
          * @enum {string}
          */
         Stage: "lead" | "booked" | "paid" | "lost";
-        /** StageInput */
-        StageInput: {
-            /** Id */
-            id?: string | null;
-            /** Name */
-            name: string;
-            /**
-             * Color
-             * @default 0
-             */
-            color?: number;
-        };
-        /** StageOut */
-        StageOut: {
-            /**
-             * Id
-             * Format: uuid
-             */
-            id: string;
-            /** Key */
-            key: string;
-            /** Name */
-            name: string;
-            /** Color */
-            color: number;
-            /** Position */
-            position: number;
-            /** Iscore */
-            isCore: boolean;
-        };
         /** SubCalendar */
         SubCalendar: {
             /** Name */
@@ -15212,6 +15032,11 @@ export interface components {
             menuAccess?: string[] | null;
             /** Photo */
             photo?: string | null;
+        };
+        /** VaAgreementOut */
+        VaAgreementOut: {
+            /** Acceptedat */
+            acceptedAt?: string | null;
         };
         /**
          * VaApplicationAnswers
@@ -22864,80 +22689,6 @@ export interface operations {
             };
         };
     };
-    sales_board_api_admin_sales_board_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** Response Sales Board Api Admin Sales Board Get */
-                        data: components["schemas"]["ContactOut"][];
-                    };
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    move_sales_card_api_admin_sales_board__contact_id__move_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                contact_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["SalesMove"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
     list_tags_api_admin_tags_get: {
         parameters: {
             query?: never;
@@ -23119,289 +22870,6 @@ export interface operations {
                         data: components["schemas"]["TagOut"];
                     };
                 };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    list_pipelines_api_admin_pipelines_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** Response List Pipelines Api Admin Pipelines Get */
-                        data: components["schemas"]["PipelineOut"][];
-                    };
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    create_pipeline_api_admin_pipelines_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PipelineCreate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PipelineOut"];
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    get_pipeline_api_admin_pipelines__pipeline_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pipeline_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PipelineDetail"];
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    delete_pipeline_api_admin_pipelines__pipeline_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pipeline_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    update_pipeline_api_admin_pipelines__pipeline_id__patch: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pipeline_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PipelineUpdate"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        data: components["schemas"]["PipelineOut"];
-                    };
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    move_pipeline_item_api_admin_pipelines__pipeline_id__move_post: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pipeline_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PipelineMove"];
-            };
-        };
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Error */
-            default: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    remove_pipeline_item_api_admin_pipelines__pipeline_id__items__contact_id__delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                pipeline_id: string;
-                contact_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -36076,6 +35544,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_va_agreement_api_portal_va_agreement_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaAgreementOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    accept_my_va_agreement_api_portal_va_agreement_accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaAgreementOut"];
+                    };
                 };
             };
             /** @description Error */

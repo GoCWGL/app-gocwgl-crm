@@ -29,12 +29,12 @@ export function useFunnelMenu(): { known: boolean; has: boolean } {
 }
 
 /**
- * The CRM packages ("Request CRM") show unless the team turned them off for this client; the Funnel packages
- * ("Request Funnel", with the whole Funnel menu) and VA packages ("Request VA") only once the team turns them on.
+ * The CRM packages ("Request CRM") and VA packages ("Request VA") show unless the team turned them off for this client;
+ * the Funnel packages ("Request Funnel", with the whole Funnel menu) only once the team turns them on.
  */
 export function useShowPackages(kind: "crm" | "funnels" | "va"): boolean {
   const overview = useOverview(30).data;
-  if (kind === "va") return overview?.showVaPackages === true;
+  if (kind === "va") return overview?.showVaPackages !== false;
   if (kind === "funnels") return overview?.showFunnelPackages === true;
   return overview?.showCrmPackages !== false;
 }

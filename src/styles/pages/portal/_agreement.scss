@@ -1,0 +1,349 @@
+@use "../../abstracts" as *;
+
+// =============================================================================
+// Client portal › VA › Agreement: a document-style header (key terms and the
+// confirmation side by side), then the agreement as pricing tiers and numbered
+// section cards, all on the page with no scroll box.
+// =============================================================================
+
+// ------------------------------------------------------------------ Header
+.cagr {
+  @include card($radius-2xl, 0);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+  overflow: hidden;
+  background:
+    radial-gradient(90% 220px at 0% 0%, rgba(227, 246, 250, 0.7), transparent 70%),
+    $white;
+
+  // A thin brand rule along the top, like a letterhead.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: $grad-progress;
+  }
+
+  @include down(lg) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &__main {
+    @include stack(10px);
+    min-width: 0;
+    padding: 26px 28px 24px;
+  }
+
+  &__eyebrow {
+    @include mono-label(10px, 0.16em, $cyan-700);
+  }
+
+  &__title {
+    margin: 0;
+    color: $ink;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  &__lead {
+    max-width: 62ch;
+    margin: 0;
+    color: $muted;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  &__status {
+    @include row(6px);
+    align-self: flex-start;
+    padding: 4px 10px;
+    border-radius: $radius-pill;
+    font-size: 12px;
+    font-weight: 700;
+
+    &--done {
+      background: $green-50;
+      color: $green-700;
+    }
+
+    &--pending {
+      background: $peach;
+      color: $orange-ink;
+    }
+  }
+
+  // Four key figures in one row.
+  &__terms {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin: 8px 0 0;
+    border: 1px solid $line-soft;
+    border-radius: $radius-lg;
+    background: $white;
+
+    @include down(md) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  &__term {
+    @include stack(3px);
+    padding: 12px 14px;
+
+    & + & {
+      border-left: 1px solid $line-faint;
+    }
+
+    @include down(md) {
+      &:nth-child(3) {
+        border-left: 0;
+      }
+
+      &:nth-child(n + 3) {
+        border-top: 1px solid $line-faint;
+      }
+    }
+
+    dt {
+      color: $muted-light;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    dd {
+      margin: 0;
+      color: $ink;
+      font-family: $font-mono;
+      font-size: 19px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+
+      small {
+        color: $muted;
+        font-family: $font-sans;
+        font-size: 12px;
+        font-weight: 600;
+      }
+    }
+
+    &:first-child dd {
+      color: $orange-ink;
+    }
+  }
+}
+
+// The confirmation: the right side of the header.
+.cagr-confirm {
+  @include stack(12px);
+  justify-content: center;
+  padding: 24px;
+  border-left: 1px solid $line-soft;
+  background: linear-gradient(180deg, rgba(255, 241, 220, 0.75), rgba(255, 248, 238, 0.4));
+
+  @include down(lg) {
+    border-top: 1px solid $line-soft;
+    border-left: 0;
+  }
+
+  &--done {
+    background: linear-gradient(180deg, rgba(236, 253, 245, 0.85), rgba(255, 255, 255, 0.4));
+  }
+
+  &__label {
+    @include mono-label(10px, 0.14em, $muted-light);
+  }
+
+  &__note {
+    color: $muted;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+// ------------------------------------------------------------------ Document
+.cagr-doc {
+  @include stack(16px);
+  color: $ink-soft;
+  font-size: 13.5px;
+  line-height: 1.6;
+
+  p {
+    margin: 0;
+  }
+
+  p + p {
+    margin-top: 8px;
+  }
+
+  strong {
+    color: $ink;
+  }
+
+  // The worked example in the training section.
+  .vra-doc__example {
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 153, 0, 0.25);
+    border-left: 3px solid $orange;
+    border-radius: $radius-md;
+    background: rgba(255, 241, 220, 0.45);
+  }
+
+  &__pricing {
+    @include card($radius-2xl, 22px 24px);
+    @include stack(12px);
+  }
+
+  &__section-head {
+    @include row(10px);
+
+    h4 {
+      margin: 0;
+      color: $ink;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+  }
+
+  &__intro {
+    max-width: 80ch;
+    color: $muted;
+  }
+
+  &__num {
+    flex: none;
+    color: $muted-light;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+}
+
+// The maintenance fee by hours, as three pricing tiers.
+.cagr-tiers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include down(md) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.cagr-tier {
+  @include stack(4px);
+  padding: 16px 18px;
+  border: 1px solid $line-soft;
+  border-radius: $radius-xl;
+  background: $bg-soft;
+
+  &--mid {
+    border-color: rgba(255, 153, 0, 0.35);
+    background: linear-gradient(180deg, rgba(255, 241, 220, 0.7), $white);
+  }
+
+  &__hours {
+    color: $ink-muted;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  &__price {
+    color: $ink;
+    font-family: $font-mono;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+
+    small {
+      margin-left: 4px;
+      color: $muted;
+      font-family: $font-sans;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+  }
+
+  &__extra {
+    color: $muted;
+    font-size: 12px;
+  }
+}
+
+// Every other section as a numbered card, two columns on wide screens.
+.cagr-clauses {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  @include down(lg) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.cagr-clause {
+  @include card($radius-xl, 18px 20px);
+  @include stack(10px);
+  min-width: 0;
+
+  // Longer sections (and the last one) span both columns, so the others pair up.
+  &--wide {
+    grid-column: 1 / -1;
+  }
+
+  &__head {
+    @include row(10px);
+  }
+
+  &__icon {
+    @include center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-md;
+    background: $cyan-50;
+    color: $cyan-700;
+  }
+
+  &__title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    color: $ink;
+    font-size: 14.5px;
+    font-weight: 800;
+    letter-spacing: -0.005em;
+  }
+
+  &__body {
+    min-width: 0;
+
+    ul {
+      @include stack(6px);
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+  }
+}

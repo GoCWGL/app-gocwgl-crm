@@ -39,6 +39,9 @@ export const usePostProjectMessage = () =>
 export const useUpdateProject = () =>
   useApiMutation((v: { id: string; body: ProjectClientUpdate }) => api.updateProject(v.id, v.body), { invalidate: [qk.portalProjects] });
 
+/** When the client ticked that they understand the VA agreement (null until then: no VA requests before it). */
+export const useMyVaAgreement = () => useQuery({ queryKey: qk.portalVaAgreement, queryFn: api.getMyVaAgreement });
+export const useAcceptMyVaAgreement = () => useApiMutation(api.acceptMyVaAgreement, { invalidate: [qk.portalVaAgreement] });
 export const useVaRequests = () => useQuery({ queryKey: qk.portalVaRequests, queryFn: api.listVaRequests });
 export const useRequestVa = () => useApiMutation(api.requestVa, { invalidate: [qk.portalVaRequests] });
 export const useUpdateMyVaRequest = () =>

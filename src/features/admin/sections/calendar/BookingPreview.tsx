@@ -31,7 +31,7 @@ export function BookingPreview({ calendar, onClose }: { calendar: CalendarOut; o
         notice={
           confirmed && (
             <div className="notice notice--success u-strong">
-              Preview only: a client who confirms {confirmed} gets a confirmation email and appears in Clients and Pipeline.
+              Preview only: a client who confirms {confirmed} gets a confirmation email and is marked Call booked.
             </div>
           )
         }

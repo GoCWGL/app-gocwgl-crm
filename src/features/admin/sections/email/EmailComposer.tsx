@@ -4,17 +4,17 @@ import { useState, type FormEvent } from "react";
 import { Button, Field, FormError, Icon, IconTile, Input, SegmentedControl, Select, Textarea } from "@/components/ui";
 import { CORE_STAGES, type CoreStage } from "@/data/admin";
 import { canWriteCrm } from "@/utils/auth/session";
-import { useAllContacts, usePipelines, useTags } from "@/utils/hooks/useContacts";
+import { useAllContacts, useTags } from "@/utils/hooks/useContacts";
 import { useSendEmail, useTemplates } from "@/utils/hooks/useMarketing";
 import { useSettings } from "@/utils/hooks/useSettings";
 import { useMe } from "@/utils/hooks/useUsers";
-import { contactName, getSalesStages } from "../../lib/contacts";
+import { contactName, SALES_STAGES } from "../../lib/contacts";
 import { useAdmin, type ComposerDraft } from "../../state/AdminContext";
 
 const MODES: Array<{ value: ComposerDraft["mode"]; label: string }> = [
   { value: "one", label: "One contact" },
   { value: "tag", label: "By tag" },
-  { value: "stage", label: "By pipeline stage" },
+  { value: "stage", label: "By sales stage" },
 ];
 
 export function EmailComposer() {
@@ -24,7 +24,7 @@ export function EmailComposer() {
   const contacts = useAllContacts().data ?? [];
   const tags = useTags().data ?? [];
   const templates = useTemplates().data ?? [];
-  const stages = getSalesStages(usePipelines().data);
+  const stages = SALES_STAGES;
   const from = useSettings().data?.bizEmail;
   const sendEmail = useSendEmail();
   const [sentMessage, setSentMessage] = useState("");

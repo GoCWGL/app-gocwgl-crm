@@ -87,7 +87,7 @@ export function TagsSection() {
         })}
       </div>
       </LoadState>
-      <p className="text-muted">Add these tags to a contact from its card in the Pipeline.</p>
+      <p className="text-muted">Add these tags to a contact from Edit profile.</p>
     </div>
   );
 }

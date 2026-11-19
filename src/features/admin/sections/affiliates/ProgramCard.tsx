@@ -51,7 +51,7 @@ export function ProgramCard({ canManage }: { canManage: boolean }) {
         <div className="stack stack--2 u-grow">
           <span className="text-strong">Affiliate program</span>
           <span className="text-small">
-            Clients get their referral ID on their portal’s Affiliate page once they’re in the Paid subscriber stage of your sales pipeline. Someone who signs
+            Clients get their referral ID on their portal’s Affiliate page once they’re in the Paid subscriber stage. Someone who signs
             up with it becomes their referral, and the bonus is earned once that new client pays for a CRM. Clients add where to send it in
             the portal.
           </span>
