@@ -619,7 +619,7 @@ function VaAgreement({
                   <>
                     I’ve read the VA agreement and agree to the <strong>${VA_MAINTENANCE_FEE_DOLLARS[load.hours]} monthly maintenance fee</strong> for{" "}
                     {load.hours} hours a week, plus <strong>${VA_TRAINING_FEE_DOLLARS_PER_HOUR} for each hour my VA works</strong> in the first{" "}
-                    {VA_TRAINING_MONTHS} months (taken off my VA’s invoice). I understand it doesn’t include my VA’s salary, which I pay directly to my VA’s payment method, and that I pay each invoice within 3 business days of its date.
+                    {VA_TRAINING_MONTHS} months (taken off my VA’s invoice). I understand the fee pays for VA maintenance, VA team building and a December raffle bonus for VAs, that it doesn’t include my VA’s salary, which I pay directly to my VA’s payment method, and that I pay each invoice within 3 business days of its date.
                   </>
                 }
               />

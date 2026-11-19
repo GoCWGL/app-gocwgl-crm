@@ -52,11 +52,22 @@ export function ClientVaAgreementTerms({ hours }: { hours?: number | null }) {
         </tbody>
       </table>
       <h4>What the fee is for</h4>
-      <p>The fee includes:</p>
+      <p>
+        The maintenance fee keeps your VA <strong>physically and mentally well</strong>, so they stay proactive and keep doing great work
+        for you. Remote work can be isolating: many VAs leave the VA world because, working from home, they have little reason to go
+        out other than buying groceries. The fee pays for the support and activities that keep them engaged. It includes:
+      </p>
       <ul>
-        <li>Keeping your VA active with your business.</li>
-        <li>Ongoing training for your VA in the latest technology, including AI tools.</li>
-        <li>Our team’s activity cost in supporting you and your VA.</li>
+        <li>
+          <strong>VA maintenance:</strong> keeping your VA active with your business, ongoing training in the latest technology
+          (including AI tools), and our team’s support for you and your VA.
+        </li>
+        <li>
+          <strong>VA team building:</strong> regular activities that get VAs out of the house and connected with other VAs.
+        </li>
+        <li>
+          <strong>December raffle bonus:</strong> a raffle every December where VAs win bonuses, to thank them for the year’s work.
+        </li>
       </ul>
       <h4>Your first {VA_TRAINING_MONTHS} months: training and onboarding</h4>
       <p>
@@ -198,7 +209,8 @@ export function ClientVaAgreementCard() {
             {accepted ? `Accepted ${formatShort(accepted)}` : "VA agreement"}
           </h3>
           <span className="agr__sub">
-            Each VA comes with a monthly maintenance fee based on their hours. During their first {VA_TRAINING_MONTHS} months, it also
+            Each VA comes with a monthly maintenance fee based on their hours. It covers VA maintenance, VA team building and a
+            December raffle bonus, to keep your VA well and proactive. During their first {VA_TRAINING_MONTHS} months, it also
             includes ${VA_TRAINING_FEE_DOLLARS_PER_HOUR} per hour for training and onboarding. That amount is deducted from your VA’s
             invoice, so your total for the hours stays the same.
           </span>
