@@ -6,9 +6,16 @@ import { Badge, Button, FormError, Icon, IconTile, LoadState, Modal, SearchBox, 
 import type { OpenJobOut } from "@/utils/api/models";
 import { formatRelative } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
-import { useApplyForJob, useOpenJobs, useWithdrawApplication } from "@/utils/hooks/useVaPortal";
+import { useApplyForJob, useMyAgreement, useOpenJobs, useWithdrawApplication } from "@/utils/hooks/useVaPortal";
+import { AgreementCard } from "../components/AgreementCard";
 
 const TYPE: Record<OpenJobOut["employmentType"], string> = { part_time: "Part-time", full_time: "Full-time", project: "Project" };
+
+/** VAs sign the VA agreement before they can apply (the API enforces it too). Unknown while it loads. */
+function useAgreementSigned(): boolean | undefined {
+  const a = useMyAgreement(useVaAccess().ready).data;
+  return a ? !!a.acceptedAt : undefined;
+}
 
 function rate(j: OpenJobOut) {
   const f = (c: number) => formatCentsExact(c).replace(/\.00$/, "");
@@ -22,6 +29,7 @@ function rate(j: OpenJobOut) {
 export function OpenJobsSection() {
   const va = useVaAccess().ready;
   const query = useOpenJobs(va);
+  const signed = useAgreementSigned();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState<OpenJobOut | null>(null);
   const q = search.trim().toLowerCase();
@@ -29,6 +37,8 @@ export function OpenJobsSection() {
 
   return (
     <div className="page-stack">
+      {/* Not signed yet: the agreement and its sign-off sit above the jobs, so VAs can agree right here. */}
+      {signed === false && <AgreementCard show="pending" />}
       <div className="card card--flat board">
         <div className="course-toolbar">
           <div className="stack stack--2">
@@ -102,19 +112,28 @@ function JobDrawer({ job: j, onClose }: { job: OpenJobOut; onClose: () => void }
   const apply = useApplyForJob();
   const withdraw = useWithdrawApplication();
   const [note, setNote] = useState("");
+  const signed = useAgreementSigned();
   const mine = j.myApplication;
   const applied = mine?.status === "applied";
+
+  const facts = [
+    { icon: "briefcase", label: "Type", value: TYPE[j.employmentType] },
+    { icon: "clock", label: "Hours", value: j.hoursPerWeek ? `${j.hoursPerWeek} h / week` : "Flexible" },
+    { icon: "dollar", label: "Rate", value: rate(j) || "On request" },
+    { icon: "calendar", label: "Posted", value: j.publishedAt ? formatRelative(j.publishedAt) : "Recently" },
+  ] as const;
+  const sections = parseDescription(j.description);
 
   return (
     <Modal
       open
-      variant="drawer"
-      width={620}
+      className="job-modal"
+      width={760}
       onClose={onClose}
       titleId="va-job"
       kicker={`OPEN JOB · ${TYPE[j.employmentType].toUpperCase()}`}
       title={j.title}
-      subtitle={[rate(j), j.hoursPerWeek ? `${j.hoursPerWeek} h/week` : "", j.schedule].filter(Boolean).join(" · ")}
+      subtitle={j.schedule || undefined}
       media={
         <IconTile tone="cyan" size="lg">
           <Icon name="briefcase" size={18} />
@@ -130,64 +149,150 @@ function JobDrawer({ job: j, onClose }: { job: OpenJobOut; onClose: () => void }
           <span className="u-spacer" />
           <Button onClick={onClose}>Close</Button>
           {!mine && (
-            <Button variant="primary" disabled={readOnly || apply.isPending} onClick={() => apply.mutate({ id: j.id, note })}>
+            <Button variant="primary" disabled={readOnly || !signed || apply.isPending} onClick={() => apply.mutate({ id: j.id, note })}>
               <Icon name="send" size={13} /> {apply.isPending ? "Applying…" : "Apply for this job"}
             </Button>
           )}
         </>
       }
     >
-      <div className="stack stack--16">
-        <FormError error={apply.error ?? withdraw.error} />
-        {mine ? (
-          <div className={`job-applied is-${mine.status}`}>
-            <Icon name={mine.status === "not_selected" ? "circleX" : "circleCheck"} size={20} />
-            <span className="stack stack--2">
-              <strong>
-                {mine.status === "hired" ? "You got this job!" : mine.status === "not_selected" ? "This role went to another VA" : "You applied"}
-              </strong>
-              <span className="text-small">
-                {mine.status === "applied"
-                  ? `Applied ${formatRelative(mine.appliedAt)}. GoCWGL reviews applicants and will reach out if you’re a match.`
-                  : `Applied ${formatRelative(mine.appliedAt)}.`}
-              </span>
-              {mine.note && <span className="job-applied__note">“{mine.note}”</span>}
+      <FormError error={apply.error ?? withdraw.error} />
+      {mine ? (
+        <div className={`job-applied is-${mine.status}`}>
+          <Icon name={mine.status === "not_selected" ? "circleX" : "circleCheck"} size={20} />
+          <span className="stack stack--2">
+            <strong>
+              {mine.status === "hired" ? "You got this job!" : mine.status === "not_selected" ? "This role went to another VA" : "You applied"}
+            </strong>
+            <span className="text-small">
+              {mine.status === "applied"
+                ? `Applied ${formatRelative(mine.appliedAt)}. GoCWGL reviews applicants and will reach out if you’re a match.`
+                : `Applied ${formatRelative(mine.appliedAt)}.`}
             </span>
-          </div>
-        ) : (
-          <div className="job-apply">
-            <label className="field__label" htmlFor="job-note">
-              Why you’re a great fit <span className="text-tiny">(optional)</span>
-            </label>
-            <Textarea
-              id="job-note"
-              rows={3}
-              maxLength={2000}
-              value={note}
-              disabled={readOnly}
-              placeholder="e.g. 3 years running a clinic’s inbox and calendar; I’m online during US Eastern hours."
-              onChange={(e) => setNote(e.target.value)}
-            />
-            <span className="text-tiny">GoCWGL sees your profile and resume with your application. The client’s name stays private until you’re matched.</span>
-          </div>
-        )}
-        {j.skills.length > 0 && (
-          <div className="stack stack--8">
-            <span className="kicker">SKILLS</span>
-            <span className="va-job__skills">
-              {j.skills.map((s) => (
-                <span key={s} className="tt-tag">
-                  {s}
-                </span>
-              ))}
-            </span>
-          </div>
-        )}
-        <div className="stack stack--8">
-          <span className="kicker">ABOUT THE ROLE</span>
-          <p className="va-pre">{j.description || "No description yet."}</p>
+            {mine.note && <span className="job-applied__note">“{mine.note}”</span>}
+          </span>
         </div>
-      </div>
+      ) : signed === false ? (
+        <div className="job-applied is-agreement">
+          <Icon name="lock" size={20} />
+          <span className="stack stack--2">
+            <strong>Sign the VA agreement to apply</strong>
+            <span className="text-small">
+              Before you apply for client roles, please read and agree to the GoCWGL VA agreement. It’s at the top of Open jobs and on your
+              dashboard.
+            </span>
+            <span>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={() => {
+                  onClose();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+              >
+                <Icon name="clipboard" size={13} /> Read and sign the agreement
+              </Button>
+            </span>
+          </span>
+        </div>
+      ) : null}
+
+      <dl className="job-facts">
+        {facts.map((f) => (
+          <div key={f.label} className="job-facts__item">
+            <span className="job-facts__icon" aria-hidden="true">
+              <Icon name={f.icon} size={15} />
+            </span>
+            <span className="stack stack--2">
+              <dt>{f.label}</dt>
+              <dd>{f.value}</dd>
+            </span>
+          </div>
+        ))}
+      </dl>
+
+      {j.skills.length > 0 && (
+        <section className="job-section">
+          <h3 className="job-section__title">Skills</h3>
+          <span className="va-job__skills">
+            {j.skills.map((s) => (
+              <span key={s} className="tt-tag">
+                {s}
+              </span>
+            ))}
+          </span>
+        </section>
+      )}
+
+      <section className="job-section">
+        <h3 className="job-section__title">About the role</h3>
+        {sections.length === 0 ? (
+          <p className="text-small">No description yet.</p>
+        ) : (
+          <div className="job-role">
+            {sections.map((sec, i) => (
+              <div key={i} className="job-role__block">
+                {sec.heading && <h4 className="job-role__heading">{sec.heading}</h4>}
+                {sec.text.length > 0 && <p className="job-role__text">{sec.text.join("\n")}</p>}
+                {sec.bullets.length > 0 && (
+                  <ul className="job-role__list">
+                    {sec.bullets.map((b, k) => (
+                      <li key={k}>
+                        <Icon name="check" size={13} />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {!mine && signed !== false && (
+        <div className="job-apply">
+          <label className="job-apply__label" htmlFor="job-note">
+            <Icon name="sparkle" size={14} /> Why you’re a great fit <span className="text-tiny">(optional)</span>
+          </label>
+          <Textarea
+            id="job-note"
+            rows={3}
+            maxLength={2000}
+            value={note}
+            disabled={readOnly}
+            placeholder="e.g. 3 years running a clinic’s inbox and calendar; I’m online during US Eastern hours."
+            onChange={(e) => setNote(e.target.value)}
+          />
+          <span className="job-apply__hint">
+            <Icon name="shield" size={12} /> GoCWGL sees your profile and resume with your application. The client’s name stays private until you’re
+            matched.
+          </span>
+        </div>
+      )}
     </Modal>
   );
+}
+
+type RoleSection = { heading: string; text: string[]; bullets: string[] };
+
+/**
+ * Job descriptions are plain text from the client's request: blocks split by a blank line,
+ * each a heading line followed by text or "• " bullets. Free-form text still reads fine.
+ */
+function parseDescription(raw: string): RoleSection[] {
+  return (raw ?? "")
+    .split(/\n\s*\n/)
+    .map((block) => block.split("\n").map((l) => l.trim()).filter(Boolean))
+    .filter((lines) => lines.length > 0)
+    .map((lines) => {
+      const isBullet = (l: string) => /^[•\-*]\s+/.test(l);
+      const heading = lines.length > 1 && !isBullet(lines[0]) && lines[0].length <= 60 ? lines[0] : "";
+      const rest = heading ? lines.slice(1) : lines;
+      return {
+        heading,
+        text: rest.filter((l) => !isBullet(l)),
+        bullets: rest.filter(isBullet).map((l) => l.replace(/^[•\-*]\s+/, "")),
+      };
+    });
 }

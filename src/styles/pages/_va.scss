@@ -7879,15 +7879,213 @@ $pdf-side: #f5f6f8;
   }
 }
 
+// VA portal › Open jobs › job details: a dialog centered on screen.
+.job-modal {
+  padding: 24px 16px;
+
+  .modal__panel {
+    margin-block: auto; // centered vertically, still scrolls on short screens
+  }
+
+  .modal__header {
+    padding: 20px 24px;
+  }
+
+  .modal__title {
+    font-size: 21px;
+    letter-spacing: -0.01em;
+  }
+
+  .modal__body {
+    gap: 20px;
+    max-height: min(68vh, 720px);
+    padding: 22px 24px 24px;
+
+    // The body scrolls; don't let its flex column squash rows (the facts strip clips to 0).
+    > * {
+      flex-shrink: 0;
+    }
+  }
+
+  .modal__footer {
+    padding: 14px 24px;
+  }
+}
+
+// Key facts strip: type, hours, rate, posted.
+.job-facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  border: 1px solid $line-soft;
+  border-radius: 14px;
+  background: #fbfdfe;
+  overflow: hidden;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 14px 16px;
+
+    & + & {
+      border-left: 1px solid $line-soft;
+    }
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgba(8, 145, 178, 0.1);
+    color: #0e7490;
+  }
+
+  dt {
+    color: $muted;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 0;
+    overflow: hidden;
+    color: $ink;
+    font-size: 14px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    &__item:nth-child(3) {
+      border-left: 0;
+    }
+
+    &__item:nth-child(n + 3) {
+      border-top: 1px solid $line-soft;
+    }
+  }
+}
+
+.job-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__title {
+    margin: 0;
+    color: $muted;
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}
+
+// "About the role": the description's blocks as titled sections with checklists.
+.job-role {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: 1px solid $line-soft;
+  border-radius: 14px;
+
+  &__block {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 18px;
+
+    & + & {
+      border-top: 1px solid $line-soft;
+    }
+  }
+
+  &__heading {
+    margin: 0;
+    color: $ink;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  &__text {
+    margin: 0;
+    color: $ink-soft;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      color: $ink-soft;
+      font-size: 14px;
+      line-height: 1.5;
+
+      > svg {
+        flex: none;
+        margin-top: 4px;
+        color: #0f7a4a;
+      }
+    }
+  }
+}
+
 // VA portal › Open jobs › apply.
 .job-apply {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px;
-  border: 1px solid rgba(8, 145, 178, 0.18);
-  border-radius: 12px;
-  background: #f5fbfd;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid rgba(8, 145, 178, 0.22);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #f3fafd 0%, #ffffff 100%);
+
+  &__label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: $ink;
+    font-size: 14px;
+    font-weight: 800;
+
+    > svg {
+      color: #0e7490;
+    }
+  }
+
+  &__hint {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 6px;
+    color: $muted;
+    font-size: 12px;
+    line-height: 1.45;
+
+    > svg {
+      flex: none;
+      margin-top: 2px;
+    }
+  }
 }
 
 .job-applied {
@@ -7908,6 +8106,13 @@ $pdf-side: #f5f6f8;
     border-color: #e2e8f0;
     background: #f8fafc;
     color: $muted;
+  }
+
+  // Open jobs: the VA agreement isn't signed yet, so Apply is locked.
+  &.is-agreement {
+    border-color: rgba(217, 119, 6, 0.3);
+    background: rgba(245, 158, 11, 0.08);
+    color: #b45309;
   }
 
   &__note {
