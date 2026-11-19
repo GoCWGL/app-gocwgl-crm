@@ -1129,3 +1129,70 @@
     }
   }
 }
+
+// VA invoices: the amount the client pays the VA (training fee already deducted), highlighted so it's the
+// number that goes on a payment link.
+.amount-due {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px;
+  border: 2px solid $orange;
+  border-radius: $radius-lg;
+  background: linear-gradient(180deg, $peach 0%, $white 90%);
+  box-shadow: $glow-orange-soft;
+
+  &__main {
+    display: grid;
+    gap: 2px;
+  }
+
+  &__label {
+    color: $orange-ink;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  &__value {
+    color: $ink;
+    font-size: 34px;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  &__math {
+    color: $ink-soft;
+    font-size: 13px;
+
+    b {
+      color: $red-700;
+    }
+  }
+
+  &__tip {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    padding: 9px 12px;
+    border-radius: $radius-md;
+    background: $white;
+    color: $ink-soft;
+    font-size: 13px;
+    box-shadow: inset 0 0 0 1px rgba(255, 153, 0, 0.35);
+
+    svg {
+      flex: none;
+      margin-top: 2px;
+      color: $orange-ink;
+    }
+
+    strong {
+      color: $ink;
+    }
+  }
+}

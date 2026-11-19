@@ -8,6 +8,7 @@ import { formatCentsExact } from "@/utils/format/money";
 import { useCreateInvoice, useInvoicePreview, usePaymentMethods } from "@/utils/hooks/useVaInvoices";
 import { clientLabel, todayKey } from "../../lib/time";
 import { BillingBreakdown, invoiceTotals } from "../../components/BillingBreakdown";
+import { AmountDue } from "../../components/AmountDue";
 import { useTrainingPeriod } from "../../components/TrainingFeeCountdown";
 import { hoursLabel, kindLabel, lineLabel, shownLines, signed } from "./shared";
 
@@ -158,6 +159,7 @@ export function CreateInvoiceModal({
                   </tr>
                 </tfoot>
               </table>
+              <AmountDue totals={invoiceTotals(p.lines)} audience="va" />
               <BillingBreakdown totals={invoiceTotals(p.lines)} audience="va" period={period} />
             </>
           ) : (

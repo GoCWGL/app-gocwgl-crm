@@ -1,6 +1,7 @@
 "use client";
 
 import { BillingBreakdown, invoiceTotals } from "@/features/va/components/BillingBreakdown";
+import { AmountDue } from "@/features/va/components/AmountDue";
 import { PaymentLines } from "@/features/va/sections/invoices/PaymentLines";
 import { useState } from "react";
 import { Avatar, Badge, Button, LoadState, Modal, StatGrid, TabBar } from "@/components/ui";
@@ -168,6 +169,7 @@ function VaInvoiceModal({ id, onClose }: { id: string; onClose: () => void }) {
                 ))}
               </tbody>
             </table>
+            <AmountDue totals={invoiceTotals(inv.lines)} audience="client" vaName={inv.va.name} />
             <BillingBreakdown totals={invoiceTotals(inv.lines)} audience="client" />
             {inv.payment && (
               <section className="cp-pay">

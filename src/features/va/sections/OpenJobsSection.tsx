@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Badge, Button, FormError, Icon, IconTile, LoadState, Modal, SearchBox, Textarea } from "@/components/ui";
 import type { OpenJobOut } from "@/utils/api/models";
 import { formatRelative } from "@/utils/format/dates";
+import { cn } from "@/lib/utils";
 import { formatCentsExact } from "@/utils/format/money";
 import { useApplyForJob, useMyAgreement, useOpenJobs, useWithdrawApplication } from "@/utils/hooks/useVaPortal";
 import { AgreementCard } from "../components/AgreementCard";
@@ -61,42 +62,7 @@ export function OpenJobsSection() {
           ) : (
             <div className="va-jobs">
               {jobs.map((j) => (
-                <button key={j.id} type="button" className="va-job" onClick={() => setOpen(j)}>
-                  <span className="va-job__top">
-                    <span className="va-job__title">{j.title}</span>
-                    {j.myApplication ? (
-                      <Badge tone="green" dot>
-                        Applied
-                      </Badge>
-                    ) : (
-                      rate(j) && <span className="va-job__rate">{rate(j)}</span>
-                    )}
-                  </span>
-                  <span className="va-job__meta">
-                    <Badge tone="cyan">{TYPE[j.employmentType]}</Badge>
-                    {j.hoursPerWeek && (
-                      <span>
-                        <Icon name="clock" size={12} /> {j.hoursPerWeek} h/week
-                      </span>
-                    )}
-                    {j.schedule && (
-                      <span>
-                        <Icon name="calendar" size={12} /> {j.schedule}
-                      </span>
-                    )}
-                    {j.publishedAt && <span className="u-push-right">Posted {formatRelative(j.publishedAt)}</span>}
-                  </span>
-                  {j.description && <span className="va-job__desc">{j.description}</span>}
-                  {j.skills.length > 0 && (
-                    <span className="va-job__skills">
-                      {j.skills.slice(0, 6).map((s) => (
-                        <span key={s} className="tt-tag">
-                          {s}
-                        </span>
-                      ))}
-                    </span>
-                  )}
-                </button>
+                <JobCard key={j.id} job={j} onOpen={() => setOpen(j)} />
               ))}
             </div>
           )}
@@ -104,6 +70,86 @@ export function OpenJobsSection() {
       </div>
       {open && <JobDrawer job={open} onClose={() => setOpen(null)} />}
     </div>
+  );
+}
+
+const TYPE_ICON: Record<OpenJobOut["employmentType"], "clock" | "briefcase" | "folder"> = {
+  part_time: "clock",
+  full_time: "briefcase",
+  project: "folder",
+};
+
+/** "Mon–Fri, 9:00 AM – 5:00 PM (US Mountain (Denver))" → the hours, and the time zone on its own. */
+function splitSchedule(schedule: string): { hours: string; zone: string } {
+  const m = schedule.match(/^(.*?)\s*\((.*)\)\s*$/);
+  return m ? { hours: m[1], zone: m[2] } : { hours: schedule, zone: "" };
+}
+
+/** The first plain paragraph of the role (no headings or bullets), for the card's summary. */
+function summaryOf(description: string): string {
+  const first = parseDescription(description).find((s) => s.text.length > 0);
+  return first ? first.text.join(" ") : "";
+}
+
+/** One open role in the list: what it is, the key facts, a short summary and skills; opens the full details. */
+function JobCard({ job: j, onOpen }: { job: OpenJobOut; onOpen: () => void }) {
+  const r = rate(j);
+  const { hours, zone } = splitSchedule(j.schedule ?? "");
+  const summary = summaryOf(j.description);
+  const extra = j.skills.length - 4;
+  return (
+    <button type="button" className={cn("va-job", `is-${j.employmentType}`, j.myApplication && "is-applied")} onClick={onOpen}>
+      <span className="va-job__head">
+        <span className="va-job__icon" aria-hidden="true">
+          <Icon name={TYPE_ICON[j.employmentType]} size={18} />
+        </span>
+        <span className="va-job__heading">
+          <span className="va-job__kicker">{TYPE[j.employmentType]}</span>
+          <span className="va-job__title">{j.title}</span>
+        </span>
+        {j.myApplication ? (
+          <Badge tone="green" dot>
+            Applied
+          </Badge>
+        ) : (
+          r && <span className="va-job__rate">{r}</span>
+        )}
+      </span>
+
+      <span className="va-job__facts">
+        {j.hoursPerWeek && (
+          <span className="va-job__fact">
+            <Icon name="clock" size={13} /> {j.hoursPerWeek} h/week
+          </span>
+        )}
+        {hours && (
+          <span className="va-job__fact" title={j.schedule}>
+            <Icon name="calendar" size={13} /> {hours}
+            {zone && <em>{zone}</em>}
+          </span>
+        )}
+      </span>
+
+      <span className={cn("va-job__desc", !summary && "is-empty")}>{summary || "Open the role to see the details."}</span>
+
+      {j.skills.length > 0 && (
+        <span className="va-job__skills">
+          {j.skills.slice(0, 4).map((s) => (
+            <span key={s} className="va-job__skill">
+              {s}
+            </span>
+          ))}
+          {extra > 0 && <span className="va-job__skill is-more">+{extra}</span>}
+        </span>
+      )}
+
+      <span className="va-job__foot">
+        <span>{j.publishedAt ? `Posted ${formatRelative(j.publishedAt)}` : "Open now"}</span>
+        <span className="va-job__cta">
+          {j.myApplication ? "View application" : "View role"} <Icon name="arrowRight" size={13} />
+        </span>
+      </span>
+    </button>
   );
 }
 

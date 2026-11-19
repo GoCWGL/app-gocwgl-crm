@@ -5234,63 +5234,155 @@ $tl-colors: (
 // Open jobs
 .va-jobs {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
-  gap: 12px;
-  padding: 16px 18px 18px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: 16px;
+  padding: 16px 18px 20px;
 }
 
+// One open role: icon + type + title, key facts, a short summary, skills, then posted time and the action.
 .va-job {
+  --job: #0891b2;
+  --job-soft: #ecfeff;
+
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid $line-soft;
+  gap: 12px;
+  overflow: hidden;
+  padding: 18px 18px 0;
+  border: 1px solid $line;
   border-radius: $radius-xl;
   background: $white;
+  box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04);
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 
-  &:hover {
-    box-shadow: 0 8px 22px rgba(11, 20, 36, 0.08);
-    transform: translateY(-1px);
+  // A thin accent along the top in the role type's color.
+  &::before {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3px;
+    background: var(--job);
+    content: "";
+    opacity: 0.85;
   }
 
-  &__top {
+  &.is-full_time {
+    --job: #4f46e5;
+    --job-soft: #eef2ff;
+  }
+
+  &.is-project {
+    --job: #d97706;
+    --job-soft: #fff7e6;
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--job) 45%, #{$line});
+    box-shadow: 0 14px 32px rgba(11, 20, 36, 0.1);
+    transform: translateY(-2px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--job);
+    outline-offset: 2px;
+  }
+
+  &__head {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__icon {
+    display: grid;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: $radius-md;
+    background: var(--job-soft);
+    color: var(--job);
+  }
+
+  &__heading {
+    display: grid;
+    flex: 1;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__kicker {
+    color: var(--job);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   &__title {
+    display: -webkit-box;
+    overflow: hidden;
     color: $ink;
-    font-size: 16px;
+    font-size: 16.5px;
     font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
   }
 
   &__rate {
-    color: #0f7a4a;
-    font-family: $font-mono;
-    font-size: 13px;
+    flex: none;
+    padding: 4px 10px;
+    border-radius: $radius-pill;
+    background: $green-50;
+    color: $green-700;
+    font-size: 12.5px;
+    font-variant-numeric: tabular-nums;
     font-weight: 800;
     white-space: nowrap;
   }
 
-  &__meta {
+  &__facts {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 14px;
-    color: $muted;
-    font-size: 12.5px;
+    gap: 6px;
+  }
 
-    > span {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
+  &__fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    max-width: 100%;
+    padding: 5px 10px;
+    border-radius: $radius-pill;
+    background: $bg-soft;
+    color: $ink-soft;
+    font-size: 12.5px;
+    font-weight: 600;
+
+    svg {
+      flex: none;
+      color: $muted;
+    }
+
+    em {
+      overflow: hidden;
+      color: $muted;
+      font-style: normal;
+      font-weight: 500;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      &::before {
+        margin-right: 6px;
+        content: "·";
+      }
     }
   }
 
@@ -5299,15 +5391,73 @@ $tl-colors: (
     overflow: hidden;
     color: $ink-soft;
     font-size: 13.5px;
-    line-height: 1.5;
+    line-height: 1.55;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
+
+    &.is-empty {
+      color: $muted-light;
+      font-style: italic;
+    }
   }
 
   &__skills {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+  }
+
+  &__skill {
+    padding: 3px 9px;
+    border: 1px solid $line-soft;
+    border-radius: $radius-sm;
+    background: $white;
+    color: $ink-soft;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.is-more {
+      color: $muted;
+    }
+  }
+
+  // Posted time and the action, on a light strip at the bottom.
+  &__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: auto -18px 0;
+    padding: 11px 18px;
+    border-top: 1px solid $line-faint;
+    background: $bg-soft;
+    color: $muted;
+    font-size: 12px;
+  }
+
+  &__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--job);
+    font-size: 13px;
+    font-weight: 800;
+
+    svg {
+      transition: transform 0.18s ease;
+    }
+  }
+
+  &:hover &__cta svg {
+    transform: translateX(3px);
+  }
+
+  &.is-applied &__foot {
+    background: $green-50;
+  }
+
+  &.is-applied &__cta {
+    color: $green-700;
   }
 }
 

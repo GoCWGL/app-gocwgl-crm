@@ -1,6 +1,7 @@
 "use client";
 
 import { BillingBreakdown, invoiceTotals } from "../../components/BillingBreakdown";
+import { AmountDue } from "../../components/AmountDue";
 import { useTrainingPeriod } from "../../components/TrainingFeeCountdown";
 import { MarkPaidButton } from "./MarkPaid";
 import { PaymentLines } from "./PaymentLines";
@@ -141,6 +142,7 @@ function InvoiceDoc({ inv }: { inv: VaInvoiceDetail }) {
         </tfoot>
       </table>
 
+      <AmountDue totals={invoiceTotals(inv.lines)} audience="va" />
       <BillingBreakdown totals={invoiceTotals(inv.lines)} audience="va" period={period} />
 
       {inv.payment && (
