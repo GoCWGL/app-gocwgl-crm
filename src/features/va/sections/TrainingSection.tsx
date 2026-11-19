@@ -160,7 +160,7 @@ function CourseView({
   const onQuiz = hasQuiz && current === t.lessons.length;
   const lesson = onQuiz ? null : t.lessons[current];
   const video = lesson ? lessonVideo(lesson) : null;
-  // Daily pace: lessons open in order, a few a day; the quiz after the last one.
+  // Daily pace: lessons open in order, the next 24 hours after the last is marked complete; the quiz after the last one.
   const firstUndone = t.lessons.findIndex((l) => !watched.includes(l.id));
   const lessonLocked = !!lesson?.locked && !isDone(current);
   const quizLocked = onQuiz && !!t.quizLocked && !t.myPassed;
@@ -275,8 +275,8 @@ function CourseView({
               step={`Lesson ${current + 1} of ${t.lessons.length}`}
               message={
                 current === firstUndone && t.nextUnlockAt
-                  ? `You've finished today's lesson${t.dailyLessons === 1 ? "" : "s"}. Great work! This one opens on its own when the timer runs out.`
-                  : `Finish ${firstUndone >= 0 ? `lesson ${firstUndone + 1}` : "the lessons before it"} first. Lessons open in order${t.dailyLessons ? `, ${t.dailyLessons} a day` : ""}.`
+                  ? `Great work! This lesson opens 24 hours after you finished the last one. It opens on its own when the timer runs out.`
+                  : `Finish ${firstUndone >= 0 ? `lesson ${firstUndone + 1}` : "the lessons before it"} first. Lessons open in order${t.dailyLessons ? `, ${t.dailyLessons} per 24 hours` : ""}.`
               }
               countdown={t.nextUnlockAt ? <NextLessonCountdown at={t.nextUnlockAt} timezone={t.timezone} /> : undefined}
               onPrevious={current > 0 ? () => go(current - 1) : undefined}
@@ -572,7 +572,7 @@ function CourseDashboard({
               <li>
                 <Icon name="calendar" size={14} />
                 <span>
-                  <strong>{t.dailyLessons}</strong> lesson{t.dailyLessons === 1 ? "" : "s"} a day
+                  <strong>{t.dailyLessons}</strong> lesson{t.dailyLessons === 1 ? "" : "s"} per 24 hours
                 </span>
               </li>
             )}

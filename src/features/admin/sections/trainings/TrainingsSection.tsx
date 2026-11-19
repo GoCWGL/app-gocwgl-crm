@@ -17,7 +17,6 @@ import {
   SegmentedControl,
   GroupedPicker,
   Tabs,
-  Select,
   LessonPlayer,
   RichTextEditor,
   RichTextView,
@@ -615,7 +614,7 @@ function TrainingDetail({ training: t, canWrite, onClose, onEdit }: { training: 
         {(t.dailyLessons ?? 0) > 0 && (
           <span>
             <Badge tone="sky">
-              {t.dailyLessons} lesson{t.dailyLessons === 1 ? "" : "s"} a day · next opens at {UNLOCK_HOURS[t.unlockHour ?? 8]?.label} learner time
+              {t.dailyLessons} lesson{t.dailyLessons === 1 ? "" : "s"} per 24 hours · the next opens 24 hours after the last is marked complete
             </Badge>
           </span>
         )}
@@ -781,11 +780,6 @@ const STEPS: Array<{ id: BuilderStep; label: string }> = [
 
 type LessonKind = "video" | "reading";
 
-/** "12:00 AM" … "11:00 PM", for when a paced course opens the next day's lessons. */
-const UNLOCK_HOURS = Array.from({ length: 24 }, (_, h) => ({
-  value: String(h),
-  label: `${h % 12 || 12}:00 ${h < 12 ? "AM" : "PM"}`,
-}));
 /** Both kinds' fields are kept, so switching a lesson between video and reading loses nothing. */
 type DraftLesson = {
   key: string;
@@ -881,9 +875,8 @@ function TrainingEditor({
     category: training?.category ?? "",
     description: training?.description ?? "",
     rate: String(training?.passingRate ?? 80),
-    // Daily pace: lessons a learner can finish per day ("0" = no limit), opening at this hour in their time zone.
+    // Daily pace: lessons a learner can finish per 24 hours ("0" = no limit); the clock starts when they mark one complete.
     daily: String(training?.dailyLessons ?? 0),
-    unlockHour: String(training?.unlockHour ?? 8),
   });
   // Client trainings: who it's for (only they see it in their portal).
   const [clientIds, setClientIds] = useState<string[]>(training?.clientIds ?? []);
@@ -976,7 +969,6 @@ function TrainingEditor({
       description: toPlainText(f.description).trim() ? f.description.trim() : "",
       passingRate: rate,
       dailyLessons: Number(f.daily),
-      unlockHour: Number(f.unlockHour),
       ...(f.audience === "client" && { clientIds }),
       questions: used.map((q) => {
         if (q.kind === "text") return { id: q.id, kind: "text" as const, text: q.text.trim(), accepted: filled(q.accepted).map((a) => a.trim()) };
@@ -1248,27 +1240,25 @@ function TrainingEditor({
               <p>Videos (YouTube, Loom or Vimeo; unlisted works too) or readings (written text and/or a PDF, image or Office document), taken in this order.</p>
             </header>
             <div className="course-pace">
-              <Field label="Lessons per day" hint="Learners finish this many, then the next lesson locks until the next day.">
+              <Field
+                label="Lessons per 24 hours"
+                hint="The next lesson opens 24 hours after the learner marks the previous one complete. Until they do, the 24 hours don't start. The quiz opens after the last lesson."
+              >
                 <SegmentedControl
                   kind="radio"
                   variant="soft"
                   size="sm"
-                  label="Lessons per day"
+                  label="Lessons per 24 hours"
                   value={f.daily}
                   onChange={(daily) => set({ daily })}
                   options={[
                     { value: "0", label: "No limit" },
-                    { value: "1", label: "1 a day" },
-                    { value: "2", label: "2 a day" },
-                    { value: "3", label: "3 a day" },
+                    { value: "1", label: "1 per 24h" },
+                    { value: "2", label: "2 per 24h" },
+                    { value: "3", label: "3 per 24h" },
                   ]}
                 />
               </Field>
-              {f.daily !== "0" && (
-                <Field label="Next lesson opens at" htmlFor="tr-unlock" hint="In each learner's own time zone. The quiz opens after the last lesson.">
-                  <Select id="tr-unlock" value={f.unlockHour} options={UNLOCK_HOURS} onChange={(e) => set({ unlockHour: e.target.value })} />
-                </Field>
-              )}
             </div>
             {lessons.map((l, i) => {
               const reading = l.kind === "reading";
