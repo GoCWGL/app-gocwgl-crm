@@ -1,6 +1,8 @@
 "use client";
 
 import { BillingBreakdown, invoiceTotals } from "../../components/BillingBreakdown";
+import { useTrainingPeriod } from "../../components/TrainingFeeCountdown";
+import { MarkPaidButton } from "./MarkPaid";
 import { PaymentLines } from "./PaymentLines";
 import { useState } from "react";
 import { Badge, Button, FormError, Icon, LoadState, Modal } from "@/components/ui";
@@ -9,7 +11,7 @@ import { formatLong, formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
 import { useDeleteInvoice, useInvoice, useSetInvoiceStatus } from "@/utils/hooks/useVaInvoices";
 import { clientLabel } from "../../lib/time";
-import { STATUS, hoursLabel, kindLabel, periodLabel } from "./shared";
+import { STATUS, hoursLabel, lineLabel, shownLines, signed, kindLabel, periodLabel } from "./shared";
 
 /** One invoice as the client sees it, with what can be done next (send, mark paid, delete a draft, print). */
 export function InvoiceDrawer({ id, onClose }: { id: string; onClose: () => void }) {
@@ -57,11 +59,7 @@ export function InvoiceDrawer({ id, onClose }: { id: string; onClose: () => void
                 <Icon name="send" size={13} /> Mark as sent
               </Button>
             )}
-            {inv.status === "sent" && (
-              <Button variant="primary" disabled={status.isPending} onClick={() => set("paid")}>
-                <Icon name="check" size={13} /> Mark as paid
-              </Button>
-            )}
+            {inv.status === "sent" && <MarkPaidButton invoice={inv} size="md" label="Mark as paid" />}
             {inv.status === "paid" && (
               <Button variant="outline" disabled={status.isPending} onClick={() => set("sent")}>
                 Mark unpaid
@@ -80,6 +78,7 @@ export function InvoiceDrawer({ id, onClose }: { id: string; onClose: () => void
 }
 
 function InvoiceDoc({ inv }: { inv: VaInvoiceDetail }) {
+  const period = useTrainingPeriod(inv.client?.id);
   return (
     <article className="invoice-doc">
       <header className="invoice-doc__head">
@@ -123,12 +122,12 @@ function InvoiceDoc({ inv }: { inv: VaInvoiceDetail }) {
           </tr>
         </thead>
         <tbody>
-          {inv.lines.map((l) => (
+          {shownLines(inv.lines).map((l) => (
             <tr key={`${l.category}-${l.rateCents}`} className={l.deduction ? "is-deduction" : undefined}>
-              <td>{l.category}</td>
+              <td>{lineLabel(l)}</td>
               <td className="is-num">{hoursLabel(l.seconds)}</td>
-              <td className="is-num">{formatCentsExact(l.rateCents)}/hr</td>
-              <td className="is-num">{formatCentsExact(l.amountCents)}</td>
+              <td className="is-num">{signed(l.rateCents, formatCentsExact, "/hr")}</td>
+              <td className="is-num">{signed(l.amountCents, formatCentsExact)}</td>
             </tr>
           ))}
         </tbody>
@@ -142,7 +141,7 @@ function InvoiceDoc({ inv }: { inv: VaInvoiceDetail }) {
         </tfoot>
       </table>
 
-      <BillingBreakdown totals={invoiceTotals(inv.lines)} audience="va" />
+      <BillingBreakdown totals={invoiceTotals(inv.lines)} audience="va" period={period} />
 
       {inv.payment && (
         <div className="invoice-doc__pay">

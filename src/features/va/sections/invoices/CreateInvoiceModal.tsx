@@ -8,7 +8,8 @@ import { formatCentsExact } from "@/utils/format/money";
 import { useCreateInvoice, useInvoicePreview, usePaymentMethods } from "@/utils/hooks/useVaInvoices";
 import { clientLabel, todayKey } from "../../lib/time";
 import { BillingBreakdown, invoiceTotals } from "../../components/BillingBreakdown";
-import { hoursLabel, kindLabel } from "./shared";
+import { useTrainingPeriod } from "../../components/TrainingFeeCountdown";
+import { hoursLabel, kindLabel, lineLabel, shownLines, signed } from "./shared";
 
 /** Bill one client for their billable, not-yet-invoiced time in a date range. */
 export function CreateInvoiceModal({
@@ -46,6 +47,7 @@ export function CreateInvoiceModal({
   const method = methodId === "none" ? "" : methodId || defaultMethod;
 
   const valid = !!clientId && !!start && !!end && start <= end;
+  const period = useTrainingPeriod(clientId || undefined);
   const preview = useInvoicePreview(valid ? { contactId: clientId, periodStart: start, periodEnd: end } : null);
   const p = preview.data;
 
@@ -127,26 +129,26 @@ export function CreateInvoiceModal({
               <table className="ci-lines">
                 <thead>
                   <tr>
-                    <th>Work</th>
+                    <th>Description</th>
                     <th className="is-num">Hours</th>
                     <th className="is-num">Rate</th>
                     <th className="is-num">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {p.lines.map((l) => (
+                  {shownLines(p.lines).map((l) => (
                     <tr key={`${l.category}-${l.rateCents}`} className={l.deduction ? "is-deduction" : undefined}>
-                      <td>{l.category}</td>
+                      <td>{lineLabel(l)}</td>
                       <td className="is-num">{hoursLabel(l.seconds)}</td>
-                      <td className="is-num">{formatCentsExact(l.rateCents)}</td>
-                      <td className="is-num">{formatCentsExact(l.amountCents)}</td>
+                      <td className="is-num">{signed(l.rateCents, formatCentsExact, "/hr")}</td>
+                      <td className="is-num">{signed(l.amountCents, formatCentsExact)}</td>
                     </tr>
                   ))}
                 </tbody>
                 <tfoot>
                   <tr>
                     <td>
-                      Total · {p.entries} entr{p.entries === 1 ? "y" : "ies"}
+                      Invoice total <span className="ci-lines__sub">· {p.entries} time entr{p.entries === 1 ? "y" : "ies"}</span>
                     </td>
                     <td className="is-num">{hoursLabel(p.seconds)}</td>
                     <td />
@@ -156,7 +158,7 @@ export function CreateInvoiceModal({
                   </tr>
                 </tfoot>
               </table>
-              <BillingBreakdown totals={invoiceTotals(p.lines)} audience="va" />
+              <BillingBreakdown totals={invoiceTotals(p.lines)} audience="va" period={period} />
             </>
           ) : (
             <span className="ci-preview__empty">

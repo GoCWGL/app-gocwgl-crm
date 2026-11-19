@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/ui";
+import { cn } from "@/lib/utils";
 import { formatCentsExact } from "@/utils/format/money";
 
 /** An invoice line as the API sends it; `deduction` marks the training fee taken off. */
@@ -47,117 +48,136 @@ const hoursLabel = (secs: number) => {
   return `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, "0")}m`;
 };
 
+/** "May 18, 2027". */
+const dayLabel = (iso: string) =>
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+
+/** The client's first-6-months training period, when it's still running (VA portal). */
+export type TrainingPeriod = { endsOn: string; daysLeft: number; feeCents: number };
+
 type Audience = "client" | "va" | "staff";
 
 /** The wording for each portal; the numbers are the same everywhere (they come from the invoice's lines). */
 const COPY: Record<
   Audience,
-  { intro: string; perRate: string; noFee: string; vaInvoice: string; toVa: string; toVaNote: string; goNote: string; total: string; totalNote: string }
+  { title: string; intro: string; rate: string; noFee: string; result: string; toVa: string; toVaNote: string; goNote: string; total: string; totalNote: string }
 > = {
   client: {
+    title: "Billing summary",
     intro: "How this invoice is worked out, and who bills what.",
-    perRate: "× each VA’s rate",
-    noFee: "None on this invoice",
-    vaInvoice: "Your VA’s invoice",
-    toVa: "To your VA",
-    toVaNote: "Paid directly to your VA",
-    goNote: "Training fee, on GoCWGL’s maintenance fee invoice",
+    rate: "each VA’s rate",
+    noFee: "Not charged on these hours",
+    result: "Your VA’s invoice",
+    toVa: "You pay your VA",
+    toVaNote: "Directly, using the payment details on this invoice",
+    goNote: "Added to your monthly maintenance fee invoice",
     total: "Your total for these hours",
-    totalNote: " · your monthly maintenance fee is billed separately",
+    totalNote: "Your monthly maintenance fee is billed separately.",
   },
   va: {
-    intro: "How this invoice is worked out: your pay and GoCWGL’s training fee.",
-    perRate: "× each client’s rate",
-    noFee: "None on this invoice: you keep your full rate",
-    vaInvoice: "Your invoice (your pay)",
-    toVa: "To you",
-    toVaNote: "Paid to you by the client",
-    goNote: "Training fee, billed by GoCWGL to the client",
+    title: "Your pay",
+    intro: "Your billable hours, less GoCWGL’s training fee.",
+    rate: "each client’s rate",
+    noFee: "Not charged: you keep your full rate",
+    result: "Your invoice total",
+    toVa: "The client pays you",
+    toVaNote: "Directly, using your payment details",
+    goNote: "Billed by GoCWGL to the client. Not paid by you.",
     total: "Client’s total for these hours",
     totalNote: "",
   },
   staff: {
+    title: "Billing summary",
     intro: "The same breakdown the VA and the client see.",
-    perRate: "× the VA’s rate",
-    noFee: "None on this invoice (past the first 6 months, or an older match)",
-    vaInvoice: "VA’s invoice",
-    toVa: "To the VA",
-    toVaNote: "The client pays the VA directly",
-    goNote: "Training fee: add it to this client’s maintenance fee invoice",
+    rate: "the VA’s rate",
+    noFee: "Not charged (past the first 6 months, or an older match)",
+    result: "VA’s invoice total",
+    toVa: "Client pays the VA",
+    toVaNote: "Directly, outside GoCWGL",
+    goNote: "Add it to this client’s maintenance fee invoice",
     total: "Client’s total for these hours",
-    totalNote: " · plus the monthly maintenance fee",
+    totalNote: "Plus the monthly maintenance fee.",
   },
 };
 
 /**
- * The calculation and who's billed what, highlighted on VA invoices in all three portals: billable hours × rate, the
- * first-6-months training fee taken off, the VA's invoice, and the split between the VA and GoCWGL. GoCWGL's monthly
- * maintenance fee isn't part of it (it's a flat fee, billed separately).
+ * The calculation and who's billed what on VA invoices in all three portals, as a short statement: billable hours ×
+ * rate, less the first-6-months training fee, gives the VA's invoice; then who pays whom. In the VA portal `period`
+ * adds how long the training fee still applies for this client. GoCWGL's monthly maintenance fee isn't part of it.
  */
-export function BillingBreakdown({ totals: t, audience }: { totals: BillingTotals; audience: Audience }) {
+export function BillingBreakdown({ totals: t, audience, period }: { totals: BillingTotals; audience: Audience; period?: TrainingPeriod | null }) {
   const c = COPY[audience];
   const va = t.grossCents - t.trainingCents;
-  const rate = t.rateCents != null ? `× ${formatCentsExact(t.rateCents)}/hr` : c.perRate;
+  const rate = t.rateCents != null ? `${formatCentsExact(t.rateCents)}/hr` : c.rate;
+  const fee = formatCentsExact(t.feeCents ?? period?.feeCents ?? 100);
+  const feeDetail = t.trainingCents
+    ? `${hoursLabel(t.trainingSeconds)} × ${fee}/hr${period ? ` · until ${dayLabel(period.endsOn)}` : " · first 6 months with the client"}`
+    : period
+      ? `${fee}/hr on billable hours until ${dayLabel(period.endsOn)}`
+      : c.noFee;
+
   return (
-    <section className="bill" aria-label="Billing breakdown">
+    <section className="bill" aria-label={c.title}>
       <header className="bill__head">
         <span className="bill__icon" aria-hidden="true">
-          <Icon name="invoice" size={16} />
+          <Icon name="invoice" size={15} />
         </span>
-        <span className="stack stack--2">
-          <h3 className="bill__title">Billing breakdown</h3>
-          <span className="text-small">{c.intro}</span>
+        <span className="bill__heading">
+          <h3 className="bill__title">{c.title}</h3>
+          <span className="bill__intro">{c.intro}</span>
         </span>
+        {period && (
+          <span className={cn("bill__period", period.daysLeft <= 30 && "is-soon")} title={`Training fee ends ${dayLabel(period.endsOn)}`}>
+            <Icon name="calendar" size={12} />
+            <span>
+              <b>{period.daysLeft}</b> {period.daysLeft === 1 ? "day" : "days"} left of training fee
+            </span>
+          </span>
+        )}
       </header>
 
-      <ol className="bill__calc">
-        <li>
-          <span className="bill__step">Billable hours</span>
-          <span className="bill__math">
-            {hoursLabel(t.billableSeconds)} {rate}
-          </span>
-          <strong className="bill__amt">{formatCentsExact(t.grossCents)}</strong>
-        </li>
-        <li className={t.trainingCents ? "is-minus" : "is-muted"}>
-          <span className="bill__step">Training fee (first 6 months)</span>
-          <span className="bill__math">{t.trainingCents ? `${hoursLabel(t.trainingSeconds)} × ${formatCentsExact(t.feeCents)}/hr` : c.noFee}</span>
-          <strong className="bill__amt">{t.trainingCents ? `− ${formatCentsExact(t.trainingCents)}` : formatCentsExact(0)}</strong>
-        </li>
-        <li className="is-result">
-          <span className="bill__step">{c.vaInvoice}</span>
-          <span className="bill__math">
-            {formatCentsExact(t.grossCents)} − {formatCentsExact(t.trainingCents)}
-          </span>
-          <strong className="bill__amt">{formatCentsExact(va)}</strong>
-        </li>
-      </ol>
+      <dl className="bill__rows">
+        <div className="bill__row">
+          <dt>
+            Billable hours
+            <small>
+              {hoursLabel(t.billableSeconds)} × {rate}
+            </small>
+          </dt>
+          <dd>{formatCentsExact(t.grossCents)}</dd>
+        </div>
+        <div className={cn("bill__row", t.trainingCents ? "is-minus" : "is-zero")}>
+          <dt>
+            GoCWGL training fee
+            <small>{feeDetail}</small>
+          </dt>
+          <dd>{t.trainingCents ? `− ${formatCentsExact(t.trainingCents)}` : formatCentsExact(0)}</dd>
+        </div>
+        <div className="bill__row is-total">
+          <dt>{c.result}</dt>
+          <dd>{formatCentsExact(va)}</dd>
+        </div>
+      </dl>
 
-      <div className="bill__tiles">
-        <div className="bill__tile">
-          <span className="bill__label">
-            <Icon name="users" size={13} /> {c.toVa}
-          </span>
-          <strong className="bill__value">{formatCentsExact(va)}</strong>
-          <span className="bill__note">{c.toVaNote}</span>
+      <div className="bill__split">
+        <div className="bill__party">
+          <span className="bill__label">{c.toVa}</span>
+          <strong>{formatCentsExact(va)}</strong>
+          <small>{c.toVaNote}</small>
         </div>
-        <div className="bill__tile bill__tile--go">
-          <span className="bill__label">
-            <Icon name="shield" size={13} /> To GoCWGL
-          </span>
-          <strong className="bill__value">{formatCentsExact(t.trainingCents)}</strong>
-          <span className="bill__note">{c.goNote}</span>
-        </div>
-        <div className="bill__tile bill__tile--total">
-          <span className="bill__label">
-            <Icon name="invoice" size={13} /> {c.total}
-          </span>
-          <strong className="bill__value">{formatCentsExact(t.grossCents)}</strong>
-          <span className="bill__note">
-            {formatCentsExact(va)} + {formatCentsExact(t.trainingCents)}
-            {c.totalNote}
-          </span>
+        <div className="bill__party">
+          <span className="bill__label">GoCWGL training fee</span>
+          <strong>{formatCentsExact(t.trainingCents)}</strong>
+          <small>{c.goNote}</small>
         </div>
       </div>
+
+      <p className="bill__foot">
+        <span>
+          {c.total}: <b>{formatCentsExact(t.grossCents)}</b>
+        </span>
+        {c.totalNote && <span>{c.totalNote}</span>}
+      </p>
     </section>
   );
 }

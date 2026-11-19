@@ -11,8 +11,10 @@ import { useInvoicesOverview, usePaymentMethods } from "@/utils/hooks/useVaInvoi
 import { useVaAccess } from "../lib/access";
 import { useVa } from "../state/VaContext";
 import { clientColors, clientLabel, downloadCsv } from "../lib/time";
+import { TrainingFeeCountdown } from "../components/TrainingFeeCountdown";
 import { CreateInvoiceModal } from "./invoices/CreateInvoiceModal";
 import { InvoiceDrawer } from "./invoices/InvoiceDrawer";
+import { MarkPaidButton, TRACKING_NOTE, isOverdue } from "./invoices/MarkPaid";
 import { PaymentDetails } from "./invoices/PaymentDetails";
 import { STATUS, hoursLabel, initials, periodLabel, type InvoiceStatus } from "./invoices/shared";
 
@@ -188,6 +190,8 @@ function Overview({
         />
       </div>
 
+      <TrainingFeeCountdown clientId={clientId === "all" ? undefined : clientId} />
+
       <section className="card inv-card">
         <header className="inv-card__head">
           <span className="stack stack--2">
@@ -253,7 +257,7 @@ function Overview({
         <header className="inv-card__head">
           <span className="stack stack--2">
             <h3 className="inv-card__title">All invoices</h3>
-            <span className="text-small">Built from your billable hours in the Time tracker</span>
+            <span className="text-small">Built from your billable hours in the Time tracker. {TRACKING_NOTE}</span>
           </span>
           <div className="inv-seg" role="group" aria-label="Filter by status">
             {(["all", "draft", "sent", "paid"] as StatusFilter[]).map((s) => (
@@ -296,6 +300,7 @@ function Overview({
 
 function InvoiceRow({ i, color, onOpen }: { i: VaInvoiceRow; color: string; onOpen: () => void }) {
   const name = clientLabel(i.client);
+  const overdue = isOverdue(i);
   return (
     <tr>
       <td>
@@ -318,14 +323,19 @@ function InvoiceRow({ i, color, onOpen }: { i: VaInvoiceRow; color: string; onOp
       <td className="is-num">
         <strong>{formatCentsExact(i.amountCents)}</strong>
       </td>
-      <td>{i.status === "paid" && i.paidAt ? `Paid ${formatShort(i.paidAt)}` : i.dueDate ? formatShort(i.dueDate) : "—"}</td>
+      <td className={cn(overdue && "inv-overdue")}>
+        {i.status === "paid" && i.paidAt ? `Paid ${formatShort(i.paidAt)}` : i.dueDate ? formatShort(i.dueDate) : "—"}
+      </td>
       <td>
-        <Badge tone={STATUS[i.status].tone}>{STATUS[i.status].label}</Badge>
+        <Badge tone={overdue ? "red" : STATUS[i.status].tone}>{overdue ? "Overdue" : STATUS[i.status].label}</Badge>
       </td>
       <td className="is-num">
-        <Button size="sm" variant="outline" onClick={onOpen}>
-          View
-        </Button>
+        <span className="inv-actions">
+          {i.status === "sent" && <MarkPaidButton invoice={i} />}
+          <Button size="sm" variant="outline" onClick={onOpen}>
+            View
+          </Button>
+        </span>
       </td>
     </tr>
   );

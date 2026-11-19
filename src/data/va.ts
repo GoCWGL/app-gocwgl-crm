@@ -7,6 +7,8 @@ import type { IconName } from "@/components/ui";
 
 export type VaTab =
   | "dashboard"
+  /** The VA agreement: sign it, and what you keep per client and when your full rate starts. */
+  | "agreement"
   | "clients"
   /** One client's full details (from their sidebar under Active clients). */
   | "client"
@@ -31,6 +33,11 @@ export const VA_PAGES: Record<VaTab, { title: string; subtitle: string; empty: s
   dashboard: {
     title: "Dashboard",
     subtitle: "Your week at a glance: clients, hours and what's next.",
+    empty: "",
+  },
+  agreement: {
+    title: "Agreement",
+    subtitle: "Your GoCWGL VA agreement: the training fee for your first months with each client, and when your full rate starts.",
     empty: "",
   },
   tasks: {
@@ -152,6 +159,7 @@ export const VA_NAV: Array<{ title: string; items: Array<{ tab: VaTab; label: st
     title: "Overview",
     items: [
       { tab: "dashboard", label: "Dashboard", icon: "grid" },
+      { tab: "agreement", label: "Agreement", icon: "journal" },
       { tab: "jobs", label: "Open Jobs", icon: "briefcase" },
       { tab: "clients", label: "Clients", icon: "briefcase" },
     ],

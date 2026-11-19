@@ -14,8 +14,9 @@ import { cn } from "@/lib/utils";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useMyAttendance } from "@/utils/hooks/useAttendance";
 import { useMyClients } from "@/utils/hooks/useShifts";
-import { useInactiveAsks, useOpenJobs, useVaTasks } from "@/utils/hooks/useVaPortal";
+import { useInactiveAsks, useMyAgreement, useOpenJobs, useVaTasks } from "@/utils/hooks/useVaPortal";
 import { useMenuCounts } from "@/utils/hooks/useMenuCounts";
+import { useInvoicesOverview } from "@/utils/hooks/useVaInvoices";
 import { useVaAccess } from "../lib/access";
 import { clientLabel } from "../lib/time";
 import { useVa } from "../state/VaContext";
@@ -47,11 +48,18 @@ export function VaSidebar() {
   // Client tasks assigned to them and not started yet, per client.
   const toStart = new Map<string, number>();
   for (const t of useVaTasks(ready).data ?? []) if (t.status === "requested") toStart.set(t.contactId, (toStart.get(t.contactId) ?? 0) + 1);
+  // Invoices sent and not marked paid yet, per client: on the client's Invoices item (and added to the client's count).
+  const unpaid = new Map<string, number>();
+  for (const i of useInvoicesOverview(ready).data?.invoices ?? [])
+    if (i.status === "sent" && i.client) unpaid.set(i.client.id, (unpaid.get(i.client.id) ?? 0) + 1);
+  const clientTodo = (id: string) => (toStart.get(id) ?? 0) + (unpaid.get(id) ?? 0);
   // Clients GoCWGL wants to move to inactive, waiting for this VA's approval.
   const asks = (useInactiveAsks(ready).data ?? []).filter((a) => !a.approvedAt).length;
   // Support, Training, SOPs, Feedback and Invoices come from the server (see menus API).
   const server = useMenuCounts("va", tab, ready);
-  const counts: Partial<Record<string, number>> = { ...server, jobs: openJobs, clients: asks };
+  // 1 while the agreement (or a new client match) is waiting to be signed.
+  const toSign = useMyAgreement(ready).data?.pending ? 1 : 0;
+  const counts: Partial<Record<string, number>> = { ...server, jobs: openJobs, clients: asks, agreement: toSign };
   const badge = (n?: number) => (n ? { text: String(n), tone: "brand" as const } : undefined);
 
   // The client sidebar follows the page: on a client's page it shows that client; going to another page from the
@@ -152,7 +160,7 @@ export function VaSidebar() {
                         onClick={() => pickClient(c.id)}
                         expanded={isOpen}
                         highlighted={openClient ? isOpen : onClientPage && client === c.id}
-                        badge={badge(toStart.get(c.id))}
+                        badge={badge(clientTodo(c.id))}
                         icon={
                           <span className="nav-item__client">
                             <Avatar name={label} tone={avatarTone(c.id)} size="sm" className="nav-item__icon nav-item__avatar" />
@@ -197,7 +205,9 @@ export function VaSidebar() {
                       label={item.label}
                       active={tab === item.tab && client === openClient.id}
                       onClick={() => goTo(item.tab, openClient.id)}
-                      badge={item.tab === "tasks" ? badge(toStart.get(openClient.id)) : undefined}
+                      badge={
+                        item.tab === "tasks" ? badge(toStart.get(openClient.id)) : item.tab === "invoices" ? badge(unpaid.get(openClient.id)) : undefined
+                      }
                       icon={<NavIcon icon={item.icon} />}
                     />
                   ))}

@@ -7,11 +7,11 @@ import { formatDuration, useNow } from "@/lib/duration";
 import { VA_NAV, VA_PAGES, type VaTab } from "@/data/va";
 import { formatCentsExact } from "@/utils/format/money";
 import { useMyClients, useMyShift, useTimeEntries } from "@/utils/hooks/useShifts";
-import { useOpenJobs } from "@/utils/hooks/useVaPortal";
+import { useMyAgreement, useOpenJobs } from "@/utils/hooks/useVaPortal";
 import { clientLabel, hms, rangeFor } from "../lib/time";
 import { useVa } from "../state/VaContext";
 import { TwoStepReminder } from "@/features/account/TwoStepReminder";
-import { AgreementCard } from "../components/AgreementCard";
+import { UnpaidInvoicesCard } from "../components/UnpaidInvoicesCard";
 
 /** The pages a VA opens most, as shortcuts on the dashboard. */
 const SHORTCUTS: VaTab[] = ["time", "clients", "tasks", "jobs", "training", "support"];
@@ -27,6 +27,8 @@ export function DashboardSection() {
   const entries = useTimeEntries(week.start.toISOString(), week.end.toISOString(), va);
   const jobs = useOpenJobs(va);
   const now = useNow(1000);
+  // The agreement has its own page now; while something's waiting to be signed, the dashboard points to it.
+  const toSign = useMyAgreement(va).data?.pending;
 
   const weekSecs = (entries.data ?? []).reduce((t, e) => t + e.workedSeconds, 0);
   const weekCents = (entries.data ?? []).reduce((t, e) => t + e.earningsCents, 0);
@@ -40,7 +42,21 @@ export function DashboardSection() {
   return (
     <div className="page-stack">
       <TwoStepReminder onSetUp={() => goTo("account")} />
-      <AgreementCard show="pending" />
+      {toSign && (
+        <section className="card va-sign-nudge">
+          <IconTile tone="orange" size="lg">
+            <Icon name="journal" size={20} />
+          </IconTile>
+          <span className="stack stack--2 u-grow">
+            <span className="kicker kicker--sm">ACTION NEEDED</span>
+            <strong className="va-now__title">Sign your VA agreement before you start working.</strong>
+          </span>
+          <Button variant="primary" onClick={() => goTo("agreement")}>
+            Open agreement <Icon name="arrowRight" size={14} />
+          </Button>
+        </section>
+      )}
+      <UnpaidInvoicesCard />
       <StatGrid
         items={[
           { label: "Active clients", value: dash(String(clients.data?.clients.filter((c) => c.active).length ?? 0)), tone: "cyan" },
@@ -49,8 +65,6 @@ export function DashboardSection() {
           { label: "Open jobs", value: dash(String(jobs.data?.length ?? 0)), tone: "orange" },
         ]}
       />
-
-      <AgreementCard show="signed" />
 
       {va && (running || tracker) && (
         <section className={`card va-now${running ? " is-running" : ""}`}>

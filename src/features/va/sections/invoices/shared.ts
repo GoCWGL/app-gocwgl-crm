@@ -85,3 +85,15 @@ export const initials = (name: string) =>
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase())
     .join("") || "?";
+
+/** Invoice lines as shown in a table: the training fee line only when it has hours, labelled plainly. */
+export function shownLines<T extends { category: string; seconds: number; deduction?: boolean }>(lines: T[]): T[] {
+  return lines.filter((l) => !l.deduction || l.seconds > 0);
+}
+
+/** "Billable work", or for the fee line "GoCWGL training fee". */
+export const lineLabel = (l: { category: string; deduction?: boolean }) => (l.deduction ? "GoCWGL training fee" : l.category);
+
+/** "$5.00/hr", "− $1.00/hr" for the fee; amounts as "− $3.00". */
+export const signed = (cents: number, money: (c: number) => string, suffix = "") =>
+  cents < 0 ? `− ${money(-cents)}${suffix}` : `${money(cents)}${suffix}`;

@@ -478,3 +478,116 @@
   font-family: $font-sans;
   font-size: 13px;
 }
+
+// VA portal › Invoices: countdown to the day the training fee comes off a new client's invoices.
+.fee-cd {
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+  }
+
+  &__tile {
+    @include stack(10px);
+    padding: 14px;
+    border: 1px solid $line-soft;
+    border-radius: $radius-md;
+    background: $white;
+
+    &.is-soon {
+      border-color: $green-50;
+      background: color-mix(in srgb, $green-50 45%, white);
+    }
+  }
+
+  &__top {
+    @include row(10px);
+  }
+
+  &__avatar {
+    @include center;
+    flex: none;
+    width: 32px;
+    height: 32px;
+    border-radius: $radius-md;
+    background: $grad-cyan;
+    color: $white;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
+  &__who {
+    @include stack(1px);
+    flex: 1;
+    min-width: 0;
+
+    strong {
+      @include truncate;
+      color: $ink;
+      font-size: 14px;
+    }
+
+    span {
+      color: $muted-light;
+      font-size: 12px;
+    }
+  }
+
+  &__count {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+
+    strong {
+      color: $orange-ink;
+      font-family: $font-mono;
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+
+    span {
+      @include stack(1px);
+      color: $ink-soft;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    small {
+      color: $muted;
+      font-size: 11.5px;
+      font-weight: 600;
+    }
+  }
+
+  &__tile.is-soon &__count strong {
+    color: $green-700;
+  }
+
+  &__bar {
+    height: 6px;
+    border-radius: $radius-pill;
+    background: $bg-tint;
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: $grad-progress;
+    }
+  }
+
+  &__note {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: $muted;
+    font-size: 12.5px;
+
+    strong {
+      color: $ink;
+    }
+  }
+}

@@ -8,156 +8,202 @@
 
 .bill {
   display: grid;
-  gap: 12px;
-  padding: 14px 16px;
-  border: 1px solid rgba(255, 153, 0, 0.35);
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid $line;
   border-radius: $radius-lg;
-  background: linear-gradient(180deg, $peach 0%, $white 70%);
-  box-shadow: $glow-orange-soft;
+  background: $white;
+  box-shadow: $shadow-soft;
 
   &__head {
     display: flex;
-    align-items: flex-start;
-    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
   }
 
   &__icon {
     display: grid;
     flex: none;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     place-items: center;
-    border-radius: $radius-sm;
-    background: $grad-orange;
-    color: $on-orange;
+    border-radius: $radius-md;
+    background: $peach;
+    color: $orange-ink;
+  }
+
+  &__heading {
+    display: grid;
+    flex: 1;
+    gap: 1px;
+    min-width: 180px;
   }
 
   &__title {
     margin: 0;
     color: $ink;
-    font-size: 14.5px;
+    font-size: 15px;
     font-weight: 800;
   }
 
-  // The calculation, one step per row: label · math · amount.
-  &__calc {
+  &__intro {
+    color: $muted;
+    font-size: 12.5px;
+  }
+
+  // How long the training fee still applies with this client (VA portal).
+  &__period {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: $radius-pill;
+    background: $peach;
+    color: $orange-ink;
+    font-size: 12px;
+    font-weight: 600;
+
+    b {
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
+    &.is-soon {
+      background: $green-50;
+      color: $green-700;
+    }
+  }
+
+  // The statement: label (with how it's worked out underneath) and the amount on the right.
+  &__rows {
     display: grid;
-    gap: 0;
     margin: 0;
-    padding: 0;
-    border: 1px solid $line-soft;
-    border-radius: $radius-md;
-    background: $white;
-    list-style: none;
+    border-top: 1px solid $line-soft;
+  }
 
-    li {
+  &__row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 11px 0;
+    border-bottom: 1px solid $line-faint;
+
+    dt {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto auto;
-      align-items: baseline;
-      gap: 12px;
-      padding: 9px 12px;
-      font-size: 13px;
+      gap: 2px;
+      color: $ink;
+      font-size: 13.5px;
+      font-weight: 700;
 
-      & + li {
-        border-top: 1px dashed $line;
+      small {
+        color: $muted;
+        font-size: 12px;
+        font-weight: 500;
       }
     }
 
-    .is-minus .bill__amt {
+    dd {
+      margin: 0;
+      color: $ink;
+      font-size: 14px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    &.is-minus dd {
       color: $red-700;
     }
 
-    .is-muted {
+    &.is-zero dd {
       color: $muted-light;
+      font-weight: 600;
     }
 
-    .is-result {
-      border-top: 2px solid $ink !important;
-      background: $bg-soft;
-      font-weight: 800;
+    &.is-total {
+      padding-top: 12px;
+      border-top: 2px solid $ink;
+      border-bottom: 0;
 
-      .bill__amt {
-        font-size: 15px;
+      dt {
+        font-size: 14.5px;
+        font-weight: 800;
+      }
+
+      dd {
+        font-size: 18px;
+        font-weight: 800;
       }
     }
   }
 
-  &__step {
-    color: $ink;
-    font-weight: 700;
-  }
-
-  &__math {
-    color: $muted;
-    font-family: $font-mono;
-    font-size: 12px;
-    text-align: right;
-  }
-
-  &__amt {
-    min-width: 84px;
-    color: $ink;
-    font-variant-numeric: tabular-nums;
-    text-align: right;
-  }
-
-  // Who's billed what.
-  &__tiles {
+  // Who pays whom.
+  &__split {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    overflow: hidden;
+    border: 1px solid $line-soft;
+    border-radius: $radius-md;
+    background: $bg-soft;
 
-    @media (max-width: 640px) {
+    @media (max-width: 560px) {
       grid-template-columns: 1fr;
     }
   }
 
-  &__tile {
+  &__party {
     display: grid;
     align-content: start;
-    gap: 3px;
-    padding: 10px 12px;
-    border: 1px solid $line-soft;
-    border-radius: $radius-md;
-    background: $white;
+    gap: 2px;
+    padding: 11px 14px;
 
-    &--go {
-      border-color: rgba(8, 145, 178, 0.35);
-      background: $cyan-50;
+    & + & {
+      border-left: 1px solid $line-soft;
+
+      @media (max-width: 560px) {
+        border-top: 1px solid $line-soft;
+        border-left: 0;
+      }
     }
 
-    &--total {
-      border-color: transparent;
-      background: $grad-orange;
+    strong {
+      color: $ink;
+      font-size: 17px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
 
-      .bill__label,
-      .bill__note,
-      .bill__value {
-        color: $on-orange;
-      }
+    small {
+      color: $muted;
+      font-size: 11.5px;
+      line-height: 1.4;
     }
   }
 
   &__label {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
     color: $muted;
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
-  &__value {
-    color: $ink;
-    font-size: 19px;
-    font-variant-numeric: tabular-nums;
-    font-weight: 800;
-  }
-
-  &__note {
+  &__foot {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 4px 12px;
+    margin: 0;
     color: $muted;
-    font-size: 11.5px;
-    line-height: 1.4;
+    font-size: 12px;
+
+    b {
+      color: $ink;
+      font-variant-numeric: tabular-nums;
+    }
   }
 }
 

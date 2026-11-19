@@ -33,11 +33,11 @@ function progress(c: AgreementClientOut, months: number): { share: number; month
  * VA portal › Dashboard: the VA agreement. When there's something to agree to (a new client match, or the agreement
  * itself) it's shown in full with a sign-off; afterwards, what the VA keeps per client and when the full rate starts.
  */
-export function AgreementCard({ show }: { show: "pending" | "signed" }) {
+export function AgreementCard({ show, openByDefault = false }: { show: "pending" | "signed"; openByDefault?: boolean }) {
   const access = useVaAccess();
   const query = useMyAgreement(access.ready);
   const accept = useAcceptAgreement();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(openByDefault);
   const [agreed, setAgreed] = useState(false);
   const a = query.data;
   // The dashboard puts it above the stats while there's something to sign, below them once it's signed.

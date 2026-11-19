@@ -5882,6 +5882,11 @@ $tl-colors: (
     font-weight: 800;
   }
 
+  .ci-lines__sub {
+    color: $muted;
+    font-weight: 500;
+  }
+
   .is-num {
     font-variant-numeric: tabular-nums;
     text-align: right;
@@ -5889,8 +5894,7 @@ $tl-colors: (
 
   // The VA agreement's first-6-months training fee, taken off the hours above.
   tr.is-deduction td {
-    color: $muted;
-    font-style: italic;
+    color: $red-700;
   }
 }
 
@@ -9597,5 +9601,290 @@ $pdf-side: #f5f6f8;
         text-decoration: underline;
       }
     }
+  }
+}
+
+// Invoices list: Mark paid next to View, and overdue due dates.
+.inv-actions {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.inv-table td.inv-overdue {
+  color: $red-700;
+  font-weight: 700;
+}
+
+// VA dashboard: the daily payment check (sent invoices not marked paid yet).
+.pay-check {
+  gap: 14px;
+  border: 1px solid rgba(255, 153, 0, 0.45);
+  border-left: 5px solid $orange;
+  background: linear-gradient(180deg, $peach 0%, $white 55%);
+  box-shadow: $glow-orange-soft;
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 12px 14px;
+  }
+
+  &__icon {
+    display: grid;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    place-items: center;
+    border-radius: $radius-md;
+    background: $grad-orange;
+    color: $on-orange;
+  }
+
+  &__heading {
+    display: grid;
+    flex: 1;
+    gap: 3px;
+    min-width: 240px;
+  }
+
+  &__kicker {
+    color: $orange-ink;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    margin: 0;
+    color: $ink;
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  &__why {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 6px;
+    color: $ink-soft;
+    font-size: 13px;
+
+    svg {
+      flex: none;
+      margin-top: 2px;
+      color: $orange-ink;
+    }
+  }
+
+  &__sum {
+    display: grid;
+    justify-items: end;
+    gap: 1px;
+
+    strong {
+      color: $ink;
+      font-size: 24px;
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
+    span {
+      color: $muted;
+      font-size: 12px;
+      font-weight: 600;
+    }
+  }
+
+  &__list {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid $line-soft;
+    border-radius: $radius-md;
+    background: $white;
+    list-style: none;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    align-items: center;
+    gap: 8px 16px;
+    padding: 10px 14px;
+
+    & + & {
+      border-top: 1px solid $line-faint;
+    }
+
+    &.is-overdue {
+      box-shadow: inset 3px 0 0 $red-700;
+    }
+
+    @include down(md) {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+  }
+
+  &__who {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+
+    strong {
+      @include truncate;
+      color: $ink;
+      font-size: 14px;
+    }
+
+    span {
+      color: $muted;
+      font-family: $font-mono;
+      font-size: 11.5px;
+    }
+  }
+
+  &__due {
+    color: $muted;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  &__row.is-overdue &__due {
+    color: $red-700;
+    font-weight: 700;
+  }
+
+  &__amt {
+    color: $ink;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__actions {
+    display: inline-flex;
+    gap: 6px;
+  }
+
+  &__more {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: $ink;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &--clear {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+    border-left-color: $green-700;
+    border-color: $green-50;
+    background: $green-50;
+    box-shadow: none;
+    color: $green-700;
+    font-size: 13px;
+
+    svg {
+      flex: none;
+      margin-top: 2px;
+    }
+
+    strong {
+      color: $green-700;
+    }
+  }
+}
+
+// Mark paid: the confirmation pop-up (which invoice, from whom, how much).
+.paid-confirm {
+  display: grid;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid $line-soft;
+  border-radius: $radius-md;
+  background: $bg-soft;
+
+  > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 12px;
+
+    & + div {
+      border-top: 1px solid $line-faint;
+    }
+  }
+
+  dt {
+    color: $muted;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+    color: $ink;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: right;
+  }
+
+  &__amt {
+    font-size: 17px !important;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__ask {
+    margin: 12px 0 0;
+    color: $ink;
+    font-size: 14px;
+  }
+
+  &__why {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin: 8px 0 0;
+    color: $muted;
+    font-size: 12.5px;
+
+    svg {
+      flex: none;
+      margin-top: 2px;
+      color: $orange-ink;
+    }
+  }
+}
+
+// VA dashboard: points to the Agreement page while something's waiting to be signed.
+.va-sign-nudge {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid rgba(255, 153, 0, 0.45);
+  border-left: 5px solid $orange;
+  background: linear-gradient(90deg, $peach, $white 65%);
+
+  .kicker {
+    color: $orange-ink;
   }
 }

@@ -12,6 +12,7 @@ import { clientLabel } from "./lib/time";
 import { useSectionChangeSweep } from "@/utils/navigation";
 import { StaffVaBar, StaffVaGate } from "./components/StaffVaGate";
 import { VaSidebar } from "./components/VaSidebar";
+import { AgreementSection } from "./sections/AgreementSection";
 import { ClientDetailsSection } from "./sections/ClientDetailsSection";
 import { ClientsSection } from "./sections/ClientsSection";
 import { DashboardSection } from "./sections/DashboardSection";
@@ -79,6 +80,7 @@ function VaLayout() {
 
 const SECTIONS: Record<VaTab, () => React.ReactNode> = {
   dashboard: DashboardSection,
+  agreement: AgreementSection,
   client: ClientDetailsSection,
   clients: ClientsSection,
   tasks: TasksSection,
