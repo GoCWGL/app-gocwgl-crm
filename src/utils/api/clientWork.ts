@@ -14,6 +14,7 @@ import type {
   ClientVaInvoiceDetail,
   JournalEntry,
   LiveOut,
+  NextInvoiceOut,
   ProjectClientUpdate,
   ProjectIn,
   ProjectStaffUpdate,
@@ -33,6 +34,8 @@ import type {
 
 // Client portal › your VA team. The API never sends pay rates or work done for other clients.
 export const liveWork = () => get<LiveOut>("/portal/live");
+/** What GoCWGL's maintenance fee invoice on the 1st comes to so far: each VA's fee plus the training fee on this month's hours. */
+export const nextMaintenanceInvoice = () => get<NextInvoiceOut>("/portal/next-maintenance-invoice");
 // Client portal › VAs: raise requests from your VAs ($1/h, at most every 6 months each).
 export const listRaiseRequests = () => get<RaiseRequestOut[]>("/portal/raise-requests");
 export const approveRaise = (id: string) => post<RaiseRequestOut>(`/portal/raise-requests/${id}/approve`);

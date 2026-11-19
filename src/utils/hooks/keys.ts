@@ -134,6 +134,7 @@ export const qk = {
   portalTimeTags: ["portal", "time-tags"] as const,
   portalRaises: ["portal", "raise-requests"] as const,
   portalVaTeam: ["portal", "va-team"] as const,
+  portalNextInvoice: ["portal", "next-maintenance-invoice"] as const,
   portalProjects: ["portal", "projects"] as const,
   portalVaInvoices: ["portal", "va-invoices"] as const,
   portalTrainings: ["portal", "trainings"] as const,

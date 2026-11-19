@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { TeamVa, VaRequestOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
-import { useVaRequests, useVaTeam } from "@/utils/hooks/useClientWork";
+import { useNextMaintenanceInvoice, useVaRequests, useVaTeam } from "@/utils/hooks/useClientWork";
 import {
   VA_MAINTENANCE_FEE_DOLLARS,
   VA_TRAINING_FEE_DOLLARS_PER_HOUR,
@@ -125,26 +125,139 @@ function nextBilling(now = new Date()) {
   };
 }
 
+const longDay = (iso: string) =>
+  new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
+const monthName = (iso: string) => new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", timeZone: "UTC" });
+/** Hours to one decimal: "12.5". */
+const hours = (seconds: number) => String(Math.round((seconds / 3600) * 10) / 10);
+
 /**
  * When GoCWGL bills: the maintenance fee invoice goes out on the 1st of every month and covers the month before (the
- * maintenance fee plus the training fee for the VA's hours that month). Shown on the VA agreement card and on Invoices.
+ * maintenance fee plus the training fee for the VA's hours that month). With the amount so far for this month, worked
+ * out like GoCWGL's own billing: each VA's fee plus the training fee on their hours, split by VA and by kind of fee.
+ * Shown on the VA agreement card and on Invoices.
  */
 export function MonthlyBillingNote() {
-  const next = nextBilling();
+  const fallback = nextBilling();
+  const next = useNextMaintenanceInvoice().data;
+  const on = next ? longDay(next.invoiceOn) : fallback.on;
+  const covers = next ? monthName(next.month) : fallback.covers;
+  const vas = next?.vas ?? [];
+  const total = next?.totalCents ?? 0;
+  const feeShare = total > 0 && next ? (next.maintenanceFeeCents / total) * 100 : 100;
+
   return (
-    <div className="bill-note" role="note">
-      <span className="bill-note__icon" aria-hidden="true">
-        <Icon name="calendar" size={16} />
-      </span>
-      <span className="stack stack--2">
-        <strong>Your maintenance fee invoice arrives on the 1st of every month</strong>
-        <span className="text-small">
-          It covers the previous month: your maintenance fee, plus ${VA_TRAINING_FEE_DOLLARS_PER_HOUR} for each hour your VA worked
-          that month while they’re in their first {VA_TRAINING_MONTHS} months. Your next one arrives on <strong>{next.on}</strong> and
-          covers {next.covers}.
+    <section className="nxi" aria-labelledby="nxi-title">
+      <header className="nxi__head">
+        <span className="nxi__icon" aria-hidden="true">
+          <Icon name="receipt" size={18} />
         </span>
-      </span>
-    </div>
+        <span className="nxi__heading">
+          <span className="nxi__kicker">
+            <span className="nxi__live" aria-hidden="true" /> Upcoming GoCWGL invoice
+          </span>
+          <h4 id="nxi-title" className="nxi__title">
+            Arrives {on}
+          </h4>
+          <span className="nxi__sub">
+            Covers {covers} · Pay within 3 business days
+          </span>
+        </span>
+        {next && (
+          <span className="nxi__amount">
+            <span className="nxi__amount-label">So far this month</span>
+            <strong>{formatCentsExact(total)}</strong>
+          </span>
+        )}
+      </header>
+
+      {next && vas.length > 0 && (
+        <>
+          <div className="nxi__split">
+            <div className="nxi__bar" aria-hidden="true">
+              <span className="nxi__bar-fee" style={{ width: `${feeShare}%` }} />
+              <span className="nxi__bar-training" style={{ width: `${100 - feeShare}%` }} />
+            </div>
+            <ul className="nxi__legend">
+              <li>
+                <span className="nxi__swatch nxi__swatch--fee" aria-hidden="true" />
+                Maintenance fees <strong>{formatCentsExact(next.maintenanceFeeCents)}</strong>
+              </li>
+              <li>
+                <span className="nxi__swatch nxi__swatch--training" aria-hidden="true" />
+                Training fees <strong>{formatCentsExact(next.trainingFeeCents)}</strong>
+              </li>
+            </ul>
+          </div>
+
+          <div className="nxi__table" role="table" aria-label={`Upcoming invoice by VA, ${covers}`}>
+            <div className="nxi__row nxi__row--head" role="row">
+              <span role="columnheader">VA</span>
+              <span role="columnheader">Maintenance</span>
+              <span role="columnheader">Training</span>
+              <span role="columnheader">Amount</span>
+            </div>
+            {vas.map((v) => (
+              <div key={v.vaId} className="nxi__row" role="row">
+                <span className="nxi__va" role="cell">
+                  <span className="nxi__avatar" aria-hidden="true">
+                    {initials(v.name)}
+                  </span>
+                  <span className="nxi__who">
+                    <strong>{v.name}</strong>
+                    <small>{v.hoursPerWeek ? `${v.hoursPerWeek} hours a week` : "VA"}</small>
+                  </span>
+                </span>
+                <span className="nxi__cell" role="cell" data-label="Maintenance">
+                  {formatCentsExact(v.maintenanceFeeCents)}
+                  <small>Monthly fee</small>
+                </span>
+                <span className="nxi__cell" role="cell" data-label="Training">
+                  {v.trainingFeeCents > 0 ? (
+                    <>
+                      {formatCentsExact(v.trainingFeeCents)}
+                      <small>
+                        {hours(v.trainingSeconds)} h × {formatCentsExact(v.trainingRateCents ?? 0)}
+                      </small>
+                    </>
+                  ) : (
+                    <>
+                      <span className="nxi__none">—</span>
+                      <small>{v.trainingEndsOn && !trainingFeeActive(v.trainingRateCents, v.trainingEndsOn) ? "Training complete" : "No hours yet"}</small>
+                    </>
+                  )}
+                </span>
+                <span className="nxi__cell nxi__cell--total" role="cell" data-label="Amount">
+                  {formatCentsExact(v.totalCents)}
+                </span>
+              </div>
+            ))}
+            {vas.length > 1 && (
+              <div className="nxi__row nxi__row--total" role="row">
+                <span role="cell">Total so far</span>
+                <span className="nxi__cell" role="cell" data-label="Maintenance">
+                  {formatCentsExact(next.maintenanceFeeCents)}
+                </span>
+                <span className="nxi__cell" role="cell" data-label="Training">
+                  {formatCentsExact(next.trainingFeeCents)}
+                </span>
+                <span className="nxi__cell nxi__cell--total" role="cell" data-label="Amount">
+                  {formatCentsExact(total)}
+                </span>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      <p className="nxi__foot">
+        <Icon name="clock" size={13} />
+        <span>
+          Each VA’s monthly maintenance fee, plus ${VA_TRAINING_FEE_DOLLARS_PER_HOUR} for each hour they work in their first{" "}
+          {VA_TRAINING_MONTHS} months. The amount grows as your VAs log time this month. Your VAs’ own invoices for their hours are separate.
+        </span>
+      </p>
+    </section>
   );
 }
 

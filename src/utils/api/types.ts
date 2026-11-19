@@ -6076,6 +6076,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/next-maintenance-invoice": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Next Maintenance Invoice
+         * @description What GoCWGL's maintenance fee invoice on the 1st comes to so far: every VA's maintenance fee plus the training fee
+         *     on this month's hours (the same numbers staff invoice from).
+         */
+        get: operations["next_maintenance_invoice_api_portal_next_maintenance_invoice_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/projects": {
         parameters: {
             query?: never;
@@ -11483,6 +11504,53 @@ export interface components {
             myLastRating: number | null;
             /** Myfeedbackcount */
             myFeedbackCount: number;
+        };
+        /** NextInvoiceOut */
+        NextInvoiceOut: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /**
+             * Invoiceon
+             * Format: date
+             */
+            invoiceOn: string;
+            /** Vas */
+            vas: components["schemas"]["NextInvoiceVa"][];
+            /** Maintenancefeecents */
+            maintenanceFeeCents: number;
+            /** Trainingfeecents */
+            trainingFeeCents: number;
+            /** Totalcents */
+            totalCents: number;
+        };
+        /** NextInvoiceVa */
+        NextInvoiceVa: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /** Name */
+            name: string;
+            /** Hoursperweek */
+            hoursPerWeek: number | null;
+            /** Billableseconds */
+            billableSeconds: number;
+            /** Trainingseconds */
+            trainingSeconds: number;
+            /** Trainingratecents */
+            trainingRateCents: number | null;
+            /** Trainingendson */
+            trainingEndsOn: string | null;
+            /** Maintenancefeecents */
+            maintenanceFeeCents: number;
+            /** Trainingfeecents */
+            trainingFeeCents: number;
+            /** Totalcents */
+            totalCents: number;
         };
         /** NoteMentionOut */
         NoteMentionOut: {
@@ -35565,6 +35633,37 @@ export interface operations {
                     "application/json": {
                         /** Response Team Api Portal Va Team Get */
                         data: components["schemas"]["TeamVa"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    next_maintenance_invoice_api_portal_next_maintenance_invoice_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["NextInvoiceOut"];
                     };
                 };
             };

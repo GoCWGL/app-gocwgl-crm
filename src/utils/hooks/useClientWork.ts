@@ -14,7 +14,7 @@ export const useRaiseRequests = () => useQuery({ queryKey: qk.portalRaises, quer
 // An approved raise changes what new time is worth, so the tracker and team reload too.
 export const useDecideRaise = () =>
   useApiMutation((v: { id: string; approve: boolean }) => (v.approve ? api.approveRaise(v.id) : api.declineRaise(v.id)), {
-    invalidate: [qk.portalRaises, qk.portalVaTeam, qk.portalJournal],
+    invalidate: [qk.portalRaises, qk.portalVaTeam, qk.portalJournal, qk.portalNextInvoice],
   });
 export const useTimeTags = () => useQuery({ queryKey: qk.portalTimeTags, queryFn: api.listTimeTags });
 // A rename also renames the tag on time already logged, so the tracker reloads too.
@@ -23,6 +23,9 @@ export const useAddTimeTag = () => useApiMutation(api.addTimeTag, { invalidate: 
 export const useUpdateTimeTag = () => useApiMutation((v: { id: string; body: TimeTagUpdate }) => api.updateTimeTag(v.id, v.body), { invalidate: TAG_KEYS });
 export const useDeleteTimeTag = () => useApiMutation(api.deleteTimeTag, { invalidate: [qk.portalTimeTags] });
 export const useVaTeam = () => useQuery({ queryKey: qk.portalVaTeam, queryFn: api.vaTeam });
+/** The next maintenance fee invoice so far; it grows as the VAs log time, so it refreshes every few minutes. */
+export const useNextMaintenanceInvoice = () =>
+  useQuery({ queryKey: qk.portalNextInvoice, queryFn: api.nextMaintenanceInvoice, refetchInterval: 5 * 60_000 });
 
 /** Refreshed every 30 s so the VA's status changes show up without reloading. */
 export const useProjects = () => useQuery({ queryKey: qk.portalProjects, queryFn: api.listProjects, refetchInterval: 30_000 });
