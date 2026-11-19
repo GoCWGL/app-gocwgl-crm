@@ -87,7 +87,7 @@ function Page({ r }: { r: VaRequestOut }) {
     r.engagement === "project"
       ? // An open project has no maintenance fee: its price is the quote the client agrees to.
         { icon: "invoice", tone: "brand", label: "Quote", value: r.quoteCents == null ? "Not quoted yet" : `${formatCentsExact(r.quoteCents)}${r.quoteAcceptedAt ? " · agreed" : " · waiting"}` }
-      : { icon: "invoice", tone: "brand", label: "Maintenance fee", value: maintenanceFeeOf(r).label },
+      : { icon: "invoice", tone: "brand", label: "Maintenance fee", value: [maintenanceFeeOf(r).label, maintenanceFeeOf(r).hourlyLabel].filter(Boolean).join(" ") },
     { icon: "calendar", tone: "brand", label: "Requested", value: formatShort(r.createdAt) },
     { icon: "radio", tone: "green", label: "In Open jobs", value: posting?.publishedAt && ["live", "interviewing"].includes(posting.status) ? `Since ${formatShort(posting.publishedAt)}` : "No" },
   ];

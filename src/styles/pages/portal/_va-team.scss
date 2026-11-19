@@ -1296,6 +1296,18 @@ tr.is-clickable {
     margin: 0;
   }
 
+  p + p {
+    margin-top: 8px;
+  }
+
+  // A worked example, set apart from the terms.
+  &__example {
+    padding: 10px 12px;
+    border-left: 3px solid $orange;
+    border-radius: $radius-sm;
+    background: $white;
+  }
+
   ul {
     margin: 4px 0 0;
     padding-left: 18px;

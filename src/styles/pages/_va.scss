@@ -5886,6 +5886,12 @@ $tl-colors: (
     font-variant-numeric: tabular-nums;
     text-align: right;
   }
+
+  // The VA agreement's first-6-months training fee, taken off the hours above.
+  tr.is-deduction td {
+    color: $muted;
+    font-style: italic;
+  }
 }
 
 .ci-nopay {

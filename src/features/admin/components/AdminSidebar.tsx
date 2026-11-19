@@ -115,7 +115,7 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
         groups: [
           {
             title: "Revenue",
-            items: [item("payments", "Billing & invoices", "invoice")],
+            items: [item("payments", "Billing & invoices", "invoice"), item("products", "Products", "tag")],
           },
           {
             title: "Referrals",

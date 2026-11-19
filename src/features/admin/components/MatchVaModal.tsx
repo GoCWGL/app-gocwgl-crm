@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { Avatar, Button, Field, FormError, Icon, LoadState, Modal, SearchBox, Select } from "@/components/ui";
-import { VA_MAINTENANCE_FEE_DOLLARS } from "@/features/portal/lib/vaAgreement";
+import { TRAINING_FEE_SHORT, VA_MAINTENANCE_FEE_DOLLARS } from "@/features/portal/lib/vaAgreement";
 import { avatarTone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import { useAssignClientVa, useClientVas } from "@/utils/hooks/useClientWork";
@@ -18,7 +18,7 @@ const HOURS: Array<{ value: Exclude<HoursChoice, "">; label: string }> = [
   { value: "40", label: "40 hours a week (full time)" },
   { value: "project", label: "Open project (no maintenance fee)" },
 ];
-/** "$20 a month". */
+/** "$45 a month". */
 const feeLabel = (dollars: number | null) => (dollars == null ? "" : `${"$"}${dollars} a month`);
 
 /**
@@ -158,7 +158,9 @@ export function MatchVaModal({ client, onClose }: { client?: { id: string; name:
             <div className="mv-fee" aria-live="polite">
               <span className="mv-fee__label">Monthly maintenance fee</span>
               <strong className="mv-fee__value">{fee != null ? feeLabel(fee) : hours === "project" ? "No maintenance fee" : "Pick the hours"}</strong>
-              <span className="text-tiny">Paid to GoCWGL. The VA’s pay is separate.</span>
+              <span className="text-tiny">
+                {fee != null ? `${TRAINING_FEE_SHORT}, taken off the VA’s invoice. ` : ""}Paid to GoCWGL. The VA’s pay is separate.
+              </span>
             </div>
           </div>
         )}

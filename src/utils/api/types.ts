@@ -5178,6 +5178,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/va-hours": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Va Hours
+         * @description Every VA's hours per client in a month (default: this month) and what GoCWGL invoices each client on the 1st.
+         */
+        get: operations["va_hours_api_admin_va_hours_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/menu-counts": {
         parameters: {
             query?: never;
@@ -5206,6 +5226,46 @@ export interface paths {
         put?: never;
         /** Admin Seen */
         post: operations["admin_seen_api_admin_menu_counts_seen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-invoices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Staff Va Invoices
+         * @description Every VA's sent and paid invoices to clients (drafts stay with the VA), newest first.
+         */
+        get: operations["staff_va_invoices_api_admin_va_invoices_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/va-invoices/{invoice_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Staff Va Invoice
+         * @description One VA invoice with its lines: hours × rate and the first-6-months training fee taken off.
+         */
+        get: operations["staff_va_invoice_api_admin_va_invoices__invoice_id__get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -8753,6 +8813,11 @@ export interface components {
             rateCents: number;
             /** Amountcents */
             amountCents: number;
+            /**
+             * Deduction
+             * @default false
+             */
+            deduction?: boolean;
         };
         /** ClientVaInvoicePayment */
         ClientVaInvoicePayment: {
@@ -8820,6 +8885,10 @@ export interface components {
             hoursPerWeek?: number | null;
             /** Maintenancefeecents */
             maintenanceFeeCents?: number | null;
+            /** Hourlyfeecents */
+            hourlyFeeCents?: number | null;
+            /** Hourlyfeeendson */
+            hourlyFeeEndsOn?: string | null;
         };
         /** ClockIn */
         ClockIn: {
@@ -10327,6 +10396,8 @@ export interface components {
             paymentUrl?: string | null;
             /** Paymentmethod */
             paymentMethod?: ("wise" | "paypal" | "stripe" | "paymongo" | "square" | "xendit" | "gcash" | "bank" | "other") | null;
+            /** Vabilling */
+            vaBilling?: components["schemas"]["VaBilling"][] | null;
         };
         /** InvoiceItem */
         InvoiceItem: {
@@ -10359,6 +10430,11 @@ export interface components {
             rateCents: number;
             /** Amountcents */
             amountCents: number;
+            /**
+             * Deduction
+             * @default false
+             */
+            deduction?: boolean;
         };
         /** InvoiceOut */
         InvoiceOut: {
@@ -10408,6 +10484,8 @@ export interface components {
             lastEmailedAt?: string | null;
             /** Subscriptionid */
             subscriptionId?: string | null;
+            /** Vabilling */
+            vaBilling?: components["schemas"]["VaBillingOut"][] | null;
         };
         /** InvoicePayment */
         InvoicePayment: {
@@ -10502,6 +10580,18 @@ export interface components {
             dueDate?: string | null;
             /** Note */
             note?: string | null;
+        };
+        /** InvoiceVa */
+        InvoiceVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
         };
         /** InvoicesOverview */
         InvoicesOverview: {
@@ -13640,6 +13730,119 @@ export interface components {
              */
             reporterEmail?: string | "";
         };
+        /** StaffVaInvoiceDetail */
+        StaffVaInvoiceDetail: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "sent" | "paid";
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /**
+             * Periodend
+             * Format: date
+             */
+            periodEnd: string;
+            /** Seconds */
+            seconds: number;
+            /** Amountcents */
+            amountCents: number;
+            /** Ratecents */
+            rateCents: number;
+            /**
+             * Deductioncents
+             * @default 0
+             */
+            deductionCents?: number;
+            /** Duedate */
+            dueDate: string | null;
+            /** Sentat */
+            sentAt: string | null;
+            /** Paidat */
+            paidAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Note */
+            note: string;
+            /** Paymentlabel */
+            paymentLabel: string;
+            client: components["schemas"]["InvoiceClient"] | null;
+            /** Lines */
+            lines: components["schemas"]["InvoiceLine"][];
+            /** Fromname */
+            fromName: string;
+            /** Fromemail */
+            fromEmail: string;
+            payment: components["schemas"]["InvoicePayment"] | null;
+            va: components["schemas"]["InvoiceVa"];
+        };
+        /** StaffVaInvoiceRow */
+        StaffVaInvoiceRow: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "sent" | "paid";
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /**
+             * Periodend
+             * Format: date
+             */
+            periodEnd: string;
+            /** Seconds */
+            seconds: number;
+            /** Amountcents */
+            amountCents: number;
+            /** Ratecents */
+            rateCents: number;
+            /**
+             * Deductioncents
+             * @default 0
+             */
+            deductionCents?: number;
+            /** Duedate */
+            dueDate: string | null;
+            /** Sentat */
+            sentAt: string | null;
+            /** Paidat */
+            paidAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Note */
+            note: string;
+            /** Paymentlabel */
+            paymentLabel: string;
+            client: components["schemas"]["InvoiceClient"] | null;
+            va: components["schemas"]["InvoiceVa"];
+        };
         /**
          * StaffVaRequestIn
          * @description A request made by GoCWGL on a client's behalf (Job postings › New job posting).
@@ -13800,17 +14003,11 @@ export interface components {
              * Format: uuid
              */
             contactId: string;
-            /**
-             * Plan
-             * @default Hosting & backend services
-             */
-            plan?: string;
-            /**
-             * Amountcents
-             * @default 9700
-             */
-            amountCents?: number;
-            /** @default Year */
+            /** Plan */
+            plan: string;
+            /** Amountcents */
+            amountCents: number;
+            /** @default Month */
             interval?: components["schemas"]["Interval"];
             /** Nextbillingdate */
             nextBillingDate?: string | null;
@@ -14218,6 +14415,14 @@ export interface components {
             myRatingCount: number;
             /** Resumeslug */
             resumeSlug: string | null;
+            /** Hoursperweek */
+            hoursPerWeek?: number | null;
+            /** Maintenancefeecents */
+            maintenanceFeeCents?: number | null;
+            /** Hourlyfeecents */
+            hourlyFeeCents?: number | null;
+            /** Hourlyfeeendson */
+            hourlyFeeEndsOn?: string | null;
         };
         /** TeamVaHours */
         TeamVaHours: {
@@ -15138,6 +15343,103 @@ export interface components {
             /** Minuteslate */
             minutesLate: number;
         };
+        /**
+         * VaBilling
+         * @description One VA on a maintenance fee invoice: the month billed and their hours and fees for it.
+         */
+        VaBilling: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /**
+             * Vaname
+             * @default
+             */
+            vaName?: string;
+            /** Month */
+            month: string;
+            /**
+             * Seconds
+             * @default 0
+             */
+            seconds?: number;
+            /**
+             * Billableseconds
+             * @default 0
+             */
+            billableSeconds?: number;
+            /**
+             * Trainingseconds
+             * @default 0
+             */
+            trainingSeconds?: number;
+            /**
+             * Valuecents
+             * @default 0
+             */
+            valueCents?: number;
+            /** Hoursperweek */
+            hoursPerWeek?: number | null;
+            /**
+             * Maintenancecents
+             * @default 0
+             */
+            maintenanceCents?: number;
+            /**
+             * Trainingcents
+             * @default 0
+             */
+            trainingCents?: number;
+        };
+        /** VaBillingOut */
+        VaBillingOut: {
+            /**
+             * Vaid
+             * Format: uuid
+             */
+            vaId: string;
+            /**
+             * Vaname
+             * @default
+             */
+            vaName?: string;
+            /** Month */
+            month: string;
+            /**
+             * Seconds
+             * @default 0
+             */
+            seconds?: number;
+            /**
+             * Billableseconds
+             * @default 0
+             */
+            billableSeconds?: number;
+            /**
+             * Trainingseconds
+             * @default 0
+             */
+            trainingSeconds?: number;
+            /**
+             * Valuecents
+             * @default 0
+             */
+            valueCents?: number;
+            /** Hoursperweek */
+            hoursPerWeek?: number | null;
+            /**
+             * Maintenancecents
+             * @default 0
+             */
+            maintenanceCents?: number;
+            /**
+             * Trainingcents
+             * @default 0
+             */
+            trainingCents?: number;
+        };
         /** VaClientOut */
         VaClientOut: {
             /**
@@ -15365,6 +15667,139 @@ export interface components {
             application?: components["schemas"]["VaApplicationAnswers"] | null;
             referral?: components["schemas"]["VaReferralSummary"] | null;
         };
+        /** VaHoursClient */
+        VaHoursClient: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Company */
+            company: string;
+            /**
+             * Email
+             * @default
+             */
+            email?: string;
+        };
+        /** VaHoursIdleVa */
+        VaHoursIdleVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+        };
+        /**
+         * VaHoursInvoice
+         * @description The GoCWGL invoice that bills this VA for the month.
+         */
+        VaHoursInvoice: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /** Status */
+            status: string;
+            /** Totalcents */
+            totalCents: number;
+            /** Billedseconds */
+            billedSeconds: number;
+        };
+        /** VaHoursReport */
+        VaHoursReport: {
+            /**
+             * Month
+             * Format: date
+             */
+            month: string;
+            /**
+             * Periodstart
+             * Format: date
+             */
+            periodStart: string;
+            /**
+             * Periodend
+             * Format: date
+             */
+            periodEnd: string;
+            /**
+             * Invoiceon
+             * Format: date
+             */
+            invoiceOn: string;
+            /** Rows */
+            rows: components["schemas"]["VaHoursRow"][];
+            /** Vaswithoutclients */
+            vasWithoutClients?: components["schemas"]["VaHoursIdleVa"][];
+            /** Clientswithoutvas */
+            clientsWithoutVas?: components["schemas"]["VaHoursClient"][];
+            totals: components["schemas"]["VaHoursTotals"];
+        };
+        /** VaHoursRow */
+        VaHoursRow: {
+            va: components["schemas"]["VaHoursVa"];
+            client: components["schemas"]["VaHoursClient"];
+            /** Active */
+            active: boolean;
+            /** Hoursperweek */
+            hoursPerWeek: number | null;
+            /** Seconds */
+            seconds: number;
+            /** Billableseconds */
+            billableSeconds: number;
+            /** Valuecents */
+            valueCents: number;
+            /** Trainingseconds */
+            trainingSeconds: number;
+            /** Trainingratecents */
+            trainingRateCents: number | null;
+            /** Trainingendson */
+            trainingEndsOn: string | null;
+            /** Trainingfeecents */
+            trainingFeeCents: number;
+            /** Maintenancefeecents */
+            maintenanceFeeCents: number | null;
+            /** Gocwgltotalcents */
+            gocwglTotalCents: number;
+            invoice?: components["schemas"]["VaHoursInvoice"] | null;
+        };
+        /** VaHoursTotals */
+        VaHoursTotals: {
+            /** Seconds */
+            seconds: number;
+            /** Billableseconds */
+            billableSeconds: number;
+            /** Valuecents */
+            valueCents: number;
+            /** Trainingseconds */
+            trainingSeconds: number;
+            /** Trainingfeecents */
+            trainingFeeCents: number;
+            /** Maintenancefeecents */
+            maintenanceFeeCents: number;
+            /** Gocwgltotalcents */
+            gocwglTotalCents: number;
+        };
+        /** VaHoursVa */
+        VaHoursVa: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+        };
         /** VaInvitationOut */
         VaInvitationOut: {
             /**
@@ -15417,6 +15852,11 @@ export interface components {
             amountCents: number;
             /** Ratecents */
             rateCents: number;
+            /**
+             * Deductioncents
+             * @default 0
+             */
+            deductionCents?: number;
             /** Duedate */
             dueDate: string | null;
             /** Sentat */
@@ -15503,6 +15943,11 @@ export interface components {
             amountCents: number;
             /** Ratecents */
             rateCents: number;
+            /**
+             * Deductioncents
+             * @default 0
+             */
+            deductionCents?: number;
             /** Duedate */
             dueDate: string | null;
             /** Sentat */
@@ -15945,6 +16390,10 @@ export interface components {
             agreementAcceptedAt?: string | null;
             /** Agreementfeecents */
             agreementFeeCents?: number | null;
+            /** Agreementhourlycents */
+            agreementHourlyCents?: number | null;
+            /** Hourlyfeeendson */
+            hourlyFeeEndsOn?: string | null;
         };
         /**
          * VaRequestPost
@@ -32573,6 +33022,48 @@ export interface operations {
             };
         };
     };
+    va_hours_api_admin_va_hours_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaHoursReport"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     admin_counts_api_admin_menu_counts_get: {
         parameters: {
             query?: never;
@@ -32626,6 +33117,80 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    staff_va_invoices_api_admin_va_invoices_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Staff Va Invoices Api Admin Va Invoices Get */
+                        data: components["schemas"]["StaffVaInvoiceRow"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    staff_va_invoice_api_admin_va_invoices__invoice_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invoice_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StaffVaInvoiceDetail"];
+                    };
+                };
             };
             /** @description Validation Error */
             422: {

@@ -1,7 +1,7 @@
 import { Icon, type IconName } from "@/components/ui";
 import { formatCentsExact } from "@/utils/format/money";
 
-/** What GoCWGL keeps per hour, and for how many months with each client (the API sends the same numbers). */
+/** The training fee per hour that comes off the VA's invoices, and for how many months with each client (the API sends the same numbers). */
 export const AGREEMENT_FEE_CENTS = 100;
 export const AGREEMENT_MONTHS = 6;
 
@@ -11,37 +11,39 @@ export function formatDay(iso: string): string {
 }
 
 /**
- * The VA agreement: for the first months with each client GoCWGL keeps part of the VA's hourly rate while the team
- * makes sure the VA and client work well together. Between GoCWGL and the VA only; the client is never told.
+ * The VA agreement: for the first months with each client part of the VA's hourly rate goes to GoCWGL while the team
+ * brings the VA up to date and makes sure the VA and client work well together. GoCWGL bills it to the client with
+ * the maintenance fee (the client agreed to it), and the VA's invoices take it off automatically.
  */
 export function VaAgreementTerms({ feeCents = AGREEMENT_FEE_CENTS, months = AGREEMENT_MONTHS }: { feeCents?: number; months?: number }) {
   const fee = formatCentsExact(feeCents);
   const example = 600;
+  const hours = 100;
   const clauses: Array<{ icon: IconName; title: string; text: string }> = [
     {
       icon: "shield",
-      title: "Monitoring period",
-      text: `For your first ${months} months with each client, GoCWGL keeps ${fee} of your hourly rate. During that time our team checks in to make sure you and the client work well together.`,
+      title: "Training period",
+      text: `For your first ${months} months with each client, ${fee} of your hourly rate goes to GoCWGL. During that time our team brings you up to date on the client’s work and checks in to make sure you and the client work well together.`,
+    },
+    {
+      icon: "invoice",
+      title: "Billed through the maintenance fee",
+      text: `GoCWGL bills that ${fee} an hour to the client with its monthly maintenance fee, so the client doesn’t pay twice. The client agreed to this when they requested a VA.`,
     },
     {
       icon: "dollar",
-      title: "Example",
-      text: `If your rate is ${formatCentsExact(example)} an hour, you take home ${formatCentsExact(example - feeCents)} an hour for the first ${months} months with that client.`,
+      title: "Taken off your invoice automatically",
+      text: `Your invoice to the client adds up your hours at your full rate, then takes off ${fee} for each hour. For example, ${hours} hours at ${formatCentsExact(example)} an hour is ${formatCentsExact(example * hours)}, less ${formatCentsExact(feeCents * hours)}, so you’re paid ${formatCentsExact((example - feeCents) * hours)}.`,
     },
     {
       icon: "trendUp",
       title: "Your full rate",
-      text: `After ${months} months with no issues, you keep your full hourly rate (${formatCentsExact(example)} in the example) for that client.`,
+      text: `After ${months} months with no issues, nothing comes off: your invoices are at your full hourly rate (${formatCentsExact(example)} in the example) for that client.`,
     },
     {
       icon: "users",
       title: "Every client",
       text: `This applies to each new client you’re matched with. The ${months} months count from the day you’re matched.`,
-    },
-    {
-      icon: "lock",
-      title: "Confidential",
-      text: "This is between you and GoCWGL. The client sees your full rate and isn’t told about this agreement. Please don’t discuss it with clients.",
     },
   ];
 
@@ -53,7 +55,7 @@ export function VaAgreementTerms({ feeCents = AGREEMENT_FEE_CENTS, months = AGRE
       </header>
       <dl className="agr-facts">
         <div className="agr-facts__item">
-          <dt>GoCWGL keeps</dt>
+          <dt>Training fee</dt>
           <dd>
             {fee}
             <small>/hr</small>

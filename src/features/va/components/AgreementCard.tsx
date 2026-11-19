@@ -72,7 +72,7 @@ export function AgreementCard({ show }: { show: "pending" | "signed" }) {
             <span className="agr__sub">Please read the agreement below and sign off before you start working.</span>
           </span>
           <span className="agr__private">
-            <Icon name="lock" size={12} /> Private to you
+            <Icon name="lock" size={12} /> You and GoCWGL
           </span>
         </header>
 
@@ -121,7 +121,8 @@ export function AgreementCard({ show }: { show: "pending" | "signed" }) {
             {a.acceptedAt ? `Signed ${formatShort(a.acceptedAt)}` : "VA agreement"}
           </h3>
           <span className="agr__sub">
-            For your first {a.months} months with each client, GoCWGL keeps {formatCentsExact(a.feeCents)} of your hourly rate.
+            For your first {a.months} months with each client, {formatCentsExact(a.feeCents)} an hour comes off your invoices automatically. GoCWGL
+            bills it to the client with the maintenance fee.
           </span>
         </span>
         <Button size="sm" variant="outline" onClick={() => setOpen((v) => !v)} aria-expanded={open}>

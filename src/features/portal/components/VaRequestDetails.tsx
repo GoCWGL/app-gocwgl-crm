@@ -86,7 +86,9 @@ export function VaRequestDetails({ r, staff }: { r: VaRequestOut; staff?: boolea
               <Fact
                 icon="invoice"
                 label="Maintenance fee"
-                value={`${fee.label} · ${fee.acceptedAt ? `agreed ${formatShort(fee.acceptedAt)}` : "standard rate, agreement not accepted"}`}
+                value={[fee.label, fee.hourlyLabel, fee.acceptedAt ? `agreed ${formatShort(fee.acceptedAt)}` : "standard rate, agreement not accepted"]
+                  .filter(Boolean)
+                  .join(" · ")}
               />
             )}
           </>

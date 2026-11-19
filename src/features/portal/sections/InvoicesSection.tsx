@@ -1,5 +1,6 @@
 "use client";
 
+import { BillingBreakdown, invoiceTotals } from "@/features/va/components/BillingBreakdown";
 import { PaymentLines } from "@/features/va/sections/invoices/PaymentLines";
 import { useState } from "react";
 import { Avatar, Badge, Button, LoadState, Modal, StatGrid, TabBar } from "@/components/ui";
@@ -8,7 +9,8 @@ import type { ClientVaInvoice } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
 import { usePortalBilling } from "@/utils/hooks/useBilling";
-import { useVaInvoiceForClient, useVaInvoicesForClient } from "@/utils/hooks/useClientWork";
+import { useVaInvoiceForClient, useVaInvoicesForClient, useVaTeam } from "@/utils/hooks/useClientWork";
+import { MonthlyBillingNote } from "../components/ClientVaAgreement";
 import { hm } from "../lib/vaTeam";
 import { BillingSection } from "./BillingSection";
 
@@ -33,6 +35,8 @@ export function InvoicesSection() {
           { value: "gocwgl", label: "From GoCWGL", hint: "Plans and builds", icon: "invoice", tone: "pink", count: gocwgl.data ? gOpen || gocwgl.data.invoices.length : "–" },
         ]}
       />
+      {/* Clients with a VA: when GoCWGL's maintenance fee invoice arrives and what it covers. */}
+      {(useVaTeam().data?.length ?? 0) > 0 && <MonthlyBillingNote />}
       {view === "vas" ? <VaInvoices /> : <BillingSection />}
     </div>
   );
@@ -152,8 +156,11 @@ function VaInvoiceModal({ id, onClose }: { id: string; onClose: () => void }) {
               </thead>
               <tbody>
                 {inv.lines.map((l) => (
-                  <tr key={l.category}>
-                    <td>{l.category || "Work"}</td>
+                  <tr key={`${l.category}-${l.rateCents}`} className={l.deduction ? "is-deduction" : undefined}>
+                    <td>
+                      {l.category || "Work"}
+                      {l.deduction && <span className="text-small"> · billed by GoCWGL with the maintenance fee</span>}
+                    </td>
                     <td>{hm(l.seconds)}</td>
                     <td>{formatCentsExact(l.rateCents)}/hr</td>
                     <td className="text-strong">{formatCentsExact(l.amountCents)}</td>
@@ -161,6 +168,7 @@ function VaInvoiceModal({ id, onClose }: { id: string; onClose: () => void }) {
                 ))}
               </tbody>
             </table>
+            <BillingBreakdown totals={invoiceTotals(inv.lines)} audience="client" />
             {inv.payment && (
               <section className="cp-pay">
                 <span className="kicker kicker--sm">HOW TO PAY</span>

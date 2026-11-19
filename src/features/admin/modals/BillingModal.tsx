@@ -4,7 +4,6 @@ import { useState, type FormEvent } from "react";
 import { Button, Checkbox, Field, Icon, IconButton, IconTile, Input, Modal, SegmentedControl, Select, type IconName } from "@/components/ui";
 import {
   BILLING_INTERVALS,
-  HOSTING_PLAN,
   PAYMENT_METHODS,
   isPayUrl,
   paymentMethodLabel,
@@ -17,11 +16,12 @@ import { centsToDollars, dollarsToCents, formatCents, formatCentsExact } from "@
 import { errorMessage, fieldErrors } from "@/utils/errors";
 import { useCreateInvoice, useCreatePaymentOption, useCreateSubscription, usePaymentOptions } from "@/utils/hooks/useBilling";
 import { useAllContacts } from "@/utils/hooks/useContacts";
+import { MaintenanceFeeModal } from "../sections/payments/VaFeeInvoiceModal";
 import { contactName } from "../lib/contacts";
 
 type LineDraft = { desc: string; qty: string; price: string };
 
-export type BillingKind = "invoice" | "custom" | "sub";
+export type BillingKind = "invoice" | "sub" | "maintenance";
 
 /** Shorter names shown in the preset picker; the invoice line keeps the full name. */
 const PRESET_NAMES: Record<string, string> = {
@@ -60,8 +60,8 @@ type BillingModalProps = {
 };
 
 /**
- * Create a one-time invoice, a custom invoice (your own price, payment method and link), or set up a recurring
- * subscription. A payment that comes in outside the app is recorded with "Mark paid" on the invoice list. Prices and
+ * Create a one-time invoice (products or your own lines, with the payment method and link), set up a recurring
+ * subscription, or bill a VA maintenance fee. A payment that comes in outside the app is recorded with "Mark paid" on the invoice list. Prices and
  * links come from your products (Invoices › Products), so a price change needs no code. Totals are computed by the API.
  */
 export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalProps) {
@@ -77,26 +77,24 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
   const [items, setItems] = useState<LineDraft[]>([{ desc: "", qty: "1", price: "" }]);
   const [due, setDue] = useState("7");
   const [note, setNote] = useState("");
-  const [plan, setPlan] = useState(HOSTING_PLAN.plan);
-  const [amount, setAmount] = useState(centsToDollars(HOSTING_PLAN.amountCents));
-  const [interval, setInterval] = useState<BillingInterval>(HOSTING_PLAN.interval);
+  // No preset plan or price: the team enters what each client's subscription is for and what it costs.
+  const [plan, setPlan] = useState("");
+  const [amount, setAmount] = useState("");
+  const [interval, setInterval] = useState<BillingInterval>("Month");
   const [trial, setTrial] = useState("0");
   const [presetsOpen, setPresetsOpen] = useState(false);
-  // Custom invoice (and subscription) payment details.
-  const [customName, setCustomName] = useState("");
-  const [customPrice, setCustomPrice] = useState("");
+  // Payment details (invoice and subscription).
   const [method, setMethod] = useState<PaymentMethod>("wise");
   const [payUrl, setPayUrl] = useState("");
   const [saveOption, setSaveOption] = useState(true);
   const [error, setError] = useState("");
 
-  const isCustom = kind === "custom";
   const isInvoice = kind === "invoice";
   const isSub = kind === "sub";
   const client = contacts.find((c) => c.id === clientId);
   const lineCents = (it: LineDraft) => Math.max(1, Number(it.qty) || 1) * dollarsToCents(it.price || 0);
   // Preview only: the saved invoice's total comes back from the API as totalCents.
-  const estimate = isCustom ? dollarsToCents(customPrice || 0) : items.reduce((n, it) => n + lineCents(it), 0);
+  const estimate = items.reduce((n, it) => n + lineCents(it), 0);
   const patchItem = (i: number, patch: Partial<LineDraft>) => {
     setItems(items.map((it, k) => (k === i ? { ...it, ...patch } : it)));
     setError("");
@@ -108,18 +106,19 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       ? oneTime.find((o) => sameName(o.name, filled[0].desc) && o.amountCents === dollarsToCents(filled[0].price))
       : undefined;
   const planMatch = plans.find((o) => sameName(o.name, plan) && o.amountCents === dollarsToCents(amount) && o.interval === interval);
-  // Custom invoice / subscription: offer to save it unless it's already a saved option as entered.
-  const customCents = isCustom ? dollarsToCents(customPrice || 0) : dollarsToCents(amount || 0);
-  const customLabel = isCustom ? customName : plan;
-  const alreadySaved = (isCustom ? oneTime : plans).some(
+  // A one-line invoice (or a subscription) with a link: offer to save it as a product, unless it already is one.
+  const single = isInvoice && filled.length === 1 && Number(filled[0].qty || 1) === 1 ? filled[0] : undefined;
+  const customCents = isInvoice ? (single ? dollarsToCents(single.price) : 0) : dollarsToCents(amount || 0);
+  const customLabel = isInvoice ? (single?.desc ?? "") : plan;
+  const alreadySaved = (isInvoice ? oneTime : plans).some(
     (o) =>
       sameName(o.name, customLabel) &&
       o.amountCents === customCents &&
       o.paymentUrl === payUrl.trim() &&
       o.method === method &&
-      (isCustom || o.interval === interval),
+      (isInvoice || o.interval === interval),
   );
-  const canSave = !alreadySaved && payUrl.trim() !== "";
+  const canSave = !alreadySaved && payUrl.trim() !== "" && (!isInvoice || !!single);
   const pending = createInvoice.isPending || createSub.isPending || createOption.isPending;
   const onError = (err: unknown) => setError(Object.values(fieldErrors(err))[0] || errorMessage(err));
 
@@ -132,9 +131,6 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       setPlan(o.name);
       setAmount(centsToDollars(o.amountCents));
       setInterval(o.interval as BillingInterval);
-    } else {
-      setCustomName(o.name);
-      setCustomPrice(centsToDollars(o.amountCents));
     }
   };
 
@@ -153,21 +149,20 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
     const sentMessage = (iv: { number: string; totalCents: number; currency: string }) =>
       draft ? `${iv.number} saved as a draft.` : `${iv.number} (${formatCentsExact(iv.totalCents, iv.currency)}) sent to ${client.email}.`;
 
-    if (isCustom) {
-      const cents = dollarsToCents(customPrice);
-      if (!customName.trim()) return setError("Enter what the invoice is for.");
-      if (!(cents > 0)) return setError("Enter a price above zero.");
-      if (!isPayUrl(payUrl)) return setError("Enter the payment link, starting with https://");
+    if (isInvoice) {
+      const lines = filled;
+      if (!lines.length) return setError("Add at least one line with a description and price.");
+      if (payUrl.trim() && !isPayUrl(payUrl)) return setError("The payment link must start with https://");
       withSavedOption(() =>
         createInvoice.mutate(
           {
             contactId: client.id,
-            items: [{ description: customName.trim(), quantity: 1, unitPriceCents: cents }],
+            items: lines.map((it) => ({ description: it.desc.trim(), quantity: Math.max(1, Number(it.qty) || 1), unitPriceCents: dollarsToCents(it.price) })),
             dueDate,
             note: note.trim(),
             send: !draft,
-            paymentUrl: payUrl.trim(),
-            paymentMethod: method,
+            // Empty: a single line that is exactly a saved product gets that product's link (on the server).
+            ...(payUrl.trim() && { paymentUrl: payUrl.trim(), paymentMethod: method }),
           },
           { onSuccess: (iv) => onCreated("inv", sentMessage(iv)), onError },
         ),
@@ -175,23 +170,8 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       return;
     }
 
-    if (isInvoice) {
-      const lines = filled;
-      if (!lines.length) return setError("Add at least one line with a description and price.");
-      createInvoice.mutate(
-        {
-          contactId: client.id,
-          items: lines.map((it) => ({ description: it.desc.trim(), quantity: Math.max(1, Number(it.qty) || 1), unitPriceCents: dollarsToCents(it.price) })),
-          dueDate,
-          note: note.trim(),
-          send: !draft,
-        },
-        { onSuccess: (iv) => onCreated("inv", sentMessage(iv)), onError },
-      );
-      return;
-    }
-
     const cents = dollarsToCents(amount);
+    if (!plan.trim()) return setError("Enter what the subscription is for.");
     if (!(cents > 0)) return setError("Enter an amount above zero.");
     if (payUrl.trim() && !isPayUrl(payUrl)) return setError("The payment link must start with https://");
     const trialDays = Number(trial);
@@ -199,7 +179,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       createSub.mutate(
         {
           contactId: client.id,
-          plan: plan.trim() || HOSTING_PLAN.plan,
+          plan: plan.trim(),
           amountCents: cents,
           interval,
           nextBillingDate: addDaysIso(todayIso(), trialDays),
@@ -221,6 +201,23 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
     create(false);
   };
 
+  const kindSwitch = (
+    <SegmentedControl
+      variant="soft"
+      label="Billing type"
+      value={kind}
+      onChange={(k) => {
+        onKind(k);
+        setError("");
+      }}
+      options={[
+        { value: "invoice", label: "One-time invoice" },
+        { value: "sub", label: "Subscription" },
+        { value: "maintenance", label: "Maintenance fee" },
+      ]}
+    />
+  );
+
   const subLink = payUrl.trim() ? `${paymentMethodLabel(method)} link` : planMatch ? `your saved ${paymentMethodLabel(planMatch.method)} link` : "";
 
   const linkFields = (
@@ -231,10 +228,11 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       <Field
         label="Payment link"
         htmlFor="bm-pay-url"
-        required={isCustom}
         hint={
-          isCustom
-            ? "The Pay button in the invoice email opens this link."
+          isInvoice
+            ? invoiceMatch && !payUrl.trim()
+              ? `Empty: uses your saved ${paymentMethodLabel(invoiceMatch.method)} link for ${invoiceMatch.name}.`
+              : "The Pay button in the invoice email opens this link (e.g. a Wise request for this total). Leave empty to send payment details yourself."
             : planMatch && !payUrl.trim()
               ? `Empty: uses your saved ${paymentMethodLabel(planMatch.method)} link for this plan.`
               : "On every invoice. Leave empty to send payment details yourself."
@@ -274,6 +272,11 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
     </Field>
   );
 
+  // Maintenance fee: the client's VAs for a month, their hours and the fees (its own form).
+  if (kind === "maintenance") {
+    return <MaintenanceFeeModal top={kindSwitch} onClose={onClose} onDone={(message) => onCreated("inv", message)} />;
+  }
+
   return (
     <Modal
       open
@@ -282,8 +285,8 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       onSubmit={submit}
       titleId="bm-title"
       kicker="BILL A CLIENT"
-      title={isCustom ? "Custom invoice" : isInvoice ? "New invoice" : "New subscription"}
-      subtitle={isCustom ? "Your own price, payment method and link. Sent with the same invoice email and follow-ups." : undefined}
+      title={isInvoice ? "One-time invoice" : "New subscription"}
+      subtitle={isInvoice ? "Products or your own lines and prices, with the payment method and link the client pays with." : undefined}
       media={
         <IconTile brand size="lg">
           <Icon name="invoice" size={18} />
@@ -292,7 +295,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          {(isInvoice || isCustom) && (
+          {isInvoice && (
             <Button variant="accent" onClick={() => create(true)} disabled={pending}>
               Save as draft
             </Button>
@@ -300,7 +303,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
           <Button type="submit" variant="primary" disabled={pending}>
             {pending
               ? "Saving…"
-              : isInvoice || isCustom
+              : isInvoice
                   ? "Send invoice"
                   : Number(trial)
                     ? "Create subscription"
@@ -309,20 +312,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
         </>
       }
     >
-      <SegmentedControl
-        variant="soft"
-        label="Billing type"
-        value={kind}
-        onChange={(k) => {
-          onKind(k);
-          setError("");
-        }}
-        options={[
-          { value: "invoice", label: "One-time invoice" },
-          { value: "custom", label: "Custom invoice" },
-          { value: "sub", label: "Subscription" },
-        ]}
-      />
+      {kindSwitch}
       <div className="form-grid">
         <Field label="Client" htmlFor="bm-client" required>
           <Select
@@ -336,17 +326,17 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
             }}
           />
         </Field>
-        {isCustom || isSub ? (
+        {isSub ? (
           <Field
             label="Product"
             htmlFor="bm-option"
-            hint={isSub ? "Fills in the plan, price and link." : "Fills in the item, price and link. Or type your own below."}
+            hint="Fills in the plan, price and link."
           >
             <Select
               id="bm-option"
               value=""
-              placeholder={(isSub ? plans : oneTime).length ? "Choose a product…" : "No products yet"}
-              options={(isSub ? plans : oneTime).map((o) => ({
+              placeholder={plans.length ? "Choose a product…" : "No products yet"}
+              options={plans.map((o) => ({
                 value: o.id,
                 label: `${o.name} · ${formatCents(o.amountCents)}${o.interval ? ` / ${o.interval.toLowerCase()}` : ""}`,
               }))}
@@ -359,60 +349,18 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
               id="bm-method"
               readOnly
               value={
-                invoiceMatch
-                  ? `${paymentMethodLabel(invoiceMatch.method)} payment link for the ${invoiceMatch.name}`
-                  : "Payment details you send them (no saved link for this item and price)"
+                payUrl.trim()
+                  ? `The ${paymentMethodLabel(method)} link below`
+                  : invoiceMatch
+                    ? `${paymentMethodLabel(invoiceMatch.method)} payment link for the ${invoiceMatch.name}`
+                    : "Payment details you send them (add a link below to include one)"
               }
             />
           </Field>
         )}
       </div>
 
-      {isCustom ? (
-        <div className="stack stack--8">
-          <span className="kicker">INVOICE</span>
-          <div className="form-grid">
-            <Field label="Item" htmlFor="bm-custom-name" required>
-              <Input
-                id="bm-custom-name"
-                value={customName}
-                placeholder="e.g. Website redesign"
-                onChange={(e) => {
-                  setCustomName(e.target.value);
-                  setError("");
-                }}
-              />
-            </Field>
-            <Field label="Price" htmlFor="bm-custom-price" required>
-              <Input
-                id="bm-custom-price"
-                type="number"
-                min={0}
-                step="0.01"
-                mono
-                placeholder="0.00"
-                value={customPrice}
-                onChange={(e) => {
-                  setCustomPrice(e.target.value);
-                  setError("");
-                }}
-              />
-            </Field>
-          </div>
-          {linkFields}
-          <div className="invoice-total">
-            {dueField}
-            <div className="invoice-total__amount">
-              <span className="text-small">Total</span>
-              <span className="billing-summary__amount">{formatCentsExact(estimate)}</span>
-            </div>
-          </div>
-          <Field label="Note to client" htmlFor="bm-note">
-            <Input id="bm-note" value={note} placeholder="Thank you for your business!" onChange={(e) => setNote(e.target.value)} />
-          </Field>
-          {saveBox}
-        </div>
-      ) : isInvoice ? (
+      {isInvoice ? (
         <div className="stack stack--8">
           <span className="kicker">LINE ITEMS</span>
           {oneTime.length > 0 && (
@@ -454,6 +402,10 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
                               // Fill the first empty line, or add one.
                               const empty = items.findIndex((it) => !it.desc.trim() && !it.price);
                               setItems(empty >= 0 ? items.map((it, k) => (k === empty ? line : it)) : [...items, line]);
+                              if (!payUrl.trim() && o.paymentUrl) {
+                                setPayUrl(o.paymentUrl);
+                                setMethod(o.method as PaymentMethod);
+                              }
                               setPresetsOpen(false);
                               setError("");
                             }}
@@ -515,6 +467,8 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
           <Button variant="dashed" size="sm" onClick={() => setItems([...items, { desc: "", qty: "1", price: "" }])}>
             + Add line
           </Button>
+          <span className="kicker">PAYMENT</span>
+          {linkFields}
           <div className="invoice-total">
             {dueField}
             <div className="invoice-total__amount">
@@ -525,15 +479,16 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
           <Field label="Note to client" htmlFor="bm-note">
             <Input id="bm-note" value={note} placeholder="Thank you for your business!" onChange={(e) => setNote(e.target.value)} />
           </Field>
+          {saveBox}
         </div>
       ) : (
         <>
           <div className="form-grid">
-            <Field label="Plan name" htmlFor="bm-plan">
-              <Input id="bm-plan" value={plan} onChange={(e) => setPlan(e.target.value)} />
+            <Field label="Plan name" htmlFor="bm-plan" required>
+              <Input id="bm-plan" value={plan} placeholder="e.g. VA maintenance fee" onChange={(e) => setPlan(e.target.value)} />
             </Field>
-            <Field label="Amount" htmlFor="bm-amt">
-              <Input id="bm-amt" type="number" min={0} step="0.01" mono value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <Field label="Amount" htmlFor="bm-amt" required>
+              <Input id="bm-amt" type="number" min={0} step="0.01" mono value={amount} placeholder="0.00" onChange={(e) => setAmount(e.target.value)} />
             </Field>
             <Field label="Bill every" htmlFor="bm-int">
               <Select id="bm-int" value={interval} options={BILLING_INTERVALS} onChange={(e) => setInterval(e.target.value as BillingInterval)} />

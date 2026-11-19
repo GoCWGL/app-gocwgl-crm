@@ -6,6 +6,9 @@ import type {
   PaymentMethodIn,
   PaymentMethodOut,
   PaymentMethodUpdate,
+  StaffVaInvoiceDetail,
+  StaffVaInvoiceRow,
+  VaHoursReport,
   VaInvoiceDetail,
   VaInvoiceIn,
   VaInvoiceUpdate,
@@ -25,3 +28,9 @@ export const listPaymentMethods = () => get<PaymentMethodOut[]>("/va/payment-met
 export const addPaymentMethod = (body: PaymentMethodIn) => post<PaymentMethodOut>("/va/payment-methods", body);
 export const updatePaymentMethod = (id: string, body: PaymentMethodUpdate) => patch<PaymentMethodOut>(`/va/payment-methods/${id}`, body);
 export const deletePaymentMethod = (id: string) => del(`/va/payment-methods/${id}`);
+
+// Staff: Finance › Billing & invoices › VA invoices (every VA's sent and paid invoices to clients).
+export const listStaffVaInvoices = () => get<StaffVaInvoiceRow[]>("/admin/va-invoices");
+export const getStaffVaInvoice = (id: string) => get<StaffVaInvoiceDetail>(`/admin/va-invoices/${id}`);
+/** Staff: Finance › Billing & invoices › VA hours: every VA's hours per client in a month ("2026-11"), and what GoCWGL invoices on the 1st. */
+export const getVaHours = (month: string) => get<VaHoursReport>(`/admin/va-hours?month=${encodeURIComponent(month)}`);

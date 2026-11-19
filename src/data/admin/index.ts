@@ -17,6 +17,7 @@ export type AdminTab =
   | "calendar"
   | "bonuses"
   | "payments"
+  | "products"
   | "affiliates"
   | "progress"
   | "media"
@@ -72,7 +73,8 @@ export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> 
   pipeline: { title: "Pipeline", subtitle: "Move each lead from signup to paid subscriber." },
   calendar: { title: "Calendar", subtitle: "Discovery calls booked by your leads." },
   bonuses: { title: "Referral bonus", subtitle: "Every referral and its bonus: what to pay, what's pending and what's paid." },
-  payments: { title: "Billing", subtitle: "Subscriptions, invoices and the products you sell. Clients pay through each payment link." },
+  payments: { title: "Billing & invoices", subtitle: "Subscriptions, invoices and each month’s client invoices. Clients pay through each payment link." },
+  products: { title: "Products", subtitle: "What you sell, with its price and payment link. Pick one when you bill a client." },
   affiliates: { title: "Affiliates", subtitle: "Clients who refer clients. Open one to see who they referred." },
   progress: { title: "CRM Requests", subtitle: "Build progress: track the system you’re building for each paid client and share the progress with them." },
   funnels: { title: "Funnel Requests", subtitle: "Funnels clients asked for from their portal: what they want, whether it’s paid, and a way to start the build." },
@@ -158,6 +160,8 @@ export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
   calendar: "calendar",
   bonuses: "affiliates",
   payments: "payments",
+  // Products share the Billing menu permission.
+  products: "payments",
   affiliates: "affiliates",
   progress: "progress",
   media: "media",

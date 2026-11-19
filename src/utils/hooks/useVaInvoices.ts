@@ -30,3 +30,12 @@ export const useAddPaymentMethod = () => useApiMutation(api.addPaymentMethod, { 
 export const useUpdatePaymentMethod = () =>
   useApiMutation((v: { id: string; body: PaymentMethodUpdate }) => api.updatePaymentMethod(v.id, v.body), { invalidate: [qk.payMethods] });
 export const useDeletePaymentMethod = () => useApiMutation(api.deletePaymentMethod, { invalidate: [qk.payMethods] });
+
+/** Staff: Finance › Billing & invoices › VA invoices. */
+export const useStaffVaInvoices = (enabled = true) => useQuery({ queryKey: qk.staffVaInvoices, queryFn: api.listStaffVaInvoices, enabled });
+export const useStaffVaInvoice = (id: string) =>
+  useQuery({ queryKey: [...qk.staffVaInvoices, id], queryFn: () => api.getStaffVaInvoice(id), enabled: !!id });
+
+/** Staff: Finance › Billing & invoices › VA hours for a month ("2026-11"). */
+export const useVaHours = (month: string) =>
+  useQuery({ queryKey: qk.vaHours(month), queryFn: () => api.getVaHours(month), enabled: /^\d{4}-\d{2}$/.test(month), placeholderData: keepPreviousData });

@@ -1,5 +1,6 @@
 "use client";
 
+import { BillingBreakdown, invoiceTotals } from "../../components/BillingBreakdown";
 import { PaymentLines } from "./PaymentLines";
 import { useState } from "react";
 import { Badge, Button, FormError, Icon, LoadState, Modal } from "@/components/ui";
@@ -123,7 +124,7 @@ function InvoiceDoc({ inv }: { inv: VaInvoiceDetail }) {
         </thead>
         <tbody>
           {inv.lines.map((l) => (
-            <tr key={`${l.category}-${l.rateCents}`}>
+            <tr key={`${l.category}-${l.rateCents}`} className={l.deduction ? "is-deduction" : undefined}>
               <td>{l.category}</td>
               <td className="is-num">{hoursLabel(l.seconds)}</td>
               <td className="is-num">{formatCentsExact(l.rateCents)}/hr</td>
@@ -140,6 +141,8 @@ function InvoiceDoc({ inv }: { inv: VaInvoiceDetail }) {
           </tr>
         </tfoot>
       </table>
+
+      <BillingBreakdown totals={invoiceTotals(inv.lines)} audience="va" />
 
       {inv.payment && (
         <div className="invoice-doc__pay">

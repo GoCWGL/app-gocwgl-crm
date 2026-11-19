@@ -6,12 +6,10 @@ import { useState } from "react";
 import { canWriteCrm, isSuperAdmin } from "@/utils/auth/session";
 import { formatLong, formatShort } from "@/utils/format/dates";
 import { formatCentsExact, formatCents } from "@/utils/format/money";
-import type { PaymentOptionOut } from "@/utils/api/models";
 import {
   useCancelSubscription,
   useInvoices,
   useMarkInvoicePaid,
-  usePaymentOptions,
   useSendInvoice,
   useSubscriptions,
   useUpdateSubscription,
@@ -19,13 +17,13 @@ import {
 } from "@/utils/hooks/useBilling";
 import { useAllContacts } from "@/utils/hooks/useContacts";
 import { useMe } from "@/utils/hooks/useUsers";
+import { useStaffVaInvoices } from "@/utils/hooks/useVaInvoices";
 import { contactName } from "../../lib/contacts";
 import type { BillingKind } from "../../modals/BillingModal";
 import { DeleteTransactionModal, type TransactionToDelete } from "./DeleteTransactionModal";
-import { PaymentOptionModal } from "./PaymentOptionModal";
-import { PaymentOptionsTable } from "./PaymentOptionsTable";
+import { VaInvoicesTable } from "./VaInvoicesTable";
 
-export type BillingView = "subs" | "inv" | "opts";
+export type BillingView = "subs" | "inv" | "vainv";
 
 type BillingTablesProps = {
   /** The views this page shows (Finance › Billing: subscriptions and products; Finance › Invoices: invoices). */
@@ -46,10 +44,7 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
   const [toDelete, setToDelete] = useState<TransactionToDelete | null>(null);
   const subsQuery = useSubscriptions();
   const invoicesQuery = useInvoices();
-  const optionsQuery = usePaymentOptions();
-  const options = optionsQuery.data ?? [];
-  // undefined: closed; null: adding a new one.
-  const [editing, setEditing] = useState<PaymentOptionOut | null | undefined>(undefined);
+  const vaInvoices = useStaffVaInvoices();
   const subscriptions = subsQuery.data ?? [];
   const invoices = invoicesQuery.data ?? [];
   const contacts = useAllContacts().data ?? [];
@@ -84,16 +79,11 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
             [
               { value: "subs", label: "Subscriptions", hint: "Recurring plans", icon: "card", count: subscriptions.length },
               { value: "inv", label: "Invoices", hint: "One-time bills", icon: "invoice", tone: "sky", count: invoices.length },
-              { value: "opts", label: "Products", hint: "Prices & payment links", icon: "tag", tone: "purple", count: options.length },
+              { value: "vainv", label: "Client invoices", hint: "Maintenance + VA hours", icon: "users", tone: "cyan", count: vaInvoices.data?.length ?? "–" },
             ] as const
           ).filter((o) => views.includes(o.value))}
         />
         <div className="board__actions">
-        {canWrite && view === "opts" && (
-          <Button variant="primary" onClick={() => setEditing(null)}>
-            + Add product
-          </Button>
-        )}
         {canWrite && view === "subs" && (
           <Button variant="accent" onClick={() => onNew("sub")}>
             + New subscription
@@ -101,8 +91,8 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
         )}
         {canWrite && view === "inv" && (
           <div className="cluster cluster--8">
-            <Button variant="outline" onClick={() => onNew("custom")}>
-              + Custom invoice
+            <Button variant="outline" onClick={() => onNew("maintenance")}>
+              + Maintenance fee
             </Button>
             <Button variant="primary" onClick={() => onNew("invoice")}>
               + New invoice
@@ -117,11 +107,14 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
         </div>
       ) : null}
 
-      <LoadState query={view === "subs" ? subsQuery : view === "inv" ? invoicesQuery : optionsQuery}>
+      {view === "vainv" ? (
+        <div className="table-scroll">
+          <VaInvoicesTable onMessage={onMessage} />
+        </div>
+      ) : (
+      <LoadState query={view === "subs" ? subsQuery : invoicesQuery}>
       <div className="table-scroll">
-        {view === "opts" ? (
-          <PaymentOptionsTable options={options} canWrite={canWrite} onEdit={setEditing} onMessage={onMessage} />
-        ) : view === "subs" ? (
+        {view === "subs" ? (
           <table className="data-table data-table--plain billing-table">
             <thead>
               <tr>
@@ -328,11 +321,9 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
         )}
         {view === "subs" && subscriptions.length === 0 && <p className="table-empty">No subscriptions yet.</p>}
         {view === "inv" && invoices.length === 0 && <p className="table-empty">No invoices yet.</p>}
-        {view === "opts" && options.length === 0 && (
-          <p className="table-empty">No products yet. Add what you sell and its price, then pick it when you bill a client.</p>
-        )}
       </div>
       </LoadState>
+      )}
 
       {message && (
         <div className="notice notice--success u-strong" role="status">
@@ -340,16 +331,6 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
         </div>
       )}
 
-      {editing !== undefined && (
-        <PaymentOptionModal
-          option={editing ?? undefined}
-          onClose={() => setEditing(undefined)}
-          onSaved={(text) => {
-            setEditing(undefined);
-            onMessage(text);
-          }}
-        />
-      )}
 
       {toDelete && (
         <DeleteTransactionModal

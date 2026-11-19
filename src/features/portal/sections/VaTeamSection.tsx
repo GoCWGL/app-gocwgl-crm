@@ -2,6 +2,7 @@
 
 import { Button, Icon, LoadState } from "@/components/ui";
 import { useVaTeam } from "@/utils/hooks/useClientWork";
+import { ClientVaAgreementCard } from "../components/ClientVaAgreement";
 import { RaiseRequests } from "../components/RaiseRequests";
 import { useShowPackages } from "../lib/vaAccess";
 import { usePortal } from "../state/PortalContext";
@@ -38,6 +39,8 @@ export function VaTeamSection() {
           </Button>
         )}
       </section>
+
+      {vas.length > 0 && <ClientVaAgreementCard />}
 
       <RaiseRequests readOnly={readOnly} />
 

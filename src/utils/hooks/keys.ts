@@ -36,6 +36,10 @@ export const qk = {
   journal: ["va", "journal"] as const,
   resume: ["va", "resume"] as const,
   vaInvoices: ["va", "invoices"] as const,
+  /** Staff: every VA's invoices to clients. */
+  staffVaInvoices: ["admin", "va-invoices"] as const,
+  /** Staff: VA hours per client in a month. */
+  vaHours: (month: string) => ["admin", "va-hours", month] as const,
   payMethods: ["va", "payment-methods"] as const,
   va: (id: string) => ["vas", "one", id] as const,
   /** Under "vas": changing a VA's clients refreshes it too. */

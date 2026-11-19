@@ -7,6 +7,7 @@ import { addDaysIso } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
 import { useCreateInvoice, useInvoicePreview, usePaymentMethods } from "@/utils/hooks/useVaInvoices";
 import { clientLabel, todayKey } from "../../lib/time";
+import { BillingBreakdown, invoiceTotals } from "../../components/BillingBreakdown";
 import { hoursLabel, kindLabel } from "./shared";
 
 /** Bill one client for their billable, not-yet-invoiced time in a date range. */
@@ -134,7 +135,7 @@ export function CreateInvoiceModal({
                 </thead>
                 <tbody>
                   {p.lines.map((l) => (
-                    <tr key={`${l.category}-${l.rateCents}`}>
+                    <tr key={`${l.category}-${l.rateCents}`} className={l.deduction ? "is-deduction" : undefined}>
                       <td>{l.category}</td>
                       <td className="is-num">{hoursLabel(l.seconds)}</td>
                       <td className="is-num">{formatCentsExact(l.rateCents)}</td>
@@ -155,6 +156,7 @@ export function CreateInvoiceModal({
                   </tr>
                 </tfoot>
               </table>
+              <BillingBreakdown totals={invoiceTotals(p.lines)} audience="va" />
             </>
           ) : (
             <span className="ci-preview__empty">

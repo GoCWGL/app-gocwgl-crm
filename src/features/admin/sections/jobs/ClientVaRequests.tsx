@@ -241,6 +241,7 @@ function RequestCard({
         </span>
         <span title="Monthly maintenance fee">
           <Icon name="invoice" size={13} /> {maintenanceFeeOf(r).label}
+          {maintenanceFeeOf(r).hourlyCents ? " + $1/hr (6 months)" : ""}
         </span>
         <span>
           <Icon name="globe" size={13} /> {requestHours(r)}

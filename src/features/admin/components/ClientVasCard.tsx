@@ -8,7 +8,7 @@ import { formatRelative, formatShort } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
 import { useClientVaRequests, useClientVas } from "@/utils/hooks/useClientWork";
 import { requestLoad } from "@/features/portal/components/VaRequestDetails";
-import { isBilledRequest, maintenanceFeeOf } from "@/features/portal/lib/vaAgreement";
+import { isBilledRequest, maintenanceFeeOf, trainingFeeActive, trainingFeeLabel } from "@/features/portal/lib/vaAgreement";
 import type { ClientVaOut, VaRequestOut } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
@@ -39,6 +39,9 @@ export function ClientVasCard({ contactId, clientName }: { contactId: string; cl
   };
   const billed = vas.filter((v) => v.active).map(feeOf).filter((f) => f.billed);
   const monthlyCents = billed.reduce((n, f) => n + (f.cents ?? 0), 0);
+  // First 6 months: $1 for each hour the VA worked this month (their invoice takes it off; GoCWGL bills it here).
+  const training = vas.filter((v) => v.active && trainingFeeActive(v.hourlyFeeCents, v.hourlyFeeEndsOn));
+  const trainingCents = training.reduce((n, v) => n + Math.round((v.monthSeconds * (v.hourlyFeeCents ?? 0)) / 3600), 0);
   const quoted = billed.filter((f) => f.cents == null).length;
   const noRequest = vas.filter((v) => v.active && !feeOf(v).billed).length;
 
@@ -112,9 +115,10 @@ export function ClientVasCard({ contactId, clientName }: { contactId: string; cl
         {active > 0 && (
           <div className="client-fee-total">
             <span>Monthly maintenance fee to invoice:</span>
-            <strong>{formatCentsExact(monthlyCents)}</strong>
+            <strong>{formatCentsExact(monthlyCents + trainingCents)}</strong>
             <span className="client-fee-total__note">
               {billed.length} active VA{billed.length === 1 ? "" : "s"}
+              {training.length > 0 && ` · includes ${formatCentsExact(trainingCents)} training fee for ${training.length} VA${training.length === 1 ? "" : "s"} in their first 6 months (this month’s hours so far)`}
               {quoted > 0 && ` · ${quoted} open project${quoted === 1 ? "" : "s"} quoted separately`}
               {noRequest > 0 && ` · ${noRequest} VA${noRequest === 1 ? "" : "s"} with no fee on file`}
             </span>
@@ -135,6 +139,7 @@ function FeeCell({ r, v }: { r?: VaRequestOut; v: ClientVaOut }) {
         <span className="vp-clist__sub">
           {v.hoursPerWeek} h a week · matched by GoCWGL
         </span>
+        {v.hourlyFeeCents != null && <span className="vp-clist__sub">{trainingFeeLabel(v.hourlyFeeCents, v.hourlyFeeEndsOn)}</span>}
       </span>
     );
   }
@@ -153,6 +158,7 @@ function FeeCell({ r, v }: { r?: VaRequestOut; v: ClientVaOut }) {
         {requestLoad(r)}
         {fee.acceptedAt ? ` · agreed ${formatShort(fee.acceptedAt)}` : " · standard rate"}
       </span>
+      {v.hourlyFeeCents != null && <span className="vp-clist__sub">{trainingFeeLabel(v.hourlyFeeCents, v.hourlyFeeEndsOn)}</span>}
     </span>
   );
 }

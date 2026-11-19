@@ -9,7 +9,9 @@ import { formatShort } from "@/utils/format/dates";
 import { useSession } from "@/utils/auth/session";
 import { formatCentsExact } from "@/utils/format/money";
 import { useAcceptQuote, useCancelVaRequest, useCommentOnMyRequest, useMyRequestComments, useVaRequests, useVaTeam } from "@/utils/hooks/useClientWork";
+import { ClientVaAgreementCard } from "../components/ClientVaAgreement";
 import { RequestComments } from "../components/RequestComments";
+import { agreementOf } from "../lib/vaAgreement";
 import { requestHours, requestLoad, VaRequestDetails } from "../components/VaRequestDetails";
 import { ApplicantsReview } from "../components/ApplicantsReview";
 import { VaProfileModal } from "../components/VaProfileModal";
@@ -96,6 +98,9 @@ export function TeamSection() {
           </Button>
         )}
       </section>
+
+      {/* The VA agreement: shown once they've accepted it on a request, or have a VA. */}
+      {(vas.length > 0 || all.some((r) => !!agreementOf(r).agreementAcceptedAt)) && <ClientVaAgreementCard />}
 
       <TabBar
         label="VAs"

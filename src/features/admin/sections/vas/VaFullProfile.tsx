@@ -618,8 +618,9 @@ function LinkReferralFor({ va, onClose }: { va: VaDetailOut; onClose: () => void
 }
 
 /**
- * The VA agreement (GoCWGL keeps $1/hr for the first 6 months with each client): whether the VA agreed, and per
- * client the monitoring period, what they keep, and a button to email it to them. Never shown to the client.
+ * The VA agreement ($1/hr of the VA's rate goes to GoCWGL for the first 6 months with each client, taken off their
+ * invoices and billed to the client with the maintenance fee): whether the VA agreed, and per client the 6 months,
+ * what they keep, and a button to email it to them.
  */
 function AgreementProfileCard({ va, canSend }: { va: VaDetailOut; canSend: boolean }) {
   const { notify } = useAdmin();
@@ -641,7 +642,8 @@ function AgreementProfileCard({ va, canSend }: { va: VaDetailOut; canSend: boole
       ) : (
         <>
           <span className="text-small">
-            First {a.months} months with each client: GoCWGL keeps {formatCentsExact(a.feeCents)}/hr. Only your team and the VA see this; the client is never told.
+            First {a.months} months with each client: {formatCentsExact(a.feeCents)}/hr of the VA’s rate goes to GoCWGL. The VA’s invoices take it off, and
+            GoCWGL bills it to the client with the maintenance fee (the client agreed to it in their VA agreement).
           </span>
           <dl className="vp-details">
             <div className="vp-details__row">

@@ -52,7 +52,7 @@ export function subscriptionOf(subs: SubscriptionOut[] | undefined, contactId: s
   return mine.find((s) => s.status !== "Canceled") ?? mine[0];
 }
 
-/** "Active · $97/mo" or "None". */
+/** "Active · $45/mo" or "None". */
 export function subscriptionText(sub: SubscriptionOut | undefined): string {
   return sub ? `${sub.status} · ${formatPerInterval(sub.amountCents, sub.interval, sub.currency)}` : "None";
 }

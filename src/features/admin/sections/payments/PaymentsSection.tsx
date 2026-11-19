@@ -5,9 +5,9 @@ import { BillingModal, type BillingKind } from "../../modals/BillingModal";
 import { useAdmin } from "../../state/AdminContext";
 import { BillingTables, type BillingView } from "./BillingTables";
 
-const VIEWS: BillingView[] = ["subs", "inv", "opts"];
+const VIEWS: BillingView[] = ["subs", "inv", "vainv"];
 
-/** Finance › Billing: subscriptions, invoices and products, one tab each. */
+/** Finance › Billing & invoices: subscriptions, invoices and client invoices (the monthly maintenance fees). Products have their own page. */
 export function PaymentsSection() {
   const { state, update } = useAdmin();
   const [billingKind, setBillingKind] = useState<BillingKind | null>(null);

@@ -34,6 +34,7 @@ import { EmailSection } from "./sections/email/EmailSection";
 import { FormsSection } from "./sections/forms/FormsSection";
 import { MediaSection } from "./sections/media/MediaSection";
 import { PaymentsSection } from "./sections/payments/PaymentsSection";
+import { ProductsSection } from "./sections/payments/ProductsSection";
 import { PipelineSection } from "./sections/pipeline/PipelineSection";
 import { NewBuildModal } from "./sections/progress/NewBuildModal";
 import { ProgressSection } from "./sections/progress/ProgressSection";
@@ -57,6 +58,7 @@ const SECTIONS: Record<AdminTab, ComponentType> = {
   calendar: CalendarSection,
   bonuses: ReferralBonusSection,
   payments: PaymentsSection,
+  products: ProductsSection,
   affiliates: AffiliatesSection,
   progress: CrmBuildsSection,
   funnels: FunnelBuildsSection,
