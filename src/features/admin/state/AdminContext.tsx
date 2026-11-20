@@ -67,7 +67,7 @@ export type AdminState = {
 };
 
 const TABS: AdminTab[] = [
-  "dashboard", "clients", "vas", "tags", "calendar", "bonuses", "payments", "products", "progress", "funnels", "media",
+  "dashboard", "leads", "clients", "vas", "tags", "calendar", "bonuses", "payments", "products", "progress", "funnels", "media",
   "email", "forms", "surveys", "automation", "reporting", "bugs", "status", "training", "sops", "clientStatus", "clientTraining", "clientSops", "support", "feedback", "jobs",
   "settings",
 ];

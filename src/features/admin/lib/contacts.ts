@@ -55,9 +55,9 @@ export function isInactiveClient(contact: ContactOut, subs: SubscriptionOut[] | 
   return contact.stage === "lost" || sub?.status === "Paused" || (contact.stage === "paid" && !isActiveClient(contact, subs));
 }
 
-/** Applied with "Become a client" on the sign-in page and not paid (or lost) yet. */
+/** Applied with "Become a client" on the sign-in page (or turned into a client from People › Leads) and not paid (or lost) yet. */
 export function isClientApplicant(contact: ContactOut): boolean {
-  return contact.source === "Client application" && (contact.stage === "lead" || contact.stage === "booked") && !contact.archivedAt;
+  return (contact.source === "Client application" || contact.convertedTo === "client") && (contact.stage === "lead" || contact.stage === "booked") && !contact.archivedAt;
 }
 
 /** Clients › Onboarding: client applicants, and current paid clients the team hasn't moved to Active yet. */

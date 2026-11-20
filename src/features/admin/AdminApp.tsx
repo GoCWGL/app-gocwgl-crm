@@ -27,6 +27,7 @@ import { TrainingsSection } from "./sections/trainings/TrainingsSection";
 import { ClientStatusSection } from "./sections/engagement/ClientStatusSection";
 import { CalendarSection } from "./sections/calendar/CalendarSection";
 import { ClientsSection } from "./sections/contacts/ClientsSection";
+import { LeadsSection } from "./sections/contacts/LeadsSection";
 import { TagsSection } from "./sections/contacts/TagsSection";
 import { VasSection } from "./sections/vas/VasSection";
 import { DashboardSection } from "./sections/dashboard/DashboardSection";
@@ -50,6 +51,7 @@ const ClientSopsSection = () => <SopsSection audience="client" />;
 
 const SECTIONS: Record<AdminTab, ComponentType> = {
   dashboard: DashboardSection,
+  leads: LeadsSection,
   clients: ClientsSection,
   vas: VasSection,
   tags: TagsSection,

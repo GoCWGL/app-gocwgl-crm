@@ -10,6 +10,7 @@ export * from "./surveys";
 /** Every page in the admin CRM. */
 export type AdminTab =
   | "dashboard"
+  | "leads"
   | "clients"
   | "vas"
   | "tags"
@@ -66,6 +67,7 @@ export const TAB_GROUPS: Array<{
 
 export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> = {
   dashboard: { title: "Dashboard", subtitle: "Overview: everyone who signed up on your landing page, and where they are now." },
+  leads: { title: "Leads", subtitle: "Everyone who booked a call on any of your calendars, or you added, who isn't a client or a VA yet." },
   clients: { title: "Clients", subtitle: "Every lead and client captured from your landing page." },
   vas: { title: "VAs", subtitle: "Your virtual assistants, the clients they support and their portal." },
   tags: { title: "Tags", subtitle: "Create and manage the tags you use on your contacts." },
@@ -148,6 +150,7 @@ export const VISIBLE_MENUS = MENUS.filter((m) => !HIDDEN_TABS.has(m.key));
 /** Which menu each page belongs to (Settings is always available: everyone has a profile). */
 export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
   dashboard: "dashboard",
+  leads: "contacts",
   clients: "contacts",
   // No menu of its own yet: whoever can use Contacts & Clients sees VAs.
   vas: "contacts",

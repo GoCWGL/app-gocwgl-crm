@@ -52,6 +52,8 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
   {
     title: "People",
     items: [
+      // Everyone who booked a call and isn't a client or a VA yet.
+      item("leads", "Leads", "userPlus"),
       {
         key: "clients-menu",
         label: "Clients",
@@ -169,7 +171,7 @@ export function AdminSidebar() {
   })).filter((g) => g.items.length);
   const flyouts = groups.flatMap((g) => g.items.filter(isFlyout));
 
-  // Support, Job Postings, Clients, VAs, Status, Feedback, Survey, Forms and Billing come from the server (see menus API).
+  // Leads (new bookers since you last opened Leads), Support, Job Postings, Clients, VAs, Status, Feedback, Survey, Forms and Billing come from the server (see menus API).
   const server = useMenuCounts("admin", tab);
   // New CRM requests (CRM Requests) and funnel requests with no build yet (Funnel Requests).
   const newCrm = (useCrmRequests().data ?? []).filter((r) => r.status === "new").length;

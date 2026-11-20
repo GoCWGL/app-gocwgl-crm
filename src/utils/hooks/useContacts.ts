@@ -25,6 +25,11 @@ export const useUpdateContact = () =>
 export const useDeleteContact = () => useApiMutation(api.deleteContact, { invalidate: CONTACT_KEYS });
 export const useArchiveContact = () => useApiMutation(api.archiveContact, { invalidate: CONTACT_KEYS });
 export const useUnarchiveContact = () => useApiMutation(api.unarchiveContact, { invalidate: CONTACT_KEYS });
+/** People › Leads (under "contacts", so every contact change refreshes it). */
+export const useLeads = (enabled = true) => useQuery({ queryKey: [...qk.contacts, "leads"], queryFn: api.listLeads, enabled });
+export const useAddLead = () => useApiMutation(api.addLead, { invalidate: CONTACT_KEYS });
+export const useConvertContact = () =>
+  useApiMutation((v: { id: string; to: "client" | "va" }) => api.convertContact(v.id, v.to), { invalidate: CONTACT_KEYS });
 export const useSendPortalInvite = () => useApiMutation(api.sendPortalInvite, { invalidate: (_, id) => [qk.portalLogin(id)] });
 export const usePortalLogin = (id: string) => useQuery({ queryKey: qk.portalLogin(id), queryFn: () => api.getPortalLogin(id), enabled: !!id });
 export const useSetContactPassword = () =>

@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Button, Checkbox, Field, Icon, IconTile, Input, Modal, PasswordInput, SegmentedControl, Select, Textarea } from "@/components/ui";
 import { browserZone, zoneOptions } from "@/features/booking/zones";
 import { copyToClipboard, generatePassword, isEmail } from "@/lib/utils";
-import type { VaStatus } from "@/utils/api/models";
+import type { VaDetailOut, VaStatus } from "@/utils/api/models";
 import { isStaffAdmin } from "@/utils/auth/session";
 import { errorMessage, fieldErrors, hasCode } from "@/utils/errors";
 import { useMe } from "@/utils/hooks/useUsers";
@@ -55,12 +55,23 @@ const FIELDS: Array<{ key: "first" | "last" | "email" | "phone" | "country"; lab
   { key: "country", label: "Country", type: "text", placeholder: "Philippines" },
 ];
 
-/** People › VAs › Add a VA: the same shape as Add a client (details, experience, portal login). */
-export function AddVaModal({ onClose }: { onClose: () => void }) {
+/**
+ * People › VAs › Add a VA: the same shape as Add a client (details, experience, portal login).
+ * People › Leads opens it with the lead's details in `initial`; `onAdded` runs once the VA is saved.
+ */
+export function AddVaModal({
+  onClose,
+  initial,
+  onAdded,
+}: {
+  onClose: () => void;
+  initial?: Partial<Pick<Draft, "first" | "last" | "email" | "phone">>;
+  onAdded?: (va: VaDetailOut) => void;
+}) {
   const { notify, update } = useAdmin();
   const create = useCreateVa();
   const isAdmin = isStaffAdmin(useMe().data);
-  const [draft, setDraft] = useState<Draft>(blank);
+  const [draft, setDraft] = useState<Draft>(() => ({ ...blank(), ...initial }));
   const [access, setAccess] = useState<Access>("invite");
   const [password, setPassword] = useState("");
   const [notifyReady, setNotifyReady] = useState(true);
@@ -125,13 +136,14 @@ export function AddVaModal({ onClose }: { onClose: () => void }) {
                 ? `${name} was added and can sign in to the VA portal${notifyReady ? " — we emailed them that it’s ready." : "."}`
                 : `${name} was added. Invite them from their profile when you’re ready.`,
           );
+          onAdded?.(va);
           setDraft(blank());
           setPassword("");
           setCopied(false);
           setTried(false);
           if (!another) {
             onClose();
-            if (openAfter) update({ vaFullId: va.id });
+            if (openAfter) update({ tab: "vas", vaFullId: va.id });
           }
         },
         onError: (err) => {
@@ -163,9 +175,11 @@ export function AddVaModal({ onClose }: { onClose: () => void }) {
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="accent" onClick={() => add(true)} disabled={create.isPending}>
-            Save &amp; add another
-          </Button>
+          {!onAdded && (
+            <Button variant="accent" onClick={() => add(true)} disabled={create.isPending}>
+              Save &amp; add another
+            </Button>
+          )}
           <Button type="submit" variant="primary" disabled={create.isPending}>
             {create.isPending ? "Adding…" : "Add VA"}
           </Button>

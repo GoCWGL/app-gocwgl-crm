@@ -2066,6 +2066,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Leads
+         * @description People › Leads: everyone who booked a call on any calendar and isn't a client, a VA or a teammate yet.
+         */
+        get: operations["list_leads_api_admin_leads_get"];
+        put?: never;
+        /**
+         * Add Lead
+         * @description Add a lead by hand: listed on People › Leads before they book a call. 409 `duplicate_email` if the email is taken.
+         */
+        post: operations["add_lead_api_admin_leads_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/contacts/{contact_id}/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Convert Contact
+         * @description Take a lead off People › Leads as a client (Clients › Onboarding) or a VA. 409 `not_a_lead` when they're past it.
+         */
+        post: operations["convert_contact_api_admin_contacts__contact_id__convert_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/contacts/{contact_id}": {
         parameters: {
             query?: never;
@@ -9136,6 +9180,14 @@ export interface components {
             /** Subcalendars */
             subCalendars?: components["schemas"]["SubCalendar"][] | null;
         };
+        /** ContactConvert */
+        ContactConvert: {
+            /**
+             * To
+             * @enum {string}
+             */
+            to: "client" | "va";
+        };
         /** ContactCreate */
         ContactCreate: {
             /** Firstname */
@@ -9290,6 +9342,10 @@ export interface components {
             showVaPackages?: boolean;
             /** Vaagreementacceptedat */
             vaAgreementAcceptedAt?: string | null;
+            /** Convertedto */
+            convertedTo?: ("client" | "va") | null;
+            /** Convertedat */
+            convertedAt?: string | null;
         };
         /** ContactReferrerIn */
         ContactReferrerIn: {
@@ -10916,6 +10972,56 @@ export interface components {
             body?: string | null;
             /** Mood */
             mood?: ("" | "great" | "good" | "okay" | "tough") | null;
+        };
+        /**
+         * LeadCreate
+         * @description People › Leads › Add a lead.
+         */
+        LeadCreate: {
+            /** Firstname */
+            firstName: string;
+            /**
+             * Lastname
+             * @default
+             */
+            lastName?: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone?: string;
+            /**
+             * Company
+             * @default
+             */
+            company?: string;
+            /** @default Manual entry */
+            source?: components["schemas"]["LeadSource"];
+            /**
+             * Notes
+             * @default
+             */
+            notes?: string;
+            /** Tagids */
+            tagIds?: string[];
+        };
+        /**
+         * LeadOut
+         * @description People › Leads: a contact who booked a call and isn't a client, a VA or a teammate yet.
+         */
+        LeadOut: {
+            contact: components["schemas"]["ContactOut"];
+            /** Bookings */
+            bookings: number;
+            /** Lastbookedat */
+            lastBookedAt: string | null;
+            /** Calendarname */
+            calendarName: string;
         };
         /**
          * LeadSource
@@ -22233,6 +22339,128 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ContactOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_leads_api_admin_leads_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Leads Api Admin Leads Get */
+                        data: components["schemas"]["LeadOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_lead_api_admin_leads_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeadCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["LeadOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    convert_contact_api_admin_contacts__contact_id__convert_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ContactConvert"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

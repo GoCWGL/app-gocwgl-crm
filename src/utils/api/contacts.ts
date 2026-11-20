@@ -4,6 +4,8 @@ import type {
   ContactCreate,
   ContactOut,
   ContactUpdate,
+  LeadCreate,
+  LeadOut,
   PortalLoginOut,
   Stage,
   TagOut,
@@ -29,6 +31,12 @@ export const updateContact = (id: string, body: ContactUpdate) => patch<ContactO
 export const deleteContact = (id: string) => del(`/admin/contacts/${id}`);
 export const archiveContact = (id: string) => post<ContactOut>(`/admin/contacts/${id}/archive`);
 export const unarchiveContact = (id: string) => post<ContactOut>(`/admin/contacts/${id}/unarchive`);
+/** People › Leads: who booked a call on any calendar and isn't a client, a VA or a teammate yet. */
+export const listLeads = () => get<LeadOut[]>("/admin/leads");
+/** Add a lead by hand: listed on Leads before they book a call. 409 `duplicate_email` when a contact has the email. */
+export const addLead = (body: LeadCreate) => post<LeadOut>("/admin/leads", body);
+/** Take a lead off People › Leads as a client (Clients › Onboarding) or a VA. 409 `not_a_lead` once they're paid or lost. */
+export const convertContact = (id: string, to: "client" | "va") => post<ContactOut>(`/admin/contacts/${id}/convert`, { to });
 export const sendPortalInvite = (id: string) => post<unknown>(`/admin/contacts/${id}/portal-invite`);
 export const getPortalLogin = (id: string) => get<PortalLoginOut>(`/admin/contacts/${id}/portal-login`);
 /** Owners and admins. Creates their portal login if they have none; an existing one is signed out everywhere. */
