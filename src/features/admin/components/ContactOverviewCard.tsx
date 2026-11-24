@@ -79,9 +79,7 @@ export function ContactOverviewCard({ contact: c }: { contact: ContactOut }) {
     ? "…"
     : affiliate.removedAt
       ? "Removed from the program"
-      : affiliate.stage === "paid"
-        ? "Active affiliate"
-        : "Not yet (paid subscribers only)";
+      : "Active affiliate";
 
   return (
     <div className="inset glance">

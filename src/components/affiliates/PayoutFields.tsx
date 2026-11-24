@@ -2,11 +2,11 @@
 
 import { Field, Input, SegmentedControl } from "@/components/ui";
 import { PAYOUT_METHODS, payoutMethodLabel } from "@/data/affiliates";
-import type { PayoutIn, PayoutMethod } from "@/utils/api/models";
+import type { PayoutIn } from "@/utils/api/models";
 
 /** Payout details as typed (the portal's Affiliate page, and the team entering them for a client). */
 export type PayoutDraft = {
-  method: PayoutMethod;
+  method: PayoutIn["method"];
   holderName: string;
   email: string;
   /** Wise only, optional. */
@@ -34,9 +34,7 @@ export function payoutBody(d: PayoutDraft): PayoutIn {
   const details =
     d.method === "bank"
       ? { bankName: d.bankName, accountNumber: d.accountNumber, routingNumber: d.routingNumber || null, swift: d.swift || null, country: d.country || null }
-      : d.method === "wise"
-        ? { email: d.email, paymentLink: d.paymentLink.trim() || null }
-        : { email: d.email };
+      : { email: d.email, paymentLink: d.paymentLink.trim() || null };
   return { method: d.method, holderName: d.holderName, details };
 }
 
@@ -46,7 +44,7 @@ export function payoutProblem(d: PayoutDraft): string {
   if (d.method !== "bank") {
     if (!d.email.includes("@")) return `Enter the email on the ${payoutMethodLabel(d.method)} account.`;
     const link = d.paymentLink.trim();
-    return d.method === "wise" && link && !/^(https:\/\/)?([\w-]+\.)*wise\.com\//i.test(link)
+    return link && !/^(https:\/\/)?([\w-]+\.)*wise\.com\//i.test(link)
       ? "Enter the Wise payment link, starting with https://wise.com/."
       : "";
   }
@@ -54,7 +52,7 @@ export function payoutProblem(d: PayoutDraft): string {
   return d.routingNumber.trim() || d.swift.trim() ? "" : "Enter a routing number or a SWIFT / BIC code.";
 }
 
-/** Wise, PayPal or bank transfer, and that method's fields. Card numbers are never asked for. */
+/** Wise or bank transfer, and that method's fields. Card numbers are never asked for. */
 export function PayoutFields({ draft, onChange, idPrefix = "po" }: { draft: PayoutDraft; onChange: (patch: Partial<PayoutDraft>) => void; idPrefix?: string }) {
   const id = (name: string) => `${idPrefix}-${name}`;
   return (
@@ -76,7 +74,6 @@ export function PayoutFields({ draft, onChange, idPrefix = "po" }: { draft: Payo
             <Field label={`${payoutMethodLabel(draft.method)} email`} htmlFor={id("email")} strongLabel>
               <Input id={id("email")} type="email" autoComplete="email" value={draft.email} onChange={(e) => onChange({ email: e.target.value })} />
             </Field>
-            {draft.method === "wise" && (
               <Field label="Wise payment link (optional)" htmlFor={id("link")} hint="So we can pay you straight from your link, e.g. https://wise.com/pay/me/yourname">
                 <Input
                   id={id("link")}
@@ -88,7 +85,6 @@ export function PayoutFields({ draft, onChange, idPrefix = "po" }: { draft: Payo
                   onChange={(e) => onChange({ paymentLink: e.target.value })}
                 />
               </Field>
-            )}
           </>
         ) : (
           <>

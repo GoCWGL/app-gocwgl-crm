@@ -247,11 +247,17 @@ export function DashboardSection() {
                   </span>
                 </div>
                 <span className="text-small">
-                  Your referral ID: <code>{affiliate.referralCode}</code>
+                  {affiliate.referralCode ? (
+                    <>
+                      Your referral ID: <code>{affiliate.referralCode}</code>
+                    </>
+                  ) : (
+                    "Read and accept the conditions to get your referral ID."
+                  )}
                 </span>
               </div>
             ) : (
-              <Empty text="Refer businesses to GoCWGL and earn a bonus. Opens once you’re a paid subscriber." />
+              <Empty text="Refer businesses to GoCWGL and earn a bonus." />
             )}
           </Panel>
         </aside>

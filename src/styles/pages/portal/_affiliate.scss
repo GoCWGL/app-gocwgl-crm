@@ -31,7 +31,61 @@
   }
 }
 
-// Before the client has a build: what the page will offer, and where to follow the build.
+// The referral list: its heading, and the countdown to a VA bonus.
+.affiliate-list__head {
+  padding: 16px 18px 8px;
+}
+
+.affiliate-count {
+  @include stack(5px);
+  max-width: 240px;
+
+  &__bar {
+    display: block;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: $bg-soft;
+
+    > span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: $grad-orange;
+    }
+  }
+}
+
+// The checkbox and button clients need before they get their referral ID.
+.affiliate-accept {
+  @include stack(14px);
+  align-items: flex-start;
+  padding: 18px 20px;
+  border-color: $orange;
+}
+
+// How it works: referring, the CRM bonus, the VA bonus.
+.affiliate-how {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 14px;
+
+  &__card {
+    @include stack(8px);
+    padding: 18px 20px;
+  }
+
+  &__list {
+    @include stack(7px);
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: $ink-soft;
+  }
+}
+
+// When the team removed the client from the program.
 .affiliate-locked {
   @include stack(12px);
   align-items: flex-start;

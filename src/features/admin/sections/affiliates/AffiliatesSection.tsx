@@ -29,7 +29,8 @@ export function ReferralBonusSection() {
   const setKind = (referralKind: ReferralKind) => update({ referralKind });
   const clients = useReferrals().data;
   const vas = useVaReferrals().data;
-  const toPay = (list: Array<{ bonusStatus: string }> | undefined) => list?.filter((r) => r.bonusStatus === "earned").length ?? 0;
+  const toPay = (list: Array<{ bonusStatus: string; vaBonusStatus?: string }> | undefined) =>
+    list?.reduce((n, r) => n + Number(r.bonusStatus === "earned") + Number(r.vaBonusStatus === "earned"), 0) ?? 0;
   return (
     <div className="stack stack--16">
       <div className="card card--flat board board--bar-only">
@@ -69,7 +70,7 @@ export function AffiliatesSection() {
 }
 
 /**
- * Affiliates: the program's bonuses; every client in the program (Paid subscriber stage), each opening to the clients
+ * Affiliates: the program's bonuses; every client in the program (anyone with a portal account), each opening to the clients
  * they referred; and every referral with where the new client is and whether the bonus is paid.
  */
 function AffiliatesPage({ view }: { view: View }) {
@@ -86,9 +87,12 @@ function AffiliatesPage({ view }: { view: View }) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [openId, setOpenId] = useState("");
 
-  const sum = (status: BonusStatus) => referrals.filter((r) => r.bonusStatus === status).reduce((t, r) => t + (r.bonusCents ?? 0), 0);
-  const count = (status: BonusStatus) => referrals.filter((r) => r.bonusStatus === status).length;
-  const shown = filter === "all" ? referrals : referrals.filter((r) => r.bonusStatus === filter);
+  // Each referral has two bonuses: the client's CRM and their hourly VAs.
+  const sum = (status: BonusStatus) =>
+    referrals.reduce((t, r) => t + (r.bonusStatus === status ? (r.bonusCents ?? 0) : 0) + (r.vaBonusStatus === status && (status !== "pending" || r.vaHired) ? r.vaBonusCents : 0), 0);
+  const matching = (status: BonusStatus) => referrals.filter((r) => r.bonusStatus === status || r.vaBonusStatus === status);
+  const count = (status: BonusStatus) => matching(status).length;
+  const shown = filter === "all" ? referrals : matching(filter);
 
   return (
     <div className="stack stack--16">

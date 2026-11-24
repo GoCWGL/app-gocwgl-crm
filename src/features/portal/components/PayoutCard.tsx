@@ -3,14 +3,14 @@
 import { useState, type FormEvent } from "react";
 import { EMPTY_PAYOUT, PayoutFields, payoutBody, payoutProblem, type PayoutDraft } from "@/components/affiliates/PayoutFields";
 import { Button, FormError, Icon, IconTile } from "@/components/ui";
-import { payoutMethodLabel } from "@/data/affiliates";
+import { offeredMethod, payoutMethodLabel } from "@/data/affiliates";
 import type { PayoutOut } from "@/utils/api/models";
 import { firstErrorMessage } from "@/utils/errors";
 import { useRemoveMyPayout, useSaveMyPayout } from "@/utils/hooks/useAffiliates";
 import { usePortal } from "../state/PortalContext";
 
 /**
- * Where the client wants referral bonuses sent: Wise, PayPal or a bank transfer. Saved details come back masked and are
+ * Where the client wants referral bonuses sent: Wise or a bank transfer. Saved details come back masked and are
  * re-entered to change them; card numbers are never asked for. Only the portal owner can change them.
  */
 export function PayoutCard({ payout, bonuses }: { payout: PayoutOut | null; bonuses: string }) {
@@ -52,7 +52,7 @@ export function PayoutCard({ payout, bonuses }: { payout: PayoutOut | null; bonu
             Where we send your bonus
           </span>
           <span className="text-small">
-            We’ll send the money to these details once a client you referred goes ahead with a Simple or Custom CRM build: {bonuses}.
+            We’ll send your bonuses to these details: {bonuses}.
           </span>
         </div>
       </div>
@@ -70,7 +70,7 @@ export function PayoutCard({ payout, bonuses }: { payout: PayoutOut | null; bonu
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setDraft({ ...EMPTY_PAYOUT, method: payout.method, holderName: payout.holderName });
+                  setDraft({ ...EMPTY_PAYOUT, method: offeredMethod(payout), holderName: payout.holderName });
                   setEditing(true);
                 }}
               >

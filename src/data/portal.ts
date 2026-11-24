@@ -1,3 +1,4 @@
+import type { CrmPaymentPlan } from "@/utils/api/models";
 import type { IconName } from "@/components/ui";
 import type { Tone } from "@/lib/tones";
 
@@ -68,7 +69,7 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   billing: { title: "Invoices", subtitle: "Invoices from your VAs and from GoCWGL." },
   training: { title: "Training", subtitle: "Short lessons from GoCWGL on getting the most from your VA team." },
   sops: { title: "SOPs", subtitle: "Your own SOPs for your VAs, and step-by-step guides from GoCWGL." },
-  affiliate: { title: "Affiliate", subtitle: "Your referral ID, the businesses you referred, and your bonuses." },
+  affiliate: { title: "Affiliate", subtitle: "Everyone you referred to GoCWGL, and the bonus for each." },
   account: { title: "Account", subtitle: "Your profile, alerts, password & 2-step verification, and who can see this portal." },
 };
 
@@ -176,12 +177,12 @@ export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
       },
     ],
   },
+  { title: "Earn", items: [page("affiliate", "Affiliate", "gift")] },
   {
     title: "Account",
     items: [
       page("support", "Request support", "lifebuoy", { needsVa: true }),
       page("billing", "Invoices", "invoice"),
-      page("affiliate", "Affiliate", "gift"),
     ],
   },
 ];
@@ -281,6 +282,18 @@ export const CRM_BOOKING_URL = "https://app.gocwgl.com/book/gocwgl-crm-discovery
 
 /** The CRM packages clients can request (Simple CRM is no longer offered; older Simple requests keep their label). */
 export const OFFERED_CRM_PACKAGES: CrmPackageKey[] = ["custom"];
+
+/**
+ * How a client pays for a Custom CRM: once, or the "Custom package option" (a set monthly payment). Same as the API's
+ * CRM_PLAN_PAYMENTS.
+ */
+export type CrmPaymentPlanKey = CrmPaymentPlan;
+export const CRM_PAYMENT_PLANS: Array<{ key: CrmPaymentPlanKey; label: string; payments: number; paymentCents: number }> = [
+  { key: "one_time", label: "One-time payment", payments: 1, paymentCents: 1_500_000 },
+  { key: "12_months", label: "12-month plan", payments: 12, paymentCents: 139_700 },
+  { key: "6_months", label: "6-month plan", payments: 6, paymentCents: 269_700 },
+];
+export const crmPlanOf = (key: string | undefined) => CRM_PAYMENT_PLANS.find((p) => p.key === key) ?? CRM_PAYMENT_PLANS[0];
 
 export const CRM_PACKAGES: Record<
   CrmPackageKey,
@@ -508,7 +521,7 @@ export const CRM_FAQ = [
   { q: "Do I own my CRM and my data?", a: "Yes. Everything we build and every record in it is yours, and you can export your data at any time." },
   {
     q: "Are there monthly fees?",
-    a: "No monthly or per-login fees. The build is a one-time price. Your first year after launch is free: security updates, keeping your code up to date, and unlimited revisions. After that, the Care plan is $500 a year.",
+    a: "No monthly or per-login fees. The build is one price, paid at once or spread over 6 or 12 monthly payments. Your first year after launch is free: security updates, keeping your code up to date, and unlimited revisions. After that, the Care plan is $500 a year.",
   },
   {
     q: "What’s the difference between a revision and a new feature?",
@@ -520,7 +533,10 @@ export const CRM_FAQ = [
     q: "Can I add features after my CRM is built?",
     a: "Yes. Once your CRM is launched and you and GoCWGL both mark it complete, each new feature starts at $100, depending on how complex it is. Request it from New features in the CRM menu and we quote it before any work starts.",
   },
-  { q: "How do I pay?", a: "After the call we send you an invoice for the agreed package. It shows up in Invoices." },
+  {
+    q: "How do I pay?",
+    a: "You choose when you request: one payment of $15,000, or the custom package option, either $1,397 a month for 12 months ($16,764 in total) or $2,697 a month for 6 months ($16,182 in total). After the call we send your invoice; on a monthly plan you get one invoice per payment. They show up in Invoices.",
+  },
 ];
 
 
@@ -528,4 +544,4 @@ export const CRM_FAQ = [
 export const VA_ONLY_TABS = new Set<PortalTab>(PORTAL_MENU_PAGES.filter((p) => p.needsVa && p.item.tab !== "vaprojects").map((p) => p.item.tab));
 
 /** Pages switched off for now: not in the menu, and links to them open the dashboard. */
-export const HIDDEN_PORTAL_TABS = new Set<PortalTab>(["affiliate"]);
+export const HIDDEN_PORTAL_TABS = new Set<PortalTab>([]);

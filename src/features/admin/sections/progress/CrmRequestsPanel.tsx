@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Avatar, Badge, Button, FormError, LoadState, Select, ConfirmDialog } from "@/components/ui";
-import { CRM_PACKAGES, type CrmPackageKey } from "@/data/portal";
+import { CRM_PACKAGES, crmPlanOf, type CrmPackageKey } from "@/data/portal";
 import { avatarTone, type Tone } from "@/lib/tones";
 import type { AdminCrmRequestOut, CrmRequestStatus } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
@@ -113,6 +113,8 @@ function RequestCard({
   const { update } = useAdmin();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const pkg = CRM_PACKAGES[r.package as CrmPackageKey];
+  const plan = crmPlanOf(r.paymentPlan);
+  const monthly = plan.payments > 1;
   const status = statusOf(r.status);
   const client = r.clientName || r.company || r.email;
 
@@ -130,7 +132,7 @@ function RequestCard({
         </div>
         <Badge tone={r.package === "custom" ? "purple" : "cyan"} mono>
           {(pkg?.label ?? r.package).toUpperCase()}
-          {pkg && ` · ${formatCents(pkg.priceCents)}`}
+          {pkg && (monthly ? ` · ${formatCents(plan.paymentCents)} × ${plan.payments}` : ` · ${formatCents(pkg.priceCents)}`)}
         </Badge>
         <Badge tone={status.tone} dot>
           {status.label}
@@ -177,7 +179,16 @@ function RequestCard({
       <RequestInvoiceRow
         invoice={r.invoice ?? null}
         email={r.email}
-        newInvoiceLabel={pkg ? `${formatCents(pkg.priceCents)} ${pkg.label}` : undefined}
+        newInvoiceLabel={
+          monthly
+            ? `${formatCents(plan.paymentCents)} payment ${r.paymentsPaid + 1} of ${r.paymentsTotal}`
+            : pkg
+              ? `${formatCents(pkg.priceCents)} ${pkg.label}`
+              : undefined
+        }
+        // A monthly plan: once a payment is in, the next one can be sent.
+        nextPayment={monthly && r.invoice?.status === "Paid" && r.paymentsPaid < r.paymentsTotal}
+        progress={monthly ? `${r.paymentsPaid} of ${r.paymentsTotal} payments paid` : undefined}
         canWrite={canWrite}
         busy={busy}
         sending={sending}

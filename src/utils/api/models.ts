@@ -111,6 +111,7 @@ export type ContactReferrerOut = S["ContactReferrerOut"];
 export type ContactSubmissionOut = S["ContactSubmissionOut"];
 export type ContactUpdate = S["ContactUpdate"];
 export type CrmPackage = S["CrmPackage"];
+export type CrmPaymentPlan = S["CrmPaymentPlan"];
 export type CrmProgress = S["CrmProgress"];
 export type CrmRequestIn = S["CrmRequestIn"];
 export type CrmRequestInvoiceOut = S["CrmRequestInvoiceOut"];

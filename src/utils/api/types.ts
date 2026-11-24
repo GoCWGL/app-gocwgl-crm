@@ -4087,7 +4087,7 @@ export interface paths {
         };
         /**
          * List Affiliates
-         * @description Every client eligible for the program (Paid subscriber stage), including removed ones.
+         * @description Every client in the program (they have a portal account, or are a paid client), including removed ones.
          */
         get: operations["list_affiliates_api_admin_affiliates_get"];
         put?: never;
@@ -4219,6 +4219,27 @@ export interface paths {
         post: operations["mark_bonus_paid_api_admin_referrals__referral_id__bonus_paid_post"];
         /** Undo Bonus Paid */
         delete: operations["undo_bonus_paid_api_admin_referrals__referral_id__bonus_paid_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/referrals/{referral_id}/va-bonus-paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark Va Bonus Paid
+         * @description The team has paid the referrer the bonus for this client's hourly VAs (outside the app).
+         */
+        post: operations["mark_va_bonus_paid_api_admin_referrals__referral_id__va_bonus_paid_post"];
+        /** Undo Va Bonus Paid */
+        delete: operations["undo_va_bonus_paid_api_admin_referrals__referral_id__va_bonus_paid_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -5872,6 +5893,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/affiliate/terms/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Accept Affiliate Terms
+         * @description The portal owner confirms they've read the conditions to earn; their referral ID shows after that.
+         */
+        post: operations["accept_affiliate_terms_api_portal_affiliate_terms_accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/affiliate/referrals/{referral_id}/crm-claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim Crm Bonus
+         * @description Ask to be paid the CRM bonus, once the referred client has fully paid for their CRM.
+         */
+        post: operations["claim_crm_bonus_api_portal_affiliate_referrals__referral_id__crm_claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/affiliate/referrals/{referral_id}/va-claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim Va Bonus
+         * @description Ask to be paid the VA bonus, once the referred client's hourly VAs have worked 8+ hours a day on 30 days.
+         */
+        post: operations["claim_va_bonus_api_portal_affiliate_referrals__referral_id__va_claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/affiliate/payout": {
         parameters: {
             query?: never;
@@ -7239,6 +7320,7 @@ export interface components {
             contactId: string;
             /** Package */
             package: string;
+            paymentPlan: components["schemas"]["CrmPaymentPlan"];
             /** Name */
             name: string;
             /** Goal */
@@ -7255,6 +7337,10 @@ export interface components {
              * Format: date-time
              */
             createdAt: string;
+            /** Paymentspaid */
+            paymentsPaid: number;
+            /** Paymentstotal */
+            paymentsTotal: number;
             /** Clientname */
             clientName: string;
             /** Company */
@@ -7363,7 +7449,7 @@ export interface components {
         };
         /**
          * AffiliateOut
-         * @description A client in the affiliate program (Paid subscriber stage), with their totals.
+         * @description A client in the affiliate program, with their totals.
          */
         AffiliateOut: {
             /**
@@ -7410,6 +7496,8 @@ export interface components {
             simpleBonusCents: number;
             /** Custombonuscents */
             customBonusCents: number;
+            /** Clientvabonuscents */
+            clientVaBonusCents: number;
             /** Vabonuscents */
             vaBonusCents: number;
             /** Currency */
@@ -7423,6 +7511,8 @@ export interface components {
             simpleBonusCents?: number | null;
             /** Custombonuscents */
             customBonusCents?: number | null;
+            /** Clientvabonuscents */
+            clientVaBonusCents?: number | null;
             /** Vabonuscents */
             vaBonusCents?: number | null;
         };
@@ -8566,6 +8656,7 @@ export interface components {
             contactId: string;
             /** Package */
             package: string;
+            paymentPlan: components["schemas"]["CrmPaymentPlan"];
             /** Name */
             name: string;
             /** Goal */
@@ -8582,6 +8673,10 @@ export interface components {
              * Format: date-time
              */
             createdAt: string;
+            /** Paymentspaid */
+            paymentsPaid: number;
+            /** Paymentstotal */
+            paymentsTotal: number;
             invoice: components["schemas"]["ClientCrmRequestInvoiceOut"] | null;
         };
         /** ClientEarnings */
@@ -9433,6 +9528,12 @@ export interface components {
          */
         CrmPackage: "simple" | "custom";
         /**
+         * CrmPaymentPlan
+         * @description How a client pays for a Custom CRM: once, or the "Custom package option" (a set monthly payment).
+         * @enum {string}
+         */
+        CrmPaymentPlan: "one_time" | "6_months" | "12_months";
+        /**
          * CrmProgress
          * @description How far the referred client is with a CRM. The bonus is earned at PAID.
          * @enum {string}
@@ -9448,6 +9549,8 @@ export interface components {
              * @enum {string}
              */
             package: "simple" | "custom";
+            /** @default one_time */
+            paymentPlan?: components["schemas"]["CrmPaymentPlan"];
             /** Name */
             name: string;
             /** Goal */
@@ -9493,6 +9596,7 @@ export interface components {
             contactId: string;
             /** Package */
             package: string;
+            paymentPlan: components["schemas"]["CrmPaymentPlan"];
             /** Name */
             name: string;
             /** Goal */
@@ -11972,7 +12076,7 @@ export interface components {
         };
         /**
          * PayoutDetails
-         * @description Wise or PayPal: the account email (Wise may add their payment link). Bank: bank name, account number, and a routing
+         * @description Wise: the account email (and optionally their payment link). Bank: bank name, account number, and a routing
          *     number or SWIFT/BIC.
          */
         PayoutDetails: {
@@ -11993,7 +12097,11 @@ export interface components {
         };
         /** PayoutIn */
         PayoutIn: {
-            method: components["schemas"]["PayoutMethod"];
+            /**
+             * Method
+             * @enum {string}
+             */
+            method: "wise" | "bank";
             /** Holdername */
             holderName: string;
             details: components["schemas"]["PayoutDetails"];
@@ -12051,12 +12159,16 @@ export interface components {
             simpleBonusCents: number;
             /** Custombonuscents */
             customBonusCents: number;
+            /** Clientvabonuscents */
+            clientVaBonusCents: number;
             /** Vabonuscents */
             vaBonusCents: number;
             /** Currency */
             currency: string;
             /** Unlocked */
             unlocked: boolean;
+            /** Termsacceptedat */
+            termsAcceptedAt: string | null;
             /** Referralcode */
             referralCode: string;
             payout: components["schemas"]["PayoutOut"] | null;
@@ -12117,6 +12229,27 @@ export interface components {
          * @description What a client sees of someone they referred.
          */
         PortalReferralOut: {
+            /** Crmpaymentspaid */
+            crmPaymentsPaid: number;
+            /** Crmpaymentstotal */
+            crmPaymentsTotal: number;
+            /** Claimedat */
+            claimedAt: string | null;
+            /** Vahired */
+            vaHired: boolean;
+            /** Vadays */
+            vaDays: number;
+            /** Vadaysneeded */
+            vaDaysNeeded: number;
+            /** Vaearnedon */
+            vaEarnedOn: string | null;
+            /** Vabonuscents */
+            vaBonusCents: number;
+            vaBonusStatus: components["schemas"]["BonusStatus"];
+            /** Vaclaimedat */
+            vaClaimedAt: string | null;
+            /** Vabonuspaidat */
+            vaBonusPaidAt: string | null;
             /**
              * Id
              * Format: uuid
@@ -12825,6 +12958,27 @@ export interface components {
         };
         /** ReferralOut */
         ReferralOut: {
+            /** Crmpaymentspaid */
+            crmPaymentsPaid: number;
+            /** Crmpaymentstotal */
+            crmPaymentsTotal: number;
+            /** Claimedat */
+            claimedAt: string | null;
+            /** Vahired */
+            vaHired: boolean;
+            /** Vadays */
+            vaDays: number;
+            /** Vadaysneeded */
+            vaDaysNeeded: number;
+            /** Vaearnedon */
+            vaEarnedOn: string | null;
+            /** Vabonuscents */
+            vaBonusCents: number;
+            vaBonusStatus: components["schemas"]["BonusStatus"];
+            /** Vaclaimedat */
+            vaClaimedAt: string | null;
+            /** Vabonuspaidat */
+            vaBonusPaidAt: string | null;
             /**
              * Id
              * Format: uuid
@@ -30004,6 +30158,90 @@ export interface operations {
             };
         };
     };
+    mark_va_bonus_paid_api_admin_referrals__referral_id__va_bonus_paid_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referral_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReferralOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    undo_va_bonus_paid_api_admin_referrals__referral_id__va_bonus_paid_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referral_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ReferralOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     payout_details_api_admin_affiliates_payouts__contact_id__get: {
         parameters: {
             query?: never;
@@ -34969,6 +35207,121 @@ export interface operations {
                     "application/json": {
                         data: components["schemas"]["PortalAffiliateOut"];
                     };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    accept_affiliate_terms_api_portal_affiliate_terms_accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PortalAffiliateOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    claim_crm_bonus_api_portal_affiliate_referrals__referral_id__crm_claim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referral_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PortalAffiliateOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    claim_va_bonus_api_portal_affiliate_referrals__referral_id__va_claim_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                referral_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PortalAffiliateOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
             /** @description Error */

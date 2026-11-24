@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { EMPTY_PAYOUT, PayoutFields, payoutBody, payoutProblem, type PayoutDraft } from "@/components/affiliates/PayoutFields";
 import { Avatar, Button, Field, Icon, FormError, Input, LoadState, Modal, StatGrid } from "@/components/ui";
-import { formatReferralCode, payoutMethodLabel } from "@/data/affiliates";
+import { formatReferralCode, offeredMethod, payoutMethodLabel } from "@/data/affiliates";
 import { avatarTone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { AffiliateDetailOut } from "@/utils/api/models";
@@ -183,7 +183,7 @@ function EditAffiliateModal({ affiliate: a, onClose }: { affiliate: AffiliateDet
   const [changePayout, setChangePayout] = useState(!a.payout);
   const [payout, setPayout] = useState<PayoutDraft>({
     ...EMPTY_PAYOUT,
-    ...(a.payout && { method: a.payout.method, holderName: a.payout.holderName }),
+    ...(a.payout && { method: offeredMethod(a.payout), holderName: a.payout.holderName }),
   });
   const [tried, setTried] = useState(false);
   const typedPayout = changePayout && (!!a.payout || payout.holderName.trim() !== "" || payout.email !== "" || payout.accountNumber !== "");

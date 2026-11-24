@@ -9,13 +9,16 @@ import {
   CRM_FAQ,
   CRM_FEATURE_FROM_CENTS,
   CRM_PACKAGES,
+  CRM_PAYMENT_PLANS,
   CRM_PRICE_BREAKDOWN,
   CRM_COMPARISON,
   CRM_RENTED_OPTIONS,
   CRM_STEPS,
   CRM_WHY_OWN,
   OFFERED_CRM_PACKAGES,
+  crmPlanOf,
   type CrmPackageKey,
+  type CrmPaymentPlanKey,
 } from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
 import type { Tone } from "@/lib/tones";
@@ -39,9 +42,9 @@ type CrmTab = "builds" | "packages" | "progress" | "revisions" | "features";
 export function useCrmTab() {
   const query = usePortalBuilds();
   const builds = (query.data ?? []).filter((b) => b.kind === "crm");
-  // Requests not turned into a build yet, plus any still waiting on payment (a paid, started one shows as its build).
+  // Requests not turned into a build yet, plus any still being paid (a fully paid, started one shows as its build).
   const requests = (usePortalCrmRequests().data ?? []).filter(
-    (r) => r.status !== "declined" && (!r.projectId || (!!r.invoice && r.invoice.status !== "Paid")),
+    (r) => r.status !== "declined" && (!r.projectId || (!!r.invoice && r.paymentsPaid < r.paymentsTotal)),
   );
   const { state } = usePortal();
   const showPackages = useShowPackages("crm");
@@ -156,6 +159,8 @@ function CrmRequestRow({ request: r, readOnly }: { request: ClientCrmRequestOut;
         </span>
         <span className="text-small">
           Requested {formatShort(r.createdAt)} ·{" "}
+          {r.paymentsTotal > 1 &&
+            `${crmPlanOf(r.paymentPlan).label}, ${formatCents(crmPlanOf(r.paymentPlan).paymentCents)} a month · ${r.paymentsPaid} of ${r.paymentsTotal} payments made · `}
           {inv
             ? `Invoice ${inv.number} · ${formatCents(inv.totalCents)}${inv.paidAt ? ` · paid ${formatShort(inv.paidAt)}` : inv.dueDate ? ` · due ${formatShort(inv.dueDate)}` : ""}`
             : r.status === "contacted"
@@ -197,13 +202,13 @@ function CrmRequestRow({ request: r, readOnly }: { request: ClientCrmRequestOut;
  */
 function CrmPackages({ onRequested }: { onRequested: () => void }) {
   const { readOnly } = usePortal();
-  const [requesting, setRequesting] = useState(false);
+  const [requesting, setRequesting] = useState<CrmPaymentPlanKey | null>(null);
 
-  const request = readOnly ? undefined : () => setRequesting(true);
+  const request = readOnly ? undefined : (plan: CrmPaymentPlanKey = "one_time") => setRequesting(plan);
 
   return (
     <div className="crm-offer">
-      <CrmHero onRequest={request} />
+      <CrmHero onRequest={request && (() => request())} />
       <WhyOwnCrm />
       <CostComparison />
       <CrmPackageCards onRequest={request} />
@@ -215,7 +220,7 @@ function CrmPackages({ onRequested }: { onRequested: () => void }) {
             <h2 className="crm-cta__title">Ready to own your CRM?</h2>
             <span className="crm-cta__text">Book a free discovery call. You approve the plan and the quote before anything is billed.</span>
           </div>
-          <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={request}>
+          <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => request()}>
             Request a CRM
             <Icon name="arrowRight" strokeWidth={2.4} />
           </Button>
@@ -223,9 +228,10 @@ function CrmPackages({ onRequested }: { onRequested: () => void }) {
       )}
       {requesting && (
         <CrmRequestModal
-          onClose={() => setRequesting(false)}
+          initialPlan={requesting}
+          onClose={() => setRequesting(null)}
           onRequested={() => {
-            setRequesting(false);
+            setRequesting(null);
             onRequested();
           }}
         />
@@ -459,7 +465,8 @@ function CostComparison() {
 }
 
 /** The CRM package (or packages) on offer: price and Request, what's included by area, what the price covers, care. */
-function CrmPackageCards({ onRequest }: { onRequest?: () => void }) {
+function CrmPackageCards({ onRequest }: { onRequest?: (plan?: CrmPaymentPlanKey) => void }) {
+  const [planKey, setPlanKey] = useState<CrmPaymentPlanKey>("one_time");
   return (
     <section className="crm-block">
       <header className="crm-block__head">
@@ -471,6 +478,8 @@ function CrmPackageCards({ onRequest }: { onRequest?: () => void }) {
       </header>
       {PACKAGE_KEYS.map((key) => {
         const p = CRM_PACKAGES[key];
+        const plan = crmPlanOf(key === "custom" ? planKey : "one_time");
+        const monthly = plan.payments > 1;
         const groups = p.groups ?? [{ title: "Everything included", icon: "check" as const, items: p.includes }];
         return (
           <article className="crm-pkg" key={key}>
@@ -494,10 +503,33 @@ function CrmPackageCards({ onRequest }: { onRequest?: () => void }) {
                 </div>
               </div>
               <div className="crm-pkg__buy">
-                <span className="crm-pkg__label">One-time build</span>
-                <span className="crm-pkg__amount">{formatCents(p.priceCents)}</span>
+                <span className="crm-pkg__label">{monthly ? "Custom package option" : "One-time payment"}</span>
+                <span className="crm-pkg__amount">
+                  {formatCents(monthly ? plan.paymentCents : p.priceCents)}
+                  {monthly && <small>/month</small>}
+                </span>
+                {key === "custom" && (
+                  <div className="crm-pkg__plans" role="radiogroup" aria-label="Payment option">
+                    {CRM_PAYMENT_PLANS.map((o) => (
+                      <button
+                        key={o.key}
+                        type="button"
+                        role="radio"
+                        aria-checked={planKey === o.key}
+                        className="option-card crm-pkg__plan"
+                        onClick={() => setPlanKey(o.key)}
+                      >
+                        <span className="option-card__head">
+                          {o.label}
+                          <span className="option-card__price">{o.payments > 1 ? `${formatCents(o.paymentCents)} × ${o.payments}` : formatCents(o.paymentCents)}</span>
+                        </span>
+                        {o.payments > 1 && <span className="option-card__desc">{formatCents(o.paymentCents * o.payments)} in total</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {onRequest && (
-                  <Button variant="primary" size="lg" block aria-haspopup="dialog" onClick={onRequest}>
+                  <Button variant="primary" size="lg" block aria-haspopup="dialog" onClick={() => onRequest(plan.key)}>
                     Request a CRM
                     <Icon name="arrowRight" strokeWidth={2.4} />
                   </Button>

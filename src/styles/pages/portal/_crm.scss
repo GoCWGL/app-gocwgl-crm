@@ -1024,6 +1024,22 @@
     color: $ink;
   }
 
+  &__amount small {
+    margin-left: 4px;
+    font-size: 16px;
+    letter-spacing: 0;
+    color: $muted;
+  }
+
+  // One-time, or the custom package option (6 or 12 monthly payments).
+  &__plans {
+    @include stack(6px);
+  }
+
+  &__plan {
+    padding: 9px 12px;
+  }
+
   &__fine {
     font-size: 12px;
     line-height: 1.45;

@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { Badge, FormError } from "@/components/ui";
-import { BONUS_STATUS, CRM_PACKAGE_LABELS, CRM_PROGRESS, formatReferralCode, payoutMethodLabel } from "@/data/affiliates";
+import { BONUS_STATUS, CRM_PACKAGE_LABELS, CRM_PROGRESS, crmPayments, formatReferralCode, payoutMethodLabel, vaBonusState } from "@/data/affiliates";
 import type { ReferralOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
 import { formatCents } from "@/utils/format/money";
-import { useDeleteReferral, useMarkBonusPaid, useUndoBonusPaid } from "@/utils/hooks/useAffiliates";
+import { useDeleteReferral, useMarkBonusPaid, useMarkClientVaBonusPaid, useUndoBonusPaid, useUndoClientVaBonusPaid } from "@/utils/hooks/useAffiliates";
 import { isSuperAdmin } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../../state/AdminContext";
@@ -25,12 +25,14 @@ export function ReferralsTable({ referrals, canManage, hideReferrer }: { referra
   const [payoutOf, setPayoutOf] = useState<ReferralOut | null>(null);
   const markPaid = useMarkBonusPaid();
   const undoPaid = useUndoBonusPaid();
+  const markVaPaid = useMarkClientVaBonusPaid();
+  const undoVaPaid = useUndoClientVaBonusPaid();
   const remove = useDeleteReferral();
-  const rowBusy = (id: string) => [markPaid, undoPaid, remove].some((m) => m.isPending && m.variables === id);
+  const rowBusy = (id: string) => [markPaid, undoPaid, markVaPaid, undoVaPaid, remove].some((m) => m.isPending && m.variables === id);
 
   return (
     <>
-      <FormError error={markPaid.error ?? undoPaid.error ?? remove.error} />
+      <FormError error={markPaid.error ?? undoPaid.error ?? markVaPaid.error ?? undoVaPaid.error ?? remove.error} />
       <div className="table-scroll">
         <table className="data-table data-table--plain referral-table">
           <thead>
@@ -39,8 +41,9 @@ export function ReferralsTable({ referrals, canManage, hideReferrer }: { referra
               <th>{hideReferrer ? "Signed up with" : "Referrer · gets the bonus"}</th>
               <th>Joined</th>
               <th>New client’s CRM</th>
-              <th>{hideReferrer ? "Their bonus" : "Referrer’s bonus"}</th>
-              <th>Bonus to referrer</th>
+              <th>CRM bonus</th>
+              <th>CRM bonus to referrer</th>
+              <th>Hourly VAs · VA bonus</th>
               {canManage && <th className="data-table__actions">Actions</th>}
             </tr>
           </thead>
@@ -48,6 +51,7 @@ export function ReferralsTable({ referrals, canManage, hideReferrer }: { referra
             {referrals.map((r) => {
               const crm = CRM_PROGRESS[r.crm];
               const bonus = BONUS_STATUS[r.bonusStatus];
+              const va = vaBonusState(r);
               const referred = r.referred.name || r.referred.email;
               const busy = rowBusy(r.id);
               return (
@@ -81,7 +85,7 @@ export function ReferralsTable({ referrals, canManage, hideReferrer }: { referra
                       {crm.label}
                     </Badge>
                     <span className="text-small referral-table__sub">
-                      {[r.crmPackage && CRM_PACKAGE_LABELS[r.crmPackage], r.crmPaidAt && formatShort(r.crmPaidAt)].filter(Boolean).join(" · ")}
+                      {[r.crmPackage && CRM_PACKAGE_LABELS[r.crmPackage], crmPayments(r), r.crmPaidAt && formatShort(r.crmPaidAt)].filter(Boolean).join(" · ")}
                     </span>
                   </td>
                   <td className="data-table__mono">
@@ -91,12 +95,42 @@ export function ReferralsTable({ referrals, canManage, hideReferrer }: { referra
                   </td>
                   <td>
                     <Badge tone={bonus.tone} dot>
-                      {bonus.label}
+                      {r.bonusStatus === "earned" ? (r.claimedAt ? "Claimed · to be paid" : "Earned · not claimed") : bonus.label}
                     </Badge>
+                    {r.claimedAt && !r.bonusPaidAt && <span className="text-small referral-table__sub">Claimed {formatShort(r.claimedAt)}</span>}
                     {r.bonusPaidAt && <span className="text-small referral-table__sub">{formatShort(r.bonusPaidAt)}</span>}
+                  </td>
+                  <td>
+                    <Badge tone={va.tone} dot>
+                      {va.key === "earned" ? "Earned · not claimed" : va.key === "claimed" ? "Claimed · to be paid" : va.label}
+                    </Badge>
+                    <span className="text-small referral-table__sub">
+                      {formatCents(r.vaBonusCents)}
+                      {r.vaHired && ` · ${r.vaDays} of ${r.vaDaysNeeded} days`}
+                      {r.vaBonusPaidAt ? ` · ${formatShort(r.vaBonusPaidAt)}` : r.vaClaimedAt ? ` · claimed ${formatShort(r.vaClaimedAt)}` : ""}
+                    </span>
                   </td>
                   {canManage && (
                     <td className="data-table__actions">
+                      {r.vaBonusStatus === "earned" && (
+                        <button
+                          type="button"
+                          className="row-action row-action--green"
+                          disabled={busy}
+                          onClick={() =>
+                            markVaPaid.mutate(r.id, {
+                              onSuccess: () => update({ toast: `${formatCents(r.vaBonusCents)} VA bonus marked paid to ${r.referrer.name || r.referrer.email}.` }),
+                            })
+                          }
+                        >
+                          {markVaPaid.isPending && markVaPaid.variables === r.id ? "Saving…" : "Mark VA bonus paid"}
+                        </button>
+                      )}
+                      {r.vaBonusStatus === "paid" && (
+                        <button type="button" className="row-action" disabled={busy} onClick={() => undoVaPaid.mutate(r.id)}>
+                          Undo VA payout
+                        </button>
+                      )}
                       {r.bonusStatus === "earned" && (
                         <button
                           type="button"
@@ -108,12 +142,12 @@ export function ReferralsTable({ referrals, canManage, hideReferrer }: { referra
                             })
                           }
                         >
-                          {markPaid.isPending && markPaid.variables === r.id ? "Saving…" : "Mark bonus paid"}
+                          {markPaid.isPending && markPaid.variables === r.id ? "Saving…" : "Mark CRM bonus paid"}
                         </button>
                       )}
                       {r.bonusStatus === "paid" && (
                         <button type="button" className="row-action" disabled={busy} onClick={() => undoPaid.mutate(r.id)}>
-                          Undo payout
+                          Undo CRM payout
                         </button>
                       )}
                       {r.referrerPayout && (

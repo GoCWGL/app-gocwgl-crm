@@ -10,6 +10,9 @@ import { useApiMutation } from "./mutation";
 // ------------------------------------------------------------------ Portal
 export const useMyAffiliate = () => useQuery({ queryKey: qk.portalAffiliate, queryFn: api.getMyAffiliate });
 export const useSaveMyPayout = () => useApiMutation((body: PayoutIn) => api.saveMyPayout(body), { invalidate: [qk.portalAffiliate] });
+export const useAcceptAffiliateTerms = () => useApiMutation(api.acceptAffiliateTerms, { invalidate: [qk.portalAffiliate] });
+export const useClaimClientCrmBonus = () => useApiMutation(api.claimClientCrmBonus, { invalidate: [qk.portalAffiliate] });
+export const useClaimClientVaBonus = () => useApiMutation(api.claimClientVaBonus, { invalidate: [qk.portalAffiliate] });
 export const useReferredBy = () => useQuery({ queryKey: qk.referredBy, queryFn: api.getReferredBy });
 export const useAddReferrer = () => useApiMutation(api.addReferrer, { invalidate: [qk.referredBy] });
 export const useRemoveMyPayout = () => useApiMutation(api.removeMyPayout, { invalidate: [qk.portalAffiliate] });
@@ -52,6 +55,8 @@ export const usePayoutDetails = (contactId: string) =>
   useQuery({ queryKey: ["affiliate-payout", contactId], queryFn: () => api.getPayoutDetails(contactId), gcTime: 0, staleTime: 0, retry: false });
 export const useMarkBonusPaid = () => useApiMutation(api.markBonusPaid, { invalidate: ALL });
 export const useUndoBonusPaid = () => useApiMutation(api.undoBonusPaid, { invalidate: ALL });
+export const useMarkClientVaBonusPaid = () => useApiMutation(api.markClientVaBonusPaid, { invalidate: ALL });
+export const useUndoClientVaBonusPaid = () => useApiMutation(api.undoClientVaBonusPaid, { invalidate: ALL });
 export const useDeleteReferral = () => useApiMutation(api.deleteReferral, { invalidate: ALL });
 
 // ------------------------------------------------------------------ VA referrals

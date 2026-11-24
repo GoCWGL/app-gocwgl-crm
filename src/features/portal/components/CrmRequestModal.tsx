@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button, Field, FormError, Icon, IconTile, Input, Modal, Textarea, buttonClass } from "@/components/ui";
-import { CRM_BOOKING_URL, CRM_PACKAGES, OFFERED_CRM_PACKAGES, type CrmPackageKey } from "@/data/portal";
+import { CRM_BOOKING_URL, CRM_PACKAGES, CRM_PAYMENT_PLANS, OFFERED_CRM_PACKAGES, crmPlanOf, type CrmPackageKey, type CrmPaymentPlanKey } from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
 import { useCreateCrmRequest } from "@/utils/hooks/useDelivery";
 import { PaymentNotes } from "./PayConfirmModal";
@@ -46,21 +46,34 @@ type Step = "edit" | "review" | "saved";
  * (Build progress › CRM requests) and the CRM discovery call opens in a new tab with the same details in the booking note,
  * so the client stays in their portal and sees the request there.
  */
-export function CrmRequestModal({ onClose, onRequested }: { onClose: () => void; onRequested: () => void }) {
+export function CrmRequestModal({
+  initialPlan = "one_time",
+  onClose,
+  onRequested,
+}: {
+  /** The payment option they tapped on the package. */
+  initialPlan?: CrmPaymentPlanKey;
+  onClose: () => void;
+  onRequested: () => void;
+}) {
   const create = useCreateCrmRequest();
   const [step, setStep] = useState<Step>("edit");
   const [pkg, setPkg] = useState<CrmPackageKey>(OFFERED_CRM_PACKAGES[0]);
+  const [planKey, setPlanKey] = useState<CrmPaymentPlanKey>(initialPlan);
   const [name, setName] = useState("");
   const [goal, setGoal] = useState("");
   const [portals, setPortals] = useState<string[]>(["Admin"]);
   const [menus, setMenus] = useState<string[]>([]);
   const [tried, setTried] = useState(false);
   const p = CRM_PACKAGES[pkg];
+  const plan = crmPlanOf(pkg === "custom" ? planKey : "one_time");
+  const price = plan.payments > 1 ? planPrice(plan) : formatCents(p.priceCents);
 
   // Only the package and the client's own answers go in the link (never their name or email); they add those on the booking page.
   const booking = new URL(CRM_BOOKING_URL);
   const notes = [
     `Package: ${p.label}`,
+    `Payment: ${plan.payments > 1 ? `Custom package option, ${price}` : `One-time payment, ${price}`}`,
     `CRM name: ${name.trim()}`,
     `Goal: ${goal.trim()}`,
     portals.length ? `Portals: ${portals.join(", ")}` : "",
@@ -78,7 +91,7 @@ export function CrmRequestModal({ onClose, onRequested }: { onClose: () => void;
     // Open the tab during the click: browsers block tabs opened after the request comes back.
     const tab = window.open("", "_blank");
     create.mutate(
-      { package: pkg, name: name.trim(), goal: goal.trim(), menus, portals },
+      { package: pkg, paymentPlan: plan.key, name: name.trim(), goal: goal.trim(), menus, portals },
       {
         onSuccess: () => {
           if (!tab) return setStep("saved");
@@ -159,7 +172,25 @@ export function CrmRequestModal({ onClose, onRequested }: { onClose: () => void;
             })}
           </div>
 
-          <span className="kicker">02 · ABOUT IT</span>
+          {pkg === "custom" && (
+            <>
+              <span className="kicker">02 · HOW YOU’LL PAY</span>
+              <div className="option-grid" role="radiogroup" aria-label="Payment option">
+                {CRM_PAYMENT_PLANS.map((o) => (
+                  <button key={o.key} type="button" role="radio" aria-checked={planKey === o.key} className="option-card" onClick={() => setPlanKey(o.key)}>
+                    <span className="option-card__head">{o.payments > 1 ? `${formatCents(o.paymentCents)} / month` : formatCents(o.paymentCents)}</span>
+                    <span className="option-card__desc">
+                      {o.payments > 1
+                        ? `Custom package option: ${o.payments} monthly payments, ${formatCents(o.paymentCents * o.payments)} in total.`
+                        : "One-time payment for the whole build."}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+
+          <span className="kicker">{pkg === "custom" ? "03" : "02"} · ABOUT IT</span>
           <Field label="Name of the CRM" htmlFor="crm-req-name" required hint="What you’d like to call it, e.g. “Acme Client Hub”.">
             <Input
               id="crm-req-name"
@@ -182,7 +213,7 @@ export function CrmRequestModal({ onClose, onRequested }: { onClose: () => void;
             />
           </Field>
 
-          <span className="kicker">03 · MENUS AND PORTALS (OPTIONAL)</span>
+          <span className="kicker">{pkg === "custom" ? "04" : "03"} · MENUS AND PORTALS (OPTIONAL)</span>
           <div className="crm-req-note">
             <Icon name="sparkle" size={15} />
             <span>
@@ -265,7 +296,11 @@ export function CrmRequestModal({ onClose, onRequested }: { onClose: () => void;
           <dl className="inset crm-request-review">
             <dt className="kicker kicker--sm kicker--muted">CRM</dt>
             <dd className="text-strong">
-              {p.label} · {formatCents(p.priceCents)} <span className="text-small">({p.timeline})</span>
+              {p.label} <span className="text-small">({p.timeline})</span>
+            </dd>
+            <dt className="kicker kicker--sm kicker--muted">PAYMENT</dt>
+            <dd className="text-strong">
+              {plan.payments > 1 ? "Custom package option" : "One-time payment"} · {price}
             </dd>
             <dt className="kicker kicker--sm kicker--muted">NAME</dt>
             <dd className="text-strong">{name.trim()}</dd>
@@ -285,6 +320,10 @@ export function CrmRequestModal({ onClose, onRequested }: { onClose: () => void;
     </Modal>
   );
 }
+
+/** "$1,397 a month for 12 months ($16,764 in total)" */
+const planPrice = (o: { payments: number; paymentCents: number }) =>
+  `${formatCents(o.paymentCents)} a month for ${o.payments} months (${formatCents(o.paymentCents * o.payments)} in total)`;
 
 /** A chip for something the client typed, with a button to remove it. */
 function RemovableChip({ label, onRemove }: { label: string; onRemove: () => void }) {

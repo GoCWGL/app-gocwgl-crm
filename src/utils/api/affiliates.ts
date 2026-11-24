@@ -21,6 +21,12 @@ import type {
 
 // ------------------------------------------------------------------ Portal: the client's referral ID and referrals
 export const getMyAffiliate = () => get<PortalAffiliateOut>("/portal/affiliate");
+/** Confirm the conditions to earn were read (portal owner only); the referral ID shows after that. */
+export const acceptAffiliateTerms = () => post<PortalAffiliateOut>("/portal/affiliate/terms/accept");
+/** Ask to be paid the CRM bonus for a referred client, once they've fully paid (portal owner only). */
+export const claimClientCrmBonus = (referralId: string) => post<PortalAffiliateOut>(`/portal/affiliate/referrals/${referralId}/crm-claim`);
+/** Ask to be paid the VA bonus for a referred client, once their hourly VAs reached 30 days of 8+ hours (portal owner only). */
+export const claimClientVaBonus = (referralId: string) => post<PortalAffiliateOut>(`/portal/affiliate/referrals/${referralId}/va-claim`);
 /** Where the client wants bonuses sent (portal owner only). */
 export const saveMyPayout = (body: PayoutIn) => put<PayoutOut>("/portal/affiliate/payout", body);
 export const removeMyPayout = () => del("/portal/affiliate/payout");
@@ -54,6 +60,9 @@ export const updateReferral = (id: string, body: ReferralPatch) => patch<Referra
 /** Only once the referred client has paid for their CRM. */
 export const markBonusPaid = (id: string) => post<ReferralOut>(`/admin/referrals/${id}/bonus-paid`);
 export const undoBonusPaid = (id: string) => del<ReferralOut>(`/admin/referrals/${id}/bonus-paid`);
+/** The bonus for a referred client's hourly VAs (once earned). */
+export const markClientVaBonusPaid = (id: string) => post<ReferralOut>(`/admin/referrals/${id}/va-bonus-paid`);
+export const undoClientVaBonusPaid = (id: string) => del<ReferralOut>(`/admin/referrals/${id}/va-bonus-paid`);
 /** Full payout details for sending a bonus (owners and admins; audited). */
 export const getPayoutDetails = (contactId: string) => get<AdminPayoutOut>(`/admin/affiliates/payouts/${contactId}`);
 export const deleteReferral = (id: string) => del(`/admin/referrals/${id}`);

@@ -10,7 +10,7 @@ import { useAffiliates } from "@/utils/hooks/useAffiliates";
 
 type Filter = "active" | "removed";
 
-/** Every client eligible for the program (Paid subscriber stage). Clicking one opens their account and referrals. */
+/** Every client in the program. Clicking one opens their account and referrals. */
 export function AffiliatesTable({ onOpen }: { onOpen: (a: AffiliateOut) => void }) {
   const query = useAffiliates();
   const all = query.data ?? [];
@@ -54,7 +54,7 @@ export function AffiliatesTable({ onOpen }: { onOpen: (a: AffiliateOut) => void 
             ? "No affiliates match your search."
             : filter === "removed"
               ? "No one has been removed from the program."
-              : "No affiliates yet. Clients join once they reach the Paid subscriber stage."
+              : "No affiliates yet. Clients join once they have a portal account."
         }
       >
         <div className="table-scroll">

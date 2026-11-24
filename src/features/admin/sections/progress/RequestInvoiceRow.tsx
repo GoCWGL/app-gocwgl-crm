@@ -37,6 +37,8 @@ export function RequestInvoiceRow({
   invoice,
   email,
   newInvoiceLabel,
+  nextPayment = false,
+  progress,
   canWrite,
   busy,
   sending,
@@ -47,6 +49,10 @@ export function RequestInvoiceRow({
   email: string;
   /** What "Send invoice" creates when there's no invoice yet, e.g. "$15,000 Custom CRM"; omit when it can't create one. */
   newInvoiceLabel?: string;
+  /** The invoice is paid and Send makes the next one (a monthly plan). */
+  nextPayment?: boolean;
+  /** "2 of 12 payments paid" on a monthly plan. */
+  progress?: string;
   canWrite: boolean;
   busy: boolean;
   sending: boolean;
@@ -56,14 +62,14 @@ export function RequestInvoiceRow({
   const [confirm, setConfirm] = useState<Confirm>("");
   const status = invoice ? (LABELS[invoice.status] ?? { label: invoice.status, tone: "neutral" as Tone }) : null;
   const open = !!invoice && isOpen(invoice.status);
-  const emailed = !!invoice?.lastEmailedAt;
-  const canSend = canWrite && (open || (!invoice && !!newInvoiceLabel));
+  const emailed = !!invoice?.lastEmailedAt && !nextPayment;
+  const canSend = canWrite && (open || ((!invoice || nextPayment) && !!newInvoiceLabel));
   const canMarkPaid = canWrite && open;
   const to = email ? ` to ${email}` : "";
 
   const question =
     confirm === "send"
-      ? invoice
+      ? invoice && !nextPayment
         ? `Email ${invoice.number}${to}${emailed ? " again" : ""}?`
         : `Email a ${newInvoiceLabel} invoice${to}?`
       : invoice
@@ -93,6 +99,7 @@ export function RequestInvoiceRow({
         <span className="text-small">Not sent yet</span>
       )}
 
+      {progress && <span className="text-small u-strong">{progress}</span>}
       {(canSend || canMarkPaid) && (
         <>
           <span className="u-spacer" />
@@ -119,7 +126,7 @@ export function RequestInvoiceRow({
             <>
               {canSend && (
                 <Button variant={emailed ? "outline" : "accent"} size="sm" disabled={busy} onClick={() => setConfirm("send")}>
-                  {sending ? "Sending…" : emailed ? "Resend invoice" : invoice ? "Send invoice" : `Send invoice · ${newInvoiceLabel}`}
+                  {sending ? "Sending…" : emailed ? "Resend invoice" : invoice && !nextPayment ? "Send invoice" : `Send invoice · ${newInvoiceLabel}`}
                 </Button>
               )}
               {canMarkPaid && (

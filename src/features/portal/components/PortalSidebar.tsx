@@ -58,8 +58,9 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const { embedded } = useSession();
   // Staff who came from the admin menu (not the "View as client" iframe, which has its own bar).
   const staffHere = !!me?.isStaff && !embedded;
-  // Affiliate opens once the client is a paid subscriber (greyed out until then, and while loading).
-  const affiliateLocked = !useMyAffiliate().data?.unlocked;
+  // Affiliate is for every client, unless the team removed them from the program.
+  const affiliate = useMyAffiliate().data;
+  const affiliateLocked = !!affiliate && !affiliate.unlocked;
   // In "View as client" the signed-in user is the staff member; show the business instead.
   const name = me?.isStaff ? business : me?.fullName || me?.email || "";
 
@@ -157,7 +158,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
       onClick={() => open(i)}
       badge={badges[i.key]}
       locked={i.tab === "affiliate" && affiliateLocked}
-      lockedHint="For paid subscribers"
+      lockedHint="Not available"
       className={i.highlight ? "nav-item--cta" : undefined}
       icon={<NavIcon icon={i.icon} />}
     />
