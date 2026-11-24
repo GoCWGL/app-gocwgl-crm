@@ -1,45 +1,15 @@
 @use "../../abstracts" as *;
 
-// Business badge at the top of the portal sidebar.
-.portal-brand {
-  @include row(10px);
-  padding: 4px 2px;
-
-  &__mark {
-    @include center;
-    width: 38px;
-    height: 38px;
-    flex: none;
-    border-radius: 11px;
-    background: linear-gradient(135deg, $cyan-700, $violet);
-    color: $white;
-    font-size: 14px;
-    font-weight: 800;
-    box-shadow: 0 0 14px rgba(124, 77, 255, 0.35);
-  }
-
-  &__name {
-    @include truncate;
-    font-size: 14px;
-    font-weight: 800;
-  }
+// The business under the name, on one line. The portal line below may wrap ("view only" must stay readable).
+.sidebar--portal .profile-button__sub:not(.profile-button__sub--detail) {
+  @include truncate;
+  font-weight: 600;
+  color: $ink;
 }
 
-// Beside the shrink / expand button while a second sidebar is open.
-.sidebar--portal .portal-brand {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-// Main menu as icons only (desktop): just the business badge, no name or "Powered by".
+// Main menu as icons only (desktop): no "Powered by".
 @include up(md) {
   .dual-nav > .sidebar--compact {
-    .portal-brand {
-      flex: none;
-      padding: 0;
-    }
-
-    .portal-brand__text,
     .portal-powered {
       display: none;
     }

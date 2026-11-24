@@ -623,16 +623,11 @@
       flex: none;
       max-width: none;
     }
-
-    .portal-brand__text {
-      overflow: hidden;
-      white-space: nowrap;
-    }
   }
 
   @media (prefers-reduced-motion: no-preference) {
     .dual-nav > .sidebar {
-      :is(.sidebar__label, .sidebar__note, .sidebar__wordmark, .portal-brand__text, .portal-powered),
+      :is(.sidebar__label, .sidebar__note, .sidebar__wordmark, .portal-powered),
       .nav-item > :is(.nav-item__label, .nav-item__trailing, .nav-item__chevron, .count-chip),
       :is(.profile-button__text, .profile-button__icon) {
         animation: nav-text-reveal 0.5s ease-in-out backwards;
@@ -641,7 +636,7 @@
 
     // Headings and counts stay on screen as icons only: "none" here makes their reveal play when the menu grows back.
     .dual-nav > .sidebar--compact {
-      :is(.sidebar__label, .sidebar__note, .sidebar__wordmark, .portal-brand__text, .portal-powered),
+      :is(.sidebar__label, .sidebar__note, .sidebar__wordmark, .portal-powered),
       .nav-item > :is(.nav-item__label, .nav-item__trailing, .nav-item__chevron, .count-chip),
       :is(.profile-button__text, .profile-button__icon) {
         animation: none;

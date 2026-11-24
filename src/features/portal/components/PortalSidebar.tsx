@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import logoMark from "@/assets/images/logo-mark.png";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { NavItem, ProfileButton, Sidebar, SidebarGroup, useNavPanel } from "@/components/layout";
 import { Icon, type IconName } from "@/components/ui";
@@ -17,7 +18,7 @@ import {
   type PortalTab,
 } from "@/data/portal";
 import type { Tone } from "@/lib/tones";
-import { cn, initials } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { usePortalBilling } from "@/utils/hooks/useBilling";
 import { useMyAffiliate } from "@/utils/hooks/useAffiliates";
 import { usePortalTodos } from "@/utils/hooks/usePortal";
@@ -32,7 +33,7 @@ import { useCrmTab } from "../sections/CrmSection";
 import { useFunnelTab } from "../sections/FunnelsSection";
 
 type PortalSidebarProps = {
-  /** Business shown at the top (from the API). */
+  /** Business shown in the profile button at the bottom (from the API). */
   business: string;
   subtitle: string;
 };
@@ -176,15 +177,8 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
         className={cn("sidebar--admin sidebar--portal", compact && "sidebar--compact", expanding && "sidebar--expanding")}
         brand={
           <>
-            <div className="portal-brand" title={compact ? business : undefined}>
-              <span className="portal-brand__mark" aria-hidden="true">
-                {initials(business)}
-              </span>
-              <div className="portal-brand__text stack stack--2 u-grow">
-                <span className="portal-brand__name">{business}</span>
-                <span className="text-tiny">{subtitle}</span>
-              </div>
-            </div>
+            <Image src={logoWordmark} alt="GoCWGL" width={168} priority className="sidebar__wordmark" />
+            <Image src={logoMark} alt="GoCWGL" width={36} height={36} className="sidebar__mark" />
             {openFlyout && (
               <button
                 type="button"
@@ -213,9 +207,12 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
             <ProfileButton
               avatar={<MyAvatar name={name} tone="purple" ring />}
               name={name}
-              subtitle="Account & settings"
+              subtitle={name === business ? undefined : business}
+              detail={subtitle}
+              tooltip={compact ? `${business} · Account & settings` : "Account & settings"}
               active={tab === "account"}
               onClick={() => update({ tab: "account" })}
+              trailing={<Icon name="settings" size={17} strokeWidth={1.9} className="profile-button__icon" />}
             />
             <div className="portal-powered">
               <span className="kicker kicker--sm kicker--muted">POWERED BY</span>

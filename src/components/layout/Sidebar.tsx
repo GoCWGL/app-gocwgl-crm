@@ -89,7 +89,11 @@ export function NavItem({ icon, label, active, onClick, badge, expanded, highlig
 type ProfileButtonProps = {
   avatar: ReactNode;
   name: string;
-  subtitle: string;
+  subtitle?: string;
+  /** Second, quieter line under the subtitle. */
+  detail?: string;
+  /** Hover text. */
+  tooltip?: string;
   active?: boolean;
   onClick: () => void;
   trailing?: ReactNode;
@@ -100,19 +104,21 @@ type ProfileButtonProps = {
 };
 
 /** Account button pinned to the bottom of the sidebar. */
-export function ProfileButton({ avatar, name, subtitle, active, onClick, trailing, expanded, highlighted }: ProfileButtonProps) {
+export function ProfileButton({ avatar, name, subtitle, detail, tooltip, active, onClick, trailing, expanded, highlighted }: ProfileButtonProps) {
   return (
     <button
       type="button"
       className={cn("profile-button", highlighted && "profile-button--open")}
       onClick={onClick}
+      title={tooltip}
       aria-expanded={expanded}
       aria-current={active ? "page" : undefined}
     >
       {avatar}
       <span className="profile-button__text">
         <span className="profile-button__name">{name}</span>
-        <span className="profile-button__sub">{subtitle}</span>
+        {subtitle && <span className="profile-button__sub">{subtitle}</span>}
+        {detail && <span className="profile-button__sub profile-button__sub--detail">{detail}</span>}
       </span>
       {trailing}
     </button>
