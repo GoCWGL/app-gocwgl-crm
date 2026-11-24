@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { Icon, type IconName } from "@/components/ui";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { ConfirmDialog, Icon, type IconName } from "@/components/ui";
 import { isStaffAdmin, useSession } from "@/utils/auth/session";
 
 type Portal = {
@@ -13,6 +14,8 @@ type Portal = {
   inside: Array<{ icon: IconName; label: string }>;
   /** Which person's portal opens first. */
   opens: string;
+  /** Whose portal it is, in the confirmation pop-up. */
+  who: string;
 };
 
 const PORTALS: Portal[] = [
@@ -29,6 +32,7 @@ const PORTALS: Portal[] = [
       { icon: "graduation", label: "Training" },
     ],
     opens: "Opens your first active VA",
+    who: "a VA's",
   },
   {
     id: "client",
@@ -43,6 +47,7 @@ const PORTALS: Portal[] = [
       { icon: "card", label: "Billing" },
     ],
     opens: "Opens a paid client",
+    who: "a client's",
   },
 ];
 
@@ -50,6 +55,9 @@ const PORTALS: Portal[] = [
 export function PortalLinks() {
   const { user } = useSession();
   const canAct = isStaffAdmin(user);
+  const router = useRouter();
+  // The portal waiting for "are you sure?".
+  const [confirming, setConfirming] = useState<Portal | null>(null);
   return (
     <div className="portal-cards">
       {PORTALS.map((p) => (
@@ -78,16 +86,31 @@ export function PortalLinks() {
             </ul>
             <div className="portal-card__footer">
               <span className="text-small">{p.opens}</span>
-              <Link href={p.href} prefetch={false} className="portal-card__view" aria-label={`View ${p.title}`}>
+              <button type="button" className="portal-card__view" aria-haspopup="dialog" aria-label={`View portal: ${p.title}`} onClick={() => setConfirming(p)}>
                 <span className="portal-card__label">View portal</span>
                 <span className="portal-card__arrow" aria-hidden="true">
                   <Icon name="arrowRight" size={14} />
                 </span>
-              </Link>
+              </button>
             </div>
           </div>
         </article>
       ))}
+
+      {confirming && (
+        <ConfirmDialog
+          title={`View the ${confirming.title}?`}
+          icon={confirming.icon}
+          confirmLabel="Yes, view portal"
+          onConfirm={() => router.push(confirming.href)}
+          onClose={() => setConfirming(null)}
+        >
+          {`You'll leave the admin and see ${confirming.who} portal as they do. `}
+          {canAct
+            ? "Changes you make there are real and apply to their account."
+            : "You can look around, but you can't make changes."}
+        </ConfirmDialog>
+      )}
     </div>
   );
 }
