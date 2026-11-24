@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Button, FormError, Icon, LoadState } from "@/components/ui";
+import { Button, FormError, LoadState } from "@/components/ui";
 import { SETTINGS_TABS, type SettingsTab } from "@/data/admin";
 import type { OrgSettingsOut, OrgSettingsUpdate, ProfileUpdate, User } from "@/utils/api/models";
-import { canUseMenu, isStaffAdmin } from "@/utils/auth/session";
-import { useSignOutConfirm } from "@/features/auth/components/SignOutConfirm";
+import { isStaffAdmin } from "@/utils/auth/session";
 import { useSettings, useUpdateSettings } from "@/utils/hooks/useSettings";
 import { useMe, useUpdateMe } from "@/utils/hooks/useUsers";
 import { useAdmin } from "../../state/AdminContext";
@@ -39,8 +38,7 @@ const businessOf = (s: OrgSettingsOut): BusinessDraft => ({
 });
 
 export function SettingsSection() {
-  const { state, update } = useAdmin();
-  const signOut = useSignOutConfirm();
+  const { state } = useAdmin();
   const me = useMe();
   const settings = useSettings();
   const saveMe = useUpdateMe();
@@ -50,7 +48,12 @@ export function SettingsSection() {
   const [message, setMessage] = useState("");
 
   const tab = state.settingsTab;
-  const setTab = (settingsTab: SettingsTab) => update({ settingsTab });
+  // "Changes saved." belongs to the page it was shown on.
+  const [messageTab, setMessageTab] = useState(tab);
+  if (messageTab !== tab) {
+    setMessageTab(tab);
+    setMessage("");
+  }
   const user = me.data;
   const canAdmin = isStaffAdmin(user);
   const head = SETTINGS_TABS.find((t) => t.id === tab)!;
@@ -96,98 +99,66 @@ export function SettingsSection() {
   const saveError = tab === "profile" ? saveMe.error : saveSettings.error;
 
   return (
-    <div className="split settings">
-      <nav className="card card--tight settings__nav" aria-label="Settings sections">
-        {/* Tags belong to the Contacts menu and Calendar to its own: hidden for teammates without them. */}
-        {SETTINGS_TABS.filter(
-          (t) => (t.id !== "tags" || canUseMenu(user, "contacts")) && (t.id !== "calendar" || canUseMenu(user, "calendar")),
-        ).map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            className="settings__tab"
-            aria-current={tab === t.id ? "page" : undefined}
-            onClick={() => {
-              setTab(t.id);
-              setMessage("");
-            }}
-          >
-            <Icon name={t.icon} strokeWidth={1.9} />
-            {t.label}
-          </button>
-        ))}
-        <button
-          type="button"
-          className="settings__tab settings__tab--signout"
-          disabled={signOut.pending}
-          onClick={signOut.ask}
-        >
-          <Icon name="arrowLeft" strokeWidth={1.9} />
-          {signOut.pending ? "Signing out…" : "Sign out"}
-        </button>
-        {signOut.dialog}
-      </nav>
+    // Keyed so each settings page animates in; unsaved drafts live above it.
+    <section className="card card--roomy settings__panel" key={tab}>
+      <div className="stack stack--4">
+        <span className="kicker">{head.kicker}</span>
+        <h2 className="modal__title">{head.heading}</h2>
+        <span className="text-muted">{head.blurb}</span>
+      </div>
 
-      <section className="card card--roomy settings__panel">
-        <div className="stack stack--4">
-          <span className="kicker">{head.kicker}</span>
-          <h2 className="modal__title">{head.heading}</h2>
-          <span className="text-muted">{head.blurb}</span>
+      {message && (
+        <div className="notice notice--success u-strong" role="status">
+          {message}
         </div>
+      )}
 
-        {message && (
-          <div className="notice notice--success u-strong" role="status">
-            {message}
-          </div>
-        )}
+      {ADMIN_TABS.includes(tab) && !canAdmin && (
+        <div className="notice notice--info" role="status">
+          Only owners and admins can change these settings.
+        </div>
+      )}
 
-        {ADMIN_TABS.includes(tab) && !canAdmin && (
-          <div className="notice notice--info" role="status">
-            Only owners and admins can change these settings.
-          </div>
-        )}
+      {tab === "profile" && (
+        <LoadState query={me}>
+          {profile && user && (
+            <ProfileSettings
+              user={user}
+              company={settings.data?.company ?? ""}
+              draft={profile}
+              onChange={(patch) => (setProfileDraft({ ...profile, ...patch }), setMessage(""))}
+            />
+          )}
+        </LoadState>
+      )}
+      {(tab === "business" || tab === "notif") && (
+        <LoadState query={settings}>
+          {business &&
+            (tab === "business" ? (
+              <BusinessSettings draft={business} onChange={(patch) => (setBusinessDraft({ ...business, ...patch }), setMessage(""))} />
+            ) : (
+              <NotificationSettings draft={business} onChange={(patch) => (setBusinessDraft({ ...business, ...patch }), setMessage(""))} />
+            ))}
+        </LoadState>
+      )}
+      {tab === "team" && <TeamSettings onMessage={setMessage} />}
+      {tab === "domains" && <DomainSettings />}
+      {tab === "tags" && <TagsSection />}
+      {tab === "calendar" && <CalendarSection />}
+      {tab === "portals" && <PortalLinks />}
+      {tab === "security" && <SecuritySettings onMessage={setMessage} promptMfa={state.mfaPrompt && !user?.mfaEnabled} />}
 
-        {tab === "profile" && (
-          <LoadState query={me}>
-            {profile && user && (
-              <ProfileSettings
-                user={user}
-                company={settings.data?.company ?? ""}
-                draft={profile}
-                onChange={(patch) => (setProfileDraft({ ...profile, ...patch }), setMessage(""))}
-              />
-            )}
-          </LoadState>
-        )}
-        {(tab === "business" || tab === "notif") && (
-          <LoadState query={settings}>
-            {business &&
-              (tab === "business" ? (
-                <BusinessSettings draft={business} onChange={(patch) => (setBusinessDraft({ ...business, ...patch }), setMessage(""))} />
-              ) : (
-                <NotificationSettings draft={business} onChange={(patch) => (setBusinessDraft({ ...business, ...patch }), setMessage(""))} />
-              ))}
-          </LoadState>
-        )}
-        {tab === "team" && <TeamSettings onMessage={setMessage} />}
-        {tab === "domains" && <DomainSettings />}
-        {tab === "tags" && <TagsSection />}
-        {tab === "calendar" && <CalendarSection />}
-        {tab === "portals" && <PortalLinks />}
-        {tab === "security" && <SecuritySettings onMessage={setMessage} promptMfa={state.mfaPrompt && !user?.mfaEnabled} />}
-
-        {DRAFT_TABS.includes(tab) && (
-          <div className="cluster cluster--end settings__footer">
-            <FormError error={saveError} />
-            <Button onClick={discard} disabled={saving}>
-              Discard changes
-            </Button>
-            <Button variant="primary" onClick={save} disabled={saving || (tab !== "profile" && !canAdmin)}>
-              {saving ? "Saving…" : "Save changes"}
-            </Button>
-          </div>
-        )}
-      </section>
-    </div>
+      {DRAFT_TABS.includes(tab) && (
+        <div className="cluster cluster--end settings__footer">
+          <FormError error={saveError} />
+          <Button onClick={discard} disabled={saving}>
+            Discard changes
+          </Button>
+          <Button variant="primary" onClick={save} disabled={saving || (tab !== "profile" && !canAdmin)}>
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        </div>
+      )}
+    </section>
   );
 }

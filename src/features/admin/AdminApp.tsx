@@ -94,7 +94,9 @@ export function AdminApp() {
 
 function AdminLayout() {
   const { state, update } = useAdmin();
-  const { tab, contactView } = state;
+  const { tab, contactView, settingsTab } = state;
+  // The page showing: Settings counts each of its own pages.
+  const view = tab === "settings" ? settingsTab : contactView;
   // Loads the business currency and time zone every admin screen formats with.
   useSettings();
   const me = useMe().data;
@@ -109,8 +111,8 @@ function AdminLayout() {
   // Start each section at the top of the page, with the top progress sweep.
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [tab, contactView]);
-  useSectionChangeSweep(`${tab}:${contactView}`);
+  }, [tab, view]);
+  useSectionChangeSweep(`${tab}:${view}`);
 
   const page = tab === "clients" ? CONTACT_VIEWS[contactView] : ADMIN_PAGES[tab];
   const Section = SECTIONS[tab];

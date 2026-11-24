@@ -32,6 +32,13 @@ export const SETTINGS_TABS: Array<{ id: SettingsTab; label: string; icon: IconNa
   },
 ];
 
+/** The Settings menu (second sidebar), under its headings. */
+export const SETTINGS_GROUPS: Array<{ title: string; tabs: SettingsTab[] }> = [
+  { title: "Account", tabs: ["profile", "security"] },
+  { title: "Workspace", tabs: ["business", "team", "domains", "notif"] },
+  { title: "Tools", tabs: ["tags", "calendar", "portals"] },
+];
+
 /** Time zones the pickers offer (IANA names, which the API requires). */
 export const TIME_ZONES = [
   { value: "America/Los_Angeles", label: "Pacific Time (US & Canada)" },

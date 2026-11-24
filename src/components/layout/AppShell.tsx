@@ -29,7 +29,7 @@ const DRAWER_QUERY = "(max-width: 800px)";
 
 // Clicking one of these in the drawer goes to a page, so the drawer closes. Buttons that only open a
 // sub-menu (they carry aria-expanded) or are locked keep it open.
-const NAVIGATES = ".nav-item:not([aria-expanded]):not([aria-disabled]), .profile-button, .subnav__item";
+const NAVIGATES = ".nav-item:not([aria-expanded]):not([aria-disabled]), .profile-button:not([aria-expanded]), .subnav__item";
 
 /**
  * Sidebar on the left, scrolling main column on the right. On phones and tablets the sidebar becomes a

@@ -93,15 +93,20 @@ type ProfileButtonProps = {
   active?: boolean;
   onClick: () => void;
   trailing?: ReactNode;
+  /** When it opens its own second sidebar: whether that's showing. */
+  expanded?: boolean;
+  /** Highlighted while its second sidebar is open (lighter than `active`). */
+  highlighted?: boolean;
 };
 
 /** Account button pinned to the bottom of the sidebar. */
-export function ProfileButton({ avatar, name, subtitle, active, onClick, trailing }: ProfileButtonProps) {
+export function ProfileButton({ avatar, name, subtitle, active, onClick, trailing, expanded, highlighted }: ProfileButtonProps) {
   return (
     <button
       type="button"
-      className="profile-button"
+      className={cn("profile-button", highlighted && "profile-button--open")}
       onClick={onClick}
+      aria-expanded={expanded}
       aria-current={active ? "page" : undefined}
     >
       {avatar}

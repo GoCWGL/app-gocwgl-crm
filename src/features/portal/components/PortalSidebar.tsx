@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
-import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
+import { NavItem, ProfileButton, Sidebar, SidebarGroup, useNavPanel } from "@/components/layout";
 import { Icon, type IconName } from "@/components/ui";
 import { MyAvatar } from "@/features/account/ProfilePhoto";
 import {
@@ -134,8 +134,13 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
     setPanel({ tab, key: f && holds(f, tab) ? f.key : null });
   }
   const openFlyout = flyouts.find((f) => f.key === panel.key);
+  // What the second sidebar shows: the open menu, or the one that's still sliding shut.
+  const navPanel = useNavPanel(openFlyout?.key ?? "");
+  const shownFlyout = flyouts.find((f) => f.key === navPanel.shown);
   const [expanded, setExpanded] = useState(false);
   const compact = !!openFlyout && !expanded;
+  // Growing back from icons while the second sidebar slides shut: its text is revealed as it widens.
+  const expanding = navPanel.closing && !openFlyout && !expanded;
   const togglePanel = (key: string) => {
     setPanel({ tab, key: panel.key === key ? null : key });
     setExpanded(false);
@@ -168,7 +173,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
     <div className={cn("dual-nav", openFlyout && "dual-nav--open")}>
       <Sidebar
         label="Portal menu"
-        className={cn("sidebar--admin sidebar--portal", compact && "sidebar--compact")}
+        className={cn("sidebar--admin sidebar--portal", compact && "sidebar--compact", expanding && "sidebar--expanding")}
         brand={
           <>
             <div className="portal-brand" title={compact ? business : undefined}>
@@ -243,27 +248,29 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
         ))}
       </Sidebar>
 
-      {openFlyout && (
-        // The panel slides open once; switching to another menu only swaps (and fades in) what's inside.
+      {shownFlyout && (
+        // Switching to another menu slides this one shut, then opens the new one (useNavPanel).
         <nav
-          className="nav-panel"
+          key={shownFlyout.key}
+          className={cn("nav-panel", navPanel.closing && "nav-panel--closing")}
+          inert={navPanel.closing}
           id="portal-nav-panel"
-          aria-label={`${openFlyout.label} menu`}
+          aria-label={`${shownFlyout.label} menu`}
           onKeyDown={(ev) => ev.key === "Escape" && hidePanel()}
         >
-          <div className="nav-panel__inner" key={openFlyout.key}>
+          <div className="nav-panel__inner">
             <div className="nav-panel__head">
-              <Icon name={openFlyout.icon} size={18} strokeWidth={1.9} className="nav-panel__icon" />
+              <Icon name={shownFlyout.icon} size={18} strokeWidth={1.9} className="nav-panel__icon" />
               <span className="nav-panel__heading">
-                <span className="nav-panel__title">{openFlyout.label}</span>
-                <span className="nav-panel__desc">{openFlyout.description}</span>
+                <span className="nav-panel__title">{shownFlyout.label}</span>
+                <span className="nav-panel__desc">{shownFlyout.description}</span>
               </span>
               <button type="button" className="nav-panel__close" onClick={hidePanel} aria-label="Hide this menu" title="Hide this menu">
                 <Icon name="close" size={15} strokeWidth={2.2} />
               </button>
             </div>
             <div className="nav-panel__nav">
-              {openFlyout.groups.map((fg, gi) => (
+              {shownFlyout.groups.map((fg, gi) => (
                 // The VA headings slide in when they first appear (when the client gets an active VA).
                 <SidebarGroup key={fg.title ?? gi} title={fg.title} className={fg.needsVa ? "sidebar__group--reveal" : undefined}>
                   {fg.items.map((i) => navItem(i))}

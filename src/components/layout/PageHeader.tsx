@@ -15,7 +15,8 @@ type PageHeaderProps = {
 export function PageHeader({ kicker, title, subtitle, dotTone = "green", actions }: PageHeaderProps) {
   return (
     <header className="page-header">
-      <div className="page-header__text">
+      {/* Keyed so the titles animate in again on every page. */}
+      <div className="page-header__text" key={`${kicker}:${title}`}>
         <span className="page-header__kicker">
           <span className={`page-header__dot ${toneClass(dotTone)}`} aria-hidden="true" />
           {kicker}

@@ -15,6 +15,7 @@
   top: 0;
   height: 100vh;
   overflow-y: auto;
+  overflow-x: hidden;
   align-self: flex-start;
 
   @include down(md) {
@@ -58,8 +59,89 @@
   }
 }
 
+// Highlight behind the current menu, 0.5s each way. Opening: bubbles fill it from left to right while it swells
+// past its actual size, bounces and settles. Closing: it swells a little, then empties from right to left.
+// Set --nav-fill for the colour; nav-bubbles-on switches it on.
+@for $i from 1 through 6 {
+  @property --nav-bubble-#{$i} {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0;
+  }
+}
+
+@function nav-bubble($x, $y, $n) {
+  $r: calc(var(--nav-bubble-#{$n}) * (14% + 38px));
+  $edge: calc(var(--nav-bubble-#{$n}) * (14% + 39px));
+  @return radial-gradient(circle farthest-side at $x $y, #000 $r, transparent $edge);
+}
+
+@mixin nav-bubbles-on {
+  --nav-bubbles: 1;
+  // Bounces past its size and back, easing in and out of every swing.
+  --nav-ease: linear(
+    0 0%, 0.0495 5.625%, 0.19 11.25%, 0.401 16.88%, 0.65 22.5%, 0.899 28.12%,
+    1.11 33.75%, 1.25 39.38%, 1.3 45%, 1.25 48.6%, 1.11 52.2%, 0.94 55.8%,
+    0.803 59.4%, 0.75 63%, 0.789 66.2%, 0.892 69.4%, 1.02 72.6%, 1.12 75.8%,
+    1.16 79%, 1.14 81.4%, 1.08 83.8%, 1.02 86.2%, 0.961 88.6%, 0.94 91%,
+    0.946 92.8%, 0.961 94.6%, 0.979 96.4%, 0.994 98.2%, 1 100%
+  );
+}
+
+@mixin nav-bubbles {
+  position: relative;
+  isolation: isolate;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--nav-fill);
+    pointer-events: none;
+    @for $i from 1 through 6 {
+      --nav-bubble-#{$i}: var(--nav-bubbles, 0);
+    }
+    scale: calc(0.82 + 0.18 * var(--nav-bubbles, 0)) calc(0.3 + 0.7 * var(--nav-bubbles, 0));
+    transform-origin: left center;
+    opacity: var(--nav-bubbles, 0);
+    mask-image:
+      nav-bubble(6%, 65%, 1),
+      nav-bubble(24%, 25%, 2),
+      nav-bubble(42%, 75%, 3),
+      nav-bubble(60%, 30%, 4),
+      nav-bubble(78%, 70%, 5),
+      nav-bubble(95%, 35%, 6);
+    // Each bubble's turn: 1 to 6 when opening; 6 to 1 when closing, after the swell.
+    --nav-delay-1: calc(0.00s * var(--nav-bubbles, 0) + 0.35s * (1 - var(--nav-bubbles, 0)));
+    --nav-delay-2: calc(0.03s * var(--nav-bubbles, 0) + 0.32s * (1 - var(--nav-bubbles, 0)));
+    --nav-delay-3: calc(0.06s * var(--nav-bubbles, 0) + 0.29s * (1 - var(--nav-bubbles, 0)));
+    --nav-delay-4: calc(0.09s * var(--nav-bubbles, 0) + 0.26s * (1 - var(--nav-bubbles, 0)));
+    --nav-delay-5: calc(0.12s * var(--nav-bubbles, 0) + 0.23s * (1 - var(--nav-bubbles, 0)));
+    --nav-delay-6: calc(0.15s * var(--nav-bubbles, 0) + 0.20s * (1 - var(--nav-bubbles, 0)));
+    transition:
+      --nav-bubble-1 0.15s ease-in-out var(--nav-delay-1),
+      --nav-bubble-2 0.15s ease-in-out var(--nav-delay-2),
+      --nav-bubble-3 0.15s ease-in-out var(--nav-delay-3),
+      --nav-bubble-4 0.15s ease-in-out var(--nav-delay-4),
+      --nav-bubble-5 0.15s ease-in-out var(--nav-delay-5),
+      --nav-bubble-6 0.15s ease-in-out var(--nav-delay-6),
+      opacity 0.5s ease-in-out,
+      scale 0.5s var(--nav-ease, cubic-bezier(0.6, -0.6, 0.4, 1));
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      transition: none;
+    }
+  }
+}
+
 // One navigation button with a tinted icon tile.
 .nav-item {
+  @include nav-bubbles;
+  --nav-fill: rgba(255, 153, 0, 0.14);
   @include row(10px);
   width: 100%;
   min-height: 36px;
@@ -79,13 +161,16 @@
 
   &[aria-current="page"],
   &--active {
-    background: rgba(255, 153, 0, 0.14);
+    @include nav-bubbles-on;
+    background: transparent;
     color: $orange-ink;
   }
 
   // Parent of an open sub-menu.
   &--open {
-    background: rgba(255, 153, 0, 0.08);
+    @include nav-bubbles-on;
+    --nav-fill: rgba(255, 153, 0, 0.08);
+    background: transparent;
     color: $orange-ink;
   }
 
@@ -213,7 +298,9 @@
 
 // Profile / account button pinned to the bottom of the sidebar.
 .profile-button {
+  @include nav-bubbles;
   @include row(10px);
+  --nav-fill: rgba(255, 153, 0, 0.12);
   width: 100%;
   min-height: 48px;
   padding: 6px 10px;
@@ -223,9 +310,10 @@
   text-align: left;
   cursor: pointer;
 
-  &[aria-current="page"] {
+  &[aria-current="page"],
+  &--open {
     border-color: rgba(255, 153, 0, 0.5);
-    background: rgba(255, 153, 0, 0.12);
+    @include nav-bubbles-on;
     box-shadow: 0 0 14px rgba(255, 153, 0, 0.2);
   }
 
@@ -251,7 +339,8 @@
     color: $cyan-700;
   }
 
-  &[aria-current="page"] &__icon {
+  &[aria-current="page"] &__icon,
+  &--open &__icon {
     color: #c2410c;
   }
 }
@@ -278,14 +367,13 @@
   }
 
   .nav-item {
-    position: relative;
     gap: 12px;
     min-height: 38px;
     padding: 0 12px;
     color: $ink-soft;
     font-size: 14px;
     font-weight: 600;
-    transition: background 0.15s ease, color 0.15s ease;
+    transition: background 0.15s ease-in-out, color 0.15s ease-in-out;
 
     &:hover {
       background: $bg-tint;
@@ -301,7 +389,8 @@
     }
 
     &[aria-current="page"] {
-      background: rgba(255, 153, 0, 0.1);
+      --nav-fill: rgba(255, 153, 0, 0.1);
+      background: transparent;
       color: $ink;
       font-weight: 700;
 
@@ -326,7 +415,7 @@
   .nav-item__icon {
     flex: none;
     color: $muted-light;
-    transition: color 0.15s ease;
+    transition: color 0.15s ease-in-out;
   }
 
   .sidebar__footer {
@@ -339,10 +428,10 @@
 // A menu group that appears later (client portal: "My VA team" once they have an active VA): it slides in,
 // then its items one after another.
 .sidebar__group--reveal {
-  animation: sidebar-reveal 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  animation: sidebar-reveal 0.45s ease-in-out backwards;
 
   > * {
-    animation: sidebar-reveal-item 0.4s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+    animation: sidebar-reveal-item 0.4s ease-in-out backwards;
   }
 
   @for $i from 1 through 6 {
@@ -390,7 +479,7 @@
     flex: none;
     width: 232px;
     height: 100%;
-    transition: width 0.32s cubic-bezier(0.22, 0.8, 0.24, 1), padding 0.32s cubic-bezier(0.22, 0.8, 0.24, 1);
+    transition: width 0.5s ease-in-out, padding 0.5s ease-in-out;
   }
 
   @include down(md) {
@@ -514,6 +603,66 @@
   }
 }
 
+// Main menu text stays on one line while the menu changes width, and is uncovered from left to right as the menu
+// grows back from icons (over the same 0.5s, while the second sidebar slides shut).
+@include up(md) {
+  .dual-nav > .sidebar .nav-item__label {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .dual-nav > .sidebar :is(.sidebar__label, .sidebar__note) {
+    white-space: nowrap;
+  }
+
+  // Full size from the start, so nothing below shifts while the menu widens.
+  .dual-nav > .sidebar--expanding {
+    .sidebar__wordmark,
+    .sidebar__wordmark img {
+      flex: none;
+      max-width: none;
+    }
+
+    .portal-brand__text {
+      overflow: hidden;
+      white-space: nowrap;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .dual-nav > .sidebar {
+      :is(.sidebar__label, .sidebar__note, .sidebar__wordmark, .portal-brand__text, .portal-powered),
+      .nav-item > :is(.nav-item__label, .nav-item__trailing, .nav-item__chevron, .count-chip),
+      :is(.profile-button__text, .profile-button__icon) {
+        animation: nav-text-reveal 0.5s ease-in-out backwards;
+      }
+    }
+
+    // Headings and counts stay on screen as icons only: "none" here makes their reveal play when the menu grows back.
+    .dual-nav > .sidebar--compact {
+      :is(.sidebar__label, .sidebar__note, .sidebar__wordmark, .portal-brand__text, .portal-powered),
+      .nav-item > :is(.nav-item__label, .nav-item__trailing, .nav-item__chevron, .count-chip),
+      :is(.profile-button__text, .profile-button__icon) {
+        animation: none;
+      }
+    }
+  }
+}
+
+@keyframes nav-text-reveal {
+  from {
+    opacity: 0;
+    clip-path: inset(-4px 100% -4px -4px);
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(-4px -4px -4px -4px);
+    transform: translateX(0);
+  }
+}
+
 .nav-panel {
   flex: none;
   width: 240px;
@@ -522,15 +671,16 @@
   background: $white;
   box-shadow: $shadow-sidebar;
   overflow: hidden;
-  // Slides open from the edge of the main menu, which shrinks to icons at the same time.
-  animation: nav-panel-open 0.32s cubic-bezier(0.22, 0.8, 0.24, 1);
+  // Glides open from under the main menu, which shrinks to icons at the same time, while its contents slide out of
+  // a soft blur. Closing plays the other way round; components/layout/useNavPanel removes it afterwards.
+  animation: nav-panel-open 0.5s ease-in-out;
 
   @include down(md) {
     width: 100%;
     height: auto;
     border-right: 0;
     border-bottom: 1px solid $line;
-    animation: nav-panel-drop 0.28s cubic-bezier(0.22, 0.8, 0.24, 1);
+    animation: nav-panel-drop 0.5s ease-in-out;
   }
 
   // Fixed width inside, so the content is revealed (not squashed) while the panel opens.
@@ -540,7 +690,8 @@
     height: 100%;
     padding: 18px 12px;
     overflow-y: auto;
-    animation: nav-panel-content 0.36s cubic-bezier(0.22, 0.8, 0.24, 1) 0.06s backwards;
+    overflow-x: hidden;
+    animation: nav-panel-content 0.5s ease-in-out backwards;
 
     @include down(md) {
       width: 100%;
@@ -548,14 +699,34 @@
     }
   }
 
-  // Items follow one after another.
-  .sidebar__group > * {
-    animation: nav-panel-item 0.3s cubic-bezier(0.22, 0.8, 0.24, 1) backwards;
+  // Items are revealed from the top of the menu to the bottom, each one dropping as it's uncovered from above.
+  @for $i from 2 through 6 {
+    .sidebar__group:nth-child(#{$i}) {
+      --nav-group: #{$i - 1};
+    }
   }
 
-  @for $i from 1 through 8 {
+  .sidebar__group > * {
+    animation: nav-panel-item 0.35s ease-in-out backwards;
+    animation-delay: calc(0.15s + var(--nav-group, 0) * 0.12s + var(--nav-row, 0) * 0.025s);
+  }
+
+  @for $i from 2 through 8 {
     .sidebar__group > :nth-child(#{$i}) {
-      animation-delay: #{100 + ($i - 1) * 35}ms;
+      --nav-row: #{$i - 1};
+    }
+  }
+
+  &--closing {
+    pointer-events: none;
+    animation: nav-panel-close 0.5s ease-in-out forwards;
+
+    @include down(md) {
+      animation: nav-panel-lift 0.5s ease-in-out forwards;
+    }
+
+    .nav-panel__inner {
+      animation: nav-panel-content-out 0.5s ease-in-out forwards;
     }
   }
 
@@ -564,6 +735,10 @@
     &__inner,
     .sidebar__group > * {
       animation: none;
+    }
+
+    &--closing {
+      display: none;
     }
   }
 
@@ -645,7 +820,6 @@
   }
 
   .nav-item {
-    position: relative;
     gap: 12px;
     min-height: 38px;
     padding: 0 12px;
@@ -661,7 +835,8 @@
     }
 
     &[aria-current="page"] {
-      background: rgba(255, 153, 0, 0.1);
+      --nav-fill: rgba(255, 153, 0, 0.1);
+      background: transparent;
       color: $ink;
       font-weight: 700;
 
@@ -686,14 +861,59 @@
     flex: none;
     color: $muted-light;
   }
+
+  // Settings › Sign out: at the end of the menu, set apart by a hairline.
+  &__signout {
+    padding-top: 12px;
+    border-top: 1px solid $line-faint;
+
+    .nav-item,
+    .nav-item:hover,
+    .nav-item__icon {
+      color: $red-700;
+    }
+
+    .nav-item:hover {
+      background: rgba(217, 45, 32, 0.07);
+    }
+  }
 }
 
 @keyframes nav-panel-open {
   from {
     width: 0;
+    opacity: 0;
   }
   to {
     width: 240px;
+    opacity: 1;
+  }
+}
+
+@keyframes nav-panel-close {
+  from {
+    width: 240px;
+    opacity: 1;
+  }
+  to {
+    width: 0;
+    border-right-width: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes nav-panel-lift {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes nav-panel-content-out {
+  to {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateX(-60px);
   }
 }
 
@@ -711,10 +931,12 @@
 @keyframes nav-panel-content {
   from {
     opacity: 0;
-    transform: translateX(-24px);
+    filter: blur(6px);
+    transform: translateX(-60px);
   }
   to {
     opacity: 1;
+    filter: blur(0);
     transform: translateX(0);
   }
 }
@@ -722,11 +944,13 @@
 @keyframes nav-panel-item {
   from {
     opacity: 0;
-    transform: translateX(-10px);
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-18px);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    clip-path: inset(0 0 0 0);
+    transform: translateY(0);
   }
 }
 

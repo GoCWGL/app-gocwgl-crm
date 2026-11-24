@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import logoMark from "@/assets/images/logo-mark.png";
-import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
+import { NavItem, ProfileButton, Sidebar, SidebarGroup, useNavPanel } from "@/components/layout";
 import { Avatar, Icon } from "@/components/ui";
 import { MyAvatar } from "@/features/account/ProfilePhoto";
 import { VA_CLIENT_NAV, VA_CLIENT_TABS, VA_NAV, type VaTab } from "@/data/va";
@@ -69,8 +69,13 @@ export function VaSidebar() {
   const [panel, setPanel] = useState({ tab, client, open: onClientPage ? client : "" });
   if (panel.tab !== tab || panel.client !== client) setPanel({ tab, client, open: onClientPage ? client : "" });
   const openClient = clients.find((c) => c.id === panel.open);
+  // Whose sidebar shows: the open client's, or the one that's still sliding shut.
+  const navPanel = useNavPanel(openClient?.id ?? "");
+  const shownClient = clients.find((c) => c.id === navPanel.shown);
   const [expanded, setExpanded] = useState(false);
   const compact = !!openClient && !expanded;
+  // Growing back from icons while the second sidebar slides shut: its text is revealed as it widens.
+  const expanding = navPanel.closing && !openClient && !expanded;
   const pickClient = (id: string) => {
     setExpanded(false);
     if (panel.open === id) return setPanel({ ...panel, open: "" });
@@ -84,7 +89,7 @@ export function VaSidebar() {
     <div className={cn("dual-nav", openClient && "dual-nav--open")}>
       <Sidebar
         label="VA menu"
-        className={cn("sidebar--admin", compact && "sidebar--compact")}
+        className={cn("sidebar--admin", compact && "sidebar--compact", expanding && "sidebar--expanding")}
         brand={
           <>
             <div className="stack stack--2 sidebar__wordmark">
@@ -180,16 +185,16 @@ export function VaSidebar() {
         ))}
       </Sidebar>
 
-      {openClient && (
-        // The panel slides open once; switching to another client only swaps (and fades in) what's inside.
-        <nav className="nav-panel" id="va-nav-panel" aria-label={`${clientLabel(openClient)} menu`} onKeyDown={(ev) => ev.key === "Escape" && hidePanel()}>
-          <div className="nav-panel__inner" key={openClient.id}>
+      {shownClient && (
+        // Switching to another client slides this one shut, then opens the new one (useNavPanel).
+        <nav key={shownClient.id} className={cn("nav-panel", navPanel.closing && "nav-panel--closing")} inert={navPanel.closing} id="va-nav-panel" aria-label={`${clientLabel(shownClient)} menu`} onKeyDown={(ev) => ev.key === "Escape" && hidePanel()}>
+          <div className="nav-panel__inner">
             <div className="nav-panel__head">
-              <Avatar name={clientLabel(openClient)} tone={avatarTone(openClient.id)} size="sm" className="nav-panel__icon" />
+              <Avatar name={clientLabel(shownClient)} tone={avatarTone(shownClient.id)} size="sm" className="nav-panel__icon" />
               <span className="nav-panel__heading">
-                <span className="nav-panel__title">{clientLabel(openClient)}</span>
+                <span className="nav-panel__title">{clientLabel(shownClient)}</span>
                 <span className="nav-panel__desc">
-                  {openClient.company && openClient.name ? openClient.name : "Your work for this client"}
+                  {shownClient.company && shownClient.name ? shownClient.name : "Your work for this client"}
                 </span>
               </span>
               <button type="button" className="nav-panel__close" onClick={hidePanel} aria-label="Hide this menu" title="Hide this menu">
@@ -197,16 +202,16 @@ export function VaSidebar() {
               </button>
             </div>
             <div className="nav-panel__nav">
-              {clientNav(openClient, clockedIn.has(openClient.id)).map((group) => (
+              {clientNav(shownClient, clockedIn.has(shownClient.id)).map((group) => (
                 <SidebarGroup key={group.title} title={group.title}>
                   {group.items.map((item) => (
                     <NavItem
                       key={item.tab}
                       label={item.label}
-                      active={tab === item.tab && client === openClient.id}
-                      onClick={() => goTo(item.tab, openClient.id)}
+                      active={tab === item.tab && client === shownClient.id}
+                      onClick={() => goTo(item.tab, shownClient.id)}
                       badge={
-                        item.tab === "tasks" ? badge(toStart.get(openClient.id)) : item.tab === "invoices" ? badge(unpaid.get(openClient.id)) : undefined
+                        item.tab === "tasks" ? badge(toStart.get(shownClient.id)) : item.tab === "invoices" ? badge(unpaid.get(shownClient.id)) : undefined
                       }
                       icon={<NavIcon icon={item.icon} />}
                     />

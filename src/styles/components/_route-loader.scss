@@ -113,14 +113,31 @@ $z-route-loader: $z-overlay + 10;
   }
 }
 
+// Cards and sections glide up out of a soft blur into focus.
 @keyframes page-enter {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    filter: blur(6px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
+    filter: blur(0);
     transform: translateY(0);
+  }
+}
+
+// Titles are uncovered from left to right. (The negative insets leave room for letter tails and glows.)
+@keyframes title-reveal {
+  from {
+    opacity: 0;
+    clip-path: inset(-12px 100% -12px -12px);
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(-12px -12px -12px -12px);
+    transform: translateX(0);
   }
 }
 
@@ -268,7 +285,7 @@ $z-route-loader: $z-overlay + 10;
 .page-enter {
   @include stack(24px);
   min-width: 0;
-  animation: page-fade 0.3s ease-out backwards;
+  animation: page-fade 0.3s ease-in-out backwards;
 
   // Each section of a page rises in, one after another (a page's own .page-stack counts as its sections).
   // "backwards", not "both": a transform kept after the animation would make a section the containing block
@@ -276,7 +293,14 @@ $z-route-loader: $z-overlay + 10;
   // Pop-ups rendered in the page (.modal) are skipped: they have their own entrance (components/_modal).
   > :not(.page-stack, .modal),
   > .page-stack > :not(.modal) {
-    animation: page-enter 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+    animation: page-enter 0.6s ease-in-out backwards;
+  }
+
+  // Rows and grids of cards only fade in: their cards come in one by one (below), not twice.
+  > :not(.page-stack, .modal, .card):has(> .card, > .card-button, > .kpi-card, > .stat-tile, > .link-card, > .training-card, > .vp-card, > .inv-card),
+  > .page-stack
+    > :not(.modal, .card):has(> .card, > .card-button, > .kpi-card, > .stat-tile, > .link-card, > .training-card, > .vp-card, > .inv-card) {
+    animation-name: page-fade;
   }
 
   @for $i from 1 through 8 {
@@ -289,6 +313,43 @@ $z-route-loader: $z-overlay + 10;
   > :not(.page-stack, .modal):nth-child(n + 9),
   > .page-stack > :not(.modal):nth-child(n + 9) {
     animation-delay: 480ms;
+  }
+}
+
+// The page title, and the cards and titles inside each section (not in pop-ups, and not cards inside a card that
+// already animates). :where keeps these weaker than the section rules above and any component's own animation.
+@media (prefers-reduced-motion: no-preference) {
+  .page-header__text > * {
+    animation: title-reveal 0.6s ease-in-out backwards;
+
+    &:nth-child(2) {
+      animation-delay: 60ms;
+    }
+
+    &:nth-child(3) {
+      animation-delay: 120ms;
+    }
+  }
+
+  :where(.page-enter)
+    :where(.card, .card-button, .kpi-card, .stat-tile, .link-card, .training-card, .vp-card, .inv-card):where(
+      :not(.modal *, [role="dialog"] *, .card *)
+    ) {
+    animation: page-enter 0.6s ease-in-out backwards;
+
+    @for $i from 2 through 6 {
+      &:where(:nth-child(#{$i})) {
+        animation-delay: #{($i - 1) * 50}ms;
+      }
+    }
+
+    &:where(:nth-child(n + 7)) {
+      animation-delay: 300ms;
+    }
+  }
+
+  :where(.page-enter) :where(h2, h3, .card-title, .vp-card__title, .inv-card__title):where(:not(.modal *, [role="dialog"] *)) {
+    animation: title-reveal 0.6s ease-in-out 0.12s backwards;
   }
 }
 
@@ -312,8 +373,8 @@ $z-route-loader: $z-overlay + 10;
   .route-loader,
   .route-loader .brand-loader,
   .page-enter,
-  .page-enter > *,
-  .page-enter > .page-stack > *,
+  .page-enter > :not(.page-stack, .modal):not(.modal),
+  .page-enter > .page-stack > :not(.modal):not(.modal),
   .sidebar__group--reveal,
   .sidebar__group--reveal > *,
   .nav-progress--sweep {

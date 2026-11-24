@@ -1,66 +1,8 @@
 @use "../../abstracts" as *;
 
-// Left tab list + right panel.
+// The menu is in the sidebar (AdminSidebar); this is the open settings page.
 .settings {
-  &__nav {
-    flex: 1 1 200px;
-    gap: 4px;
-    max-width: 100%;
-    padding: 10px;
-    align-self: flex-start;
-  }
-
-  &__tab {
-    @include row(10px);
-    min-height: 40px;
-    padding: 0 12px;
-    border: 1px solid transparent;
-    border-radius: 9px;
-    background: transparent;
-    color: $ink-soft;
-    font-size: 14px;
-    font-weight: 700;
-    text-align: left;
-    cursor: pointer;
-
-    &:hover {
-      background: rgba(8, 145, 178, 0.06);
-    }
-
-    &[aria-current="page"] {
-      border-color: rgba(255, 153, 0, 0.45);
-      background: rgba(255, 153, 0, 0.12);
-      color: $orange-ink;
-    }
-
-    // Sign out sits under the tabs, set apart by a hairline.
-    &--signout {
-      position: relative;
-      margin-top: 9px;
-      color: $red-700;
-
-      &::before {
-        content: "";
-        position: absolute;
-        top: -6px;
-        left: 4px;
-        right: 4px;
-        border-top: 1px solid $line-faint;
-      }
-
-      &:hover {
-        background: rgba(217, 45, 32, 0.07);
-      }
-
-      &:disabled {
-        cursor: progress;
-        opacity: 0.6;
-      }
-    }
-  }
-
   &__panel {
-    flex: 4 1 520px;
     gap: 18px;
   }
 

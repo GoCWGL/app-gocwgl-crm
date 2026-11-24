@@ -4,11 +4,12 @@ import { useState } from "react";
 import Image from "next/image";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import logoMark from "@/assets/images/logo-mark.png";
-import { NavItem, ProfileButton, Sidebar, SidebarGroup } from "@/components/layout";
+import { NavItem, ProfileButton, Sidebar, SidebarGroup, useNavPanel } from "@/components/layout";
 import { Icon, type IconName } from "@/components/ui";
 import { MyAvatar } from "@/features/account/ProfilePhoto";
+import { useSignOutConfirm } from "@/features/auth/components/SignOutConfirm";
 import { cn } from "@/lib/utils";
-import { CRM_TABS, DASHBOARD_TABS, HIDDEN_TABS, TAB_MENU, type AdminTab } from "@/data/admin";
+import { CRM_TABS, DASHBOARD_TABS, HIDDEN_TABS, SETTINGS_GROUPS, SETTINGS_TABS, TAB_MENU, type AdminTab, type SettingsTab } from "@/data/admin";
 import { canUseMenu } from "@/utils/auth/session";
 import { useMenuCounts } from "@/utils/hooks/useMenuCounts";
 import { useCrmRequests } from "@/utils/hooks/useDelivery";
@@ -143,6 +144,9 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
   },
 ];
 
+/** The profile button at the bottom opens Settings' own second sidebar. */
+const SETTINGS_PANEL = { key: "settings", label: "Settings", icon: "settings" as IconName, description: "Your profile, business and preferences" };
+
 const pagesOf = (i: MenuItem) => i.tabs ?? [i.tab];
 const flyoutItems = (f: Flyout) => f.groups.flatMap((g) => g.items);
 
@@ -150,7 +154,8 @@ const NavIcon = ({ icon }: { icon: IconName }) => <Icon name={icon} size={17} st
 
 export function AdminSidebar() {
   const { state, goTo, update, openContacts } = useAdmin();
-  const { tab, contactView } = state;
+  const { tab, contactView, settingsTab } = state;
+  const signOut = useSignOutConfirm();
   const me = useMe().data;
   const name = me?.fullName || me?.email || "";
   // Settings › Team › Menus: only the menus this teammate may use are shown.
@@ -182,17 +187,35 @@ export function AdminSidebar() {
   const isActive = (i: MenuItem) => pagesOf(i).includes(tab);
   const holds = (f: Flyout, t: AdminTab) => flyoutItems(f).some((i) => pagesOf(i).includes(t));
 
-  // Clicking Clients, VAs, Finance or Marketing opens that menu's own sidebar next to the main one, and the main
+  // Tags belong to the Contacts menu and Calendar to its own: hidden for teammates without them.
+  const canSettings = (t: SettingsTab) =>
+    (t !== "tags" || canUseMenu(me, "contacts")) && (t !== "calendar" || canUseMenu(me, "calendar"));
+  const settingsGroups = SETTINGS_GROUPS.map((g) => ({
+    title: g.title,
+    items: g.tabs.filter(canSettings).map((id) => SETTINGS_TABS.find((t) => t.id === id)!),
+  })).filter((g) => g.items.length);
+
+  // Clicking Clients, VAs, Finance, Marketing or your profile opens that menu's own sidebar next to the main one, and the main
   // menu shrinks to its icons. It stays while you move between its pages; hiding it (or going to a page
   // outside it) brings the full main menu back. "Expand" shows the full main menu beside it.
-  const [panel, setPanel] = useState<{ tab: AdminTab; key: string | null }>({ tab, key: null });
+  // Going to Settings any other way (a link, a notification) opens its sidebar too: its pages are only listed there.
+  const [panel, setPanel] = useState<{ tab: AdminTab; key: string | null }>({ tab, key: tab === "settings" ? SETTINGS_PANEL.key : null });
   if (panel.tab !== tab) {
     const f = flyouts.find((x) => x.key === panel.key);
-    setPanel({ tab, key: f && holds(f, tab) ? f.key : null });
+    setPanel({ tab, key: tab === "settings" ? SETTINGS_PANEL.key : f && holds(f, tab) ? f.key : null });
   }
   const openFlyout = flyouts.find((f) => f.key === panel.key);
+  const settingsOpen = panel.key === SETTINGS_PANEL.key;
+  const openPanel = settingsOpen ? SETTINGS_PANEL : openFlyout;
+  // What the second sidebar shows: the open menu, or the one that's still sliding shut.
+  const navPanel = useNavPanel(openPanel?.key ?? "");
+  const shownFlyout = flyouts.find((f) => f.key === navPanel.shown);
+  const shownSettings = navPanel.shown === SETTINGS_PANEL.key;
+  const shownPanel = shownSettings ? SETTINGS_PANEL : shownFlyout;
   const [expanded, setExpanded] = useState(false);
-  const compact = !!openFlyout && !expanded;
+  const compact = !!openPanel && !expanded;
+  // Growing back from icons while the second sidebar slides shut: its text is revealed as it widens.
+  const expanding = navPanel.closing && !openPanel && !expanded;
   const togglePanel = (key: string) => {
     setPanel({ tab, key: panel.key === key ? null : key });
     setExpanded(false);
@@ -211,16 +234,17 @@ export function AdminSidebar() {
     else goTo(i.tab);
   };
 
+  // While a second sidebar is open, only its menu is highlighted in the main menu (not also the page you're on).
   return (
-    <div className={cn("dual-nav", openFlyout && "dual-nav--open")}>
+    <div className={cn("dual-nav", openPanel && "dual-nav--open")}>
       <Sidebar
         label="Main menu"
-        className={cn("sidebar--admin", compact && "sidebar--compact")}
+        className={cn("sidebar--admin", compact && "sidebar--compact", expanding && "sidebar--expanding")}
         brand={
           <>
             <Image src={logoWordmark} alt="GoCWGL" width={168} priority className="sidebar__wordmark" />
             <Image src={logoMark} alt="GoCWGL" width={36} height={36} className="sidebar__mark" />
-            {openFlyout && (
+            {openPanel && (
               <button
                 type="button"
                 className="sidebar__toggle"
@@ -240,7 +264,7 @@ export function AdminSidebar() {
                 <NavItem
                   label="Report a bug"
                   tooltip={compact ? "Report a bug" : undefined}
-                  active={tab === "bugs"}
+                  active={tab === "bugs" && !openPanel}
                   onClick={() => goTo("bugs")}
                   icon={<NavIcon icon="bug" />}
                 />
@@ -250,8 +274,10 @@ export function AdminSidebar() {
               avatar={<MyAvatar name={name} brand ring />}
               name={name}
               subtitle="Profile & settings"
-              active={tab === "settings"}
-              onClick={() => goTo("settings")}
+              active={tab === "settings" && (!openPanel || settingsOpen)}
+              onClick={() => togglePanel(SETTINGS_PANEL.key)}
+              expanded={settingsOpen}
+              highlighted={settingsOpen}
               trailing={<Icon name="settings" size={17} strokeWidth={1.9} className="profile-button__icon" />}
             />
           </>
@@ -265,7 +291,7 @@ export function AdminSidebar() {
               const tooltip = compact ? e.label : undefined;
               if (!isFlyout(e))
                 return (
-                  <NavItem key={e.key} label={e.label} tooltip={tooltip} active={isActive(e)} onClick={() => open(e)} badge={badge} icon={<NavIcon icon={e.icon} />} />
+                  <NavItem key={e.key} label={e.label} tooltip={tooltip} active={isActive(e) && !openPanel} onClick={() => open(e)} badge={badge} icon={<NavIcon icon={e.icon} />} />
                 );
               const isOpen = panel.key === e.key;
               return (
@@ -275,7 +301,7 @@ export function AdminSidebar() {
                   tooltip={tooltip}
                   onClick={() => togglePanel(e.key)}
                   expanded={isOpen}
-                  highlighted={isOpen || holds(e, tab)}
+                  highlighted={openPanel ? isOpen : holds(e, tab)}
                   badge={badge}
                   icon={<NavIcon icon={e.icon} />}
                 />
@@ -285,27 +311,53 @@ export function AdminSidebar() {
         ))}
       </Sidebar>
 
-      {openFlyout && (
-        // The panel slides open once; switching to another menu only swaps (and fades in) what's inside.
+      {shownPanel && (
+        // Switching to another menu slides this one shut, then opens the new one (useNavPanel).
         <nav
-          className="nav-panel"
+          key={shownPanel.key}
+          className={cn("nav-panel", navPanel.closing && "nav-panel--closing")}
+          inert={navPanel.closing}
           id="admin-nav-panel"
-          aria-label={`${openFlyout.label} menu`}
+          aria-label={`${shownPanel.label} menu`}
           onKeyDown={(ev) => ev.key === "Escape" && hidePanel()}
         >
-          <div className="nav-panel__inner" key={openFlyout.key}>
+          <div className="nav-panel__inner">
             <div className="nav-panel__head">
-              <Icon name={openFlyout.icon} size={18} strokeWidth={1.9} className="nav-panel__icon" />
+              <Icon name={shownPanel.icon} size={18} strokeWidth={1.9} className="nav-panel__icon" />
               <span className="nav-panel__heading">
-                <span className="nav-panel__title">{openFlyout.label}</span>
-                {openFlyout.description && <span className="nav-panel__desc">{openFlyout.description}</span>}
+                <span className="nav-panel__title">{shownPanel.label}</span>
+                {shownPanel.description && <span className="nav-panel__desc">{shownPanel.description}</span>}
               </span>
               <button type="button" className="nav-panel__close" onClick={hidePanel} aria-label="Hide this menu" title="Hide this menu">
                 <Icon name="close" size={15} strokeWidth={2.2} />
               </button>
             </div>
             <div className="nav-panel__nav">
-              {openFlyout.groups.map((fg, gi) => (
+              {shownSettings && (
+                <>
+                  {settingsGroups.map((g) => (
+                    <SidebarGroup key={g.title} title={g.title}>
+                      {g.items.map((t) => (
+                        <NavItem
+                          key={t.id}
+                          label={t.label}
+                          active={tab === "settings" && settingsTab === t.id}
+                          onClick={() => update({ tab: "settings", settingsTab: t.id })}
+                          icon={<NavIcon icon={t.icon} />}
+                        />
+                      ))}
+                    </SidebarGroup>
+                  ))}
+                  <SidebarGroup className="nav-panel__signout">
+                    <NavItem
+                      label={signOut.pending ? "Signing out…" : "Sign out"}
+                      onClick={() => !signOut.pending && signOut.ask()}
+                      icon={<NavIcon icon="arrowLeft" />}
+                    />
+                  </SidebarGroup>
+                </>
+              )}
+              {shownFlyout?.groups.map((fg, gi) => (
                 <SidebarGroup key={fg.title ?? gi} title={fg.title}>
                   {fg.items.map((i) => (
                     <NavItem
@@ -323,6 +375,7 @@ export function AdminSidebar() {
           </div>
         </nav>
       )}
+      {signOut.dialog}
     </div>
   );
 }
