@@ -52,7 +52,7 @@ export function VaProjectsSection() {
   const lists: Record<View, VaRequestOut[]> = { requested, open: current, done, cancelled: stopped };
   const shown = lists[tab]
     .filter((r) => !vaFilter || vaOf(r)?.id === vaFilter)
-    .filter((r) => !q || [r.role, r.overview, r.important, vaOf(r)?.name].some((x) => x?.toLowerCase().includes(q)))
+    .filter((r) => !q || [r.role, r.category, r.overview, r.important, vaOf(r)?.name].some((x) => x?.toLowerCase().includes(q)))
     .sort((a, b) =>
       sort === "newest"
         ? b.createdAt.localeCompare(a.createdAt)
@@ -177,7 +177,7 @@ function ProjectList({ projects, onOpen }: { projects: VaRequestOut[]; onOpen: (
               <span className="rq-row__main">
                 <strong className="rq-row__title">{r.role}</strong>
                 <span className="rq-row__meta">
-                  {[r.dueDate && `Due ${formatLong(r.dueDate)}`, r.budgetCents != null && `Budget ${formatCents(r.budgetCents)}`].filter(Boolean).join(" · ")}
+                  {[r.category, r.dueDate && `Due ${formatLong(r.dueDate)}`, r.budgetCents != null && `Budget ${formatCents(r.budgetCents)}`].filter(Boolean).join(" · ")}
                 </span>
               </span>
               <span className="rq-row__extra">

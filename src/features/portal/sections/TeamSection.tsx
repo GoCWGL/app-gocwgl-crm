@@ -157,7 +157,7 @@ export function TeamSection() {
 }
 
 /** "40 hours a week · Mon–Fri, 9:00 AM – 5:00 PM · US Eastern", or "Open project · due Dec 15, 2026". */
-const requestSummary = (r: VaRequestOut) => (r.engagement === "project" ? requestHours(r) : `${requestLoad(r)} · ${requestHours(r)}`);
+const requestSummary = (r: VaRequestOut) => [r.category, r.engagement !== "project" && requestLoad(r), requestHours(r)].filter(Boolean).join(" · ");
 
 /** The road from request to VA, as the client sees it. */
 const STAGES: Array<{ label: string; reached: Array<VaRequestOut["status"]> }> = [

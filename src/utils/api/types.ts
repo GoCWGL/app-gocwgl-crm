@@ -14160,6 +14160,11 @@ export interface components {
             /** Role */
             role: string;
             /**
+             * Category
+             * @default
+             */
+            category?: string;
+            /**
              * Engagement
              * @default part_time
              * @enum {string}
@@ -16514,6 +16519,11 @@ export interface components {
             /** Role */
             role: string;
             /**
+             * Category
+             * @default
+             */
+            category?: string;
+            /**
              * Engagement
              * @default part_time
              * @enum {string}
@@ -16592,6 +16602,11 @@ export interface components {
             clientName: string;
             /** Role */
             role: string;
+            /**
+             * Category
+             * @default
+             */
+            category?: string;
             /**
              * Engagement
              * @enum {string}
@@ -16732,6 +16747,8 @@ export interface components {
             teamNote?: string | null;
             /** Role */
             role?: string | null;
+            /** Category */
+            category?: string | null;
             /** Engagement */
             engagement?: ("part_time" | "full_time" | "project") | null;
             /** Hoursperweek */

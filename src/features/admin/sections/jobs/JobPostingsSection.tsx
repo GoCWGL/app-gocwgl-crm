@@ -85,19 +85,18 @@ function JobPostingsBoard() {
   const tabOf = (r: (typeof allRequests)[number]) => requestTab(stageOf(r));
   const linked = new Set(allRequests.map((r) => r.jobPostingId).filter(Boolean) as string[]);
   const fresh = allRequests.filter((r) => tabOf(r) === "requests").length;
-  // Job post → the client request it was made from (opens that request's full page).
-  const requestOf = new Map(allRequests.filter((r) => r.jobPostingId).map((r) => [r.jobPostingId as string, r.id]));
   // Until a tab is picked: new client requests when there are some, else Live.
   const [picked, setTab] = useState<BoardTab | null>(null);
   const tab = picked ?? (fresh ? "requests" : "live");
   const [search, setSearch] = useState("");
   const q = search.trim().toLowerCase();
   const matchesRequest = (r: (typeof allRequests)[number]) =>
-    !q || [r.role, r.clientName, r.overview].some((x) => x?.toLowerCase().includes(q));
+    !q || [r.role, r.category, r.clientName, r.overview].some((x) => x?.toLowerCase().includes(q));
   const shownRequests = allRequests.filter((r) => tabOf(r) === tab && matchesRequest(r));
   const [editing, setEditing] = useState<JobPostingOut | "new" | null>(null);
   const [filling, setFilling] = useState<JobPostingOut | null>(null);
   const [applicants, setApplicants] = useState<JobPostingOut | null>(null);
+  const [viewing, setViewing] = useState<JobPostingOut | null>(null);
   const [creating, setCreating] = useState(false);
   // Match a VA to a client directly (no request from the client needed).
   const [matching, setMatching] = useState(false);
@@ -274,11 +273,9 @@ function JobPostingsBoard() {
                         <span className="text-tiny">
                           {p.publishedAt ? `Posted ${formatShort(p.publishedAt)}` : `Created ${formatShort(p.createdAt)}`}
                         </span>
-                        {requestOf.has(p.id) && (
-                          <button type="button" className="ap-count" onClick={() => update({ jobRequestId: requestOf.get(p.id)! })}>
-                            <Icon name="eye" size={12} /> Full details
-                          </button>
-                        )}
+                        <button type="button" className="ap-count" onClick={() => setViewing(p)}>
+                          <Icon name="eye" size={12} /> Full details
+                        </button>
                         {((p.applicationCount ?? 0) > 0 || p.status === "live" || p.status === "interviewing") && (
                           <button type="button" className="ap-count" onClick={() => setApplicants(p)}>
                             <Icon name="users" size={12} /> {p.applicationCount ?? 0} applicant{p.applicationCount === 1 ? "" : "s"}
@@ -384,6 +381,7 @@ function JobPostingsBoard() {
           );
         })()}
       {creating && <VaRequestForm staff notify={notify} onClose={() => setCreating(false)} onSent={() => setTab("requests")} />}
+      {viewing && <JobDetailsModal posting={viewing} onClose={() => setViewing(null)} />}
       {applicants && <ApplicantsModal posting={applicants} canWrite={canWrite} onClose={() => setApplicants(null)} />}
       {filling && (
         <MarkFilledModal
@@ -401,6 +399,40 @@ function JobPostingsBoard() {
 }
 
 // ------------------------------------------------------------------ New / edit
+
+/** Every detail of a job not made from a client request (those open the request's full page). */
+function JobDetailsModal({ posting: p, onClose }: { posting: JobPostingOut; onClose: () => void }) {
+  const facts: Array<[string, string]> = [
+    ["Client", p.client ? p.client.company || p.client.name : "No client linked"],
+    ["Type", TYPE_LABEL[p.employmentType]],
+    ["Hours", p.hoursPerWeek ? `${p.hoursPerWeek} a week` : "—"],
+    ["Pay for the VA", rateText(p) || "Not set"],
+    ["Schedule", p.schedule || "—"],
+    ["Skills", p.skills.join(", ") || "—"],
+    ["Applicants", String(p.applicationCount ?? 0)],
+    ["Created", formatShort(p.createdAt)],
+    ["Posted", p.publishedAt ? formatShort(p.publishedAt) : "Not posted"],
+    ...(p.status === "filled" ? [["Filled", [p.filledVa?.name, p.filledAt && formatShort(p.filledAt)].filter(Boolean).join(" · ") || "—"] as [string, string]] : []),
+  ];
+  return (
+    <Modal open width={620} onClose={onClose} titleId="job-details" kicker="JOB POSTING" title={p.title} subtitle={STATUS[p.status].label}>
+      <dl className="vp-details">
+        {facts.map(([k, v]) => (
+          <div key={k} className="vp-details__row">
+            <dt>{k}</dt>
+            <dd>{v}</dd>
+          </div>
+        ))}
+      </dl>
+      <section className="rd-block">
+        <h4 className="rd-block__title">
+          <Icon name="textLong" size={14} /> Description
+        </h4>
+        <p className="rd-block__text">{p.description || "No description."}</p>
+      </section>
+    </Modal>
+  );
+}
 
 /** The job post form, for jobs not made from a client request. */
 function JobPostingModal({ posting, onClose, onSaved }: { posting: JobPostingOut | null; onClose: () => void; onSaved: (p: JobPostingOut) => void }) {

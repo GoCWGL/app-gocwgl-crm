@@ -111,6 +111,11 @@ function Page({ r }: { r: VaRequestOut }) {
               For {r.clientName || "client"} · requested by {r.requestedByName || "the client"}
             </p>
             <ul className="vp-hero__meta">
+              {r.category && (
+                <li>
+                  <Icon name="users" size={14} /> <span>{r.category}</span>
+                </li>
+              )}
               <li>
                 <Icon name="clock" size={14} /> <span>{requestHours(r)}</span>
               </li>
@@ -176,6 +181,12 @@ function Page({ r }: { r: VaRequestOut }) {
             closed={r.status === "cancelled"}
             readOnly={!canWrite}
           />
+
+          {posting?.description && (
+            <Card icon="eye" title="What VAs see in Open jobs">
+              <p className="rd-block__text">{posting.description}</p>
+            </Card>
+          )}
 
           <Card icon="users" title="Applicants" count={r.jobPostingId ? applicants : undefined}>
             {r.jobPostingId ? (

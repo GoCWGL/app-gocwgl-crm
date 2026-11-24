@@ -8,6 +8,7 @@ import { avatarTone, toneClass, type Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { VaRequestOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
+import { formatCents } from "@/utils/format/money";
 import { useDeclineVaRequest, useSetVaRequestStage } from "@/utils/hooks/useClientWork";
 import { useJobPostings } from "@/utils/hooks/useJobPostings";
 import { useVas } from "@/utils/hooks/useVas";
@@ -236,6 +237,11 @@ function RequestCard({
         )}
       </span>
       <span className="job-card__facts">
+        {r.category && (
+          <span title="VA category">
+            <Icon name="users" size={13} /> {r.category}
+          </span>
+        )}
         <span>
           <Icon name="briefcase" size={13} /> {requestLoad(r)}
         </span>
@@ -246,6 +252,11 @@ function RequestCard({
         <span>
           <Icon name="globe" size={13} /> {requestHours(r)}
         </span>
+        {r.engagement === "project" && r.budgetCents != null && (
+          <span title="The client’s estimated budget">
+            <Icon name="dollar" size={13} /> Budget {formatCents(r.budgetCents)}
+          </span>
+        )}
         {r.requestedVa && !r.matchedVa && (
           <span title="The client asked for this VA (worked with them before)">
             <Icon name="userPlus" size={13} /> Asked for {r.requestedVa.name}

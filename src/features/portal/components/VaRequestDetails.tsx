@@ -30,13 +30,14 @@ export function trackingLabel(r: Pick<VaRequestOut, "wantsTimeTracker" | "wantsA
 export function jobDescriptionFrom(r: VaRequestOut): string {
   if (r.engagement === "project") {
     // The client's budget is for GoCWGL's quote, not shown to VAs.
-    return [r.overview && `Project details\n${r.overview}`, r.dueDate && `Due date\n${formatLong(r.dueDate)}`, r.important && `Important\n${r.important}`]
+    return [r.category && `Category\n${r.category}`, r.overview && `Project details\n${r.overview}`, r.dueDate && `Due date\n${formatLong(r.dueDate)}`, r.important && `Important\n${r.important}`]
       .filter(Boolean)
       .join("\n\n");
   }
   const hours = `${r.timezone ? `${r.schedule} (${r.timezone})` : r.schedule}${r.hoursPerWeek ? `, about ${r.hoursPerWeek} hours a week` : ""}`;
   const list = (title: string, xs: string[]) => (xs.length ? `${title}\n${xs.map((x) => `• ${x}`).join("\n")}` : "");
   return [
+    r.category && `Category\n${r.category}`,
     r.overview && `Role overview\n${r.overview}`,
     `Working hours\n${hours}`,
     list("Key responsibilities", r.responsibilities),
@@ -58,6 +59,8 @@ export function VaRequestDetails({ r, staff }: { r: VaRequestOut; staff?: boolea
   return (
     <div className="rd">
       <div className="rd-facts">
+        {(r.category || staff) && <Fact icon="users" label="VA category" value={r.category || "Not chosen"} />}
+        {r.startDate && <Fact icon="calendar" label="Start date" value={formatLong(r.startDate)} />}
         {project ? (
           <>
             <Fact icon="briefcase" label="Request" value="Open project" />
@@ -75,6 +78,7 @@ export function VaRequestDetails({ r, staff }: { r: VaRequestOut; staff?: boolea
                     : "No maintenance fee · GoCWGL will quote the price"
               }
             />
+            {staff && <Fact icon="check" label="Project agreement" value={fee.acceptedAt ? `Accepted ${formatShort(fee.acceptedAt)}` : "Not accepted (added by GoCWGL)"} />}
           </>
         ) : (
           <>

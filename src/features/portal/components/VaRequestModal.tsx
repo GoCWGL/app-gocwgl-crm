@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
-import { Avatar, Button, Checkbox, Field, FormError, Icon, Input, Modal, SearchBox, Select, Textarea, Toggle } from "@/components/ui";
+import { Avatar, Button, Checkbox, Field, FormError, GroupedPicker, Icon, Input, Modal, SearchBox, Select, Textarea, Toggle } from "@/components/ui";
 import { avatarTone } from "@/lib/tones";
 import { useContactsPage } from "@/utils/hooks/useContacts";
 import type { JobPostingOut, VaRequestIn, VaRequestOut } from "@/utils/api/models";
@@ -10,6 +10,7 @@ import { useUpdateJobPosting } from "@/utils/hooks/useJobPostings";
 import { useMyVaAgreement, useRequestVa, useStaffCreateVaRequest, useStaffUpdateVaRequest, useUpdateMyVaRequest, useVaRequests } from "@/utils/hooks/useClientWork";
 import { usePortal } from "../state/PortalContext";
 import { ClientVaAgreementTerms } from "./ClientVaAgreement";
+import { CATEGORY_GROUPS, CATEGORY_INFO, OTHER_CATEGORY, splitCategory } from "../lib/vaCategories";
 import {
   TRAINING_FEE_SHORT,
   VA_MAINTENANCE_FEE_DOLLARS,
@@ -171,6 +172,11 @@ export function VaRequestForm({
   const [client, setClient] = useState<{ id: string; label: string } | null>(null);
   const [publish, setPublish] = useState(true);
   const [title, setTitle] = useState(edit?.role ?? "");
+  // The category of VA they want ("Other" is written in), on every package. A request from before categories can stay without one.
+  const savedCategory = splitCategory(edit?.category ?? "");
+  const [categoryChoice, setCategoryChoice] = useState(savedCategory.choice);
+  const [otherCategory, setOtherCategory] = useState(savedCategory.other);
+  const category = categoryChoice === OTHER_CATEGORY ? otherCategory.trim() : categoryChoice;
   const [days, setDays] = useState(saved?.days ?? "Mon–Fri");
   const [from, setFrom] = useState(saved?.from ?? "09:00");
   const [to, setTo] = useState(saved?.to ?? "17:00");
@@ -228,6 +234,8 @@ export function VaRequestForm({
       dollarsToCents(payMin) > dollarsToCents(payMax) &&
       "The lowest pay is above the highest.",
     title: !title.trim() && (project ? "Say what the project is." : "Add a title for the role."),
+    category: !categoryChoice && !(edit && !edit.category) && "Choose the category of VA you want.",
+    otherCategory: categoryChoice === OTHER_CATEGORY && !otherCategory.trim() && "Say what kind of VA you need.",
     zone: !project && !zone && "Pick your time zone.",
     time: !project && !flexible && (!from || !to) && "Pick a start and end time.",
     overview: !overview.trim() && (project ? "Describe the project." : "Describe the role in a few sentences."),
@@ -252,6 +260,7 @@ export function VaRequestForm({
     const body: VaRequestWithAgreementIn = {
       ...(!staff && agreed && { agreementAccepted: true }),
       role: title.trim(),
+      category,
       engagement: load.engagement,
       hoursPerWeek: load.hours,
       overview: overview.trim(),
@@ -451,6 +460,30 @@ export function VaRequestForm({
               autoFocus
             />
           </Field>
+          <Field label="VA category" htmlFor="vr-category" required error={err("category")}>
+            <GroupedPicker
+              id="vr-category"
+              value={categoryChoice}
+              onChange={setCategoryChoice}
+              groups={CATEGORY_GROUPS}
+              info={CATEGORY_INFO}
+              invalid={!!err("category")}
+              placeholder="Choose the kind of VA"
+              searchPlaceholder="Search categories or skills"
+            />
+          </Field>
+          {categoryChoice === OTHER_CATEGORY && (
+            <Field label="What kind of VA" htmlFor="vr-category-other" required error={err("otherCategory")}>
+              <Input
+                id="vr-category-other"
+                value={otherCategory}
+                maxLength={80}
+                placeholder="e.g. Legal assistant"
+                aria-invalid={!!err("otherCategory")}
+                onChange={(e) => setOtherCategory(e.target.value)}
+              />
+            </Field>
+          )}
           <Field label={project ? "Details" : "Role overview"} htmlFor="vr-overview" required error={err("overview")}>
             <Textarea
               id="vr-overview"

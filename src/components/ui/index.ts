@@ -7,7 +7,7 @@ export { Dropdown, type DropdownItem } from "./Dropdown";
 export { FileCard } from "./FileCard";
 export { ConfirmDialog } from "./ConfirmDialog";
 export { Checkbox, Field, Input, Select, Textarea, type SelectOption } from "./Form";
-export { GroupedPicker, type PickerGroup } from "./GroupedPicker";
+export { GroupedPicker, type PickerGroup, type PickerOptionInfo } from "./GroupedPicker";
 export { FolderGlyph, GripIcon, Icon, ICONS, type IconName } from "./Icon";
 export { Modal } from "./Modal";
 export { PasswordInput } from "./PasswordInput";
