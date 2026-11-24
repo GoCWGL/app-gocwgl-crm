@@ -1,30 +1,137 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Icon, type IconName } from "@/components/ui";
+import { isStaffAdmin, useSession } from "@/utils/auth/session";
 
-const PORTALS: Array<{ href: string; icon: IconName; title: string; text: string }> = [
-  { href: "/va", icon: "briefcase", title: "VA portal", text: "What your VAs see: their dashboard, clients, time and training." },
-  { href: "/portal", icon: "user", title: "Client portal", text: "Opens a client's portal (Funnels, CRM, Build progress and more)." },
+type Portal = {
+  id: "va" | "client";
+  href: string;
+  icon: IconName;
+  title: string;
+  text: string;
+  inside: Array<{ icon: IconName; label: string }>;
+  /** Which person's portal opens first. */
+  opens: string;
+};
+
+const PORTALS: Portal[] = [
+  {
+    id: "va",
+    href: "/va",
+    icon: "briefcase",
+    title: "VA portal",
+    text: "Where your VAs run their day: clients, tasks, time and training.",
+    inside: [
+      { icon: "users", label: "Clients" },
+      { icon: "clipboard", label: "Tasks" },
+      { icon: "clock", label: "Time tracker" },
+      { icon: "graduation", label: "Training" },
+    ],
+    opens: "Opens your first active VA",
+  },
+  {
+    id: "client",
+    href: "/portal",
+    icon: "user",
+    title: "Client portal",
+    text: "Where clients follow their work: CRM, funnels, build progress and billing.",
+    inside: [
+      { icon: "grid", label: "CRM" },
+      { icon: "funnel", label: "Funnels" },
+      { icon: "rocket", label: "Build progress" },
+      { icon: "card", label: "Billing" },
+    ],
+    opens: "Opens a paid client",
+  },
 ];
 
 /** Settings › Portals: switch view to the VA portal or the client portal. */
 export function PortalLinks() {
-  const router = useRouter();
+  const { user } = useSession();
+  const canAct = isStaffAdmin(user);
   return (
-    <div className="stack stack--8">
+    <div className="portal-cards">
       {PORTALS.map((p) => (
-        <button key={p.href} type="button" className="link-card" onClick={() => router.push(p.href)}>
-          <span className="link-card__icon" aria-hidden="true">
-            <Icon name={p.icon} size={17} />
-          </span>
-          <span className="stack stack--2 u-grow">
-            <span className="text-strong">{p.title}</span>
-            <span className="text-small">{p.text}</span>
-          </span>
-          <Icon name="arrowRight" size={16} />
-        </button>
+        <article key={p.id} className={`portal-card portal-card--${p.id}`} aria-labelledby={`portal-${p.id}`}>
+          <div className="portal-card__stage">
+            <span className="portal-card__access">
+              <Icon name={canAct ? "edit" : "eye"} size={12} />
+              {canAct ? "View and act" : "View only"}
+            </span>
+            <PortalPreview portal={p} />
+          </div>
+          <div className="portal-card__body">
+            <div className="stack stack--6">
+              <h3 className="portal-card__title" id={`portal-${p.id}`}>
+                {p.title}
+              </h3>
+              <p className="portal-card__text">{p.text}</p>
+            </div>
+            <ul className="portal-card__inside" aria-label="What's inside">
+              {p.inside.map((i) => (
+                <li key={i.label}>
+                  <Icon name={i.icon} size={14} />
+                  {i.label}
+                </li>
+              ))}
+            </ul>
+            <div className="portal-card__footer">
+              <span className="text-small">{p.opens}</span>
+              <Link href={p.href} prefetch={false} className="portal-card__view" aria-label={`View ${p.title}`}>
+                <span className="portal-card__label">View portal</span>
+                <span className="portal-card__arrow" aria-hidden="true">
+                  <Icon name="arrowRight" size={14} />
+                </span>
+              </Link>
+            </div>
+          </div>
+        </article>
       ))}
     </div>
+  );
+}
+
+/** Decorative sketch of the portal's screen: no real data. */
+function PortalPreview({ portal }: { portal: Portal }) {
+  return (
+    <span className="portal-mock" aria-hidden="true">
+      <span className="portal-mock__side">
+        <span className="portal-mock__mark">
+          <Icon name={portal.icon} size={14} />
+        </span>
+        {portal.inside.map((i, n) => (
+          <span key={i.label} className={n === 0 ? "portal-mock__nav is-on" : "portal-mock__nav"}>
+            <Icon name={i.icon} size={11} />
+            <i />
+          </span>
+        ))}
+      </span>
+      <span className="portal-mock__main">
+        <i className="portal-mock__heading" />
+        {portal.id === "va" ? (
+          [72, 48, 60].map((w) => (
+            <span key={w} className="portal-mock__row">
+              <b />
+              <i style={{ width: `${w}%` }} />
+              <em />
+            </span>
+          ))
+        ) : (
+          <>
+            <span className="portal-mock__stats">
+              <span />
+              <span />
+              <span />
+            </span>
+            <span className="portal-mock__chart">
+              {[34, 52, 44, 68, 60, 84, 100].map((h) => (
+                <i key={h} style={{ height: `${h}%` }} />
+              ))}
+            </span>
+          </>
+        )}
+      </span>
+    </span>
   );
 }
