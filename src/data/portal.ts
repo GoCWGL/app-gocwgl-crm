@@ -490,7 +490,7 @@ export const CRM_COMPARISON = {
  * (`CRM_FEATURE_FROM_CENTS`).
  */
 export const CRM_CARE_PLAN = {
-  priceCents: 50_000,
+  priceCents: 80_000,
   freeYears: 1,
   includes: [
     "Security updates, backups and monitoring",
@@ -521,7 +521,7 @@ export const CRM_FAQ = [
   { q: "Do I own my CRM and my data?", a: "Yes. Everything we build and every record in it is yours, and you can export your data at any time." },
   {
     q: "Are there monthly fees?",
-    a: "No monthly or per-login fees. The build is one price, paid at once or spread over 6 or 12 monthly payments. Your first year after launch is free: security updates, keeping your code up to date, and unlimited revisions. After that, the Care plan is $500 a year.",
+    a: "No monthly or per-login fees. The build is one price, paid at once or spread over 6 or 12 monthly payments. Your first year after launch is free: security updates, keeping your code up to date, and unlimited revisions. After that, the Care plan is $800 a year.",
   },
   {
     q: "What’s the difference between a revision and a new feature?",

@@ -345,7 +345,7 @@ function CostComparison() {
       <header className="crm-block__head">
         <span className="crm-block__kicker">Renting vs owning</span>
         <h2 className="crm-block__title">What HubSpot, GoHighLevel and Zoho really cost</h2>
-        <p className="crm-block__lead">Set your team size and how long you’ll use it. Rented CRMs bill every month for every login; yours is a one-time build, with the first year of care free and $500 a year after that.</p>
+        <p className="crm-block__lead">Set your team size and how long you’ll use it. Rented CRMs bill every month for every login; yours is a one-time build, with the first year of care free and $800 a year after that.</p>
       </header>
 
       <div className="crm-cost">
