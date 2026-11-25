@@ -16,9 +16,17 @@ export type AdminTab =
   | "tags"
   | "calendar"
   | "bonuses"
+  | "billingOverview"
   | "payments"
+  | "expenses"
   | "products"
   | "affiliates"
+  | "investorOverview"
+  | "shareholders"
+  | "capTable"
+  | "distributions"
+  | "investorUpdates"
+  | "dataRoom"
   | "progress"
   | "media"
   | "email"
@@ -73,9 +81,17 @@ export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> 
   tags: { title: "Tags", subtitle: "Create and manage the tags you use on your contacts." },
   calendar: { title: "Calendar", subtitle: "Discovery calls booked by your leads." },
   bonuses: { title: "Referral bonus", subtitle: "Every referral and its bonus: what to pay, what's pending and what's paid." },
+  billingOverview: { title: "Overview", subtitle: "Income & billing at a glance: what’s paid, what’s pending and what needs your attention." },
   payments: { title: "Billing & invoices", subtitle: "Subscriptions, invoices and each month’s client invoices. Clients pay through each payment link." },
+  expenses: { title: "Expenses", subtitle: "What the business spends: hosting, clients’ hosting, software and anything else, once or repeating." },
   products: { title: "Products", subtitle: "What you sell, with its price and payment link. Pick one when you bill a client." },
   affiliates: { title: "Affiliates", subtitle: "Clients who refer clients. Open one to see who they referred." },
+  investorOverview: { title: "Overview", subtitle: "How the business is doing: net income, costs, cash and budget." },
+  shareholders: { title: "Shareholders", subtitle: "Founders, investors and advisors: their details, checks and your history with them." },
+  capTable: { title: "Cap Table & Equity", subtitle: "Who owns what, how each round changed it, the option pool and what each stake is worth." },
+  distributions: { title: "Declare Distribution", subtitle: "Dividends, returns of capital and exit payouts: declare them, withhold tax and track every payment." },
+  investorUpdates: { title: "Investor Updates & KPIs", subtitle: "Monthly and quarterly updates. Shareholders see them once you publish." },
+  dataRoom: { title: "Data Room & Governance", subtitle: "Legal, tax and board documents, and who can open each one." },
   progress: { title: "CRM Requests", subtitle: "Build progress: track the system you’re building for each paid client and share the progress with them." },
   funnels: { title: "Funnel Requests", subtitle: "Funnels clients asked for from their portal: what they want, whether it’s paid, and a way to start the build." },
   media: { title: "CRM Requests", subtitle: "Client media: one folder per client. Files your clients upload from their portal land here." },
@@ -147,6 +163,12 @@ export const HIDDEN_TABS: ReadonlySet<string> = new Set(["email", "forms", "auto
 /** The menus shown in Settings › Team. */
 export const VISIBLE_MENUS = MENUS.filter((m) => !HIDDEN_TABS.has(m.key));
 
+/** Pages only super admins can open (the API enforces it). */
+export const SUPER_ADMIN_TABS: ReadonlySet<AdminTab> = new Set<AdminTab>(["investorOverview", "shareholders", "capTable", "distributions", "investorUpdates", "dataRoom"]);
+
+/** Pages for owners and admins only (the API enforces it). */
+export const ADMIN_ONLY_TABS: ReadonlySet<AdminTab> = new Set<AdminTab>(["expenses"]);
+
 /** Which menu each page belongs to (Settings is always available: everyone has a profile). */
 export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
   dashboard: "dashboard",
@@ -157,10 +179,21 @@ export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
   tags: "contacts",
   calendar: "calendar",
   bonuses: "affiliates",
+  // The overview shares the Billing menu permission.
+  billingOverview: "payments",
   payments: "payments",
+  // Expenses share it too, for owners and admins only (see ADMIN_ONLY_TABS).
+  expenses: "payments",
   // Products share the Billing menu permission.
   products: "payments",
   affiliates: "affiliates",
+  // Super admins only (see SUPER_ADMIN_TABS).
+  investorOverview: null,
+  shareholders: null,
+  capTable: null,
+  distributions: null,
+  investorUpdates: null,
+  dataRoom: null,
   progress: "progress",
   media: "media",
   email: "email",

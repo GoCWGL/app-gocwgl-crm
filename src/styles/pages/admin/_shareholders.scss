@@ -1,0 +1,595 @@
+// Shareholders menu, and the shareholder's own page.
+.sh-text {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.sh-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  font-size: 13px;
+
+  dt {
+    opacity: 0.65;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.sh-good {
+  color: #15803d;
+}
+
+.sh-bad {
+  color: #b91c1c;
+}
+
+// Declare Distribution: the wizard's steps and the resolution drop area.
+.dw-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin: 0;
+  padding: 0 0 12px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+  list-style: none;
+  font-size: 13px;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.55;
+
+    &.is-current,
+    &.is-done {
+      opacity: 1;
+    }
+
+    &.is-current {
+      font-weight: 700;
+    }
+  }
+
+  &__dot {
+    display: grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.08);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  &__item.is-current &__dot {
+    background: #ff9900;
+    color: #0b1424;
+  }
+
+  &__item.is-done &__dot {
+    background: #15803d;
+    color: #fff;
+  }
+}
+
+.dw-rate {
+  width: 84px;
+}
+
+.dw-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 22px 16px;
+  border: 1.5px dashed rgba(15, 23, 42, 0.25);
+  border-radius: 12px;
+  font-size: 13px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+
+  &.is-over,
+  &:focus-within,
+  &:hover {
+    border-color: #ff9900;
+    background: #fff7eb;
+  }
+}
+
+// A run's payouts: nine columns, so cells are tighter and the actions stack.
+.dw-payouts .data-table {
+  th,
+  td {
+    padding-inline: 8px;
+  }
+
+  td.data-table__actions {
+    white-space: normal;
+
+    .row-action {
+      display: block;
+      width: 100%;
+      margin: 0 0 4px;
+      white-space: nowrap;
+    }
+  }
+}
+
+// ------------------------------------------------------------------ Overview
+.ov-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+  padding: 30px 32px;
+  overflow: hidden;
+  border-radius: 22px;
+  background:
+    radial-gradient(90% 140% at 100% 0%, rgba(8, 145, 178, 0.38), transparent 60%),
+    radial-gradient(70% 120% at 0% 110%, rgba(255, 153, 0, 0.22), transparent 60%), #0b1424;
+  color: #fff;
+  box-shadow: 0 18px 40px -22px rgba(11, 20, 36, 0.65);
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  &__label {
+    color: #b7c1d1;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &__value {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    font-size: clamp(32px, 4.4vw, 48px);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    overflow-wrap: anywhere;
+  }
+
+  &__text {
+    max-width: 52ch;
+    margin: 0;
+    color: #d5dce7;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  &__stats {
+    display: grid;
+    gap: 1px;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+
+    > div {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2px 14px;
+      align-items: center;
+      padding: 14px 18px;
+      background: rgba(11, 20, 36, 0.72);
+    }
+
+    dt {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    dd {
+      grid-row: span 2;
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    span {
+      color: #a9b5c7;
+      font-size: 12.5px;
+    }
+  }
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    padding: 24px 20px;
+  }
+}
+
+.ov-trend {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+
+  &.is-up {
+    background: rgba(34, 197, 94, 0.18);
+    color: #86efac;
+  }
+
+  &.is-down {
+    background: rgba(248, 113, 113, 0.18);
+    color: #fca5a5;
+  }
+}
+
+.ov-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+
+  &--wide {
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+  }
+
+  @media (max-width: 1000px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ov-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 16px;
+}
+
+.ov-metric {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+
+.ov-panel {
+  gap: 18px;
+  padding: 22px 24px;
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+
+    h3 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: -0.01em;
+    }
+  }
+}
+
+.ov-flow {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__step {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 0;
+
+    // The line joining one step to the next.
+    &:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: calc(50% + 17px);
+      left: 16px;
+      width: 2px;
+      height: calc(100% - 34px);
+      background: rgba(15, 23, 42, 0.1);
+    }
+
+    &.is-in .ov-flow__icon {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    &.is-out .ov-flow__icon {
+      background: #fff3e0;
+      color: #b45309;
+    }
+
+    &.is-total {
+      margin-top: 8px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: #f1f8fb;
+      font-weight: 700;
+
+      .ov-flow__icon {
+        background: #0891b2;
+        color: #fff;
+      }
+
+      .ov-flow__value {
+        font-size: 18px;
+      }
+    }
+
+    // The last line would run into the total's box.
+    &:nth-last-child(2)::after {
+      display: none;
+    }
+  }
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    background: #eef2f7;
+    color: #334155;
+  }
+
+  &__label {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    font-size: 14px;
+  }
+
+  &__value {
+    font-size: 14.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}
+
+.ov-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 7px;
+    font-size: 14px;
+
+    b {
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  &__track {
+    display: block;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #eef2f7;
+
+    > span {
+      display: block;
+      height: 100%;
+      border-radius: 0 4px 4px 0;
+    }
+  }
+}
+
+.ov-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 600;
+
+  b {
+    font-size: 20px;
+    letter-spacing: -0.01em;
+  }
+
+  &.is-up {
+    background: #ecfdf3;
+    color: #166534;
+  }
+
+  &.is-down {
+    background: #fef2f2;
+    color: #991b1b;
+  }
+}
+
+.ov-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ov-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 12px 0;
+
+  & + & {
+    border-top: 1px solid rgba(15, 23, 42, 0.07);
+  }
+
+  &__date {
+    flex: 0 0 104px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  &__main {
+    display: flex;
+    flex: 1 1 120px;
+    flex-direction: column;
+    min-width: 0;
+    font-size: 14px;
+  }
+
+  &__value {
+    font-size: 14.5px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 6px;
+  }
+}
+
+.area-chart {
+  margin: 0;
+
+  &__row {
+    display: flex;
+    gap: 12px;
+  }
+
+  &__ticks {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 74px;
+    color: #5b6b82;
+    font-size: 12px;
+    text-align: right;
+
+    span {
+      height: 0;
+      line-height: 0;
+    }
+  }
+
+  &__plot {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    cursor: crosshair;
+    touch-action: pan-y;
+
+    &:focus-visible {
+      outline: 2px solid #0891b2;
+      outline-offset: 4px;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+  }
+
+  &__grid {
+    stroke: rgba(15, 23, 42, 0.08);
+    stroke-width: 1;
+  }
+
+  &__cross {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(15, 23, 42, 0.25);
+    pointer-events: none;
+  }
+
+  &__dot {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  &__tip {
+    position: absolute;
+    top: 8px;
+    display: flex;
+    flex-direction: column;
+    margin-left: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #0b1424;
+    color: #fff;
+    font-size: 12.5px;
+    white-space: nowrap;
+    pointer-events: none;
+
+    b {
+      font-size: 15px;
+    }
+
+    &.is-left {
+      margin-left: -12px;
+      transform: translateX(-100%);
+    }
+  }
+
+  &__axis {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0 0 86px;
+    color: #5b6b82;
+    font-size: 12px;
+
+    // Each label is centered under its point.
+    span {
+      display: flex;
+      justify-content: center;
+      width: 0;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 700px) {
+      span:nth-child(even) {
+        visibility: hidden;
+      }
+    }
+  }
+}

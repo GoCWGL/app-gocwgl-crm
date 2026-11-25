@@ -9,9 +9,14 @@ import { useApiMutation } from "./mutation";
 
 const BILLING_KEYS = [qk.subscriptions, qk.invoices, ["dashboard"], qk.contacts, qk.activity];
 
+/** Pages that total things up: fetched again when opened or focused, and every minute (payments also come from others). */
+const LIVE = { refetchOnMount: "always", refetchOnWindowFocus: "always", refetchInterval: 60_000 } as const;
+
 /** Invoices page data: not requested for teammates without the Invoices menu. */
 export const useSubscriptions = (contactId?: string) =>
   useQuery({ queryKey: [...qk.subscriptions, contactId ?? "all"], queryFn: () => api.listSubscriptions(contactId), enabled: useCanUseMenu("payments") });
+export const useLiveSubscriptions = () =>
+  useQuery({ ...LIVE, queryKey: [...qk.subscriptions, "all"], queryFn: () => api.listSubscriptions(), enabled: useCanUseMenu("payments") });
 export const useCreateSubscription = () => useApiMutation(api.createSubscription, { invalidate: BILLING_KEYS });
 export const useUpdateSubscription = () =>
   useApiMutation((v: { id: string; body: SubscriptionUpdate }) => api.updateSubscription(v.id, v.body), { invalidate: BILLING_KEYS });
@@ -20,6 +25,8 @@ export const useCancelSubscription = () => useApiMutation(api.cancelSubscription
 
 export const useInvoices = (filters: { status?: string; contact_id?: string } = {}) =>
   useQuery({ queryKey: [...qk.invoices, filters], queryFn: () => api.listInvoices(filters), enabled: useCanUseMenu("payments") });
+export const useLiveInvoices = () =>
+  useQuery({ ...LIVE, queryKey: [...qk.invoices, {}], queryFn: () => api.listInvoices({}), enabled: useCanUseMenu("payments") });
 export const useCreateInvoice = () => useApiMutation(api.createInvoice, { invalidate: BILLING_KEYS });
 export const useUpdateInvoice = () =>
   useApiMutation((v: { id: string; body: InvoiceUpdate }) => api.updateInvoice(v.id, v.body), { invalidate: BILLING_KEYS });

@@ -67,7 +67,7 @@ export type AdminState = {
 };
 
 const TABS: AdminTab[] = [
-  "dashboard", "leads", "clients", "vas", "tags", "calendar", "bonuses", "payments", "products", "progress", "funnels", "media",
+  "dashboard", "leads", "clients", "vas", "tags", "calendar", "bonuses", "billingOverview", "expenses", "payments", "products", "investorOverview", "shareholders", "capTable", "distributions", "investorUpdates", "dataRoom", "progress", "funnels", "media",
   "email", "forms", "surveys", "automation", "reporting", "bugs", "status", "training", "sops", "clientStatus", "clientTraining", "clientSops", "support", "feedback", "jobs",
   "settings",
 ];
@@ -77,7 +77,8 @@ function initialState(params: URLSearchParams | null): AdminState {
   const asked = params?.get("tab") as AdminTab | null;
   // Tags and Calendar now live in Settings: an old ?tab=tags or ?tab=calendar link opens that Settings tab.
   const inSettings = asked === "tags" || asked === "calendar";
-  const tab: AdminTab | null = inSettings ? "settings" : asked;
+  // Financials & Runway is now part of the shareholder Overview.
+  const tab: AdminTab | null = inSettings ? "settings" : (asked as string | null) === "financials" ? "investorOverview" : asked;
   const section = inSettings ? asked : (params?.get("section") as SettingsTab | null);
   return {
     tab: tab && TABS.includes(tab) && !HIDDEN_TABS.has(tab) ? tab : "dashboard",

@@ -90,6 +90,11 @@ export function isVa(user: { role: string } | null | undefined): boolean {
   return user?.role === "va";
 }
 
+/** Shareholders: they only use the shareholder page (/shareholder). */
+export function isShareholder(user: { role: string } | null | undefined): boolean {
+  return user?.role === "shareholder";
+}
+
 /** Staff who can change CRM data (everyone but "viewer"). */
 export function canWriteCrm(user: User | null | undefined): boolean {
   return !!user?.isStaff && user.role !== "viewer";

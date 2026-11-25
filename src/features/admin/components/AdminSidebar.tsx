@@ -9,8 +9,8 @@ import { Icon, type IconName } from "@/components/ui";
 import { MyAvatar } from "@/features/account/ProfilePhoto";
 import { useSignOutConfirm } from "@/features/auth/components/SignOutConfirm";
 import { cn } from "@/lib/utils";
-import { CRM_TABS, DASHBOARD_TABS, HIDDEN_TABS, SETTINGS_GROUPS, SETTINGS_TABS, TAB_MENU, type AdminTab, type SettingsTab } from "@/data/admin";
-import { canUseMenu } from "@/utils/auth/session";
+import { ADMIN_ONLY_TABS, CRM_TABS, DASHBOARD_TABS, HIDDEN_TABS, SETTINGS_GROUPS, SETTINGS_TABS, SUPER_ADMIN_TABS, TAB_MENU, type AdminTab, type SettingsTab } from "@/data/admin";
+import { canUseMenu, isStaffAdmin, isSuperAdmin } from "@/utils/auth/session";
 import { useMenuCounts } from "@/utils/hooks/useMenuCounts";
 import { useCrmRequests } from "@/utils/hooks/useDelivery";
 import { useAdminFunnels } from "@/utils/hooks/usePortal";
@@ -112,18 +112,40 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
     items: [
       {
         key: "finance",
-        label: "Finance",
+        label: "Income & Billing",
         icon: "card",
-        description: "Billing, payouts and referral partners",
+        description: "Income, expenses and referral partners",
         groups: [
+          { title: "Snapshot", items: [item("billingOverview", "Overview", "gauge")] },
           {
             title: "Revenue",
             items: [item("payments", "Billing & invoices", "invoice"), item("products", "Products", "tag")],
           },
+          { title: "Spending", items: [item("expenses", "Expenses", "receipt")] },
           {
             title: "Referrals",
             items: [item("affiliates", "Affiliate partners", "gift"), item("bonuses", "Referral payouts", "dollar")],
           },
+        ],
+      },
+      // Super admins only.
+      {
+        key: "shareholders-menu",
+        label: "Shareholders",
+        icon: "trendUp",
+        description: "Investors, equity and reporting",
+        groups: [
+          { title: "Snapshot", items: [item("investorOverview", "Overview", "gauge")] },
+          {
+            title: "Ownership",
+            items: [item("shareholders", "Shareholders", "users"), item("capTable", "Cap Table & Equity", "chart")],
+          },
+          { title: "Payouts", items: [item("distributions", "Declare Distribution", "receipt")] },
+          {
+            title: "Reporting",
+            items: [item("investorUpdates", "Investor Updates & KPIs", "send")],
+          },
+          { title: "Compliance", items: [item("dataRoom", "Data Room & Governance", "folder")] },
         ],
       },
       {
@@ -159,7 +181,7 @@ export function AdminSidebar() {
   const me = useMe().data;
   const name = me?.fullName || me?.email || "";
   // Settings › Team › Menus: only the menus this teammate may use are shown.
-  const can = (t: AdminTab) => !HIDDEN_TABS.has(t) && canUseMenu(me, TAB_MENU[t]);
+  const can = (t: AdminTab) => !HIDDEN_TABS.has(t) && canUseMenu(me, TAB_MENU[t]) && (!SUPER_ADMIN_TABS.has(t) || isSuperAdmin(me)) && (!ADMIN_ONLY_TABS.has(t) || isStaffAdmin(me));
   const allowItems = (items: MenuItem[]) =>
     items
       .map((i) => (i.tabs ? { ...i, tab: i.tabs.find(can) ?? i.tab } : i))
@@ -195,7 +217,7 @@ export function AdminSidebar() {
     items: g.tabs.filter(canSettings).map((id) => SETTINGS_TABS.find((t) => t.id === id)!),
   })).filter((g) => g.items.length);
 
-  // Clicking Clients, VAs, Finance, Marketing or your profile opens that menu's own sidebar next to the main one, and the main
+  // Clicking Clients, VAs, Income & Billing, Shareholders, Marketing or your profile opens that menu's own sidebar next to the main one, and the main
   // menu shrinks to its icons. It stays while you move between its pages; hiding it (or going to a page
   // outside it) brings the full main menu back. "Expand" shows the full main menu beside it.
   // Going to Settings any other way (a link, a notification) opens its sidebar too: its pages are only listed there.

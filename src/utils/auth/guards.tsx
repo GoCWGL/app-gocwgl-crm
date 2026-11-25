@@ -3,26 +3,28 @@
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { BrandLoader } from "@/components/ui/BrandLoader";
-import { isVa, useSession } from "./session";
+import { isShareholder, isVa, useSession } from "./session";
 
 /**
  * Route guards for the UI only: they send people to the right app.
  * The API enforces access on every request, whatever these do.
  */
-type Audience = "staff" | "client" | "va";
+type Audience = "staff" | "client" | "va" | "shareholder";
 
 /** Where each kind of account lives. */
 function homeOf(user: { isStaff?: boolean; role: string }): string {
   if (user.isStaff) return "/admin";
+  if (isShareholder(user)) return "/shareholder";
   return isVa(user) ? "/va" : "/portal";
 }
 
 function allowed(allow: Audience, user: { isStaff?: boolean; role: string }, embedded: boolean): boolean {
+  if (allow === "shareholder") return isShareholder(user);
   if (allow === "staff") return !!user.isStaff;
   // Staff may open the VA portal too, to see what VAs see.
   if (allow === "va") return isVa(user) || !!user.isStaff;
   // Staff open the client portal too: they pick a client there ("View as client").
-  return !isVa(user) || embedded;
+  return (!isVa(user) && !isShareholder(user)) || embedded;
 }
 
 function Gate({ allow, children }: { allow: Audience; children: ReactNode }) {
@@ -63,6 +65,11 @@ export function RequireVa({ children }: { children: ReactNode }) {
 }
 
 const SPLASH_STEPS = ["Restoring your session", "Checking your access"] as const;
+
+/** Shareholders: their own read-only dashboard. */
+export function RequireShareholder({ children }: { children: ReactNode }) {
+  return <Gate allow="shareholder">{children}</Gate>;
+}
 
 export function SessionSplash({ text }: { text: string }) {
   return (

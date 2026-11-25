@@ -75,11 +75,12 @@ export const NOTIFICATION_OPTIONS = [
   { key: "digest", label: "Daily summary email", desc: "One email a day with yesterday’s numbers, at the time you choose below", defaultOn: true },
 ];
 
-export const TEAM_ROLES: Array<{ value: "super_admin" | "admin" | "sales" | "viewer"; label: string }> = [
+export const TEAM_ROLES: Array<{ value: "super_admin" | "admin" | "sales" | "viewer" | "shareholder"; label: string }> = [
   { value: "super_admin", label: "Super Admin" },
   { value: "admin", label: "Admin" },
   { value: "sales", label: "Sales" },
   { value: "viewer", label: "Viewer" },
+  { value: "shareholder", label: "Shareholder" },
 ];
 
 // ------------------------------------------------------------------ Domains

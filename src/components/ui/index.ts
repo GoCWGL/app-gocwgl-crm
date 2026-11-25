@@ -1,3 +1,4 @@
+export { AreaChart, type AreaPoint } from "./AreaChart";
 export { Avatar, IconTile } from "./Avatar";
 export { Badge, CountChip } from "./Badge";
 export { BarChart, type BarDatum } from "./BarChart";

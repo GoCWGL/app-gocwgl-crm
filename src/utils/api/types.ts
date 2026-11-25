@@ -2045,6 +2045,128 @@ export interface paths {
         patch: operations["update_my_asset_api_va_assets__asset_id__patch"];
         trace?: never;
     };
+    "/api/shareholder/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Dashboard */
+        get: operations["my_dashboard_api_shareholder_dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shareholder/updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Updates
+         * @description Published updates only.
+         */
+        get: operations["my_updates_api_shareholder_updates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shareholder/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Documents */
+        get: operations["my_documents_api_shareholder_documents_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shareholder/documents/{document_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open My Document */
+        get: operations["open_my_document_api_shareholder_documents__document_id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shareholder/distributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Distributions */
+        get: operations["my_distributions_api_shareholder_distributions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shareholder/payouts/{payout_id}/voucher": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Voucher */
+        get: operations["my_voucher_api_shareholder_payouts__payout_id__voucher_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/shareholder/payouts/{payout_id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** My Receipt */
+        get: operations["my_receipt_api_shareholder_payouts__payout_id__receipt_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/contacts": {
         parameters: {
             query?: never;
@@ -5269,6 +5391,697 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/shareholders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overview */
+        get: operations["overview_api_admin_shareholders_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/stakeholders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Stakeholder */
+        post: operations["add_stakeholder_api_admin_shareholders_stakeholders_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/stakeholders/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Stakeholder */
+        put: operations["update_stakeholder_api_admin_shareholders_stakeholders__record_id__put"];
+        post?: never;
+        /** Delete Stakeholder */
+        delete: operations["delete_stakeholder_api_admin_shareholders_stakeholders__record_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/rounds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Round */
+        post: operations["add_round_api_admin_shareholders_rounds_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/rounds/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Round */
+        put: operations["update_round_api_admin_shareholders_rounds__record_id__put"];
+        post?: never;
+        /** Delete Round */
+        delete: operations["delete_round_api_admin_shareholders_rounds__record_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Grant */
+        post: operations["add_grant_api_admin_shareholders_grants_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/grants/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Grant */
+        put: operations["update_grant_api_admin_shareholders_grants__record_id__put"];
+        post?: never;
+        /** Delete Grant */
+        delete: operations["delete_grant_api_admin_shareholders_grants__record_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/cash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Cash */
+        post: operations["add_cash_api_admin_shareholders_cash_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/cash/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Cash */
+        put: operations["update_cash_api_admin_shareholders_cash__record_id__put"];
+        post?: never;
+        /** Delete Cash */
+        delete: operations["delete_cash_api_admin_shareholders_cash__record_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/milestones": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Milestone */
+        post: operations["add_milestone_api_admin_shareholders_milestones_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/milestones/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Milestone */
+        put: operations["update_milestone_api_admin_shareholders_milestones__record_id__put"];
+        post?: never;
+        /** Delete Milestone */
+        delete: operations["delete_milestone_api_admin_shareholders_milestones__record_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/updates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Updates */
+        get: operations["list_updates_api_admin_shareholders_updates_get"];
+        put?: never;
+        /** Add Update */
+        post: operations["add_update_api_admin_shareholders_updates_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/updates/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Update */
+        put: operations["update_update_api_admin_shareholders_updates__record_id__put"];
+        post?: never;
+        /** Delete Update */
+        delete: operations["delete_update_api_admin_shareholders_updates__record_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/stakeholders/{record_id}/interactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Interactions */
+        get: operations["list_interactions_api_admin_shareholders_stakeholders__record_id__interactions_get"];
+        put?: never;
+        /** Add Interaction */
+        post: operations["add_interaction_api_admin_shareholders_stakeholders__record_id__interactions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/interactions/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Interaction */
+        delete: operations["delete_interaction_api_admin_shareholders_interactions__record_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save Settings */
+        put: operations["save_settings_api_admin_shareholders_settings_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/budget/{year}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Budget
+         * @description Replaces the whole year's budget.
+         */
+        put: operations["set_budget_api_admin_shareholders_budget__year__put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/updates/{record_id}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish Update */
+        post: operations["publish_update_api_admin_shareholders_updates__record_id__publish_post"];
+        /** Unpublish Update */
+        delete: operations["unpublish_update_api_admin_shareholders_updates__record_id__publish_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/documents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Documents */
+        get: operations["list_documents_api_admin_shareholders_documents_get"];
+        put?: never;
+        /**
+         * Add Document
+         * @description The title defaults to the file's name.
+         */
+        post: operations["add_document_api_admin_shareholders_documents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/documents/{document_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Document */
+        put: operations["update_document_api_admin_shareholders_documents__document_id__put"];
+        post?: never;
+        /** Delete Document */
+        delete: operations["delete_document_api_admin_shareholders_documents__document_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/documents/{document_id}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open Document */
+        get: operations["open_document_api_admin_shareholders_documents__document_id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/stakeholders/{record_id}/payout-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Profile */
+        get: operations["get_profile_api_admin_shareholders_stakeholders__record_id__payout_profile_get"];
+        /** Save Profile */
+        put: operations["save_profile_api_admin_shareholders_stakeholders__record_id__payout_profile_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/stakeholders/{record_id}/payout-profile/reveal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reveal Profile
+         * @description The full TIN and account. Every look is on the audit log.
+         */
+        post: operations["reveal_profile_api_admin_shareholders_stakeholders__record_id__payout_profile_reveal_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/distributions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Distributions */
+        get: operations["list_distributions_api_admin_shareholders_distributions_get"];
+        put?: never;
+        /** Add Distribution */
+        post: operations["add_distribution_api_admin_shareholders_distributions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/distributions/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Distribution
+         * @description Saves nothing.
+         */
+        post: operations["preview_distribution_api_admin_shareholders_distributions_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/distributions/{record_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Distribution */
+        get: operations["get_distribution_api_admin_shareholders_distributions__record_id__get"];
+        /**
+         * Update Distribution
+         * @description Drafts only.
+         */
+        put: operations["update_distribution_api_admin_shareholders_distributions__record_id__put"];
+        post?: never;
+        /**
+         * Delete Distribution
+         * @description A draft or a canceled one. A declared one is canceled first.
+         */
+        delete: operations["delete_distribution_api_admin_shareholders_distributions__record_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/distributions/{record_id}/declare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Declare Distribution */
+        post: operations["declare_distribution_api_admin_shareholders_distributions__record_id__declare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/distributions/{record_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel Distribution */
+        post: operations["cancel_distribution_api_admin_shareholders_distributions__record_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/distributions/{record_id}/resolution": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open Resolution */
+        get: operations["open_resolution_api_admin_shareholders_distributions__record_id__resolution_get"];
+        /**
+         * Set Resolution
+         * @description The signed board resolution (PDF).
+         */
+        put: operations["set_resolution_api_admin_shareholders_distributions__record_id__resolution_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/payouts/{payout_id}/tax": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Payout Tax */
+        put: operations["set_payout_tax_api_admin_shareholders_payouts__payout_id__tax_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/payouts/{payout_id}/paid": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Mark Payout Paid */
+        post: operations["mark_payout_paid_api_admin_shareholders_payouts__payout_id__paid_post"];
+        /** Undo Payout Paid */
+        delete: operations["undo_payout_paid_api_admin_shareholders_payouts__payout_id__paid_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/payouts/{payout_id}/voucher": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payout Voucher */
+        get: operations["payout_voucher_api_admin_shareholders_payouts__payout_id__voucher_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shareholders/payouts/{payout_id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Payout Receipt */
+        get: operations["payout_receipt_api_admin_shareholders_payouts__payout_id__receipt_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Expenses */
+        get: operations["list_expenses_api_admin_expenses_get"];
+        put?: never;
+        /** Add Expense */
+        post: operations["add_expense_api_admin_expenses_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/expenses/recurring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Recurring
+         * @description A start date in the past adds the ones since then.
+         */
+        post: operations["add_recurring_api_admin_expenses_recurring_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/expenses/recurring/{recurring_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Recurring */
+        put: operations["update_recurring_api_admin_expenses_recurring__recurring_id__put"];
+        post?: never;
+        /** Delete Recurring */
+        delete: operations["delete_recurring_api_admin_expenses_recurring__recurring_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/expenses/{expense_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Update Expense */
+        put: operations["update_expense_api_admin_expenses__expense_id__put"];
+        post?: never;
+        /** Delete Expense */
+        delete: operations["delete_expense_api_admin_expenses__expense_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/expenses/{expense_id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Open Receipt */
+        get: operations["open_receipt_api_admin_expenses__expense_id__receipt_get"];
+        /** Set Receipt */
+        put: operations["set_receipt_api_admin_expenses__expense_id__receipt_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/overview": {
         parameters: {
             query?: never;
@@ -8030,6 +8843,54 @@ export interface components {
             /** Steps */
             steps?: (components["schemas"]["ActionStep"] | components["schemas"]["ConditionStep"])[] | null;
         };
+        /** Body_add_document_api_admin_shareholders_documents_post */
+        Body_add_document_api_admin_shareholders_documents_post: {
+            /** File */
+            file: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "incorporation" | "agreement" | "security" | "board" | "tax" | "other";
+            /**
+             * Visibility
+             * @default private
+             * @enum {string}
+             */
+            visibility?: "private" | "all" | "selected";
+            /**
+             * Title
+             * @default
+             */
+            title?: string;
+            /** Documentdate */
+            documentDate?: string | null;
+            /**
+             * Stakeholderids
+             * @default []
+             */
+            stakeholderIds?: string[];
+        };
+        /** Body_mark_payout_paid_api_admin_shareholders_payouts__payout_id__paid_post */
+        Body_mark_payout_paid_api_admin_shareholders_payouts__payout_id__paid_post: {
+            /**
+             * Paidon
+             * Format: date
+             */
+            paidOn: string;
+            /**
+             * Reference
+             * @default
+             */
+            reference?: string;
+            /**
+             * Notify
+             * @default false
+             */
+            notify?: boolean;
+            /** File */
+            file?: string | null;
+        };
         /** Body_replace_my_sop_file_api_portal_my_sops__sop_id__file_put */
         Body_replace_my_sop_file_api_portal_my_sops__sop_id__file_put: {
             /** File */
@@ -8049,6 +8910,16 @@ export interface components {
              * File
              * @description PNG, JPG or WebP, up to 5 MB
              */
+            file: string;
+        };
+        /** Body_set_receipt_api_admin_expenses__expense_id__receipt_put */
+        Body_set_receipt_api_admin_expenses__expense_id__receipt_put: {
+            /** File */
+            file: string;
+        };
+        /** Body_set_resolution_api_admin_shareholders_distributions__record_id__resolution_put */
+        Body_set_resolution_api_admin_shareholders_distributions__record_id__resolution_put: {
+            /** File */
             file: string;
         };
         /** Body_set_training_thumbnail_api_admin_trainings__training_id__thumbnail_put */
@@ -8108,6 +8979,15 @@ export interface components {
         Body_upload_resume_document_api_va_resume_documents_post: {
             /** File */
             file: string;
+        };
+        /** BonusSource */
+        BonusSource: {
+            /** Kind */
+            kind: string;
+            /** Amountcents */
+            amountCents: number;
+            /** Bonuses */
+            bonuses: number;
         };
         /**
          * BonusStatus
@@ -8242,6 +9122,28 @@ export interface components {
             /** Bodyfont */
             bodyFont: string;
         };
+        /** BudgetIn */
+        BudgetIn: {
+            /** Lines */
+            lines: components["schemas"]["BudgetLineIn"][];
+        };
+        /** BudgetLine */
+        BudgetLine: {
+            /** Line */
+            line: string;
+            /** Monthlycents */
+            monthlyCents: number;
+        };
+        /** BudgetLineIn */
+        BudgetLineIn: {
+            /**
+             * Line
+             * @enum {string}
+             */
+            line: "income" | "bonuses" | "hosting" | "client_hosting" | "domains" | "delivery" | "payroll" | "software" | "marketing" | "contractors" | "office" | "taxes" | "other";
+            /** Monthlycents */
+            monthlyCents: number;
+        };
         /** BugReportIn */
         BugReportIn: {
             /** Title */
@@ -8293,6 +9195,47 @@ export interface components {
             code: string;
             /** Status */
             status: string;
+        };
+        /**
+         * BusinessResultsOut
+         * @description Profit = paid invoices − recorded expenses − referral bonuses paid; net income = profit − cash dividends declared.
+         *     For `year` unless it says all time.
+         */
+        BusinessResultsOut: {
+            /** Year */
+            year: number;
+            /** Years */
+            years: number[];
+            /** Currency */
+            currency: string;
+            /** Months */
+            months: components["schemas"]["ResultMonth"][];
+            /** Incomecents */
+            incomeCents: number;
+            /** Expensecents */
+            expenseCents: number;
+            /** Bonuscents */
+            bonusCents: number;
+            /** Profitcents */
+            profitCents: number;
+            /** Distributedcents */
+            distributedCents: number;
+            /** Netincomecents */
+            netIncomeCents: number;
+            /** Categories */
+            categories: components["schemas"]["ExpenseCategoryTotal"][];
+            /** Outstandingcents */
+            outstandingCents: number;
+            /** Alltimeprofitcents */
+            allTimeProfitCents: number;
+            /** Dividendsdeclaredcents */
+            dividendsDeclaredCents: number;
+            /** Retainedcents */
+            retainedCents: number;
+            /** Totalshares */
+            totalShares: number;
+            /** Companyshares */
+            companyShares: number;
         };
         /** CalendarCreate */
         CalendarCreate: {
@@ -8452,6 +9395,177 @@ export interface components {
             calendarName: string;
             /** Bookingurl */
             bookingUrl: string;
+        };
+        /** CancelIn */
+        CancelIn: {
+            /** Reason */
+            reason: string;
+        };
+        /** CapTableGrant */
+        CapTableGrant: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Stakeholderid
+             * Format: uuid
+             */
+            stakeholderId: string;
+            /** Roundid */
+            roundId: string | null;
+            /** Shareclass */
+            shareClass: string;
+            /**
+             * Issuedon
+             * Format: date
+             */
+            issuedOn: string;
+            /** Shares */
+            shares: number;
+            /** Investedcents */
+            investedCents: number;
+            /** Capcents */
+            capCents: number | null;
+            /** Vestmonths */
+            vestMonths: number;
+            /** Cliffmonths */
+            cliffMonths: number;
+            /** Note */
+            note: string;
+            /** Name */
+            name: string;
+            /** Vested */
+            vested: number;
+            /** Estimatedshares */
+            estimatedShares: number | null;
+        };
+        /** CapTableHolder */
+        CapTableHolder: {
+            /**
+             * Stakeholderid
+             * Format: uuid
+             */
+            stakeholderId: string;
+            /** Name */
+            name: string;
+            /** Category */
+            category: string;
+            /** Common */
+            common: number;
+            /** Preferred */
+            preferred: number;
+            /** Option */
+            option: number;
+            /** Safe */
+            safe: number;
+            /** Issued */
+            issued: number;
+            /** Fullydiluted */
+            fullyDiluted: number;
+            /** Investedcents */
+            investedCents: number;
+        };
+        /** CapTableOut */
+        CapTableOut: {
+            /** Issued */
+            issued: number;
+            /** Companyshares */
+            companyShares: number;
+            /** Fullydiluted */
+            fullyDiluted: number;
+            /** Optionpool */
+            optionPool: number;
+            /** Optionsgranted */
+            optionsGranted: number;
+            /** Optionsavailable */
+            optionsAvailable: number;
+            /** Optionsvested */
+            optionsVested: number;
+            /** Pooloverdrawn */
+            poolOverdrawn: boolean;
+            /** Safeinvestedcents */
+            safeInvestedCents: number;
+            /** Safesnotestimated */
+            safesNotEstimated: number;
+            /** Holders */
+            holders: components["schemas"]["CapTableHolder"][];
+            /** Rounds */
+            rounds: components["schemas"]["CapTableRound"][];
+            /** Grants */
+            grants: components["schemas"]["CapTableGrant"][];
+        };
+        /** CapTableRound */
+        CapTableRound: {
+            /**
+             * Roundid
+             * Format: uuid
+             */
+            roundId: string;
+            /** Name */
+            name: string;
+            /**
+             * Closedon
+             * Format: date
+             */
+            closedOn: string;
+            /** Premoneycents */
+            preMoneyCents: number | null;
+            /** Raisedcents */
+            raisedCents: number;
+            /** Postmoneycents */
+            postMoneyCents: number | null;
+            /** Issued */
+            issued: number;
+            /** Ownership */
+            ownership: components["schemas"]["CategoryShares"][];
+        };
+        /** CashBalanceIn */
+        CashBalanceIn: {
+            /**
+             * Asof
+             * Format: date
+             */
+            asOf: string;
+            /** Amountcents */
+            amountCents: number;
+        };
+        /** CashBalanceOut */
+        CashBalanceOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Asof
+             * Format: date
+             */
+            asOf: string;
+            /** Amountcents */
+            amountCents: number;
+        };
+        /**
+         * CashMovesOut
+         * @description Since the last balance entered.
+         */
+        CashMovesOut: {
+            /** Receivedcents */
+            receivedCents: number;
+            /** Spentcents */
+            spentCents: number;
+            /** Bonuscents */
+            bonusCents: number;
+            /** Payoutcents */
+            payoutCents: number;
+        };
+        /** CategoryShares */
+        CategoryShares: {
+            /** Category */
+            category: string;
+            /** Shares */
+            shares: number;
         };
         /** ChangePasswordRequest */
         ChangePasswordRequest: {
@@ -9168,6 +10282,36 @@ export interface components {
             /** Text */
             text: string;
         };
+        /** CompanyHealthOut */
+        CompanyHealthOut: {
+            /** Valuationcents */
+            valuationCents: number | null;
+            /** Valuedon */
+            valuedOn: string | null;
+            /** Valuationsource */
+            valuationSource: string;
+            /** Cashcents */
+            cashCents: number | null;
+            cashMoves: components["schemas"]["CashMovesOut"] | null;
+            /** Cashbalancecents */
+            cashBalanceCents: number | null;
+            /** Cashasof */
+            cashAsOf: string | null;
+            /** Cashenteredat */
+            cashEnteredAt: string | null;
+            /** Grossburncents */
+            grossBurnCents: number;
+            /** Netburncents */
+            netBurnCents: number;
+            /** Runwaymonths */
+            runwayMonths: number | null;
+            /** Mrrcents */
+            mrrCents: number;
+            /** Arrcents */
+            arrCents: number;
+            /** Recurring */
+            recurring: components["schemas"]["RecurringMonth"][];
+        };
         /**
          * CompletionIn
          * @description The team marks a launched build complete (or takes that back).
@@ -9670,6 +10814,35 @@ export interface components {
              */
             submittedAt: string;
         };
+        /** DataRoomDocumentOut */
+        DataRoomDocumentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Category */
+            category: string;
+            /** Documentdate */
+            documentDate: string | null;
+            /** Filename */
+            fileName: string;
+            /** Filetype */
+            fileType: string;
+            /** Filesize */
+            fileSize: number;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /** Visibility */
+            visibility: string;
+            /** Stakeholderids */
+            stakeholderIds: string[];
+        };
         /** DayHours */
         DayHours: {
             /**
@@ -9683,6 +10856,13 @@ export interface components {
             start: string;
             /** End */
             end: string;
+        };
+        /** DeclareIn */
+        DeclareIn: {
+            /** Fingerprint */
+            fingerprint: string;
+            /** Notify */
+            notify: boolean;
         };
         /** DefaultThumbnailOut */
         DefaultThumbnailOut: {
@@ -9730,6 +10910,250 @@ export interface components {
             /** Code */
             code: string;
         };
+        /** DistributionDetailOut */
+        DistributionDetailOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Kind */
+            kind: string;
+            /** Poolcents */
+            poolCents: number;
+            /** Currency */
+            currency: string;
+            /**
+             * Recorddate
+             * Format: date
+             */
+            recordDate: string;
+            /**
+             * Paymentdate
+             * Format: date
+             */
+            paymentDate: string;
+            /** Classes */
+            classes: string[];
+            /** Taxoverrides */
+            taxOverrides: {
+                [key: string]: number;
+            };
+            /** Note */
+            note: string;
+            /** Status */
+            status: string;
+            /** Declaredat */
+            declaredAt: string | null;
+            /** Canceledat */
+            canceledAt: string | null;
+            /** Cancelreason */
+            cancelReason: string;
+            /** Resolutionname */
+            resolutionName: string;
+            /** Taxcents */
+            taxCents: number;
+            /** Netcents */
+            netCents: number;
+            /** Netpaidcents */
+            netPaidCents: number;
+            /** Paid */
+            paid: number;
+            /** Count */
+            count: number;
+            /** Overdue */
+            overdue: boolean;
+            /** Payouts */
+            payouts: components["schemas"]["DistributionPayoutOut"][];
+        };
+        /** DistributionIn */
+        DistributionIn: {
+            /** Title */
+            title: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "cash_dividend" | "return_of_capital" | "exit";
+            /** Poolcents */
+            poolCents: number;
+            /**
+             * Recorddate
+             * Format: date
+             */
+            recordDate: string;
+            /**
+             * Paymentdate
+             * Format: date
+             */
+            paymentDate: string;
+            /** Classes */
+            classes: string[];
+            /** Taxoverrides */
+            taxOverrides?: {
+                [key: string]: number;
+            };
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** DistributionOut */
+        DistributionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Kind */
+            kind: string;
+            /** Poolcents */
+            poolCents: number;
+            /** Currency */
+            currency: string;
+            /**
+             * Recorddate
+             * Format: date
+             */
+            recordDate: string;
+            /**
+             * Paymentdate
+             * Format: date
+             */
+            paymentDate: string;
+            /** Classes */
+            classes: string[];
+            /** Taxoverrides */
+            taxOverrides: {
+                [key: string]: number;
+            };
+            /** Note */
+            note: string;
+            /** Status */
+            status: string;
+            /** Declaredat */
+            declaredAt: string | null;
+            /** Canceledat */
+            canceledAt: string | null;
+            /** Cancelreason */
+            cancelReason: string;
+            /** Resolutionname */
+            resolutionName: string;
+            /** Taxcents */
+            taxCents: number;
+            /** Netcents */
+            netCents: number;
+            /** Netpaidcents */
+            netPaidCents: number;
+            /** Paid */
+            paid: number;
+            /** Count */
+            count: number;
+            /** Overdue */
+            overdue: boolean;
+        };
+        /** DistributionPayoutOut */
+        DistributionPayoutOut: {
+            /**
+             * Stakeholderid
+             * Format: uuid
+             */
+            stakeholderId: string;
+            /** Name */
+            name: string;
+            /** Shares */
+            shares: number;
+            /** Totalshares */
+            totalShares: number;
+            /** Grosscents */
+            grossCents: number;
+            /** Taxbps */
+            taxBps: number;
+            /** Taxcents */
+            taxCents: number;
+            /** Netcents */
+            netCents: number;
+            /** Payoutto */
+            payoutTo: string;
+            /** Issues */
+            issues: string[];
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Status */
+            status: string;
+            /** Paidat */
+            paidAt: string | null;
+            /** Paidon */
+            paidOn: string | null;
+            /** Reference */
+            reference: string;
+            /** Receiptname */
+            receiptName: string;
+            /** Notifiedat */
+            notifiedAt: string | null;
+        };
+        /** DistributionPreviewOut */
+        DistributionPreviewOut: {
+            /** Final */
+            final: boolean;
+            /** Totalshares */
+            totalShares: number;
+            /** Grosscents */
+            grossCents: number;
+            /** Taxcents */
+            taxCents: number;
+            /** Netcents */
+            netCents: number;
+            /** Rows */
+            rows: components["schemas"]["PreviewRow"][];
+            /** Fingerprint */
+            fingerprint: string;
+        };
+        /** DistributionsOut */
+        DistributionsOut: {
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Currency */
+            currency: string;
+            /** Retainedcents */
+            retainedCents: number;
+            /** Classes */
+            classes: components["schemas"]["EligibleClassOut"][];
+            /** Runs */
+            runs: components["schemas"]["DistributionOut"][];
+        };
+        /** DocumentPatch */
+        DocumentPatch: {
+            /** Title */
+            title: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "incorporation" | "agreement" | "security" | "board" | "tax" | "other";
+            /** Documentdate */
+            documentDate?: string | null;
+            /**
+             * Visibility
+             * @enum {string}
+             */
+            visibility: "private" | "all" | "selected";
+            /** Stakeholderids */
+            stakeholderIds?: string[];
+        };
         /** DomainCreate */
         DomainCreate: {
             /** Host */
@@ -9771,6 +11195,15 @@ export interface components {
          * @enum {string}
          */
         DomainPurpose: "all" | "forms" | "booking" | "progress" | "email";
+        /** EligibleClassOut */
+        EligibleClassOut: {
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Shares */
+            shares: number;
+        };
         /** EmailRequest */
         EmailRequest: {
             /**
@@ -9930,6 +11363,199 @@ export interface components {
             startedAt?: string | null;
             /** Endedat */
             endedAt?: string | null;
+        };
+        /** EquityGrantIn */
+        EquityGrantIn: {
+            /**
+             * Stakeholderid
+             * Format: uuid
+             */
+            stakeholderId: string;
+            /** Roundid */
+            roundId?: string | null;
+            /**
+             * Shareclass
+             * @enum {string}
+             */
+            shareClass: "common" | "preferred" | "option" | "safe";
+            /**
+             * Issuedon
+             * Format: date
+             */
+            issuedOn: string;
+            /**
+             * Shares
+             * @default 0
+             */
+            shares?: number;
+            /**
+             * Investedcents
+             * @default 0
+             */
+            investedCents?: number;
+            /** Capcents */
+            capCents?: number | null;
+            /**
+             * Vestmonths
+             * @default 0
+             */
+            vestMonths?: number;
+            /**
+             * Cliffmonths
+             * @default 0
+             */
+            cliffMonths?: number;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** EquityGrantOut */
+        EquityGrantOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Stakeholderid
+             * Format: uuid
+             */
+            stakeholderId: string;
+            /** Roundid */
+            roundId: string | null;
+            /** Shareclass */
+            shareClass: string;
+            /**
+             * Issuedon
+             * Format: date
+             */
+            issuedOn: string;
+            /** Shares */
+            shares: number;
+            /** Investedcents */
+            investedCents: number;
+            /** Capcents */
+            capCents: number | null;
+            /** Vestmonths */
+            vestMonths: number;
+            /** Cliffmonths */
+            cliffMonths: number;
+            /** Note */
+            note: string;
+        };
+        /** EquitySettingsIn */
+        EquitySettingsIn: {
+            /** Totalshares */
+            totalShares?: number | null;
+            /** Optionpool */
+            optionPool: number;
+            /** Valuationcents */
+            valuationCents?: number | null;
+            /** Valuedon */
+            valuedOn?: string | null;
+        };
+        /** EquitySettingsOut */
+        EquitySettingsOut: {
+            /** Totalshares */
+            totalShares: number;
+            /** Optionpool */
+            optionPool: number;
+            /** Valuationcents */
+            valuationCents: number | null;
+            /** Valuedon */
+            valuedOn: string | null;
+        };
+        /** ExpenseCategoryTotal */
+        ExpenseCategoryTotal: {
+            /** Category */
+            category: string;
+            /** Amountcents */
+            amountCents: number;
+        };
+        /** ExpenseIn */
+        ExpenseIn: {
+            /** Category */
+            category: string;
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+            /** Amountcents */
+            amountCents: number;
+            /**
+             * Vendor
+             * @default
+             */
+            vendor?: string;
+            /**
+             * Method
+             * @default
+             */
+            method?: string;
+            /** Contactid */
+            contactId?: string | null;
+            /**
+             * Spenton
+             * Format: date
+             */
+            spentOn: string;
+            /**
+             * Reference
+             * @default
+             */
+            reference?: string;
+        };
+        /** ExpenseOut */
+        ExpenseOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Spenton
+             * Format: date
+             */
+            spentOn: string;
+            /** Category */
+            category: string;
+            /** Description */
+            description: string;
+            /** Amountcents */
+            amountCents: number;
+            /** Vendor */
+            vendor: string;
+            /** Method */
+            method: string;
+            /** Reference */
+            reference: string;
+            /** Contactid */
+            contactId: string | null;
+            /** Recurringid */
+            recurringId: string | null;
+            /** Receiptname */
+            receiptName: string;
+        };
+        /** ExpensesOut */
+        ExpensesOut: {
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Currency */
+            currency: string;
+            /** Referralpayouts */
+            referralPayouts: components["schemas"]["MonthAmount"][];
+            /** Distributions */
+            distributions: components["schemas"]["MonthAmount"][];
+            /** Expenses */
+            expenses: components["schemas"]["ExpenseOut"][];
+            /** Recurring */
+            recurring: components["schemas"]["RecurringExpenseOut"][];
         };
         /** FeedbackClient */
         FeedbackClient: {
@@ -10184,6 +11810,42 @@ export interface components {
             redirectUrl?: string | null;
             /** Fields */
             fields?: components["schemas"]["FormField"][] | null;
+        };
+        /** FundingRoundIn */
+        FundingRoundIn: {
+            /** Name */
+            name: string;
+            /**
+             * Closedon
+             * Format: date
+             */
+            closedOn: string;
+            /** Premoneycents */
+            preMoneyCents?: number | null;
+            /**
+             * Raisedcents
+             * @default 0
+             */
+            raisedCents?: number;
+        };
+        /** FundingRoundOut */
+        FundingRoundOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Closedon
+             * Format: date
+             */
+            closedOn: string;
+            /** Premoneycents */
+            preMoneyCents: number | null;
+            /** Raisedcents */
+            raisedCents: number;
         };
         /** FunnelCatalogOut */
         FunnelCatalogOut: {
@@ -10459,6 +12121,15 @@ export interface components {
             /** Fix */
             fix?: string | null;
         };
+        /** IncomeSource */
+        IncomeSource: {
+            /** Source */
+            source: string;
+            /** Amountcents */
+            amountCents: number;
+            /** Invoices */
+            invoices: number;
+        };
         /** IntakeKeyCreated */
         IntakeKeyCreated: {
             /**
@@ -10523,11 +12194,107 @@ export interface components {
             /** Revokedat */
             revokedAt: string | null;
         };
+        /** InteractionIn */
+        InteractionIn: {
+            /**
+             * Happenedon
+             * Format: date
+             */
+            happenedOn: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "email" | "call" | "meeting" | "note";
+            /** Summary */
+            summary: string;
+        };
+        /** InteractionOut */
+        InteractionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Happenedon
+             * Format: date
+             */
+            happenedOn: string;
+            /** Kind */
+            kind: string;
+            /** Summary */
+            summary: string;
+            /** Authorname */
+            authorName: string;
+        };
         /**
          * Interval
          * @enum {string}
          */
         Interval: "Week" | "Month" | "Quarter" | "Year";
+        /** InvestorUpdateIn */
+        InvestorUpdateIn: {
+            /** Title */
+            title: string;
+            /**
+             * Cadence
+             * @enum {string}
+             */
+            cadence: "monthly" | "quarterly";
+            /** Period */
+            period: string;
+            /**
+             * Wins
+             * @default
+             */
+            wins?: string;
+            /**
+             * Challenges
+             * @default
+             */
+            challenges?: string;
+            /**
+             * Roadmap
+             * @default
+             */
+            roadmap?: string;
+            /**
+             * Asks
+             * @default
+             */
+            asks?: string;
+        };
+        /** InvestorUpdateOut */
+        InvestorUpdateOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Cadence */
+            cadence: string;
+            /** Period */
+            period: string;
+            /** Wins */
+            wins: string;
+            /** Challenges */
+            challenges: string;
+            /** Roadmap */
+            roadmap: string;
+            /** Asks */
+            asks: string;
+            kpis: components["schemas"]["UpdateKpis"];
+            /** Publishedat */
+            publishedAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
         /** InvitationOut */
         InvitationOut: {
             /**
@@ -11456,6 +13223,45 @@ export interface components {
             /** Recoverycodesleft */
             recoveryCodesLeft: number;
         };
+        /** MilestoneIn */
+        MilestoneIn: {
+            /** Title */
+            title: string;
+            /**
+             * Happenson
+             * Format: date
+             */
+            happensOn: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "board" | "milestone" | "deadline";
+        };
+        /** MilestoneOut */
+        MilestoneOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Happenson
+             * Format: date
+             */
+            happensOn: string;
+            /** Kind */
+            kind: string;
+        };
+        /** MonthAmount */
+        MonthAmount: {
+            /** Month */
+            month: string;
+            /** Amountcents */
+            amountCents: number;
+        };
         /** MyApplication */
         MyApplication: {
             /**
@@ -11554,6 +13360,52 @@ export interface components {
             /** Ratings */
             ratings: components["schemas"]["MyRatingOut"][];
         };
+        /** MyPayoutOut */
+        MyPayoutOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Kind */
+            kind: string;
+            /** Currency */
+            currency: string;
+            /**
+             * Recorddate
+             * Format: date
+             */
+            recordDate: string;
+            /**
+             * Paymentdate
+             * Format: date
+             */
+            paymentDate: string;
+            /** Note */
+            note: string;
+            /** Shares */
+            shares: number;
+            /** Totalshares */
+            totalShares: number;
+            /** Grosscents */
+            grossCents: number;
+            /** Taxbps */
+            taxBps: number;
+            /** Taxcents */
+            taxCents: number;
+            /** Netcents */
+            netCents: number;
+            /** Status */
+            status: string;
+            /** Paidon */
+            paidOn: string | null;
+            /** Reference */
+            reference: string;
+            /** Hasreceipt */
+            hasReceipt: boolean;
+        };
         /** MyRateIn */
         MyRateIn: {
             /** Ratecents */
@@ -11619,6 +13471,12 @@ export interface components {
             programBonusCents: number;
             /** Referrals */
             referrals: components["schemas"]["MyReferralOut"][];
+        };
+        /** MyShareholdingOut */
+        MyShareholdingOut: {
+            results: components["schemas"]["BusinessResultsOut"];
+            /** Shares */
+            shares: number;
         };
         /** MyShiftOut */
         MyShiftOut: {
@@ -12075,6 +13933,44 @@ export interface components {
             updatedAt: string;
         };
         /**
+         * PayoutAccount
+         * @description Bank: bank name and account number. Wise: email. GCash: mobile number. Check: nothing else.
+         */
+        PayoutAccount: {
+            /**
+             * Bankname
+             * @default
+             */
+            bankName?: string;
+            /**
+             * Accountnumber
+             * @default
+             */
+            accountNumber?: string;
+            /**
+             * Swift
+             * @default
+             */
+            swift?: string;
+            /**
+             * Email
+             * @default
+             */
+            email?: string | "";
+        };
+        /** PayoutBrief */
+        PayoutBrief: {
+            /**
+             * Stakeholderid
+             * Format: uuid
+             */
+            stakeholderId: string;
+            /** Netcents */
+            netCents: number;
+            /** Paid */
+            paid: boolean;
+        };
+        /**
          * PayoutDetails
          * @description Wise: the account email (and optionally their payment link). Bank: bank name, account number, and a routing
          *     number or SWIFT/BIC.
@@ -12124,6 +14020,54 @@ export interface components {
             summary: string;
             /** Updatedat */
             updatedAt: string | null;
+        };
+        /** PayoutProfileIn */
+        PayoutProfileIn: {
+            /**
+             * Taxclass
+             * @default
+             * @enum {string}
+             */
+            taxClass?: "" | "ph_individual" | "nonresident_alien" | "nonresident_alien_not_engaged" | "ph_corporation" | "foreign_corporation" | "custom";
+            /** Customtaxbps */
+            customTaxBps?: number | null;
+            /** Tin */
+            tin?: string | null;
+            /**
+             * Method
+             * @default
+             * @enum {string}
+             */
+            method?: "" | "bank" | "wise" | "gcash" | "check";
+            /**
+             * Holdername
+             * @default
+             */
+            holderName?: string;
+            account?: components["schemas"]["PayoutAccount"] | null;
+        };
+        /**
+         * PayoutProfileOut
+         * @description Masked: never the full TIN or account number.
+         */
+        PayoutProfileOut: {
+            /** Taxclass */
+            taxClass: string;
+            /** Customtaxbps */
+            customTaxBps: number | null;
+            /** Tinmasked */
+            tinMasked: string;
+            /** Method */
+            method: string;
+            /** Holdername */
+            holderName: string;
+            /** Summary */
+            summary: string;
+        };
+        /** PayoutTaxIn */
+        PayoutTaxIn: {
+            /** Taxbps */
+            taxBps: number;
         };
         /** PhaseIn */
         PhaseIn: {
@@ -12347,6 +14291,36 @@ export interface components {
             lastSeenAt: string;
             /** Online */
             online: boolean;
+        };
+        /** PreviewRow */
+        PreviewRow: {
+            /**
+             * Stakeholderid
+             * Format: uuid
+             */
+            stakeholderId: string;
+            /** Name */
+            name: string;
+            /** Shares */
+            shares: number;
+            /** Totalshares */
+            totalShares: number;
+            /** Grosscents */
+            grossCents: number;
+            /** Taxbps */
+            taxBps: number;
+            /** Taxcents */
+            taxCents: number;
+            /** Netcents */
+            netCents: number;
+            /** Payoutto */
+            payoutTo: string;
+            /** Issues */
+            issues: string[];
+            /** Email */
+            email: string;
+            /** Defaulttaxbps */
+            defaultTaxBps: number;
         };
         /**
          * Priority
@@ -12773,6 +14747,11 @@ export interface components {
                 [key: string]: unknown;
             }[];
         };
+        /** PublishIn */
+        PublishIn: {
+            /** Withnumbers */
+            withNumbers: boolean;
+        };
         /** Question */
         Question: {
             /** Id */
@@ -12942,6 +14921,89 @@ export interface components {
         RecoveryCodesOut: {
             /** Recoverycodes */
             recoveryCodes: string[];
+        };
+        /** RecurringExpenseIn */
+        RecurringExpenseIn: {
+            /** Category */
+            category: string;
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+            /** Amountcents */
+            amountCents: number;
+            /**
+             * Vendor
+             * @default
+             */
+            vendor?: string;
+            /**
+             * Method
+             * @default
+             */
+            method?: string;
+            /** Contactid */
+            contactId?: string | null;
+            /**
+             * Interval
+             * @enum {string}
+             */
+            interval: "Week" | "Month" | "Quarter" | "Year";
+            /**
+             * Startson
+             * Format: date
+             */
+            startsOn: string;
+            /** Endson */
+            endsOn?: string | null;
+            /**
+             * Active
+             * @default true
+             */
+            active?: boolean;
+        };
+        /** RecurringExpenseOut */
+        RecurringExpenseOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Category */
+            category: string;
+            /** Description */
+            description: string;
+            /** Amountcents */
+            amountCents: number;
+            /** Vendor */
+            vendor: string;
+            /** Method */
+            method: string;
+            /** Contactid */
+            contactId: string | null;
+            /** Interval */
+            interval: string;
+            /**
+             * Startson
+             * Format: date
+             */
+            startsOn: string;
+            /** Endson */
+            endsOn: string | null;
+            /** Active */
+            active: boolean;
+            /** Nexton */
+            nextOn: string | null;
+            /** Monthlycents */
+            monthlyCents: number;
+        };
+        /** RecurringMonth */
+        RecurringMonth: {
+            /** Month */
+            month: string;
+            /** Amountcents */
+            amountCents: number;
         };
         /** ReferralIn */
         ReferralIn: {
@@ -13258,6 +15320,23 @@ export interface components {
              * Format: date-time
              */
             createdAt: string;
+        };
+        /** ResultMonth */
+        ResultMonth: {
+            /** Month */
+            month: string;
+            /** Incomecents */
+            incomeCents: number;
+            /** Expensecents */
+            expenseCents: number;
+            /** Bonuscents */
+            bonusCents: number;
+            /** Profitcents */
+            profitCents: number;
+            /** Distributedcents */
+            distributedCents: number;
+            /** Netincomecents */
+            netIncomeCents: number;
         };
         /**
          * ResumeCert
@@ -13597,19 +15676,44 @@ export interface components {
              */
             label?: string;
         };
+        /** RevealedProfileOut */
+        RevealedProfileOut: {
+            /** Tin */
+            tin: string;
+            /**
+             * Bankname
+             * @default
+             */
+            bankName?: string;
+            /**
+             * Accountnumber
+             * @default
+             */
+            accountNumber?: string;
+            /**
+             * Swift
+             * @default
+             */
+            swift?: string;
+            /**
+             * Email
+             * @default
+             */
+            email?: string;
+        };
         /**
          * Role
          * @description Account type. Staff roles mirror the CRM team roles; VAs use the VA portal; everyone else is a portal client.
          * @enum {string}
          */
-        Role: "super_admin" | "admin" | "sales" | "viewer" | "client" | "va";
+        Role: "super_admin" | "admin" | "sales" | "viewer" | "client" | "va" | "shareholder";
         /** RoleChange */
         RoleChange: {
             /**
              * Role
              * @enum {string}
              */
-            role: "super_admin" | "admin" | "sales" | "viewer";
+            role: "super_admin" | "admin" | "sales" | "viewer" | "shareholder";
         };
         /** RunOut */
         RunOut: {
@@ -13773,6 +15877,76 @@ export interface components {
              * @default false
              */
             notify?: boolean;
+        };
+        /** SharedDocumentOut */
+        SharedDocumentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Category */
+            category: string;
+            /** Documentdate */
+            documentDate: string | null;
+            /** Filename */
+            fileName: string;
+            /** Filetype */
+            fileType: string;
+            /** Filesize */
+            fileSize: number;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /** ShareholderLoginOut */
+        ShareholderLoginOut: {
+            /**
+             * Userid
+             * Format: uuid
+             */
+            userId: string;
+            /** Name */
+            name: string;
+            /** Email */
+            email: string;
+        };
+        /** ShareholderOverviewOut */
+        ShareholderOverviewOut: {
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            results: components["schemas"]["BusinessResultsOut"];
+            health: components["schemas"]["CompanyHealthOut"];
+            economics: components["schemas"]["UnitEconomicsOut"];
+            /** Incomesources */
+            incomeSources: components["schemas"]["IncomeSource"][];
+            /** Bonussources */
+            bonusSources: components["schemas"]["BonusSource"][];
+            /** Toverifycents */
+            toVerifyCents: number;
+            /** Toverifycount */
+            toVerifyCount: number;
+            capTable: components["schemas"]["CapTableOut"];
+            settings: components["schemas"]["EquitySettingsOut"];
+            /** Stakeholders */
+            stakeholders: components["schemas"]["StakeholderOut"][];
+            /** Logins */
+            logins: components["schemas"]["ShareholderLoginOut"][];
+            /** Milestones */
+            milestones: components["schemas"]["MilestoneOut"][];
+            /** Cash */
+            cash: components["schemas"]["CashBalanceOut"][];
+            /** Budget */
+            budget: components["schemas"]["BudgetLine"][];
+            /** Payouts */
+            payouts: components["schemas"]["PayoutBrief"][];
         };
         /** ShiftClient */
         ShiftClient: {
@@ -13973,7 +16147,7 @@ export interface components {
              * @default viewer
              * @enum {string}
              */
-            role?: "super_admin" | "admin" | "sales" | "viewer";
+            role?: "super_admin" | "admin" | "sales" | "viewer" | "shareholder";
             /** Menuaccess */
             menuAccess?: ("dashboard" | "contacts" | "calendar" | "payments" | "affiliates" | "progress" | "media" | "email" | "forms" | "surveys" | "automation" | "reporting" | "bugs")[] | null;
         };
@@ -14235,6 +16409,100 @@ export interface components {
          * @enum {string}
          */
         Stage: "lead" | "booked" | "paid" | "lost";
+        /** StakeholderIn */
+        StakeholderIn: {
+            /** Name */
+            name: string;
+            /**
+             * Contactname
+             * @default
+             */
+            contactName?: string;
+            /**
+             * Email
+             * @default
+             */
+            email?: string | "";
+            /**
+             * Phone
+             * @default
+             */
+            phone?: string;
+            /**
+             * Country
+             * @default
+             */
+            country?: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "founder" | "vc" | "angel" | "advisor" | "employee" | "other";
+            /**
+             * Entitytype
+             * @enum {string}
+             */
+            entityType: "individual" | "company" | "fund" | "trust";
+            /**
+             * Taxstatus
+             * @default missing
+             * @enum {string}
+             */
+            taxStatus?: "missing" | "requested" | "received";
+            /**
+             * Kycstatus
+             * @default not_started
+             * @enum {string}
+             */
+            kycStatus?: "not_started" | "pending" | "verified" | "expired";
+            /**
+             * Status
+             * @default active
+             * @enum {string}
+             */
+            status?: "active" | "former";
+            /**
+             * Notes
+             * @default
+             */
+            notes?: string;
+            /** Userid */
+            userId?: string | null;
+            /** Sharepercent */
+            sharePercent?: number | string | null;
+        };
+        /** StakeholderOut */
+        StakeholderOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Contactname */
+            contactName: string;
+            /** Email */
+            email: string;
+            /** Phone */
+            phone: string;
+            /** Country */
+            country: string;
+            /** Category */
+            category: string;
+            /** Entitytype */
+            entityType: string;
+            /** Taxstatus */
+            taxStatus: string;
+            /** Kycstatus */
+            kycStatus: string;
+            /** Status */
+            status: string;
+            /** Notes */
+            notes: string;
+            /** Userid */
+            userId: string | null;
+        };
         /** SubCalendar */
         SubCalendar: {
             /** Name */
@@ -15212,6 +17480,19 @@ export interface components {
              */
             value?: string;
         };
+        /** UnitEconomicsOut */
+        UnitEconomicsOut: {
+            /** Grossmarginpct */
+            grossMarginPct: number | null;
+            /** Newclients */
+            newClients: number;
+            /** Caccents */
+            cacCents: number | null;
+            /** Ltvcents */
+            ltvCents: number | null;
+            /** Ltvtocac */
+            ltvToCac: number | null;
+        };
         /** UnlockIn */
         UnlockIn: {
             /** Password */
@@ -15243,6 +17524,21 @@ export interface components {
         UpdateIn: {
             /** Text */
             text: string;
+        };
+        /** UpdateKpis */
+        UpdateKpis: {
+            /** Currency */
+            currency?: string | null;
+            /** Mrrcents */
+            mrrCents?: number | null;
+            /** Arrcents */
+            arrCents?: number | null;
+            /** Cashcents */
+            cashCents?: number | null;
+            /** Netburncents */
+            netBurnCents?: number | null;
+            /** Runwaymonths */
+            runwayMonths?: number | null;
         };
         /** UpdateOut */
         UpdateOut: {
@@ -22418,6 +24714,268 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["VaAssetOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_dashboard_api_shareholder_dashboard_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyShareholdingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_updates_api_shareholder_updates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Updates Api Shareholder Updates Get */
+                        data: components["schemas"]["InvestorUpdateOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_documents_api_shareholder_documents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Documents Api Shareholder Documents Get */
+                        data: components["schemas"]["SharedDocumentOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    open_my_document_api_shareholder_documents__document_id__file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_distributions_api_shareholder_distributions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Distributions Api Shareholder Distributions Get */
+                        data: components["schemas"]["MyPayoutOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_voucher_api_shareholder_payouts__payout_id__voucher_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_receipt_api_shareholder_payouts__payout_id__receipt_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
                     };
                 };
             };
@@ -33437,6 +35995,2497 @@ export interface operations {
                 content: {
                     "application/json": {
                         data: components["schemas"]["StaffVaInvoiceDetail"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    overview_api_admin_shareholders_get: {
+        parameters: {
+            query?: {
+                year?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ShareholderOverviewOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_stakeholder_api_admin_shareholders_stakeholders_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StakeholderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StakeholderOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_stakeholder_api_admin_shareholders_stakeholders__record_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StakeholderIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["StakeholderOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_stakeholder_api_admin_shareholders_stakeholders__record_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_round_api_admin_shareholders_rounds_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FundingRoundIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FundingRoundOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_round_api_admin_shareholders_rounds__record_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FundingRoundIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["FundingRoundOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_round_api_admin_shareholders_rounds__record_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_grant_api_admin_shareholders_grants_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EquityGrantIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EquityGrantOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_grant_api_admin_shareholders_grants__record_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EquityGrantIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EquityGrantOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_grant_api_admin_shareholders_grants__record_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_cash_api_admin_shareholders_cash_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CashBalanceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CashBalanceOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_cash_api_admin_shareholders_cash__record_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CashBalanceIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["CashBalanceOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_cash_api_admin_shareholders_cash__record_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_milestone_api_admin_shareholders_milestones_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MilestoneIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MilestoneOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_milestone_api_admin_shareholders_milestones__record_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MilestoneIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MilestoneOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_milestone_api_admin_shareholders_milestones__record_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_updates_api_admin_shareholders_updates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Updates Api Admin Shareholders Updates Get */
+                        data: components["schemas"]["InvestorUpdateOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_update_api_admin_shareholders_updates_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvestorUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvestorUpdateOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_update_api_admin_shareholders_updates__record_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvestorUpdateIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvestorUpdateOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_update_api_admin_shareholders_updates__record_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_interactions_api_admin_shareholders_stakeholders__record_id__interactions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Interactions Api Admin Shareholders Stakeholders  Record Id  Interactions Get */
+                        data: components["schemas"]["InteractionOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_interaction_api_admin_shareholders_stakeholders__record_id__interactions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InteractionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InteractionOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_interaction_api_admin_shareholders_interactions__record_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    save_settings_api_admin_shareholders_settings_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EquitySettingsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EquitySettingsOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_budget_api_admin_shareholders_budget__year__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                year: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BudgetIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    publish_update_api_admin_shareholders_updates__record_id__publish_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvestorUpdateOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unpublish_update_api_admin_shareholders_updates__record_id__publish_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvestorUpdateOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_documents_api_admin_shareholders_documents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Documents Api Admin Shareholders Documents Get */
+                        data: components["schemas"]["DataRoomDocumentOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_document_api_admin_shareholders_documents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_add_document_api_admin_shareholders_documents_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DataRoomDocumentOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_document_api_admin_shareholders_documents__document_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DocumentPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DataRoomDocumentOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_document_api_admin_shareholders_documents__document_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    open_document_api_admin_shareholders_documents__document_id__file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_profile_api_admin_shareholders_stakeholders__record_id__payout_profile_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PayoutProfileOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    save_profile_api_admin_shareholders_stakeholders__record_id__payout_profile_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayoutProfileIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PayoutProfileOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    reveal_profile_api_admin_shareholders_stakeholders__record_id__payout_profile_reveal_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RevealedProfileOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_distributions_api_admin_shareholders_distributions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionsOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_distribution_api_admin_shareholders_distributions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistributionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    preview_distribution_api_admin_shareholders_distributions_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistributionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionPreviewOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    get_distribution_api_admin_shareholders_distributions__record_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_distribution_api_admin_shareholders_distributions__record_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DistributionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_distribution_api_admin_shareholders_distributions__record_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    declare_distribution_api_admin_shareholders_distributions__record_id__declare_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeclareIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancel_distribution_api_admin_shareholders_distributions__record_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CancelIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    open_resolution_api_admin_shareholders_distributions__record_id__resolution_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_resolution_api_admin_shareholders_distributions__record_id__resolution_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                record_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_set_resolution_api_admin_shareholders_distributions__record_id__resolution_put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_payout_tax_api_admin_shareholders_payouts__payout_id__tax_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PayoutTaxIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    mark_payout_paid_api_admin_shareholders_payouts__payout_id__paid_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_mark_payout_paid_api_admin_shareholders_payouts__payout_id__paid_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    undo_payout_paid_api_admin_shareholders_payouts__payout_id__paid_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["DistributionDetailOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    payout_voucher_api_admin_shareholders_payouts__payout_id__voucher_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    payout_receipt_api_admin_shareholders_payouts__payout_id__receipt_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                payout_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_expenses_api_admin_expenses_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ExpensesOut"];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_expense_api_admin_expenses_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ExpenseOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_recurring_api_admin_expenses_recurring_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurringExpenseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecurringExpenseOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_recurring_api_admin_expenses_recurring__recurring_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recurring_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurringExpenseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecurringExpenseOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_recurring_api_admin_expenses_recurring__recurring_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recurring_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_expense_api_admin_expenses__expense_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expense_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ExpenseOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_expense_api_admin_expenses__expense_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expense_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    open_receipt_api_admin_expenses__expense_id__receipt_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expense_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_receipt_api_admin_expenses__expense_id__receipt_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expense_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_set_receipt_api_admin_expenses__expense_id__receipt_put"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["ExpenseOut"];
                     };
                 };
             };

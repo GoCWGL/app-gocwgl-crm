@@ -67,12 +67,12 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
                   {isSelf && " (you)"}
                 </span>
                 <span className="text-small">{m.email}</span>
-                <span className="text-tiny team-row__menus" title={menuAccessLabel(m.menuAccess)}>
-                  <Icon name="grid" size={11} /> {m.role === "super_admin" ? "Every menu (super admin)" : menuAccessLabel(m.menuAccess)}
+                <span className="text-tiny team-row__menus" title={menusOf(m)}>
+                  <Icon name="grid" size={11} /> {menusOf(m)}
                 </span>
               </div>
               <Badge tone="green">{m.status ?? "Active"}</Badge>
-              {!isSelf && !lockedOwner && m.role !== "super_admin" && (
+              {!isSelf && !lockedOwner && m.role !== "super_admin" && m.role !== "shareholder" && (
                 <Button size="sm" variant="outline" aria-label={`Menu access for ${m.fullName || m.email}`} onClick={() => setEditingMenus(m)}>
                   Menus
                 </Button>
@@ -112,7 +112,7 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
               <span className="text-strong">{inv.fullName || inv.email}</span>
               <span className="text-small">{inv.email}</span>
               <span className="text-tiny team-row__menus">
-                <Icon name="grid" size={11} /> {inv.role === "super_admin" ? "Every menu (super admin)" : menuAccessLabel(inv.menuAccess)}
+                <Icon name="grid" size={11} /> {menusOf(inv)}
               </span>
             </div>
             <Badge tone="amber">Invited</Badge>
@@ -141,17 +141,26 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
       )}
 
       <span className="text-small">
-        Super Admin: everything · Admin: everything except managing admins · Sales: contacts, calendar and email · Viewer: read only.
+        Super Admin: everything · Admin: everything except managing admins · Sales: contacts, calendar and email · Viewer: read only
+        {superAdmin && " · Shareholder: only the shareholder dashboard, no CRM"}.
         Use Menus to limit which pages someone can open.
       </span>
     </div>
   );
 }
 
+/** Which pages they can open, in words. */
+function menusOf(m: { role: string; menuAccess?: string[] | null }): string {
+  if (m.role === "super_admin") return "Every menu (super admin)";
+  if (m.role === "shareholder") return "Shareholder dashboard only";
+  return menuAccessLabel(m.menuAccess);
+}
+
 const ROLE_HELP: Record<StaffRole, string> = {
   super_admin: "Everything, including who is an admin or super admin.",
   admin: "Everything except adding, changing or removing admins and super admins.",
   sales: "Contacts, calendar, email and payments. No settings or team.",
+  shareholder: "Only sees the shareholder dashboard: business results, published updates, documents shared with them, and their own shares and dividends. No CRM.",
   viewer: "Can look at everything but can’t change anything.",
 };
 
@@ -174,7 +183,8 @@ function AddTeamMemberDialog({
   const [role, setRole] = useState<StaffRole>("sales");
   const [menus, setMenus] = useState<MenuAccess>(null);
   const [tried, setTried] = useState(false);
-  const noMenus = role !== "super_admin" && menus !== null && menus.length === 0;
+  const hasMenus = role !== "super_admin" && role !== "shareholder";
+  const noMenus = hasMenus && menus !== null && menus.length === 0;
   const api = fieldErrors(invite.error);
   const nameErr = !fullName.trim() ? "Enter their name." : api.fullName || "";
   const emailErr = !isEmail(email) ? "Enter a valid email." : api.email || "";
@@ -185,7 +195,7 @@ function AddTeamMemberDialog({
     if (!fullName.trim() || !isEmail(email) || noMenus) return;
     const address = email.trim();
     invite.mutate(
-      { email: address, fullName: fullName.trim(), role, menuAccess: role === "super_admin" ? null : menus },
+      { email: address, fullName: fullName.trim(), role, menuAccess: hasMenus ? menus : null },
       { onSuccess: () => onAdded(`${fullName.trim()} was added as ${TEAM_ROLES.find((r) => r.value === role)?.label}. An invite is on its way to ${address}.`) },
     );
   };
@@ -199,7 +209,7 @@ function AddTeamMemberDialog({
       titleId="tm-title"
       kicker="TEAM"
       title="Add a team member"
-      subtitle="They get an email to set their password, then they can sign in to the CRM."
+      subtitle="They get an email to set their password, then they can sign in."
       media={
         <IconTile brand size="lg">
           <Icon name="userPlus" size={18} />
@@ -235,8 +245,10 @@ function AddTeamMemberDialog({
       <Field label="Role" htmlFor="tm-role" hint={ROLE_HELP[role]}>
         <Select id="tm-role" value={role} options={roleOptions} onChange={(e) => setRole(e.target.value as StaffRole)} />
       </Field>
-      {role === "super_admin" ? (
-        <span className="text-small">Super admins always have every menu.</span>
+      {!hasMenus ? (
+        <span className="text-small">
+          {role === "shareholder" ? "Once they accept, add them on Shareholders with their share % and link this login." : "Super admins always have every menu."}
+        </span>
       ) : (
         <MenuAccessPicker value={menus} onChange={setMenus} idPrefix="tm-menus" />
       )}

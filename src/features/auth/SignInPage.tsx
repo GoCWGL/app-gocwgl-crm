@@ -6,7 +6,7 @@ import { Icon } from "@/components/ui";
 import { roleLabel } from "@/data/admin";
 import { refresh } from "@/utils/api/client";
 import type { SessionResponse, User } from "@/utils/api/models";
-import { getSession, isVa, useSession } from "@/utils/auth/session";
+import { getSession, isShareholder, isVa, useSession } from "@/utils/auth/session";
 import { acceptSession } from "@/utils/hooks/useAuth";
 import { AcceptInviteForm } from "./components/AcceptInviteForm";
 import { ApplyOptions } from "./components/ApplyOptions";
@@ -36,6 +36,7 @@ const OAUTH_NOTICES: Record<string, Notice> = {
 function homeFor(user: User | null | undefined, enrollMfa = false): string {
   if (!user) return "/login";
   if (isVa(user)) return "/va";
+  if (isShareholder(user)) return "/shareholder";
   if (!user.isStaff) return "/portal";
   return enrollMfa ? "/admin?enroll=mfa" : "/admin";
 }
@@ -119,7 +120,7 @@ export function SignInPage() {
     if (user) router.replace(homeFor(user));
   }, [status, mode, router, fromLink]);
 
-  const head = getHeading(mode, { verifyReason, doneAfterSignup, isStaff: !!session?.user.isStaff, isVa: isVa(session?.user), email: verifyEmail });
+  const head = getHeading(mode, { verifyReason, doneAfterSignup, isStaff: !!session?.user.isStaff, isVa: isVa(session?.user), isShareholder: isShareholder(session?.user), email: verifyEmail });
 
   return (
     <div className="auth">
@@ -209,7 +210,7 @@ export function SignInPage() {
 // ----------------------------------------------------------------- Copy
 function getHeading(
   mode: AuthMode,
-  ctx: { verifyReason: VerifyReason; doneAfterSignup: boolean; isStaff: boolean; isVa: boolean; email: string },
+  ctx: { verifyReason: VerifyReason; doneAfterSignup: boolean; isStaff: boolean; isVa: boolean; isShareholder: boolean; email: string },
 ) {
   switch (mode) {
     case "forgot":
@@ -252,7 +253,7 @@ function getHeading(
         : {
             kicker: "SIGNED IN",
             title: "You are in",
-            sub: ctx.isStaff ? "Taking you to the CRM dashboard." : ctx.isVa ? "Taking you to your VA portal." : "Taking you to your client portal.",
+            sub: ctx.isStaff ? "Taking you to the CRM dashboard." : ctx.isVa ? "Taking you to your VA portal." : ctx.isShareholder ? "Taking you to your shareholder dashboard." : "Taking you to your client portal.",
           };
     default:
       return { kicker: "SECURE ACCESS", title: "Welcome back", sub: "Sign in to your GoCWGL account." };
@@ -264,12 +265,14 @@ function getSignedInSummary(user: User, ctx: { doneAfterSignup: boolean; enrollM
     ? `${roleLabel(user.role)} · GoCWGL team`
     : isVa(user)
       ? "VA · GoCWGL"
-      : user.portalRole === "viewer"
-        ? "Portal viewer"
-        : "Client";
+      : isShareholder(user)
+        ? "Shareholder · GoCWGL"
+        : user.portalRole === "viewer"
+          ? "Portal viewer"
+          : "Client";
   const steps = ctx.doneAfterSignup
     ? ["Email verified", user.isStaff ? "Team account ready" : "Portal ready"]
-    : ["Password checked", user.mfaEnabled ? "Two-step check passed" : user.isStaff ? "Team account" : isVa(user) ? "VA account" : "Client account"];
+    : ["Password checked", user.mfaEnabled ? "Two-step check passed" : user.isStaff ? "Team account" : isVa(user) ? "VA account" : isShareholder(user) ? "Shareholder account" : "Client account"];
   steps.push(user.isStaff ? "Opening the CRM…" : "Opening your portal…");
   return {
     who: `${user.fullName || user.email} · ${role}`,

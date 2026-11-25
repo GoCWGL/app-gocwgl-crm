@@ -3,9 +3,9 @@
 import { useEffect, type ComponentType } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button, TabBar, Toast } from "@/components/ui";
-import { ADMIN_PAGES, CONTACT_VIEWS, TAB_GROUPS, TAB_MENU, type AdminTab } from "@/data/admin";
+import { ADMIN_ONLY_TABS, ADMIN_PAGES, CONTACT_VIEWS, SUPER_ADMIN_TABS, TAB_GROUPS, TAB_MENU, type AdminTab } from "@/data/admin";
 import { RequireStaff } from "@/utils/auth/guards";
-import { canUseMenu, canWriteCrm } from "@/utils/auth/session";
+import { canUseMenu, canWriteCrm, isStaffAdmin, isSuperAdmin } from "@/utils/auth/session";
 import { useSettings } from "@/utils/hooks/useSettings";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useSectionChangeSweep } from "@/utils/navigation";
@@ -22,6 +22,12 @@ import { FeedbackSection } from "./sections/engagement/FeedbackSection";
 import { StatusSection } from "./sections/engagement/StatusSection";
 import { SupportSection } from "./sections/engagement/SupportSection";
 import { JobPostingsSection } from "./sections/jobs/JobPostingsSection";
+import { CapTableSection } from "./sections/shareholders/CapTableSection";
+import { DataRoomSection } from "./sections/shareholders/DataRoomSection";
+import { DirectorySection } from "./sections/shareholders/DirectorySection";
+import { DistributionsSection } from "./sections/shareholders/DistributionsSection";
+import { InvestorOverviewSection } from "./sections/shareholders/InvestorOverviewSection";
+import { InvestorUpdatesSection } from "./sections/shareholders/InvestorUpdatesSection";
 import { SopsSection } from "./sections/sops/SopsSection";
 import { TrainingsSection } from "./sections/trainings/TrainingsSection";
 import { ClientStatusSection } from "./sections/engagement/ClientStatusSection";
@@ -34,6 +40,8 @@ import { DashboardSection } from "./sections/dashboard/DashboardSection";
 import { EmailSection } from "./sections/email/EmailSection";
 import { FormsSection } from "./sections/forms/FormsSection";
 import { MediaSection } from "./sections/media/MediaSection";
+import { BillingOverviewSection } from "./sections/payments/BillingOverviewSection";
+import { ExpensesSection } from "./sections/payments/ExpensesSection";
 import { PaymentsSection } from "./sections/payments/PaymentsSection";
 import { ProductsSection } from "./sections/payments/ProductsSection";
 import { NewBuildModal } from "./sections/progress/NewBuildModal";
@@ -57,9 +65,17 @@ const SECTIONS: Record<AdminTab, ComponentType> = {
   tags: TagsSection,
   calendar: CalendarSection,
   bonuses: ReferralBonusSection,
+  billingOverview: BillingOverviewSection,
   payments: PaymentsSection,
+  expenses: ExpensesSection,
   products: ProductsSection,
   affiliates: AffiliatesSection,
+  investorOverview: InvestorOverviewSection,
+  shareholders: DirectorySection,
+  capTable: CapTableSection,
+  distributions: DistributionsSection,
+  investorUpdates: InvestorUpdatesSection,
+  dataRoom: DataRoomSection,
   progress: CrmBuildsSection,
   funnels: FunnelBuildsSection,
   media: MediaSection,
@@ -102,8 +118,9 @@ function AdminLayout() {
   const me = useMe().data;
   const canWrite = canWriteCrm(me);
   // Settings › Team › Menus: a page this teammate can't use sends them to their first one (Settings if none).
-  const allowed = canUseMenu(me, TAB_MENU[tab]);
-  const firstAllowed = (Object.keys(SECTIONS) as AdminTab[]).find((t) => canUseMenu(me, TAB_MENU[t])) ?? "settings";
+  const can = (t: AdminTab) => canUseMenu(me, TAB_MENU[t]) && (!SUPER_ADMIN_TABS.has(t) || isSuperAdmin(me)) && (!ADMIN_ONLY_TABS.has(t) || isStaffAdmin(me));
+  const allowed = can(tab);
+  const firstAllowed = (Object.keys(SECTIONS) as AdminTab[]).find(can) ?? "settings";
   useEffect(() => {
     if (me && !allowed) update({ tab: firstAllowed, editContactId: "" });
   }, [me, allowed, firstAllowed, update]);

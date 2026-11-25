@@ -17,7 +17,7 @@ type Mate = { id: string; name: string };
 function useTeammates(): Mate[] {
   const team = useStaffTeam().data;
   return useMemo(
-    () => (team?.members ?? []).filter((m) => m.status === "Active").map((m) => ({ id: m.id, name: m.fullName || m.email })),
+    () => (team?.members ?? []).filter((m) => m.status === "Active" && m.role !== "shareholder").map((m) => ({ id: m.id, name: m.fullName || m.email })),
     [team],
   );
 }
