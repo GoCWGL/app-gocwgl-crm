@@ -3,6 +3,8 @@ import type { DomainCreate, DomainOut, DomainPurpose, OrgSettingsOut, OrgSetting
 
 export const getSettings = () => get<OrgSettingsOut>("/admin/settings");
 export const updateSettings = (body: OrgSettingsUpdate) => patch<OrgSettingsOut>("/admin/settings", body);
+/** Super admins: pesos per dollar for the whole team; null goes back to the daily rate. */
+export const setPesoRate = (usdPhpRate: number | null) => put<OrgSettingsOut>("/admin/settings/peso-rate", { usdPhpRate });
 export const setSubdomain = (subdomain: string) => put<OrgSettingsOut>("/admin/settings/subdomain", { subdomain });
 
 export const listDomains = () => get<DomainOut[]>("/admin/domains");

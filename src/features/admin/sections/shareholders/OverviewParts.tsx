@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Icon, type IconName } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -68,7 +68,7 @@ export function Panel({ title, hint, action, children, className }: { title: str
   );
 }
 
-export type FlowStep = { label: string; hint?: string; value: string; icon: IconName; kind: "start" | "in" | "out" | "total" };
+export type FlowStep = { label: string; hint?: string; value: ReactNode; icon: IconName; kind: "start" | "in" | "out" | "total" };
 
 /** A sum, step by step: where it started, what came in and out, and the result. */
 export function Flow({ steps }: { steps: FlowStep[] }) {
@@ -91,14 +91,17 @@ export function Flow({ steps }: { steps: FlowStep[] }) {
 }
 
 /** Labelled bars on one scale. */
-export function Bars({ rows }: { rows: Array<{ label: string; value: number; display: string; color: string }> }) {
+export function Bars({ rows }: { rows: Array<{ key?: string; label: string; hint?: string; value: number; display: ReactNode; color: string }> }) {
   const max = Math.max(1, ...rows.map((r) => r.value));
   return (
     <ul className="ov-bars">
       {rows.map((r) => (
-        <li key={r.label}>
+        <li key={r.key ?? r.label}>
           <span className="ov-bars__head">
-            <span>{r.label}</span>
+            <span>
+              {r.label}
+              {r.hint && <span className="text-small"> · {r.hint}</span>}
+            </span>
             <b>{r.display}</b>
           </span>
           <span className="ov-bars__track" aria-hidden="true">
@@ -107,6 +110,17 @@ export function Bars({ rows }: { rows: Array<{ label: string; value: number; dis
         </li>
       ))}
     </ul>
+  );
+}
+
+/** One figure with a colored edge. */
+export function Kpi({ label, value, hint, color }: { label: string; value: ReactNode; hint?: ReactNode; color: string }) {
+  return (
+    <div className="card ov-kpi" style={{ "--kpi": color } as CSSProperties}>
+      <span className="ov-kpi__label">{label}</span>
+      <span className="ov-metric">{value}</span>
+      {hint && <span className="text-small">{hint}</span>}
+    </div>
   );
 }
 

@@ -9,6 +9,9 @@ export function setDefaultCurrency(currency: string | null | undefined) {
   if (currency) defaultCurrency = currency.toUpperCase();
 }
 
+/** The business currency, "USD" until the settings load. */
+export const businessCurrency = () => defaultCurrency;
+
 /** 9700 → "$97" · 9750 → "$97.50" (whole amounts drop the ".00", like the original design). */
 export function formatCents(cents: number | null | undefined, currency: string = defaultCurrency): string {
   const value = (Number(cents) || 0) / 100;

@@ -4,9 +4,11 @@ import { useState } from "react";
 import { Button, Field, Input, SegmentedControl, StatGrid } from "@/components/ui";
 import { BUDGET_LINES, monthName, sharePct } from "@/data/shareholders";
 import type { ShareholderOverviewOut } from "@/utils/api/models";
-import { centsToDollars, dollarsToCents, formatCents, formatCentsExact } from "@/utils/format/money";
+import { centsToDollars, dollarsToCents, formatCents } from "@/utils/format/money";
 import { useReferrals, useVaReferrals } from "@/utils/hooks/useAffiliates";
+import { usePeso } from "@/utils/hooks/useExchangeRate";
 import { useSaveBudget } from "@/utils/hooks/useShareholders";
+import { Amount } from "../../components/Peso";
 import { useAdmin } from "../../state/AdminContext";
 import { Panel } from "./OverviewParts";
 import { FormModal, SimpleTable } from "./shared";
@@ -20,7 +22,7 @@ export function runwayText(h: ShareholderOverviewOut["health"]): string {
 /** Margin, and what a client costs and brings in. */
 export function UnitEconomics({ data }: { data: ShareholderOverviewOut }) {
   const { results: r, economics: e } = data;
-  const orNone = (cents: number | null | undefined) => (cents == null ? "—" : formatCents(cents, r.currency));
+  const orNone = (cents: number | null | undefined) => (cents == null ? "—" : <Amount cents={cents} currency={r.currency} text={formatCents(cents, r.currency)} />);
   return (
     <Panel
       title={`Margin and clients, ${r.year}`}
@@ -41,6 +43,7 @@ export function UnitEconomics({ data }: { data: ShareholderOverviewOut }) {
 /** What was recorded as expenses, with a link to them. */
 export function ExpensesLink({ data }: { data: ShareholderOverviewOut }) {
   const { goTo } = useAdmin();
+  const { withPesos } = usePeso();
   const r = data.results;
   return (
     <Panel
@@ -52,7 +55,7 @@ export function ExpensesLink({ data }: { data: ShareholderOverviewOut }) {
       }
     >
       <span className="text-small">
-        {formatCents(r.expenseCents, r.currency)} recorded in {r.year}. Add and edit them on Income & Billing › Expenses; they count here straight away.
+        {withPesos(r.expenseCents, r.currency)} recorded in {r.year}. Add and edit them on Income & Billing › Expenses; they count here straight away.
       </span>
     </Panel>
   );
@@ -68,8 +71,9 @@ const SOURCES: Record<string, string> = {
 /** Where the year's income came from: the paid invoices in Billing & invoices. */
 export function IncomeSources({ data }: { data: ShareholderOverviewOut }) {
   const { goTo } = useAdmin();
+  const { withPesos } = usePeso();
   const r = data.results;
-  const money = (cents: number) => formatCentsExact(cents, r.currency);
+  const money = (cents: number) => withPesos(cents, r.currency);
   return (
     <Panel
       title={`Income by source, ${r.year}`}
@@ -90,7 +94,9 @@ export function IncomeSources({ data }: { data: ShareholderOverviewOut }) {
           <tr key={s.source}>
             <td className="u-strong u-ink">{SOURCES[s.source] ?? s.source}</td>
             <td className="data-table__mono">{s.invoices}</td>
-            <td className="data-table__mono">{money(s.amountCents)}</td>
+            <td className="data-table__mono">
+              <Amount cents={s.amountCents} currency={r.currency} />
+            </td>
             <td className="data-table__mono">{sharePct(s.amountCents, r.incomeCents)}</td>
           </tr>
         ))}
@@ -108,8 +114,9 @@ const BONUSES: Record<string, string> = {
 /** Affiliate and referral bonuses paid this year: the same payouts as Referral payouts, counted as costs. */
 export function ReferralCosts({ data }: { data: ShareholderOverviewOut }) {
   const { goTo } = useAdmin();
+  const { withPesos } = usePeso();
   const r = data.results;
-  const money = (cents: number) => formatCentsExact(cents, r.currency);
+  const money = (cents: number) => withPesos(cents, r.currency);
   // Earned and not paid yet: a cost that's coming, not counted until it's paid.
   const clients = useReferrals().data;
   const vas = useVaReferrals().data;
@@ -133,7 +140,9 @@ export function ReferralCosts({ data }: { data: ShareholderOverviewOut }) {
           <tr key={b.kind}>
             <td className="u-strong u-ink">{BONUSES[b.kind] ?? b.kind}</td>
             <td className="data-table__mono">{b.bonuses}</td>
-            <td className="data-table__mono">{money(b.amountCents)}</td>
+            <td className="data-table__mono">
+              <Amount cents={b.amountCents} currency={r.currency} />
+            </td>
           </tr>
         ))}
       </SimpleTable>
@@ -177,10 +186,18 @@ export function ProfitAndLoss({ data }: { data: ShareholderOverviewOut }) {
         {(by === "quarter" ? quarters : months).map((p) => (
           <tr key={p.label}>
             <td className="u-strong u-ink">{p.label}</td>
-            <td className="data-table__mono">{money(p.income)}</td>
-            <td className="data-table__mono">{money(p.costs)}</td>
-            <td className="data-table__mono">{money(p.distributed)}</td>
-            <td className="data-table__mono">{money(p.net)}</td>
+            <td className="data-table__mono">
+              <Amount cents={p.income} currency={r.currency} text={money(p.income)} />
+            </td>
+            <td className="data-table__mono">
+              <Amount cents={p.costs} currency={r.currency} text={money(p.costs)} />
+            </td>
+            <td className="data-table__mono">
+              <Amount cents={p.distributed} currency={r.currency} text={money(p.distributed)} />
+            </td>
+            <td className="data-table__mono">
+              <Amount cents={p.net} currency={r.currency} text={money(p.net)} />
+            </td>
           </tr>
         ))}
       </SimpleTable>
@@ -215,12 +232,17 @@ export function Budget({ data }: { data: ShareholderOverviewOut }) {
           return (
             <tr key={l.value}>
               <td className="u-strong u-ink">{l.label}</td>
-              <td className="data-table__mono">{money(l.monthly)}</td>
-              <td className="data-table__mono">{money(l.monthly * elapsed)}</td>
-              <td className="data-table__mono">{money(actual(l.value))}</td>
+              <td className="data-table__mono">
+                <Amount cents={l.monthly} currency={r.currency} text={money(l.monthly)} />
+              </td>
+              <td className="data-table__mono">
+                <Amount cents={l.monthly * elapsed} currency={r.currency} text={money(l.monthly * elapsed)} />
+              </td>
+              <td className="data-table__mono">
+                <Amount cents={actual(l.value)} currency={r.currency} text={money(actual(l.value))} />
+              </td>
               <td className={good ? "data-table__mono sh-good" : "data-table__mono sh-bad"}>
-                {diff > 0 ? "+" : ""}
-                {money(diff)}
+                <Amount cents={diff} currency={r.currency} text={`${diff > 0 ? "+" : ""}${money(diff)}`} />
               </td>
             </tr>
           );

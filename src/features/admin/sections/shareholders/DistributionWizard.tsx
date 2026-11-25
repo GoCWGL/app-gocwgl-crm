@@ -7,7 +7,9 @@ import { cn } from "@/lib/utils";
 import type { DistributionDetailOut, DistributionIn, DistributionOut, DistributionPreviewOut, DistributionsOut } from "@/utils/api/models";
 import { formatLong } from "@/utils/format/dates";
 import { centsToDollars, dollarsToCents, formatCents, formatCentsExact } from "@/utils/format/money";
+import { usePeso } from "@/utils/hooks/useExchangeRate";
 import { useDeclareDistribution, usePreviewDistribution, useSaveDistribution, useSetResolution, useShareholders } from "@/utils/hooks/useShareholders";
+import { Amount } from "../../components/Peso";
 
 const STEPS = ["Details", "Breakdown & tax", "Confirm & publish"];
 const MAX_CENTS = 100_000_000_000;
@@ -50,6 +52,8 @@ export function DistributionWizard({
   const busy = preview.isPending || save.isPending || declare.isPending || resolution.isPending;
   const cents = dollarsToCents(pool);
   const p = preview.data;
+  const peso = usePeso();
+  const withPesos = (n: number) => [formatCentsExact(n, data.currency), peso.text(n, data.currency)].filter(Boolean).join(" ");
 
   const body = (taxOverrides = rates): DistributionIn => ({ title: title.trim(), kind, poolCents: cents, recordDate, paymentDate, classes, taxOverrides, note: note.trim() });
 
@@ -190,7 +194,9 @@ export function DistributionWizard({
               label={`Total distribution pool (${data.currency})`}
               htmlFor="dw-pool"
               required
-              hint={kind === "cash_dividend" ? `Net income available: ${formatCents(data.retainedCents, data.currency)}` : "Before tax."}
+              hint={[cents > 0 && peso.text(cents, data.currency), kind === "cash_dividend" ? `Net income available: ${formatCents(data.retainedCents, data.currency)}` : "Before tax."]
+                .filter(Boolean)
+                .join(" · ")}
             >
               <Input id="dw-pool" type="number" min={0} step="0.01" mono placeholder="0.00" value={pool} onChange={(e) => setPool(e.target.value)} />
             </Field>
@@ -244,9 +250,9 @@ export function DistributionWizard({
               ["Record date", formatLong(recordDate)],
               ["Payment date", formatLong(paymentDate)],
               ["Shareholders", String(p.rows.length)],
-              ["Gross pool", formatCentsExact(p.grossCents, data.currency)],
-              ["Tax withheld", formatCentsExact(p.taxCents, data.currency)],
-              ["Net to pay", formatCentsExact(p.netCents, data.currency)],
+              ["Gross pool", withPesos(p.grossCents)],
+              ["Tax withheld", withPesos(p.taxCents)],
+              ["Net to pay", withPesos(p.netCents)],
               ["Eligible classes", data.classes.filter((c) => classes.includes(c.key)).map((c) => c.label).join(", ")],
             ].map(([k, v]) => (
               <div key={k}>
@@ -308,7 +314,6 @@ function Breakdown({
   busy: boolean;
   onRate: (stakeholderId: string, bps: number, fallback: number) => void;
 }) {
-  const money = (cents: number) => formatCentsExact(cents, currency);
   // Shares nobody holds get nothing, so the holders split the whole pool.
   const cap = useShareholders().data?.capTable;
   const unassigned = cap ? cap.companyShares - cap.issued : 0;
@@ -316,9 +321,9 @@ function Breakdown({
     <>
       <StatGrid
         items={[
-          { label: "Gross pool", value: money(p.grossCents), tone: "cyan", glyph: "$" },
-          { label: "Tax withheld", value: money(p.taxCents), tone: "amber", glyph: "$" },
-          { label: "Net to pay", value: money(p.netCents), tone: "green", glyph: "$" },
+          { label: "Gross pool", value: <Amount cents={p.grossCents} currency={currency} />, tone: "cyan", glyph: "$" },
+          { label: "Tax withheld", value: <Amount cents={p.taxCents} currency={currency} />, tone: "amber", glyph: "$" },
+          { label: "Net to pay", value: <Amount cents={p.netCents} currency={currency} />, tone: "green", glyph: "$" },
           { label: "Shareholders", value: p.rows.length, tone: "purple", glyph: "#" },
         ]}
       />
@@ -361,13 +366,19 @@ function Breakdown({
                   </td>
                   <td className="data-table__mono">{count(r.shares)}</td>
                   <td className="data-table__mono">{sharePct(r.shares, r.totalShares)}</td>
-                  <td className="data-table__mono">{money(r.grossCents)}</td>
+                  <td className="data-table__mono">
+                    <Amount cents={r.grossCents} currency={currency} />
+                  </td>
                   <td>
                     <RateInput key={r.taxBps} name={r.name} bps={r.taxBps} disabled={busy} onSet={(bps) => onRate(r.stakeholderId, bps, r.defaultTaxBps)} />
                     <span className="text-small">{r.stakeholderId in rates ? ` default ${r.defaultTaxBps / 100}%` : " auto"}</span>
                   </td>
-                  <td className="data-table__mono">{money(r.taxCents)}</td>
-                  <td className="data-table__mono u-strong">{money(r.netCents)}</td>
+                  <td className="data-table__mono">
+                    <Amount cents={r.taxCents} currency={currency} />
+                  </td>
+                  <td className="data-table__mono u-strong">
+                    <Amount cents={r.netCents} currency={currency} />
+                  </td>
                 </tr>
               ))}
             </tbody>

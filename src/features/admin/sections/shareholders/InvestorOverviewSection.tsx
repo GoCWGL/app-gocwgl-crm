@@ -6,7 +6,9 @@ import { expenseLabel, MILESTONE_KINDS, milestoneLabel, monthName } from "@/data
 import type { CashBalanceOut, MilestoneIn, MilestoneOut, ShareholderOverviewOut } from "@/utils/api/models";
 import { formatLong } from "@/utils/format/dates";
 import { centsToDollars, dollarsToCents, formatCents, formatCentsExact } from "@/utils/format/money";
+import { usePeso } from "@/utils/hooks/useExchangeRate";
 import { useSaveRecord, useShareholders } from "@/utils/hooks/useShareholders";
+import { Amount, HeroPeso, PesoRateBar } from "../../components/Peso";
 import { useAdmin } from "../../state/AdminContext";
 import { CashTab } from "./CashTab";
 import { ValuationModal } from "./EquityModals";
@@ -35,6 +37,8 @@ function Overview({ data, onYear }: { data: ShareholderOverviewOut; onYear: (yea
   const [cash, setCash] = useState<CashBalanceOut | "new" | null>(null);
   const [date, setDate] = useState<MilestoneOut | "new" | null>(null);
   const money = (cents: number) => formatCents(cents, r.currency);
+  const peso = usePeso();
+  const amount = (cents: number) => <Amount cents={cents} currency={r.currency} text={money(cents).replace("-", "−")} />;
   const upcoming = data.milestones.filter((m) => m.happensOn >= data.today);
   const past = data.milestones.filter((m) => m.happensOn < data.today).reverse();
   const years = r.years.includes(r.year) ? r.years : [r.year, ...r.years];
@@ -65,6 +69,7 @@ function Overview({ data, onYear }: { data: ShareholderOverviewOut; onYear: (yea
           />
         </div>
       </div>
+      <PesoRateBar currency={r.currency} />
       {view !== "cash" && (
         <div className="cluster cluster--end">
           <Select size="sm" className="input--auto" aria-label="Year" value={String(r.year)} options={years.map(String)} onChange={(e) => onYear(Number(e.target.value))} />
@@ -76,18 +81,23 @@ function Overview({ data, onYear }: { data: ShareholderOverviewOut; onYear: (yea
           <Hero
             label={`Net income ${r.year}`}
             value={formatCentsExact(r.netIncomeCents, r.currency)}
-            badge={thisMonth === null ? undefined : <Trend up={thisMonth >= 0}>{`${money(Math.abs(thisMonth))} this month`}</Trend>}
+            badge={
+              <>
+                <HeroPeso cents={r.netIncomeCents} currency={r.currency} />
+                {thisMonth !== null && <Trend up={thisMonth >= 0}>{`${peso.withPesos(Math.abs(thisMonth), r.currency)} this month`}</Trend>}
+              </>
+            }
             text="What’s left for the owners after costs and what was already distributed."
             stats={[
-              { label: "Income", value: money(r.incomeCents), hint: "Paid invoices" },
-              { label: "Costs", value: `−${money(r.expenseCents + r.bonusCents)}`, hint: "Expenses and referral payouts" },
-              { label: "Distributed", value: `−${money(r.distributedCents)}`, hint: "Cash dividends declared" },
+              { label: "Income", value: amount(r.incomeCents), hint: "Paid invoices" },
+              { label: "Costs", value: amount(-(r.expenseCents + r.bonusCents)), hint: "Expenses and referral payouts" },
+              { label: "Distributed", value: amount(-r.distributedCents), hint: "Cash dividends declared" },
             ]}
           />
           <div className="ov-grid ov-grid--wide">
             <Panel
               title="Income and costs by month"
-              hint={r.outstandingCents ? `${money(r.outstandingCents)} more is invoiced but not paid yet.` : "Paid invoices against expenses and referral payouts."}
+              hint={r.outstandingCents ? `${peso.withPesos(r.outstandingCents, r.currency)} more is invoiced but not paid yet.` : "Paid invoices against expenses and referral payouts."}
             >
               <ColumnChart
                 label={`Income and costs per month, ${r.year}`}
@@ -101,13 +111,13 @@ function Overview({ data, onYear }: { data: ShareholderOverviewOut; onYear: (yea
                   values: [m.incomeCents, m.expenseCents + m.bonusCents],
                   current: m.month === data.today.slice(0, 7),
                 }))}
-                format={money}
+                format={(n) => peso.withPesos(n, r.currency)}
                 axisFormat={(n) => formatCents(Math.round(n / 100) * 100, r.currency)}
               />
             </Panel>
             <Panel title="Where costs went" hint={String(r.year)}>
               {costs.length ? (
-                <Bars rows={costs.map((c) => ({ ...c, display: money(c.value), color: "#d97706" }))} />
+                <Bars rows={costs.map((c) => ({ ...c, display: amount(c.value), color: "#d97706" }))} />
               ) : (
                 <div className="empty-state">No costs recorded in {r.year}.</div>
               )}
@@ -123,7 +133,7 @@ function Overview({ data, onYear }: { data: ShareholderOverviewOut; onYear: (yea
                 </Button>
               }
             >
-              <span className="ov-metric">{h.valuationCents == null ? "Not set" : money(h.valuationCents)}</span>
+              <span className="ov-metric">{h.valuationCents == null ? "Not set" : amount(h.valuationCents)}</span>
             </Panel>
             <Panel
               title="Money in the bank"
@@ -134,7 +144,7 @@ function Overview({ data, onYear }: { data: ShareholderOverviewOut; onYear: (yea
                 </Button>
               }
             >
-              <span className="ov-metric">{h.cashCents == null ? "Not entered" : money(h.cashCents)}</span>
+              <span className="ov-metric">{h.cashCents == null ? "Not entered" : amount(h.cashCents)}</span>
             </Panel>
             <Panel title="How long it lasts" hint="Runway, at the pace of the last 3 months.">
               <span className="ov-metric">{runwayText(h)}</span>
@@ -182,8 +192,8 @@ function Overview({ data, onYear }: { data: ShareholderOverviewOut; onYear: (yea
           <Panel title="Recurring revenue" hint="Income that repeats: active subscriptions, per month (MRR) and per year (ARR).">
             <StatGrid
               items={[
-                { label: "Per month (MRR)", value: money(h.mrrCents), tone: "cyan", glyph: "$" },
-                { label: "Per year (ARR)", value: money(h.arrCents), tone: "purple", glyph: "$" },
+                { label: "Per month (MRR)", value: amount(h.mrrCents), tone: "cyan", glyph: "$" },
+                { label: "Per year (ARR)", value: amount(h.arrCents), tone: "purple", glyph: "$" },
               ]}
             />
           </Panel>
@@ -198,7 +208,7 @@ function Overview({ data, onYear }: { data: ShareholderOverviewOut; onYear: (yea
                   values: [m.amountCents],
                   current: i === h.recurring.length - 1,
                 }))}
-                format={money}
+                format={(n) => peso.withPesos(n, r.currency)}
                 axisFormat={(n) => formatCents(Math.round(n / 100) * 100, r.currency)}
               />
             ) : (

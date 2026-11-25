@@ -5,6 +5,8 @@ import { monthName } from "@/data/shareholders";
 import type { CashBalanceOut, ShareholderOverviewOut } from "@/utils/api/models";
 import { formatLong } from "@/utils/format/dates";
 import { formatCents, formatCentsExact } from "@/utils/format/money";
+import { usePeso } from "@/utils/hooks/useExchangeRate";
+import { Amount, HeroPeso } from "../../components/Peso";
 import { Bars, Entry, Flow, Hero, Panel, Trend, type FlowStep } from "./OverviewParts";
 import { RowActions } from "./shared";
 
@@ -17,6 +19,8 @@ export function CashTab({ data, onAdd, onEdit }: { data: ShareholderOverviewOut;
   const { health: h, results: r } = data;
   const money = (cents: number) => formatCents(Math.round(cents / 100) * 100, r.currency);
   const exact = (cents: number) => formatCentsExact(cents, r.currency);
+  const peso = usePeso();
+  const amount = (cents: number, sign?: "+" | "−") => <Amount cents={cents} currency={r.currency} text={sign && `${sign}${exact(Math.abs(cents))}`} />;
   const started = h.cashCents != null && h.cashMoves != null;
   // The last 3 finished months, the ones the averages use.
   const [y, m] = data.today.split("-").map(Number);
@@ -45,20 +49,25 @@ export function CashTab({ data, onAdd, onEdit }: { data: ShareholderOverviewOut;
 
   const moves = h.cashMoves!;
   const steps: FlowStep[] = [
-    { label: "Bank balance you entered", hint: formatLong(h.cashAsOf), value: exact(h.cashBalanceCents ?? 0), icon: "building", kind: "start" },
-    { label: "Invoices clients paid", value: `+${exact(moves.receivedCents)}`, icon: "invoice", kind: "in" },
-    { label: "Expenses", value: `−${exact(moves.spentCents)}`, icon: "receipt", kind: "out" },
-    { label: "Referral bonuses", value: `−${exact(moves.bonusCents)}`, icon: "gift", kind: "out" },
-    { label: "Distributions to shareholders", value: `−${exact(moves.payoutCents)}`, icon: "users", kind: "out" },
+    { label: "Bank balance you entered", hint: formatLong(h.cashAsOf), value: amount(h.cashBalanceCents ?? 0), icon: "building", kind: "start" },
+    { label: "Invoices clients paid", value: amount(moves.receivedCents, "+"), icon: "invoice", kind: "in" },
+    { label: "Expenses", value: amount(-moves.spentCents, "−"), icon: "receipt", kind: "out" },
+    { label: "Referral bonuses", value: amount(-moves.bonusCents, "−"), icon: "gift", kind: "out" },
+    { label: "Distributions to shareholders", value: amount(-moves.payoutCents, "−"), icon: "users", kind: "out" },
   ];
-  steps.push({ label: "In the bank today", value: exact(h.cashCents!), icon: "check", kind: "total" });
+  steps.push({ label: "In the bank today", value: amount(h.cashCents!), icon: "check", kind: "total" });
 
   return (
     <>
       <Hero
         label="Money in the bank"
         value={exact(h.cashCents!)}
-        badge={quiet ? undefined : <Trend up={!losing}>{losing ? "shrinking" : "growing"}</Trend>}
+        badge={
+          <>
+            <HeroPeso cents={h.cashCents!} currency={r.currency} />
+            {!quiet && <Trend up={!losing}>{losing ? "shrinking" : "growing"}</Trend>}
+          </>
+        }
         text={
           h.cashCents! <= 0
             ? "There’s no money left according to these records. Check your bank and update the balance."
@@ -72,9 +81,9 @@ export function CashTab({ data, onAdd, onEdit }: { data: ShareholderOverviewOut;
           </Button>
         }
         stats={[
-          { label: "Change a month", value: `${losing ? "−" : "+"}${money(Math.abs(h.netBurnCents))}`, hint: "Average, last 3 full months" },
+          { label: "Change a month", value: <Amount cents={-h.netBurnCents} currency={r.currency} text={`${losing ? "−" : "+"}${money(Math.abs(h.netBurnCents))}`} />, hint: "Average, last 3 full months" },
           { label: "How long it lasts", value: losing && h.runwayMonths != null ? `${h.runwayMonths} months` : "Won’t run out", hint: "Also called runway" },
-          { label: "In 12 months", value: money(year ?? 0), hint: "If every month is the same" },
+          { label: "In 12 months", value: <Amount cents={year ?? 0} currency={r.currency} text={money(year ?? 0)} />, hint: "If every month is the same" },
         ]}
       />
 
@@ -85,13 +94,13 @@ export function CashTab({ data, onAdd, onEdit }: { data: ShareholderOverviewOut;
         <Panel title="Money in and out, a month" hint={`Average of ${period}.`}>
           <Bars
             rows={[
-              { label: "Comes in", value: received, display: exact(received), color: IN },
-              { label: "Goes out", value: spent, display: exact(spent), color: OUT },
+              { label: "Comes in", value: received, display: amount(received), color: IN },
+              { label: "Goes out", value: spent, display: amount(spent), color: OUT },
             ]}
           />
           <div className={losing ? "ov-result is-down" : "ov-result is-up"}>
             <span>{quiet ? "Nothing moved in these months" : losing ? "Lost, a month" : "Gained, a month"}</span>
-            <b>{exact(Math.abs(h.netBurnCents))}</b>
+            <b>{amount(Math.abs(h.netBurnCents))}</b>
           </div>
           <span className="text-small">Goes out means expenses and referral bonuses; distributions aren’t included. One very good or bad month changes the average a lot.</span>
         </Panel>
@@ -109,7 +118,7 @@ export function CashTab({ data, onAdd, onEdit }: { data: ShareholderOverviewOut;
                 return { label: monthName(at), title: `${monthName(at, "long")} ${at.slice(0, 4)}`, value: Math.max(0, h.cashCents! - h.netBurnCents * (i + 1)) };
               }),
             ]}
-            format={money}
+            format={(n) => peso.withPesos(n, r.currency)}
             axisFormat={money}
           />
         </Panel>
@@ -122,7 +131,7 @@ export function CashTab({ data, onAdd, onEdit }: { data: ShareholderOverviewOut;
               key={c.id}
               date={formatLong(c.asOf)}
               title={c.asOf === h.cashAsOf ? "In use" : "Earlier balance"}
-              value={exact(c.amountCents)}
+              value={amount(c.amountCents)}
               actions={<RowActions kind="cash" id={c.id} name={`the ${formatLong(c.asOf)} balance`} onEdit={() => onEdit(c)} />}
             />
           ))}

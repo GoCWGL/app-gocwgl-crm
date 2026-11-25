@@ -1,3 +1,5 @@
+@use "../../abstracts" as *;
+
 // Shareholders menu, and the shareholder's own page.
 .sh-text {
   margin: 0;
@@ -209,7 +211,7 @@
       text-align: right;
     }
 
-    span {
+    > div > span {
       color: #a9b5c7;
       font-size: 12.5px;
     }
@@ -592,4 +594,118 @@
       }
     }
   }
+}
+
+// ------------------------------------------------------------------ Dollars to pesos
+.peso-amount {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__php {
+    color: #5b6b82;
+    font-family: $font-sans;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0;
+    white-space: nowrap;
+  }
+}
+
+.ov-hero .peso-amount__php {
+  color: #a9b5c7;
+  font-size: 12.5px;
+}
+
+.ov-hero__stats .peso-amount,
+.ov-flow__value .peso-amount,
+.ov-entry__value .peso-amount,
+.ov-result .peso-amount {
+  align-items: flex-end;
+}
+
+.ov-hero__peso {
+  color: #ffc266;
+  letter-spacing: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.peso-rate {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 12px 16px;
+  border: 1px solid rgba(15, 23, 42, 0.09);
+  border-radius: 14px;
+  background: #fff;
+
+  &__symbol {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: #fff3e0;
+    color: #b45309;
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  &__main {
+    display: flex;
+    flex: 1 1 220px;
+    flex-direction: column;
+    min-width: 0;
+    font-size: 14px;
+  }
+
+  &__input {
+    width: 110px;
+  }
+}
+
+// ------------------------------------------------------------------ Income & Billing
+.ov-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.ov-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border-left: 3px solid var(--kpi, #cbd5e1);
+
+  &__label {
+    color: #475569;
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+}
+
+
+.peso-input {
+  display: flex;
+  gap: 8px;
+
+  > :first-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  > select {
+    flex: none;
+    width: 100px;
+  }
+}
+
+.ov-bars .peso-amount {
+  align-items: flex-end;
 }

@@ -7,6 +7,7 @@ import { downloadCsv } from "@/lib/csv";
 import type { DistributionDetailOut, DistributionOut, DistributionPayoutOut, DistributionsOut } from "@/utils/api/models";
 import { formatLong } from "@/utils/format/dates";
 import { formatCentsExact } from "@/utils/format/money";
+import { usePeso } from "@/utils/hooks/useExchangeRate";
 import {
   useCancelDistribution,
   useDistribution,
@@ -18,6 +19,7 @@ import {
   useSetPayoutTax,
   useUndoPayoutPaid,
 } from "@/utils/hooks/useShareholders";
+import { Amount, PesoRateBar } from "../../components/Peso";
 import { useAdmin } from "../../state/AdminContext";
 import { DistributionWizard } from "./DistributionWizard";
 import { FormModal, RowActions, SectionCard, SimpleTable } from "./shared";
@@ -67,16 +69,16 @@ function StatusBadge({ run }: { run: DistributionOut }) {
 function Runs({ data, onOpen, onDeclare }: { data: DistributionsOut; onOpen: (id: string) => void; onDeclare: (d: DistributionOut | "new") => void }) {
   const live = data.runs.filter((r) => r.status === "processing" || r.status === "completed");
   const sum = (f: (r: DistributionOut) => number) => live.reduce((t, r) => t + f(r), 0);
-  const money = (cents: number) => formatCentsExact(cents, data.currency);
   const hasShares = data.classes.some((c) => c.shares > 0);
   return (
     <div className="stack stack--16">
+      <PesoRateBar currency={data.currency} />
       <StatGrid
         items={[
-          { label: "Declared", value: money(sum((r) => r.poolCents)), tone: "cyan", glyph: "$" },
-          { label: "Tax withheld", value: money(sum((r) => r.taxCents)), tone: "purple", glyph: "$" },
-          { label: "Net paid", value: money(sum((r) => r.netPaidCents)), tone: "green", glyph: "$" },
-          { label: "Net still to pay", value: money(sum((r) => r.netCents - r.netPaidCents)), tone: "amber", glyph: "$" },
+          { label: "Declared", value: <Amount cents={sum((r) => r.poolCents)} currency={data.currency} />, tone: "cyan", glyph: "$" },
+          { label: "Tax withheld", value: <Amount cents={sum((r) => r.taxCents)} currency={data.currency} />, tone: "purple", glyph: "$" },
+          { label: "Net paid", value: <Amount cents={sum((r) => r.netPaidCents)} currency={data.currency} />, tone: "green", glyph: "$" },
+          { label: "Net still to pay", value: <Amount cents={sum((r) => r.netCents - r.netPaidCents)} currency={data.currency} />, tone: "amber", glyph: "$" },
         ]}
       />
       <SectionCard
@@ -104,9 +106,11 @@ function Runs({ data, onOpen, onDeclare }: { data: DistributionsOut; onOpen: (id
                 </td>
                 <td>{formatLong(r.recordDate)}</td>
                 <td>{formatLong(r.paymentDate)}</td>
-                <td className="data-table__mono">{formatCentsExact(r.poolCents, r.currency)}</td>
-                <td className="data-table__mono">{draft ? "—" : formatCentsExact(r.taxCents, r.currency)}</td>
-                <td className="data-table__mono">{draft ? "—" : formatCentsExact(r.netPaidCents, r.currency)}</td>
+                <td className="data-table__mono">
+                  <Amount cents={r.poolCents} currency={r.currency} />
+                </td>
+                <td className="data-table__mono">{draft ? "—" : <Amount cents={r.taxCents} currency={r.currency} />}</td>
+                <td className="data-table__mono">{draft ? "—" : <Amount cents={r.netPaidCents} currency={r.currency} />}</td>
                 <td>
                   {draft ? (
                     "—"
@@ -148,8 +152,10 @@ function Run({ id, data, onBack }: { id: string; data: DistributionsOut; onBack:
   const { notify } = useAdmin();
   const openResolution = useOpenResolution();
   const [canceling, setCanceling] = useState(false);
+  const peso = usePeso();
   const run = query.data;
   const labels = run?.classes.map((c) => data.classes.find((x) => x.key === c)?.label ?? "Removed class").join(", ");
+  const inPesos = !!run && peso.toCents(0, run.currency) !== null;
   const exportCsv = () =>
     run &&
     downloadCsv(
@@ -162,6 +168,7 @@ function Run({ id, data, onBack }: { id: string; data: DistributionsOut; onBack:
         "Tax %",
         "Tax withheld",
         "Net payable",
+        ...(inPesos ? [`Net in PHP (at ${peso.rate})`] : []),
         "Paid to",
         "Status",
         "Paid on",
@@ -176,6 +183,7 @@ function Run({ id, data, onBack }: { id: string; data: DistributionsOut; onBack:
         p.taxBps / 100,
         (p.taxCents / 100).toFixed(2),
         (p.netCents / 100).toFixed(2),
+        ...(inPesos ? [((peso.toCents(p.netCents, run.currency) ?? 0) / 100).toFixed(2)] : []),
         p.payoutTo,
         p.status,
         p.paidOn ?? "",
@@ -210,11 +218,12 @@ function Run({ id, data, onBack }: { id: string; data: DistributionsOut; onBack:
       <LoadState query={query} loadingText="Loading payouts…">
         {run && (
           <>
+            <PesoRateBar currency={run.currency} />
             <StatGrid
               items={[
-                { label: "Gross pool", value: formatCentsExact(run.poolCents, run.currency), tone: "cyan", glyph: "$" },
-                { label: "Tax withheld", value: formatCentsExact(run.taxCents, run.currency), tone: "purple", glyph: "$" },
-                { label: "Net paid", value: formatCentsExact(run.netPaidCents, run.currency), tone: "green", glyph: "$" },
+                { label: "Gross pool", value: <Amount cents={run.poolCents} currency={run.currency} />, tone: "cyan", glyph: "$" },
+                { label: "Tax withheld", value: <Amount cents={run.taxCents} currency={run.currency} />, tone: "purple", glyph: "$" },
+                { label: "Net paid", value: <Amount cents={run.netPaidCents} currency={run.currency} />, tone: "green", glyph: "$" },
                 { label: "Paid", value: `${run.paid} / ${run.count}`, tone: "amber", glyph: "#" },
               ]}
             />
@@ -267,11 +276,15 @@ function Payouts({ run, today }: { run: DistributionDetailOut; today: string }) 
               <td className="u-strong u-ink">{p.name}</td>
               <td className="data-table__mono">{count(p.shares)}</td>
               <td className="data-table__mono">{sharePct(p.shares, p.totalShares)}</td>
-              <td className="data-table__mono">{money(p.grossCents)}</td>
               <td className="data-table__mono">
-                {money(p.taxCents)} ({bpsPct(p.taxBps)})
+                <Amount cents={p.grossCents} currency={run.currency} />
               </td>
-              <td className="data-table__mono u-strong">{money(p.netCents)}</td>
+              <td className="data-table__mono">
+                <Amount cents={p.taxCents} currency={run.currency} /> ({bpsPct(p.taxBps)})
+              </td>
+              <td className="data-table__mono u-strong">
+                <Amount cents={p.netCents} currency={run.currency} />
+              </td>
               <td className="text-small">{p.payoutTo || "Not set"}</td>
               <td>
                 {live ? (
@@ -379,6 +392,7 @@ type Done = { onClose: () => void; onDone: () => void };
 
 function PaidModal({ payout: p, currency, today, onClose, onDone }: Done & { payout: DistributionPayoutOut; currency: string; today: string }) {
   const save = useMarkPayoutPaid();
+  const pesos = usePeso().text(p.netCents, currency);
   const [paidOn, setDay] = useState(today);
   const [reference, setReference] = useState("");
   const [receipt, setReceipt] = useState<File | null>(null);
@@ -405,6 +419,7 @@ function PaidModal({ payout: p, currency, today, onClose, onDone }: Done & { pay
       onSubmit={check}
       onClose={onClose}
     >
+      {pesos && <span className="text-small">{pesos} at the current rate. The payout is recorded in {currency}.</span>}
       <div className="form-grid">
         <Field label="Bank reference no." htmlFor="pm-ref">
           <Input id="pm-ref" mono maxLength={120} value={reference} onChange={(e) => setReference(e.target.value)} />

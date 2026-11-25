@@ -306,6 +306,7 @@ export type PayoutOut = S["PayoutOut"];
 export type PayoutProfileIn = S["PayoutProfileIn"];
 export type PayoutProfileOut = S["PayoutProfileOut"];
 export type PayoutTaxIn = S["PayoutTaxIn"];
+export type PesoRateUpdate = S["PesoRateUpdate"];
 export type PhaseIn = S["PhaseIn"];
 export type PhaseOut = S["PhaseOut"];
 export type PhasesIn = S["PhasesIn"];

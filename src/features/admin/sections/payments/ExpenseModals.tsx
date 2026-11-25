@@ -4,13 +4,14 @@ import { useState } from "react";
 import { Field, Input, Select } from "@/components/ui";
 import { EXPENSE_CATEGORIES, expenseLabel } from "@/data/shareholders";
 import type { ExpenseOut, RecurringExpenseIn, RecurringExpenseOut } from "@/utils/api/models";
-import { centsToDollars, dollarsToCents } from "@/utils/format/money";
+import { centsToDollars, dollarsToCents, formatCentsExact } from "@/utils/format/money";
+import { usePeso } from "@/utils/hooks/useExchangeRate";
 import { useSaveExpense, useSaveRecurringExpense, useSetExpenseReceipt } from "@/utils/hooks/useExpenses";
 import { FormModal } from "../shareholders/shared";
 
 type Done = { onClose: () => void; onSaved: (message: string) => void };
 export type ClientOption = { value: string; label: string };
-type Shared = { customCategories: string[]; clients: ClientOption[]; today: string };
+type Shared = { currency: string; customCategories: string[]; clients: ClientOption[]; today: string };
 
 const CUSTOM = "__custom";
 const MAX_CENTS = 1_000_000_000;
@@ -63,13 +64,37 @@ function useDetails(x: Partial<Pick<ExpenseOut, "description" | "vendor" | "meth
   const [vendor, setVendor] = useState(x?.vendor ?? "");
   const [method, setMethod] = useState(x?.method ?? "");
   const [contactId, setContact] = useState(x?.contactId ?? "");
-  const cents = dollarsToCents(amount);
+  const [entered, setEntered] = useState<"USD" | "PHP">("USD");
+  const peso = usePeso();
+  const convertible = peso.toCents(0, shared.currency) !== null;
+  const inPesos = entered === "PHP" && convertible && peso.rate !== null;
+  // Always saved in the business currency.
+  const cents = inPesos ? Math.round(dollarsToCents(amount) / peso.rate!) : dollarsToCents(amount);
+  const equals = cents > 0 && convertible ? (inPesos ? `Saved as ${formatCentsExact(cents, shared.currency)}.` : peso.text(cents, shared.currency)) : undefined;
   const problem = amountProblem(cents) || (category.value ? "" : "Name the custom category.");
   const body = { category: category.value, description: description.trim(), amountCents: cents, vendor: vendor.trim(), method: method.trim(), contactId: contactId || null };
   const top = (id: string) => (
     <>
-      <Field label="Amount" htmlFor={`${id}-amt`} required>
-        <Input id={`${id}-amt`} type="number" min={0} step="0.01" mono placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+      <Field label="Amount" htmlFor={`${id}-amt`} required hint={equals}>
+        <div className="peso-input">
+          <Input id={`${id}-amt`} type="number" min={0} step="0.01" mono placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} />
+          {convertible && (
+            <Select
+              aria-label="Currency of the amount"
+              value={entered}
+              options={[
+                { value: "USD", label: "$ USD" },
+                { value: "PHP", label: "₱ PHP" },
+              ]}
+              onChange={(e) => {
+                const to = e.target.value as "USD" | "PHP";
+                // The same money, in the other currency.
+                if (amount && cents > 0) setAmount(centsToDollars(to === "PHP" ? (peso.toCents(cents, shared.currency) ?? 0) : cents));
+                setEntered(to);
+              }}
+            />
+          )}
+        </div>
       </Field>
       {category.field(id)}
     </>

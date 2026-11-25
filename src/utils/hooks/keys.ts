@@ -5,6 +5,7 @@ export const qk = {
   staffTeam: ["staff-team"] as const,
   portalTeam: ["portal-team"] as const,
   expenses: ["expenses"] as const,
+  exchangeRate: ["exchange-rate"] as const,
   shareholders: ["shareholders"] as const,
   shareholderNotes: (id: string) => ["shareholders", "notes", id] as const,
   investorUpdates: ["shareholders", "updates"] as const,

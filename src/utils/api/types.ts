@@ -3839,6 +3839,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/settings/peso-rate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set Peso Rate */
+        put: operations["set_peso_rate_api_admin_settings_peso_rate_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/domains": {
         parameters: {
             query?: never;
@@ -13646,6 +13663,8 @@ export interface components {
             currency: string;
             /** Timezone */
             timezone: string;
+            /** Usdphprate */
+            usdPhpRate: number | null;
             /** Notifyemail */
             notifyEmail: string;
             /** Notifications */
@@ -14068,6 +14087,11 @@ export interface components {
         PayoutTaxIn: {
             /** Taxbps */
             taxBps: number;
+        };
+        /** PesoRateUpdate */
+        PesoRateUpdate: {
+            /** Usdphprate */
+            usdPhpRate: number | null;
         };
         /** PhaseIn */
         PhaseIn: {
@@ -31169,6 +31193,50 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SubdomainUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["OrgSettingsOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    set_peso_rate_api_admin_settings_peso_rate_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PesoRateUpdate"];
             };
         };
         responses: {
