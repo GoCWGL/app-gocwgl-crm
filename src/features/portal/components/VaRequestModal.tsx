@@ -365,6 +365,7 @@ export function VaRequestForm({
           agreed={agreed}
           onAgree={setAgreed}
           error={agreeTried && !agreed ? "Tick the box to accept the VA agreement before you continue." : undefined}
+          tools={{ timeTracker, attendance, setTimeTracker, setAttendance }}
         />
       </Modal>
     );
@@ -411,7 +412,7 @@ export function VaRequestForm({
           : staff
           ? "Same form clients use. It’s added to the client’s VA requests, and VAs can apply once it’s live."
           : project
-          ? "Step 2 of 2 · Tell us about the project. We’ll review it and quote the payment."
+          ? "Step 2 of 2 · Tell us about the project and the skills it needs. We’ll review it, quote the payment and find a VA with those skills."
           : "Step 2 of 2 · Tell us about the role. We’ll review it and match you with a trained VA."
       }
       footer={
@@ -448,7 +449,21 @@ export function VaRequestForm({
           </Section>
         )}
 
-        <Section title={project ? "Project" : "Role"} desc={project ? "What you need done, your budget and when it’s due." : "What you’re hiring for."}>
+        {project && !staff && (
+          <div className="vrf-note" role="note">
+            <Icon name="briefcase" size={16} />
+            <span>
+              <strong>A project is a one-time task that needs specific skills</strong> your current VAs don’t have. GoCWGL assigns a
+              different VA with those skills for this project only; they don’t become a daily VA unless you ask and they agree after
+              the project. If a VA on your team can already do it, request a task instead.
+            </span>
+          </div>
+        )}
+
+        <Section
+          title={project ? "Project" : "Role"}
+          desc={project ? "What you need done, the skills it takes, your budget and when it’s due." : "What you’re hiring for."}
+        >
           <Field label={project ? "What project" : "Title"} htmlFor="vr-title" required error={err("title")}>
             <Input
               id="vr-title"
@@ -491,7 +506,11 @@ export function VaRequestForm({
               maxLength={5000}
               value={overview}
               aria-invalid={!!err("overview")}
-              placeholder={project ? "What the project involves, what you have already, and what done looks like." : "What the role is for and what success looks like."}
+              placeholder={
+                project
+                  ? "What the project involves, the skills or tools it needs (e.g. WordPress, Premiere Pro, QuickBooks), what you have already, and what done looks like."
+                  : "What the role is for and what success looks like."
+              }
               onChange={(e) => setOverview(e.target.value)}
             />
           </Field>
@@ -555,22 +574,25 @@ export function VaRequestForm({
               {hoursField}
             </Section>
 
-            <Section title="Time tracking" desc="Off unless you need it. Turn on what you want and it’s added to your menu (Time & activity) and your VA’s.">
-              <ToolRow
-                icon="clock"
-                title="Time tracker"
-                hint="Your VA tracks the time they spend on your work. You see it in VA tracker."
-                checked={timeTracker}
-                onChange={setTimeTracker}
-              />
-              <ToolRow
-                icon="calendarCheck"
-                title="Attendance"
-                hint="Your VA clocks in and out, so you see when they start and whether it’s on time for your schedule."
-                checked={attendance}
-                onChange={setAttendance}
-              />
-            </Section>
+            {/* Clients choose these on the agreement step; here only for staff, and when changing a request. */}
+            {(staff || edit) && (
+              <Section title="Time tracking" desc="Off unless you need it. Turn on what you want and it’s added to your menu (Time & activity) and your VA’s.">
+                <ToolRow
+                  icon="clock"
+                  title="Time tracker"
+                  hint="Your VA tracks the time they spend on your work. You see it in VA tracker."
+                  checked={timeTracker}
+                  onChange={setTimeTracker}
+                />
+                <ToolRow
+                  icon="calendarCheck"
+                  title="Attendance"
+                  hint="Your VA clocks in and out, so you see when they start and whether it’s on time for your schedule."
+                  checked={attendance}
+                  onChange={setAttendance}
+                />
+              </Section>
+            )}
 
             <Section title="Responsibilities & experience" desc="One item per line. Press Enter to add another.">
               <BulletField label="Key responsibilities" required items={duties} onChange={setDuties} error={err("duties")} placeholder="e.g. Answer and sort the patient inbox" />
@@ -616,12 +638,15 @@ function VaAgreement({
   agreed,
   onAgree,
   error,
+  tools,
 }: {
   loadKey: LoadKey;
   onLoad: (key: LoadKey) => void;
   agreed: boolean;
   onAgree: (agreed: boolean) => void;
   error?: string;
+  /** Time tracker and Attendance for the VA: both off unless the client turns them on. */
+  tools: { timeTracker: boolean; attendance: boolean; setTimeTracker: (on: boolean) => void; setAttendance: (on: boolean) => void };
 }) {
   const load = LOADS.find((l) => l.value === loadKey) ?? LOADS[2];
   return (
@@ -640,6 +665,18 @@ function VaAgreement({
       {!load.hours ? (
         <Section title="Project agreement" desc="Please read it before you request a project.">
           <div className="vra-doc" tabIndex={0} aria-label="Project agreement">
+            <h4>What a project is</h4>
+            <p>
+              A project is a <strong>one-time task</strong> that the VAs already on your team don’t know how to complete, because it
+              needs <strong>specific skills</strong> (for example a website rebuild, video editing or a bookkeeping clean-up). GoCWGL
+              assigns a <strong>different VA with those skills</strong> to do it. For everyday work your current VAs can do, request a
+              task instead.
+            </p>
+            <h4>The project VA is not a daily VA</h4>
+            <p>
+              The VA assigned to a project works on that project only, and their work with you ends when it’s done. They don’t
+              become one of your daily VAs, unless you ask for it and the VA agrees after the project is finished.
+            </p>
             <h4>No maintenance fee</h4>
             <p>
               An open project is one piece of work with a due date, not set weekly hours, so there’s <strong>no monthly maintenance
@@ -676,6 +713,27 @@ function VaAgreement({
       ) : (
           <Section title="VA agreement" desc="Please read it before you request a VA.">
             <ClientVaAgreementTerms hours={load.hours} />
+            {/* Right before accepting: whether the VA uses the time tracker and the attendance tracker (both off unless turned on). */}
+            <div className="vra-tools" role="group" aria-labelledby="vra-tools-title">
+              <div className="vra-tools__head">
+                <strong id="vra-tools-title">Time tracking (optional)</strong>
+                <span>Both are off unless you turn them on. What you turn on is added to your menu under Time &amp; activity, and to your VA’s portal.</span>
+              </div>
+              <ToolRow
+                icon="clock"
+                title="Time tracker"
+                hint="Your VA tracks the time they spend on your work. You see it in VA tracker."
+                checked={tools.timeTracker}
+                onChange={tools.setTimeTracker}
+              />
+              <ToolRow
+                icon="calendarCheck"
+                title="Attendance tracker"
+                hint="Your VA clocks in and out, so you see when they start and whether they’re on time for your schedule."
+                checked={tools.attendance}
+                onChange={tools.setAttendance}
+              />
+            </div>
             <Field error={error}>
               <Checkbox
                 brand

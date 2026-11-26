@@ -5158,3 +5158,56 @@ $tk-cols: minmax(0, 2.4fr) minmax(0, 1.1fr) 140px 130px minmax(150px, auto);
   font-size: 12px;
   text-align: center;
 }
+
+// Request a project: what a project is (complex work that needs a new VA with specific skills).
+.vrf-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(124, 58, 237, 0.25);
+  border-radius: $radius-lg;
+  background: rgba(124, 58, 237, 0.06);
+  color: $ink-soft;
+  font-size: 0.875rem;
+  line-height: 1.5;
+
+  svg {
+    flex: none;
+    margin-top: 2px;
+    color: $violet;
+  }
+
+  strong {
+    color: $ink;
+  }
+}
+
+// VA agreement: the time tracker and attendance tracker toggles, right before the "I've read it" box.
+.vra-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid $line-soft;
+  border-radius: $radius-lg;
+  background: $bg-soft;
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 2px;
+
+    strong {
+      color: $ink;
+      font-size: 14px;
+    }
+
+    span {
+      color: $muted;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+  }
+}

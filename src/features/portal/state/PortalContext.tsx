@@ -38,6 +38,8 @@ export type PortalState = {
   crmView: "" | "builds" | "packages" | "progress" | "revisions" | "features";
   /** VAs page tab. */
   teamView: "requests" | "matched";
+  /** Tasks & projects tab ("" = Tasks when the client has a VA, else Projects). */
+  workView: "" | "tasks" | "projects";
 };
 
 /** Build progress is a tab on the CRM page: links to it open that tab. */
@@ -63,6 +65,8 @@ function initialState(params: URLSearchParams | null): PortalState {
     funnelView: "",
     funnelPackage: "",
     teamView: "requests",
+    // Old links to the separate Projects page open its tab on Tasks & projects.
+    workView: tab === "vaprojects" ? "projects" : "",
   });
 }
 
@@ -107,7 +111,8 @@ export function PortalProvider({ children }: { children: ReactNode }) {
       update,
       readOnly,
       isOwner,
-      goTo: (tab) => update({ tab }),
+      // Links from other pages ("All tasks") open Tasks & projects on its default tab.
+      goTo: (tab) => update(tab === "projects" ? { tab, workView: "" } : { tab }),
       notify: (toast) => update({ toast }),
       openSupport: (draft) => update((s) => ({ tab: "support", support: { ...s.support, view: "requests", ...draft } })),
     }),

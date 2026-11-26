@@ -18,7 +18,6 @@ export type PortalTab =
   | "team"
   | "agreement"
   | "vateam"
-  | "vaprojects"
   | "projects"
   | "ratings"
   | "build"
@@ -30,7 +29,7 @@ export type PortalTab =
   | "account";
 
 /** Old ?tab= links that point at a page with a new name. */
-export const PORTAL_TAB_ALIASES: Record<string, PortalTab> = { va: "team", invoices: "billing", overview: "dashboard", feedback: "ratings", live: "attendance" };
+export const PORTAL_TAB_ALIASES: Record<string, PortalTab> = { va: "team", invoices: "billing", overview: "dashboard", feedback: "ratings", live: "attendance", vaprojects: "projects", tasks: "projects" };
 
 export type FunnelStatus = "live" | "build" | "pay" | "queued" | "quote";
 export type FunnelTypeKey = "lead" | "booking" | "webinar" | "sales" | "membership" | "custom";
@@ -61,8 +60,7 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   team: { title: "Request VA", subtitle: "Ask GoCWGL for a VA, and follow each request until you're matched." },
   agreement: { title: "Agreement", subtitle: "Your GoCWGL VA agreement: the maintenance and training fees, billing and when to pay. Come back anytime to check it." },
   vateam: { title: "Team", subtitle: "The virtual assistants working with your business right now." },
-  vaprojects: { title: "Projects", subtitle: "Your open projects: requested, in progress with a VA, and completed." },
-  projects: { title: "Tasks", subtitle: "Request a task, pick the main VA and any backups, and follow its status." },
+  projects: { title: "Tasks & projects", subtitle: "Tasks go to the VAs already on your team. Projects are one-time work that needs specific skills, done by a different VA." },
   ratings: { title: "Ratings", subtitle: "Rate each VA on your team. Ratings go to GoCWGL and help us support them." },
   build: { title: "Build progress", subtitle: "Follow along as we build your system." },
   support: { title: "Request support", subtitle: "Ask for changes, report a problem, or message your team." },
@@ -71,6 +69,122 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   sops: { title: "SOPs", subtitle: "Your own SOPs for your VAs, and step-by-step guides from GoCWGL." },
   affiliate: { title: "Affiliate", subtitle: "Everyone you referred to GoCWGL, and the bonus for each." },
   account: { title: "Account", subtitle: "Your profile, alerts, password & 2-step verification, and who can see this portal." },
+};
+
+/**
+ * "About this page": what each portal page is for and what the client can do there, shown in a card under the
+ * page title (PageGuide). Plain words for someone opening the page for the first time.
+ */
+/** One side of a side-by-side comparison in "About this page" (Tasks vs Projects). */
+export type PortalGuideCompare = {
+  title: string;
+  icon: IconName;
+  tone: "brand" | "purple";
+  /** Who it's for, in a pill next to the title. */
+  tag: string;
+  /** Same labels, in the same order, on both sides. */
+  rows: Array<{ label: string; value: string }>;
+};
+
+export const PORTAL_PAGE_GUIDE: Record<PortalTab, { purpose: string; points: string[]; compare?: [PortalGuideCompare, PortalGuideCompare] }> = {
+  dashboard: {
+    purpose: "Your starting point. It sums up your VA team, your open tasks, your builds and anything waiting on you.",
+    points: ["See who's working right now and your hours this week", "Jump to open tasks, unpaid invoices and build to-dos", "Click any card to open the page behind it"],
+  },
+  funnels: {
+    purpose: "Everything about the funnels GoCWGL builds for you: the ones you have, new ones to request, and how each build is going.",
+    points: ["Your funnel builds: live funnels and the ones being built", "Request Funnel: compare the packages and send a request", "Build progress: the timeline and the to-dos we need from you"],
+  },
+  crm: {
+    purpose: "Your CRM with GoCWGL, from choosing a package to the changes you want after it launches.",
+    points: ["Request CRM: the packages, and booking a call", "Your CRM builds and their build progress", "After launch: ask for revisions or new features"],
+  },
+  attendance: {
+    purpose: "Checks that your VAs show up on time. It compares each VA's clock-ins and clock-outs to the schedule you set.",
+    points: ["See today's clock-ins, late starts and early finishes", "Look back day by day for each VA", "Set each VA's schedule, work days and grace time"],
+  },
+  assets: {
+    purpose: "A safe place for the logins, links and notes your VAs need to do their work.",
+    points: ["Add a login or link once instead of sending it in chat", "Choose exactly which VAs can see each one", "Update or remove access at any time"],
+  },
+  journal: {
+    purpose: "A day-by-day record of what your VAs did for your business, from their time tracker.",
+    points: ["See the time logged and the tasks each VA completed", "Filter by VA, date, project code or tag", "Use it to check hours before an invoice"],
+  },
+  team: {
+    purpose: "Where you ask GoCWGL for a virtual assistant and follow the hiring until you're matched.",
+    points: ["Request a VA: the role, the hours and what you need", "Follow each request: review, finding candidates, interviews", "Review applicants when GoCWGL shares them"],
+  },
+  agreement: {
+    purpose: "Your VA agreement with GoCWGL, kept here so you can check the terms whenever you need to.",
+    points: ["The maintenance and training fees", "How billing works and when payments are due", "Confirm you've read it, then come back to check it anytime"],
+  },
+  vateam: {
+    purpose: "Meet the virtual assistants working with your business right now.",
+    points: ["See how many VAs are working for you right now", "Open a VA for their profile, tracker and ratings", "Answer rate requests from your VAs"],
+  },
+  projects: {
+    purpose: "Two ways to give work to VAs. Request a task for everyday work your team knows how to do, or a project for one-time work that needs skills they don't have.",
+    points: [],
+    compare: [
+      {
+        title: "Task",
+        icon: "clipboard",
+        tone: "brand",
+        tag: "Your current VAs",
+        rows: [
+          { label: "Who does it", value: "A VA already on your team. You pick the main VA and any backups." },
+          { label: "What it's for", value: "Everyday work your VAs know how to do." },
+          { label: "How often", value: "Ongoing. Request as many as you need." },
+          { label: "Afterwards", value: "Your VA keeps working with you as usual." },
+        ],
+      },
+      {
+        title: "Project",
+        icon: "briefcase",
+        tone: "purple",
+        tag: "A new, skilled VA",
+        rows: [
+          { label: "Who does it", value: "A different VA that GoCWGL assigns for the skills it needs." },
+          { label: "What it's for", value: "One-time work your VAs don't know how to complete." },
+          { label: "How often", value: "Once, with a due date and a payment GoCWGL quotes." },
+          { label: "Afterwards", value: "The VA's work ends. They only become a daily VA if you ask and they agree." },
+        ],
+      },
+    ],
+  },
+  ratings: {
+    purpose: "Tell GoCWGL how each VA is doing. Your ratings help us coach and support them.",
+    points: ["Rate each VA on your team", "Add a comment about what's going well or not", "Rate again whenever things change"],
+  },
+  build: {
+    purpose: "Follow along as GoCWGL builds your system.",
+    points: ["See each phase of the build and where it is", "Find the to-dos we need from you", "Read the updates your team posts"],
+  },
+  support: {
+    purpose: "Your line to the GoCWGL team for anything about your system or your VAs.",
+    points: ["Ask for a change or a new feature", "Report something that's broken", "Message your team and follow each request's status"],
+  },
+  billing: {
+    purpose: "All your invoices in one place: from your VAs and from GoCWGL.",
+    points: ["See what's waiting for payment and what's paid", "Open an invoice for the hours and the breakdown", "Find how to pay each one"],
+  },
+  training: {
+    purpose: "Short lessons from GoCWGL on working well with your VA team.",
+    points: ["Watch or read each lesson at your own pace", "Track which lessons you've finished", "Come back to any lesson later"],
+  },
+  sops: {
+    purpose: "Step-by-step instructions (SOPs) for your VAs, so work is done the same way every time.",
+    points: ["Write your own SOPs and share them with your VAs", "Read GoCWGL's ready-made guides", "Keep them up to date as your process changes"],
+  },
+  affiliate: {
+    purpose: "Earn a bonus for referring other businesses to GoCWGL.",
+    points: ["Share your referral ID", "See every business you referred and when they joined", "Track the bonus you earn for each one"],
+  },
+  account: {
+    purpose: "Your own settings for this portal.",
+    points: ["Update your profile and photo", "Choose your email alerts", "Change your password, set up 2-step verification, and manage who can see this portal"],
+  },
 };
 
 /** One page in the portal menu. `view` opens one tab of that page (CRM, Funnels and VA tracker have tabs). */
@@ -161,7 +275,7 @@ export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
           {
             title: "Your team",
             needsVa: true,
-            items: [page("vateam", "Team", "users"), page("vaprojects", "Projects", "folder"), page("projects", "Tasks", "clipboard"), page("assets", "Assets", "lock")],
+            items: [page("vateam", "Team", "users"), page("projects", "Tasks & projects", "clipboard"), page("assets", "Assets", "lock")],
           },
           {
             title: "Time & activity",
@@ -540,8 +654,11 @@ export const CRM_FAQ = [
 ];
 
 
-/** Pages a client only gets once they have an active VA (Projects, under "Your team", shows before: project requests). */
-export const VA_ONLY_TABS = new Set<PortalTab>(PORTAL_MENU_PAGES.filter((p) => p.needsVa && p.item.tab !== "vaprojects").map((p) => p.item.tab));
+/**
+ * Pages a client only gets once they have an active VA. Tasks & projects, under "Your team", can show before: its
+ * Projects tab follows project requests (the page decides with useWorkTabs).
+ */
+export const VA_ONLY_TABS = new Set<PortalTab>(PORTAL_MENU_PAGES.filter((p) => p.needsVa && p.item.tab !== "projects").map((p) => p.item.tab));
 
 /** Pages switched off for now: not in the menu, and links to them open the dashboard. */
 export const HIDDEN_PORTAL_TABS = new Set<PortalTab>([]);

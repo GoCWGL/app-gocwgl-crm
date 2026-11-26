@@ -1,0 +1,598 @@
+@use "../../abstracts" as *;
+
+// Client portal › Tasks & projects: summary banner, the Tasks / Projects switch, and the lists.
+$work-purple: #7c3aed;
+
+@keyframes work-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(52, 211, 153, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+  }
+}
+
+@keyframes work-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// ------------------------------------------------------------------ Banner
+.work-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: center;
+  padding: 28px 30px;
+  overflow: hidden;
+  border-radius: 22px;
+  background:
+    radial-gradient(90% 140% at 100% 0%, rgba(8, 145, 178, 0.4), transparent 60%),
+    radial-gradient(70% 120% at 0% 110%, rgba(255, 153, 0, 0.22), transparent 60%),
+    $ink;
+  color: $white;
+  box-shadow: 0 18px 40px -22px rgba(11, 20, 36, 0.65);
+
+  // A faint grid, so the dark card has some depth.
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 28px 28px;
+    mask-image: linear-gradient(90deg, transparent, #000 70%);
+    pointer-events: none;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  &__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #9fb0c6;
+    font-family: $font-mono;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+
+  &__pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    animation: work-pulse 2.2s ease-out infinite;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: clamp(26px, 3.4vw, 38px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+  }
+
+  &__text {
+    max-width: 56ch;
+    margin: 0;
+    color: #d5dce7;
+    font-size: 14.5px;
+    line-height: 1.55;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  &__ghost {
+    @include button-reset;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 18px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: $radius-lg;
+    background: rgba(255, 255, 255, 0.06);
+    color: $white;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
+
+    &:hover {
+      border-color: rgba(196, 181, 253, 0.6);
+      background: rgba(124, 58, 237, 0.22);
+    }
+
+    &:focus-visible {
+      outline: 2px solid #c4b5fd;
+      outline-offset: 2px;
+    }
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1px;
+    margin: 0;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px 18px;
+    background: rgba(11, 20, 36, 0.72);
+
+    dt {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #a9b5c7;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    > span {
+      color: #9fb0c6;
+      font-size: 12px;
+    }
+
+    &.is-accent dd {
+      color: #ffc266;
+    }
+  }
+
+  @include down(lg) {
+    grid-template-columns: 1fr;
+    padding: 24px 22px;
+  }
+}
+
+// ------------------------------------------------------------------ Tasks / Projects switch
+.work-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+
+  @include down(md) {
+    grid-template-columns: 1fr;
+  }
+
+  &__card {
+    --accent: #{$orange};
+    --accent-soft: rgba(255, 153, 0, 0.12);
+    --accent-ink: #c2410c;
+    @include button-reset;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 1px solid #e6edf5;
+    border-radius: 18px;
+    background: $white;
+    color: $ink;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04);
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.2s ease,
+      transform 0.2s ease;
+
+    &.is-purple {
+      --accent: #{$work-purple};
+      --accent-soft: rgba(124, 58, 237, 0.1);
+      --accent-ink: #{$work-purple};
+    }
+
+    &:hover:not(.is-on) {
+      border-color: $line-strong;
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px -18px rgba(11, 20, 36, 0.4);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    // The open one: its color on the edge and a soft glow.
+    &.is-on {
+      border-color: var(--accent);
+      background: linear-gradient(120deg, var(--accent-soft), $white 65%);
+      box-shadow:
+        0 0 0 3px var(--accent-soft),
+        0 12px 28px -20px rgba(11, 20, 36, 0.45);
+
+      .work-switch__icon {
+        background: var(--accent);
+        color: $white;
+      }
+    }
+  }
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    transition:
+      background 0.15s ease,
+      color 0.15s ease;
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  &__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 10px;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  &__chip {
+    padding: 2px 8px;
+    border-radius: $radius-pill;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  &__text {
+    color: $muted;
+    font-size: 13.5px;
+    line-height: 1.45;
+  }
+
+  &__count {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: flex-end;
+    color: $muted;
+    font-size: 11.5px;
+    font-weight: 600;
+
+    b {
+      color: $ink;
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+}
+
+// ------------------------------------------------------------------ Lists
+.work-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: work-rise 0.25s ease both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.work {
+  // Project rows get the same colored edge by stage as the task rows.
+  .rq-list {
+    border-color: #e6edf5;
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04), 0 10px 30px -22px rgba(11, 20, 36, 0.25);
+  }
+
+  .rq-row {
+    position: relative;
+    padding: 15px 20px;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 12px auto 12px 0;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: #cbd5e1;
+    }
+
+    &.is-requested::before {
+      background: #38bdf8;
+    }
+
+    &.is-progress::before {
+      background: $work-purple;
+    }
+
+    &.is-done::before {
+      background: $green-500;
+    }
+
+    &:hover .rq-row__chev {
+      color: $work-purple;
+      transform: translateX(2px);
+    }
+
+    &__chev {
+      transition:
+        color 0.15s ease,
+        transform 0.15s ease;
+    }
+  }
+
+  .tk-list {
+    border-color: #e6edf5;
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04), 0 10px 30px -22px rgba(11, 20, 36, 0.25);
+  }
+
+  .empty-state:has(.work-empty) {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+}
+
+// ------------------------------------------------------------------ Empty lists
+.work-empty {
+  --accent: #{$orange};
+  --accent-soft: rgba(255, 153, 0, 0.12);
+  --accent-ink: #c2410c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 24px;
+  border: 1px dashed $line-strong;
+  border-radius: 18px;
+  background: linear-gradient(180deg, $white, $bg-soft);
+  text-align: center;
+
+  &.is-purple {
+    --accent-soft: rgba(124, 58, 237, 0.1);
+    --accent-ink: #{$work-purple};
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: 4px;
+    border-radius: 16px;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+
+  &__title {
+    color: $ink;
+    font-size: 16px;
+    font-weight: 800;
+  }
+
+  &__text {
+    max-width: 52ch;
+    color: $muted;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .btn {
+    margin-top: 8px;
+  }
+}
+
+// ------------------------------------------------------------------ List toolbar (status tabs, search, filters)
+// One slim toolbar instead of two stacked rows: status tabs on the left, search and filters on the right.
+// The accent follows the open list: orange for Tasks, purple for Projects.
+.work-body {
+  --accent: #{$orange};
+  --accent-soft: rgba(255, 153, 0, 0.12);
+  --accent-ring: rgba(255, 153, 0, 0.18);
+
+  &.is-projects {
+    --accent: #{$work-purple};
+    --accent-soft: rgba(124, 58, 237, 0.1);
+    --accent-ring: rgba(124, 58, 237, 0.16);
+  }
+}
+
+.work .tk-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px 8px 8px;
+  overflow: visible;
+  border: 1px solid #e6edf5;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04), 0 8px 24px -20px rgba(11, 20, 36, 0.3);
+  backdrop-filter: blur(8px);
+
+  // Both rows lay out as one: their items join this toolbar.
+  .tk-bar__top,
+  .tk-bar__filters {
+    display: contents;
+  }
+
+  .u-spacer {
+    display: none;
+  }
+
+  .tk-search {
+    margin-left: auto;
+  }
+
+  @include down(lg) {
+    .tk-tabs {
+      flex: 1 1 100%;
+    }
+
+    .tk-search {
+      flex: 1 1 220px;
+      width: auto;
+      margin-left: 0;
+    }
+  }
+
+  // Status tabs: a quiet segmented control; the open one is raised, with its count in the accent.
+  .tk-tabs {
+    gap: 2px;
+    padding: 4px;
+    border-radius: 12px;
+    background: #f1f5f9;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &__tab {
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 9px;
+      color: $muted;
+      font-size: 13.5px;
+      font-weight: 700;
+      white-space: nowrap;
+
+      &:hover:not(.is-on) {
+        background: transparent;
+        color: $ink;
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      &.is-on {
+        background: $white;
+        color: $ink;
+        box-shadow:
+          0 1px 2px rgba(11, 20, 36, 0.08),
+          0 4px 12px -6px rgba(11, 20, 36, 0.22);
+
+        .tk-tabs__count {
+          background: var(--accent);
+          color: $white;
+        }
+      }
+    }
+
+    &__count {
+      min-width: 20px;
+      height: 19px;
+      padding: 0 6px;
+      background: rgba(11, 20, 36, 0.06);
+      color: $muted;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  // Search and filters: soft filled fields that light up in the accent when used.
+  .tk-search,
+  .tk-filter {
+    height: 38px;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    background: #f1f5f9;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:hover {
+      background: #eaf0f6;
+      border-color: transparent;
+    }
+
+    &:focus-within {
+      border-color: var(--accent);
+      background: $white;
+      box-shadow: 0 0 0 3px var(--accent-ring);
+    }
+  }
+
+  .tk-search {
+    width: min(300px, 100%);
+  }
+
+  .tk-filter {
+    &.is-active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+
+      > svg:first-child {
+        color: var(--accent);
+      }
+    }
+  }
+
+  .tk-bar__clear {
+    color: var(--accent);
+
+    &:hover {
+      background: var(--accent-soft);
+    }
+  }
+}

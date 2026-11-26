@@ -31,6 +31,7 @@ import { useHasTraining, useHasVaWork, useShowPackages, useVaTools } from "../li
 import { useCrmLaunched } from "../sections/CrmAfterLaunch";
 import { useCrmTab } from "../sections/CrmSection";
 import { useFunnelTab } from "../sections/FunnelsSection";
+import { useWorkTab, useWorkTabs } from "../sections/WorkSection";
 
 type PortalSidebarProps = {
   /** Business shown in the profile button at the bottom (from the API). */
@@ -78,22 +79,23 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const showVaPackages = useShowPackages("va");
   const vaRequests = useVaRequests().data ?? [];
   const hasVaRequests = vaRequests.some((r) => r.status !== "cancelled");
-  // Projects shows with Request VA, or while the client has project requests to follow.
-  const hasProjects = vaRequests.some((r) => r.engagement === "project");
+  // Tasks & projects: Tasks with an active VA; Projects with Request VA, or while there are project requests to follow.
+  const work = useWorkTabs();
+  const workTab = useWorkTab();
   // Time & activity (VA tracker and Attendance) is hidden until a VA request turns on the time tracker or Attendance.
   const tools = useVaTools();
   // Revisions and New features (CRM menu) open once a CRM build is launched.
   const crmLaunched = useCrmLaunched();
   const shown = (i: PortalMenuItem, needsVa?: boolean) =>
     !HIDDEN_PORTAL_TABS.has(i.tab) &&
-    // Projects sits under "Your team" but also shows before the first VA, so a client can follow a project request.
-    (!(needsVa || i.needsVa) || vaWork.has || i.tab === "vaprojects") &&
+    // Tasks & projects sits under "Your team" but also shows before the first VA, so a client can follow a project request.
+    (!(needsVa || i.needsVa) || vaWork.has || i.tab === "projects") &&
     (i.tab !== "training" || training.has) &&
     (i.tab !== "funnels" || showFunnelPackages) &&
     ((i.view !== "revisions" && i.view !== "features") || crmLaunched) &&
     (i.view !== "packages" || i.tab !== "crm" || showCrmPackages) &&
     (i.tab !== "team" || showVaPackages || hasVaRequests) &&
-    (i.tab !== "vaprojects" || showVaPackages || hasProjects) &&
+    (i.tab !== "projects" || work.any) &&
     (i.tab !== "journal" || tools.timeTracker) &&
     (i.tab !== "attendance" || tools.attendance);
   const groups = PORTAL_MENU.map((g) => ({
@@ -109,10 +111,15 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const flyouts = groups.flatMap((g) => g.items.filter(isPortalFlyout));
 
   // VAs, Live work, VA tracker, Tasks, Training, SOPs and Request support come from the server (see menus API).
-  const server = useMenuCounts("portal", tab);
+  // Projects' updates are marked seen when its tab is open (the server still calls them "vaprojects").
+  const server = useMenuCounts("portal", tab === "projects" && workTab === "projects" ? "vaprojects" : tab);
   const badges: Partial<Record<string, Badge>> = {
     ...Object.fromEntries(Object.entries(server).filter(([, n]) => n > 0).map(([t, n]) => [t, { text: String(n), tone: (t === "live" ? "green" : "brand") as Tone }])),
     // Open to-dos on a build: they're on the CRM page's Build progress tab.
+    // Tasks & projects: tasks waiting for review plus project updates.
+    ...((server.projects ?? 0) + (server.vaprojects ?? 0) > 0 && {
+      projects: { text: String((server.projects ?? 0) + (server.vaprojects ?? 0)), tone: "brand" },
+    }),
     ...(openTodos && { "crm-progress": { text: String(openTodos), tone: "brand" } }),
     ...(openInvoices && { billing: { text: String(openInvoices), tone: "red" } }),
   };

@@ -43,10 +43,12 @@ export function useShowPackages(kind: "crm" | "funnels" | "va"): boolean {
  * Whether the client wants the time tracker (VA tracker) and Attendance: on when any of their VA requests (not
  * cancelled, declined or inactive) turned it on. Off by default, so the Time & activity menu stays hidden until then.
  */
-export function useVaTools(): { timeTracker: boolean; attendance: boolean } {
-  const requests = (useVaRequests().data ?? []).filter((r) => !["cancelled", "declined", "inactive"].includes(r.status));
+export function useVaTools(): { timeTracker: boolean; attendance: boolean; known: boolean } {
+  const query = useVaRequests();
+  const requests = (query.data ?? []).filter((r) => !["cancelled", "declined", "inactive"].includes(r.status));
   return {
     timeTracker: requests.some((r) => r.wantsTimeTracker === true),
     attendance: requests.some((r) => r.wantsAttendance === true),
+    known: query.isSuccess,
   };
 }

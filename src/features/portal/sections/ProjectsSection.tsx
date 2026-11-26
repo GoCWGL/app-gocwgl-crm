@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { Avatar, Button, ConfirmDialog, Field, FormError, Icon, Input, LoadState, Modal, SegmentedControl, StatGrid, Textarea } from "@/components/ui";
+import { Avatar, Button, ConfirmDialog, Field, FormError, Icon, Input, LoadState, Modal, SegmentedControl, Textarea } from "@/components/ui";
 import { avatarTone, toneClass } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { ClientProjectOut, TeamVa } from "@/utils/api/models";
@@ -13,18 +13,21 @@ import { assignmentOf, VaAssign, type VaAssignment } from "../components/VaPicke
 import { LinkInputs } from "../components/TaskLinks";
 import { TaskConversation, UnreadMark } from "../components/TaskConversation";
 import { TaskBar, TaskFilter, TaskSearch, TaskTabs, taskText } from "../components/TaskFilters";
+import { WorkEmpty } from "../components/WorkEmpty";
 import { isTaskOverdue, TaskSheet, TaskStatus } from "../components/TaskSheet";
 import { usePortal } from "../state/PortalContext";
 
 type View = "open" | "done" | "cancelled";
 
-/** Client portal › My VA team › Tasks: request a task, pick the VAs for it (one or several), and follow its status. */
-export function ProjectsSection() {
+/**
+ * Client portal › Tasks & projects › Tasks: request a task, pick the VAs for it (one or several), and follow its status.
+ * The request form opens from the page banner (Tasks & projects owns `requesting`) or from an empty list.
+ */
+export function ProjectsSection({ requesting, onRequest }: { requesting: boolean; onRequest: (open: boolean) => void }) {
   const { readOnly } = usePortal();
   const projects = useProjects();
   const team = useVaTeam();
   const [view, setView] = useState<View>("open");
-  const [requesting, setRequesting] = useState(false);
   const [openId, setOpenId] = useState("");
   const [search, setSearch] = useState("");
   const [vaFilter, setVaFilter] = useState("");
@@ -50,14 +53,6 @@ export function ProjectsSection() {
 
   return (
     <div className="page-stack">
-      <StatGrid
-        items={[
-          { label: "Requested", value: String(everything.filter((p) => p.status === "requested").length), tone: "sky" },
-          { label: "In progress", value: String(everything.filter((p) => p.status === "in_progress" || p.status === "review").length), tone: "brand" },
-          { label: "Done", value: String(everything.filter((p) => p.status === "done").length), tone: "green" },
-        ]}
-      />
-
       <TaskBar
         top={
           <>
@@ -72,11 +67,6 @@ export function ProjectsSection() {
             />
             <span className="u-spacer" />
             <TaskSearch value={search} onChange={setSearch} placeholder="Search tasks or details" />
-            {!readOnly && (
-              <Button variant="primary" onClick={() => setRequesting(true)}>
-                <Icon name="plus" size={14} /> Request a task
-              </Button>
-            )}
           </>
         }
         filters={
@@ -125,13 +115,20 @@ export function ProjectsSection() {
         loadingText="Loading your tasks…"
         isEmpty={!shown.length}
         empty={
-          q || vaFilter
-            ? "No tasks match these filters."
-            : view === "open"
-            ? "No open tasks. Request one and pick the VA you’d like on it, and GoCWGL takes it from there."
-            : view === "done"
-              ? "No finished tasks yet."
-              : "No cancelled tasks."
+          q || vaFilter ? (
+            <WorkEmpty icon="search" title="No tasks match these filters" text="Try another search or VA." />
+          ) : view === "open" ? (
+            <WorkEmpty
+              icon="clipboard"
+              title="No open tasks"
+              text="Request a task, pick the VA you’d like on it, and follow it here until it’s done."
+              action={!readOnly ? { label: "Request a task", onClick: () => onRequest(true) } : undefined}
+            />
+          ) : view === "done" ? (
+            <WorkEmpty icon="circleCheck" title="No finished tasks yet" text="Tasks your VAs complete show up here." />
+          ) : (
+            <WorkEmpty icon="close" title="No cancelled tasks" text="Requests you cancel show up here." />
+          )
         }
       >
         <div className="card tk-list" role="table" aria-label="Tasks">
@@ -150,7 +147,7 @@ export function ProjectsSection() {
 
       {opened && <ProjectDetails p={opened} team={team.data ?? []} onClose={() => setOpenId("")} />}
 
-      {requesting && <RequestModal team={team.data ?? []} onClose={() => setRequesting(false)} />}
+      {requesting && <RequestModal team={team.data ?? []} onClose={() => onRequest(false)} />}
     </div>
   );
 }

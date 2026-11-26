@@ -1,0 +1,269 @@
+@use "../../abstracts" as *;
+
+// "About this page" under each portal page title (PageGuide). On Tasks & projects it compares the two side by side.
+.page-guide {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 18px 52px 18px 18px;
+  border: 1px solid #e3ecf4;
+  border-radius: 20px;
+  background:
+    radial-gradient(60% 120% at 100% 0%, rgba(34, 211, 238, 0.1), transparent 60%),
+    $white;
+  box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04), 0 10px 28px -22px rgba(11, 20, 36, 0.3);
+
+  &--compare {
+    padding: 20px;
+  }
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  &--compare &__head {
+    padding-right: 36px;
+  }
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ecfeff, #e0f2fe);
+    color: $cyan-700;
+    box-shadow: inset 0 0 0 1px rgba(8, 145, 178, 0.15);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  &__kicker {
+    color: $cyan-700;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  }
+
+  &__purpose {
+    max-width: 90ch;
+    margin: 0;
+    color: $ink;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  &__points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+    color: $muted;
+    font-size: 13.5px;
+
+    li {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 6px;
+
+      svg {
+        flex: none;
+        margin-top: 3px;
+        color: $cyan-700;
+      }
+    }
+  }
+
+  &__close {
+    @include button-reset;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    color: $muted-light;
+    cursor: pointer;
+
+    &:hover {
+      background: $bg-soft;
+      color: $ink;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $cyan-700;
+      outline-offset: 1px;
+    }
+  }
+}
+
+// ------------------------------------------------------------------ Task vs Project
+.guide-compare {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+
+  // "VS" in a small disc where the two cards meet.
+  &__vs {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 3px solid $white;
+    border-radius: 50%;
+    background: $ink;
+    color: $white;
+    font-size: 10.5px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 6px 14px -6px rgba(11, 20, 36, 0.5);
+  }
+
+  &__card {
+    --accent: #{$orange};
+    --accent-soft: rgba(255, 153, 0, 0.12);
+    --accent-ink: #c2410c;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px 18px 18px;
+    border: 1px solid #e6edf5;
+    border-top: 3px solid var(--accent);
+    border-radius: 16px;
+    background: linear-gradient(180deg, var(--accent-soft), $white 70px);
+
+    &.is-purple {
+      --accent: #7c3aed;
+      --accent-soft: rgba(124, 58, 237, 0.09);
+      --accent-ink: #7c3aed;
+    }
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 10px;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+    background: var(--accent);
+    color: $white;
+  }
+
+  &__title {
+    color: $ink;
+    font-size: 17px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  &__tag {
+    margin-left: auto;
+    padding: 3px 10px;
+    border-radius: $radius-pill;
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+
+    > div {
+      display: grid;
+      grid-template-columns: 112px minmax(0, 1fr);
+      gap: 12px;
+      padding: 9px 0;
+      border-top: 1px dashed #e3eaf2;
+
+      &:first-child {
+        border-top: 0;
+        padding-top: 0;
+      }
+    }
+
+    dt {
+      color: $muted;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.6;
+    }
+
+    dd {
+      margin: 0;
+      color: $ink-soft;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  }
+
+  @include down(md) {
+    grid-template-columns: 1fr;
+
+    &__vs {
+      position: static;
+      justify-self: center;
+      margin: -6px 0;
+      transform: none;
+    }
+
+    &__rows > div {
+      grid-template-columns: 1fr;
+      gap: 2px;
+    }
+  }
+}
+
+.page-guide-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  border: 1px solid $line;
+  border-radius: $radius-pill;
+  background: $white;
+  color: $muted;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    border-color: $line-strong;
+    color: $ink;
+  }
+}

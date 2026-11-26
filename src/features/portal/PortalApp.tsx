@@ -6,7 +6,7 @@ import { useEffect, type ComponentType, type ReactNode } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button, Toast } from "@/components/ui";
 import { HIDDEN_PORTAL_TABS, PORTAL_GROUP_OF, PORTAL_PAGES, VA_ONLY_TABS, type PortalTab } from "@/data/portal";
-import { useFunnelMenu, useHasTraining, useHasVaWork } from "./lib/vaAccess";
+import { useFunnelMenu, useHasTraining, useHasVaWork, useVaTools } from "./lib/vaAccess";
 import { RequireClient, SessionSplash } from "@/utils/auth/guards";
 import { setViewAs, useSession } from "@/utils/auth/session";
 import { useContactsPage } from "@/utils/hooks/useContacts";
@@ -28,13 +28,13 @@ import { DashboardSection } from "./sections/DashboardSection";
 import { FunnelsSection } from "./sections/FunnelsSection";
 import { InvoicesSection } from "./sections/InvoicesSection";
 import { ClientSopsSection, ClientTrainingSection } from "./sections/LearnSections";
-import { ProjectsSection } from "./sections/ProjectsSection";
 import { RatingsSection } from "./sections/RatingsSection";
 import { SupportSection } from "./sections/SupportSection";
 import { TeamSection } from "./sections/TeamSection";
-import { VaProjectsSection } from "./sections/VaProjectsSection";
 import { VaTeamSection } from "./sections/VaTeamSection";
 import { WorkJournalSection } from "./sections/WorkJournalSection";
+import { useWorkTabs, WorkSection } from "./sections/WorkSection";
+import { PageGuide } from "./components/PageGuide";
 import { StaffClientBar } from "./components/StaffClientBar";
 import { PortalProvider, usePortal } from "./state/PortalContext";
 
@@ -48,8 +48,7 @@ const SECTIONS: Record<PortalTab, ComponentType> = {
   team: TeamSection,
   agreement: AgreementSection,
   vateam: VaTeamSection,
-  vaprojects: VaProjectsSection,
-  projects: ProjectsSection,
+  projects: WorkSection,
   ratings: RatingsSection,
   build: BuildSection,
   support: SupportSection,
@@ -150,11 +149,18 @@ function PortalLayout() {
   const training = useHasTraining();
   // Funnels opens once the team turns on the Funnel menu for this client.
   const funnelMenu = useFunnelMenu();
+  // Tasks & projects shows while the client has either tab (Projects can come before the first VA).
+  const work = useWorkTabs();
+  // VA tracker and Attendance open only once a VA request turned on the time tracker or the attendance tracker.
+  const tools = useVaTools();
   const locked =
     HIDDEN_PORTAL_TABS.has(state.tab) ||
     (vaWork.known && !vaWork.has && VA_ONLY_TABS.has(state.tab)) ||
     (state.tab === "training" && training.known && !training.has) ||
-    (state.tab === "funnels" && funnelMenu.known && !funnelMenu.has);
+    (state.tab === "funnels" && funnelMenu.known && !funnelMenu.has) ||
+    (state.tab === "projects" && work.known && !work.any) ||
+    (state.tab === "journal" && tools.known && !tools.timeTracker) ||
+    (state.tab === "attendance" && tools.known && !tools.attendance);
   useEffect(() => {
     if (locked) update({ tab: "dashboard" });
   }, [locked, update]);
@@ -195,6 +201,7 @@ function PortalLayout() {
           )
         }
       />
+      <PageGuide key={`guide-${tab}`} tab={tab} />
       <Toast message={state.toast} onClose={() => update({ toast: "" })} />
       <div className="page-enter" key={tab}>
         <Section />

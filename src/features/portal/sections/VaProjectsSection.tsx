@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Avatar, Badge, Button, Icon, LoadState, StatGrid } from "@/components/ui";
+import { Avatar, Badge, Icon, LoadState } from "@/components/ui";
 import { avatarTone } from "@/lib/tones";
 import type { VaRequestOut } from "@/utils/api/models";
 import { formatLong, formatShort } from "@/utils/format/dates";
@@ -9,8 +9,7 @@ import { formatCents } from "@/utils/format/money";
 import { useVaRequests } from "@/utils/hooks/useClientWork";
 import { TaskBar, TaskFilter, TaskSearch, TaskTabs } from "../components/TaskFilters";
 import { VaRequestModal } from "../components/VaRequestModal";
-import { useShowPackages } from "../lib/vaAccess";
-import { usePortal } from "../state/PortalContext";
+import { WorkEmpty } from "../components/WorkEmpty";
 import { REQUEST_STATUS, RequestPopup } from "./TeamSection";
 
 /** Finished or stopped: the VA on it is inactive for the client (name only). */
@@ -25,11 +24,8 @@ const REQUESTED = new Set<VaRequestOut["status"]>(["new", "reviewing", "approved
  * Client portal › VA › Projects: every open project the client requested, by where it is: requested (on its way to a
  * VA), in progress (a VA is on it), completed (ended after a VA worked on it), and cancelled or declined.
  */
-export function VaProjectsSection() {
-  const { readOnly } = usePortal();
-  const canRequest = useShowPackages("va") && !readOnly;
+export function VaProjectsSection({ asking, onAsk, canRequest }: { asking: boolean; onAsk: (open: boolean) => void; canRequest: boolean }) {
   const requests = useVaRequests();
-  const [asking, setAsking] = useState(false);
   // The project open in its pop-up (kept here so a refresh of the list doesn't close it).
   const [openId, setOpenId] = useState("");
   const projects = (requests.data ?? []).filter((r) => r.engagement === "project");
@@ -61,14 +57,6 @@ export function VaProjectsSection() {
 
   return (
     <div className="page-stack">
-      <StatGrid
-        items={[
-          { label: "Requested", value: String(requested.length), tone: "sky" },
-          { label: "In progress", value: String(current.length), tone: "brand" },
-          { label: "Completed", value: String(done.length), tone: "green" },
-        ]}
-      />
-
       <TaskBar
         top={
           <>
@@ -84,11 +72,6 @@ export function VaProjectsSection() {
             />
             <span className="u-spacer" />
             <TaskSearch value={search} onChange={setSearch} placeholder="Search projects or details" />
-            {canRequest && (
-              <Button variant="primary" onClick={() => setAsking(true)}>
-                <Icon name="plus" size={14} /> Request a project
-              </Button>
-            )}
           </>
         }
         filters={
@@ -133,22 +116,32 @@ export function VaProjectsSection() {
         loadingText="Loading your projects…"
         isEmpty={!shown.length}
         empty={
-          q || vaFilter
-            ? "No projects match these filters."
-            : tab === "requested"
-              ? "No projects waiting. Request one and GoCWGL reviews it, quotes the payment and assigns a VA."
-              : tab === "open"
-                ? "No projects in progress. A requested project moves here once a VA is working on it."
-                : tab === "done"
-                  ? "No completed projects yet."
-                  : "No cancelled or declined projects."
+          q || vaFilter ? (
+            <WorkEmpty icon="search" title="No projects match these filters" text="Try another search or VA." />
+          ) : tab === "requested" || tab === "open" ? (
+            <WorkEmpty
+              icon="briefcase"
+              tone="purple"
+              title={tab === "requested" ? "No projects waiting" : "No projects in progress"}
+              text={
+                tab === "requested"
+                  ? "Need one-time work your VAs can’t do? Request a project and GoCWGL reviews it, quotes the payment and assigns a VA with the right skills."
+                  : "A requested project moves here once its VA is working on it."
+              }
+              action={canRequest ? { label: "Request a project", onClick: () => onAsk(true) } : undefined}
+            />
+          ) : tab === "done" ? (
+            <WorkEmpty icon="circleCheck" title="No completed projects yet" text="Finished projects show up here, with the VA who did them." />
+          ) : (
+            <WorkEmpty icon="close" title="No cancelled or declined projects" text="Projects you cancel, or GoCWGL declines, show up here." />
+          )
         }
       >
         <ProjectList projects={shown} onOpen={setOpenId} />
       </LoadState>
 
       {open && <RequestPopup r={open} onClose={() => setOpenId("")} />}
-      {asking && <VaRequestModal project onClose={() => setAsking(false)} onSent={() => setView("requested")} />}
+      {asking && <VaRequestModal project onClose={() => onAsk(false)} onSent={() => setView("requested")} />}
     </div>
   );
 }
@@ -166,11 +159,13 @@ function ProjectList({ projects, onOpen }: { projects: VaRequestOut[]; onOpen: (
             : (r.status === "inactive" || r.status === "closed") && r.matchedVa
               ? { label: "Completed", tone: REQUEST_STATUS.inactive.tone }
               : REQUEST_STATUS[r.status];
+        // Its stage, for the colored edge (like the task rows).
+        const stage = REQUESTED.has(r.status) ? "requested" : r.status === "matched" ? "progress" : (r.status === "inactive" || r.status === "closed") && r.matchedVa ? "done" : "stopped";
         // The VA on it, or (still requested) the one the client asked for.
         const va = r.matchedVa ?? (REQUESTED.has(r.status) ? r.requestedVa : null);
         return (
           <li key={r.id}>
-            <button type="button" className={`rq-row${ended ? " is-ended" : ""}`} onClick={() => onOpen(r.id)}>
+            <button type="button" className={`rq-row is-${stage}${ended ? " is-ended" : ""}`} onClick={() => onOpen(r.id)}>
               <span className={`rq-row__icon tone-${st.tone}`} aria-hidden="true">
                 <Icon name="folder" size={16} />
               </span>
