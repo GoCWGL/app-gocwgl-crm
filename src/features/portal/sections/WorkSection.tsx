@@ -7,8 +7,7 @@ import { useProjects, useVaRequests } from "@/utils/hooks/useClientWork";
 import { isOpenProject } from "../lib/projects";
 import { useHasVaWork, useShowPackages } from "../lib/vaAccess";
 import { usePortal } from "../state/PortalContext";
-import { ProjectsSection } from "./ProjectsSection";
-import { VaProjectsSection } from "./VaProjectsSection";
+import { WorkBoard } from "./WorkBoard";
 
 type WorkTab = "tasks" | "projects";
 
@@ -40,12 +39,11 @@ export function useWorkTab(): WorkTab {
 /**
  * Client portal › VA › Tasks & projects. A task goes to a VA already on the team; a project is a one-time task the
  * team can't do, done by a different VA with the skills (not a daily VA unless the client asks and they agree).
- * A summary banner with the request buttons, a switch between the two, then the list.
+ * A slim summary with the request buttons, then both on one board.
  */
 export function WorkSection() {
-  const { update, readOnly } = usePortal();
+  const { readOnly } = usePortal();
   const tabs = useWorkTabs();
-  const tab = useWorkTab();
   // The request forms open from the banner, the list bar or an empty list.
   const [asking, setAsking] = useState<WorkTab | null>(null);
 
@@ -55,147 +53,83 @@ export function WorkSection() {
   const toReview = tasks.filter((t) => t.status === "review").length;
   const projectsRequested = projects.filter((r) => REQUESTED_PROJECT.has(r.status)).length;
   const projectsActive = projects.filter((r) => r.status === "matched").length;
-  const projectsOpen = projectsRequested + projectsActive;
   const finished =
     tasks.filter((t) => t.status === "done").length + projects.filter((r) => (r.status === "inactive" || r.status === "closed") && r.matchedVa).length;
 
   const canTask = tabs.tasks && !readOnly;
   const canProject = tabs.canRequestProject && !readOnly;
-  const ask = (t: WorkTab) => {
-    update({ workView: t });
-    setAsking(t);
-  };
-  const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
-  const headline =
-    tabs.tasks && openTasks
-      ? `${plural(openTasks, "open task")}${projectsOpen ? ` · ${plural(projectsOpen, "project")}` : ""}`
-      : projectsOpen
-        ? `${plural(projectsOpen, "project")} underway`
-        : "You’re all caught up";
+  const ask = (t: WorkTab) => setAsking(t);
 
   return (
     <div className="page-stack work">
-      <section className="work-hero" aria-label="Your VA work">
-        <div className="work-hero__main">
-          <span className="work-hero__kicker">
-            <span className="work-hero__pulse" aria-hidden="true" />
-            YOUR VA WORK
-          </span>
-          <h2 className="work-hero__title">{headline}</h2>
-          <p className="work-hero__text">
-            {tabs.tasks
-              ? "Give everyday work to the VAs on your team as tasks. For a one-time job they can’t do, request a project and GoCWGL brings in a VA with the right skills."
-              : "Request a project for one-time work that needs specific skills. GoCWGL reviews it, quotes the payment and assigns a VA who has them."}
-          </p>
-          {(canTask || canProject) && (
-            <div className="work-hero__actions">
-              {canTask && (
-                <Button variant="primary" size="lg" onClick={() => ask("tasks")}>
-                  <Icon name="plus" size={15} strokeWidth={2.4} /> Request a task
-                </Button>
-              )}
-              {canProject && (
-                <button type="button" className="work-hero__ghost" onClick={() => ask("projects")}>
-                  <Icon name="briefcase" size={15} /> Request a project
-                </button>
-              )}
-            </div>
+      <section className="work-summary" aria-label="Your VA work at a glance">
+        <dl className="work-summary__stats">
+          {tabs.tasks && <SummaryStat icon="clipboard" tone="brand" label="Open tasks" value={openTasks} hint="With your VAs" />}
+          {tabs.tasks && (
+            <SummaryStat
+              icon="eye"
+              tone="sky"
+              label="Waiting on you"
+              value={toReview}
+              hint={toReview ? "Ready to check" : "Nothing to check"}
+              accent={toReview > 0}
+            />
           )}
-        </div>
-        <dl className="work-hero__stats">
-          {tabs.tasks && <HeroStat icon="clipboard" label="Open tasks" value={openTasks} />}
-          {tabs.tasks && <HeroStat icon="eye" label="Ready for your review" value={toReview} accent={toReview > 0} />}
-          <HeroStat icon="folder" label="Projects in progress" value={projectsActive} hint={projectsRequested ? `+ ${projectsRequested} requested` : undefined} />
-          <HeroStat icon="circleCheck" label="Completed" value={finished} />
+          <SummaryStat
+            icon="briefcase"
+            tone="purple"
+            label="Projects underway"
+            value={projectsActive}
+            hint={projectsRequested ? `+${projectsRequested} finding a VA` : "One-time work"}
+          />
+          <SummaryStat icon="circleCheck" tone="green" label="Completed" value={finished} hint="All time" />
         </dl>
+        {(canTask || canProject) && (
+          <div className="work-summary__actions">
+            {canTask && (
+              <Button variant="primary" onClick={() => ask("tasks")}>
+                <Icon name="plus" size={15} strokeWidth={2.4} /> New task
+              </Button>
+            )}
+            {canProject && (
+              <button type="button" className="work-summary__project" onClick={() => ask("projects")}>
+                <Icon name="briefcase" size={15} /> New project
+              </button>
+            )}
+          </div>
+        )}
       </section>
 
-      {tabs.tasks && tabs.projects && (
-        <div className="work-switch" role="tablist" aria-label="Tasks or projects">
-          <SwitchCard
-            on={tab === "tasks"}
-            onClick={() => update({ workView: "tasks" })}
-            icon="clipboard"
-            title="Tasks"
-            text="Everyday work for the VAs already on your team."
-            chip="Your current VAs"
-            count={openTasks}
-            countLabel="open"
-          />
-          <SwitchCard
-            on={tab === "projects"}
-            onClick={() => update({ workView: "projects" })}
-            icon="briefcase"
-            title="Projects"
-            text="One-time work that needs specific skills, done by a different VA."
-            chip="A new, skilled VA"
-            tone="purple"
-            count={projectsOpen}
-            countLabel="active"
-          />
-        </div>
-      )}
-
-      <div className={`work-body is-${tab}`} key={tab}>
-        {tab === "projects" ? (
-          <VaProjectsSection asking={asking === "projects"} onAsk={(v) => setAsking(v ? "projects" : null)} canRequest={canProject} />
-        ) : (
-          <ProjectsSection requesting={asking === "tasks"} onRequest={(v) => setAsking(v ? "tasks" : null)} />
-        )}
-      </div>
+      <WorkBoard asking={asking} onAsk={setAsking} hasTasks={tabs.tasks} canRequestProject={canProject} />
     </div>
   );
 }
 
-function HeroStat({ icon, label, value, hint, accent }: { icon: IconName; label: string; value: number; hint?: string; accent?: boolean }) {
-  return (
-    <div className={cn("work-hero__stat", accent && "is-accent")}>
-      <dt>
-        <Icon name={icon} size={14} /> {label}
-      </dt>
-      <dd>{value}</dd>
-      {hint && <span>{hint}</span>}
-    </div>
-  );
-}
-
-function SwitchCard({
-  on,
-  onClick,
+function SummaryStat({
   icon,
-  title,
-  text,
-  chip,
-  tone = "brand",
-  count,
-  countLabel,
+  tone,
+  label,
+  value,
+  hint,
+  accent,
 }: {
-  on: boolean;
-  onClick: () => void;
   icon: IconName;
-  title: string;
-  text: string;
-  chip: string;
-  tone?: "brand" | "purple";
-  count: number;
-  countLabel: string;
+  tone: "brand" | "sky" | "purple" | "green";
+  label: string;
+  value: number;
+  hint: string;
+  accent?: boolean;
 }) {
   return (
-    <button type="button" role="tab" aria-selected={on} className={cn("work-switch__card", `is-${tone}`, on && "is-on")} onClick={onClick}>
-      <span className="work-switch__icon" aria-hidden="true">
-        <Icon name={icon} size={20} strokeWidth={1.9} />
+    <div className={cn("work-stat", `is-${tone}`, accent && "is-accent")}>
+      <span className="work-stat__icon" aria-hidden="true">
+        <Icon name={icon} size={16} strokeWidth={2} />
       </span>
-      <span className="work-switch__body">
-        <span className="work-switch__title">
-          {title}
-          <span className="work-switch__chip">{chip}</span>
-        </span>
-        <span className="work-switch__text">{text}</span>
+      <span className="work-stat__text">
+        <dt>{label}</dt>
+        <dd>{value}</dd>
+        <span className="work-stat__hint">{hint}</span>
       </span>
-      <span className="work-switch__count">
-        <b>{count}</b>
-        {countLabel}
-      </span>
-    </button>
+    </div>
   );
 }

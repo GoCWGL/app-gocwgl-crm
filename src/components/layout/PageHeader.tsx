@@ -10,9 +10,11 @@ type PageHeaderProps = {
   /** Color of the status dot before the kicker. */
   dotTone?: Tone;
   actions?: ReactNode;
+  /** Something small right after the title, e.g. a "What's this page for?" button. */
+  titleAside?: ReactNode;
 };
 
-export function PageHeader({ kicker, title, subtitle, dotTone = "green", actions }: PageHeaderProps) {
+export function PageHeader({ kicker, title, subtitle, dotTone = "green", actions, titleAside }: PageHeaderProps) {
   return (
     <header className="page-header">
       {/* Keyed so the titles animate in again on every page. */}
@@ -21,7 +23,14 @@ export function PageHeader({ kicker, title, subtitle, dotTone = "green", actions
           <span className={`page-header__dot ${toneClass(dotTone)}`} aria-hidden="true" />
           {kicker}
         </span>
-        <h1 className="page-title">{title}</h1>
+        {titleAside ? (
+          <div className="page-header__title-row">
+            <h1 className="page-title">{title}</h1>
+            {titleAside}
+          </div>
+        ) : (
+          <h1 className="page-title">{title}</h1>
+        )}
         <p className="page-header__subtitle">{subtitle}</p>
       </div>
       <div className="page-header__actions">

@@ -1,25 +1,25 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { Button, ConfirmDialog, Icon, Input, LoadState, Modal, StatGrid, type IconName } from "@/components/ui";
-import { TaskConversation, UnreadMark } from "@/features/portal/components/TaskConversation";
-import { TaskBar, TaskFilter, TaskSearch, TaskTabs, taskText } from "@/features/portal/components/TaskFilters";
+import { Button, ConfirmDialog, GripIcon, Icon, Input, LoadState, Modal, StatGrid, type IconName } from "@/components/ui";
+import { TaskBoard, type BoardCard } from "@/features/portal/components/TaskBoard";
+import { TaskConversation } from "@/features/portal/components/TaskConversation";
+import { TaskBar, TaskFilter, TaskSearch, taskText } from "@/features/portal/components/TaskFilters";
 import { TaskSheet, TaskStatus } from "@/features/portal/components/TaskSheet";
-import { isOpenProject, PRIORITY, PROJECT_STATUS, vaNames } from "@/features/portal/lib/projects";
-import { toneClass } from "@/lib/tones";
+import { isOpenProject, vaNames, type ProjectStatus } from "@/features/portal/lib/projects";
 import { cn } from "@/lib/utils";
-import type { VaTaskOut } from "@/utils/api/models";
+import type { VaProjectOut, VaTaskOut, VaTaskUpdate } from "@/utils/api/models";
+import { errorMessage } from "@/utils/errors";
 import { formatShort } from "@/utils/format/dates";
 import { useSession } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
-import { useMarkVaTaskRead, usePostVaTaskMessage, useUpdateVaTask, useVaTaskMessages, useVaTasks } from "@/utils/hooks/useVaPortal";
+import { useMarkVaTaskRead, usePlaceVaProject, usePostVaTaskMessage, useUpdateVaTask, useVaProjects, useVaTaskMessages, useVaTasks } from "@/utils/hooks/useVaPortal";
 import { useVaAccess } from "../lib/access";
 import { useVa } from "../state/VaContext";
 
-type View = "open" | "done" | "all";
 type RangeKey = "any" | "week" | "month" | "next30" | "custom";
 type DateField = "created" | "due";
-type Sort = "due" | "newest";
+type Sort = "board" | "due" | "newest";
 
 const RANGES: Array<{ value: RangeKey; label: string }> = [
   { value: "any", label: "Any date" },
@@ -46,20 +46,43 @@ function presetRange(key: RangeKey): [string, string] | null {
   return null;
 }
 
-const isOverdue = (t: VaTaskOut) => !!t.dueDate && isOpenProject(t) && t.dueDate < today();
+const isOverdue = (t: BoardCard) => !!t.dueDate && t.column !== "done" && t.column !== "cancelled" && t.dueDate < today();
+
+/** The board's columns, in order, with what each means from the VA's side. */
+const COLUMNS: Array<{ status: ProjectStatus; hint: string }> = [
+  { status: "requested", hint: "Not started yet" },
+  { status: "in_progress", hint: "You’re working on it" },
+  { status: "review", hint: "Waiting for the client to check" },
+  { status: "done", hint: "Finished" },
+];
+const CANCELLED = { status: "cancelled" as const, hint: "Cancelled by the client" };
 
 /** Lets a Start task button anywhere on the page show the "timer started" banner. */
 const TimerNotice = createContext<(message: string) => void>(() => undefined);
 const useTimerNotice = () => useContext(TimerNotice);
 
-/** VA portal › Tasks: client tasks assigned to this VA (the client's "Tasks" requests), moved along by the VA. */
+/** A task or a project on the VA's board, with what the filters and sort need. */
+type Item = BoardCard & { contactId: string; clientName: string; createdAt: string; text: string };
+
+/** Where a project sits: in progress while they're on it, then done (or cancelled). GoCWGL moves it. */
+const projectColumn = (p: VaProjectOut): ProjectStatus =>
+  p.status === "inactive" || p.status === "closed" ? "done" : p.status === "cancelled" || p.status === "declined" ? "cancelled" : "in_progress";
+
+/**
+ * VA portal › Tasks: client tasks assigned to this VA (the client's "Tasks" requests), moved along by the VA, and the
+ * open projects GoCWGL matched them to, together on one board.
+ */
 export function TasksSection() {
   const { ready, readOnly } = useVaAccess();
   const query = useVaTasks(ready);
-  const [view, setView] = useState<View>("open");
+  const projectsQ = useVaProjects(ready);
+  const update = useUpdateVaTask();
+  const placeProject = usePlaceVaProject();
+  const [showCancelled, setShowCancelled] = useState<"hide" | "show">("hide");
   const [range, setRange] = useState<RangeKey>("any");
   const [field, setField] = useState<DateField>("due");
-  const [sort, setSort] = useState<Sort>("due");
+  // "Your order": the board's own order, shared with each client's board, where cards can be moved up and down.
+  const [sort, setSort] = useState<Sort>("board");
   const [from, setFrom] = useState(today);
   const [to, setTo] = useState(() => {
     const d = new Date();
@@ -67,40 +90,119 @@ export function TasksSection() {
   });
   // Only the client picked under Active clients in the menu (all of them until one is picked).
   const { goTo, client: scope } = useVa();
-  const all = useMemo(() => (query.data ?? []).filter((t) => !scope || t.contactId === scope), [query.data, scope]);
+  const myId = useMyVaId();
+  const myTasks = useMemo(() => (query.data ?? []).filter((t) => !scope || t.contactId === scope), [query.data, scope]);
+  const myProjects = useMemo(() => (projectsQ.data ?? []).filter((p) => !scope || p.contactId === scope), [projectsQ.data, scope]);
+  const [kind, setKind] = useState<"" | "task" | "project">("");
   const [timerNote, setTimerNote] = useState("");
+  const [moveError, setMoveError] = useState("");
   const [client, setClient] = useState("");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState("");
-  // The clients they have tasks from, for the client picker (A–Z).
+  // Tasks and projects as board cards.
+  const all: Item[] = [
+    ...myTasks.map((t) => ({
+      id: `task:${t.id}`,
+      kind: "task" as const,
+      column: t.status,
+      title: t.title,
+      details: t.details,
+      priority: t.priority,
+      dueDate: t.dueDate,
+      links: t.links.length,
+      messages: t.messageCount ?? 0,
+      unread: t.unreadCount ?? 0,
+      who: (
+        <span className="kb-card__client">
+          <Icon name="building" size={12} /> {t.clientName || "Your client"}
+          {roleNote(t, myId) && <span className="tk-row__muted"> · {roleNote(t, myId)}</span>}
+        </span>
+      ),
+      contactId: t.contactId,
+      clientName: t.clientName,
+      createdAt: t.createdAt,
+      position: t.position ?? 0,
+      text: taskText(t.title, t.details, t.clientName, t.requestedByName),
+    })),
+    ...myProjects.map((p) => ({
+      id: `project:${p.id}`,
+      kind: "project" as const,
+      column: projectColumn(p),
+      title: p.role,
+      details: p.overview,
+      dueDate: p.dueDate,
+      stage: p.category || undefined,
+      who: (
+        <span className="kb-card__client">
+          <Icon name="building" size={12} /> {p.clientName || "Your client"}
+        </span>
+      ),
+      contactId: p.contactId,
+      clientName: p.clientName,
+      createdAt: p.createdAt,
+      position: p.position ?? 0,
+      text: taskText(p.role, p.category, p.overview, p.important, p.clientName),
+    })),
+  ];
+  // The clients they have work from, for the client picker (A–Z).
   const clients = useMemo(() => {
     const byId = new Map<string, { name: string; open: number }>();
-    for (const t of all) {
+    for (const t of [...myTasks, ...myProjects]) {
       const c = byId.get(t.contactId) ?? { name: t.clientName || "Your client", open: 0 };
-      if (isOpenProject(t)) c.open += 1;
+      if ("title" in t ? isOpenProject(t) : projectColumn(t) === "in_progress") c.open += 1;
       byId.set(t.contactId, c);
     }
     return [...byId].map(([id, c]) => ({ id, ...c })).sort((a, b) => a.name.localeCompare(b.name));
-  }, [all]);
+  }, [myTasks, myProjects]);
   const picked = clients.some((c) => c.id === client) ? client : "";
-  const opened = all.find((t) => t.id === openId) ?? null;
+  const openedTask = myTasks.find((t) => `task:${t.id}` === openId) ?? null;
+  const openedProject = myProjects.find((p) => `project:${p.id}` === openId) ?? null;
 
-  // Date range: on the requested date or the due date (tasks with no due date only match "Any date").
+  // Date range: on the requested date or the due date (work with no due date only matches "Any date").
   const span = range === "custom" ? ([from, to] as [string, string]) : presetRange(range);
-  const inRange = (t: VaTaskOut) => {
+  const inRange = (t: Item) => {
     if (!span) return true;
     const d = field === "due" ? t.dueDate : t.createdAt.slice(0, 10);
     return !!d && d >= span[0] && d <= span[1];
   };
   const q = search.trim().toLowerCase();
-  const dated = all.filter(
-    (t) => inRange(t) && (!picked || t.contactId === picked) && (!q || taskText(t.title, t.details, t.clientName, t.requestedByName).includes(q)),
-  );
-  const open = dated.filter(isOpenProject);
-  const done = dated.filter((t) => t.status === "done");
-  const shown = (view === "open" ? open : view === "done" ? done : dated).slice().sort((a, b) =>
-    sort === "newest" ? b.createdAt.localeCompare(a.createdAt) : (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999") || b.createdAt.localeCompare(a.createdAt),
-  );
+  const dated = all.filter((t) => inRange(t) && (!kind || t.kind === kind) && (!picked || t.contactId === picked) && (!q || t.text.includes(q)));
+  const shown = dated
+    .filter((t) => showCancelled === "show" || t.column !== "cancelled")
+    .sort((a, b) =>
+      sort === "board"
+        ? a.position - b.position
+        : sort === "newest"
+          ? b.createdAt.localeCompare(a.createdAt)
+          : (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999") || b.createdAt.localeCompare(a.createdAt),
+    );
+  const cancelledCount = all.filter((t) => t.column === "cancelled").length;
+  const filtered = !!(picked || span || q || kind);
+
+  // Dragging a task: In progress (also starts their timer, like Start task), In review or Done. Projects don't drag.
+  // A drop: a task to another column and/or a new place in it; a project only up or down its own column.
+  const move = (c: BoardCard, to: ProjectStatus, position: number) => {
+    const t = myTasks.find((x) => `task:${x.id}` === c.id);
+    if (!t) {
+      const p = myProjects.find((x) => `project:${x.id}` === c.id);
+      if (!p) return Promise.reject(new Error("Not found."));
+      return placeProject.mutateAsync({ id: p.id, position }).catch((err) => {
+        setMoveError(`Couldn’t move “${c.title}”: ${errorMessage(err)}`);
+        throw err;
+      });
+    }
+    const status = to !== t.status ? (to as VaTaskUpdate["status"]) : undefined;
+    return update.mutateAsync({ id: t.id, status, position }).then(
+      (res) => {
+        setMoveError("");
+        if (res?.timerStarted) setTimerNote(`Timer started for ${res.clientName || "your client"}: “${res.title}”.`);
+      },
+      (err) => {
+        setMoveError(`Couldn’t move “${t.title}”: ${errorMessage(err)}`);
+        throw err;
+      },
+    );
+  };
 
   return (
     <TimerNotice.Provider value={setTimerNote}>
@@ -119,11 +221,16 @@ export function TasksSection() {
           </button>
         </div>
       )}
+      {moveError && (
+        <span className="form-error" role="alert">
+          {moveError}
+        </span>
+      )}
       <StatGrid
         items={[
-          { label: "To start", value: String(all.filter((t) => t.status === "requested").length), tone: "sky" },
-          { label: "In progress", value: String(all.filter((t) => t.status === "in_progress").length), tone: "brand" },
-          { label: "In review", value: String(all.filter((t) => t.status === "review").length), tone: "purple" },
+          { label: "To start", value: String(all.filter((t) => t.column === "requested").length), tone: "sky" },
+          { label: "In progress", value: String(all.filter((t) => t.column === "in_progress").length), tone: "brand" },
+          { label: "In review", value: String(all.filter((t) => t.column === "review").length), tone: "purple" },
           { label: "Overdue", value: String(all.filter(isOverdue).length), tone: all.some(isOverdue) ? "red" : "slate" },
         ]}
       />
@@ -131,17 +238,16 @@ export function TasksSection() {
       <TaskBar
         top={
           <>
-            <TaskTabs
-              value={view}
-              onChange={setView}
-              options={[
-                { value: "open", label: "Open", count: open.length },
-                { value: "done", label: "Done", count: done.length },
-                { value: "all", label: "All", count: dated.length },
-              ]}
-            />
+            <span className="tk-bar__note">
+              <GripIcon size={14} />
+              {readOnly
+                ? "Click a card to see everything about it."
+                : sort === "board"
+                  ? "Drag cards up and down to put them in order, or a task to another column to move it along. Click a card for everything about it."
+                  : "Drag a task to another column to move it along. Switch Sort to “Your order” to arrange cards."}
+            </span>
             <span className="u-spacer" />
-            <TaskSearch value={search} onChange={setSearch} placeholder="Search tasks, details or clients" />
+            <TaskSearch value={search} onChange={setSearch} placeholder="Search tasks, projects or clients" />
           </>
         }
         filters={
@@ -160,6 +266,18 @@ export function TasksSection() {
               />
             )}
             <TaskFilter
+              icon="form"
+              label="Show"
+              value={kind}
+              onChange={setKind}
+              active={!!kind}
+              options={[
+                { value: "", label: "Tasks and projects" },
+                { value: "task", label: `Tasks only (${myTasks.length})` },
+                { value: "project", label: `Projects only (${myProjects.length})` },
+              ]}
+            />
+            <TaskFilter
               icon="calendar"
               label="Dates by"
               value={field}
@@ -167,6 +285,17 @@ export function TasksSection() {
               options={[
                 { value: "due", label: "Due date" },
                 { value: "created", label: "Requested date" },
+              ]}
+            />
+            <TaskFilter
+              icon="close"
+              label="Cancelled"
+              value={showCancelled}
+              onChange={setShowCancelled}
+              active={showCancelled === "show"}
+              options={[
+                { value: "hide", label: "Hidden" },
+                { value: "show", label: `Shown (${cancelledCount})` },
               ]}
             />
             <TaskFilter icon="clock" label="Range" value={range} onChange={setRange} active={range !== "any"} options={RANGES} />
@@ -189,15 +318,17 @@ export function TasksSection() {
               value={sort}
               onChange={setSort}
               options={[
+                { value: "board", label: "Your order" },
                 { value: "due", label: "Due soonest" },
                 { value: "newest", label: "Newest first" },
               ]}
             />
-            {(picked || range !== "any" || search) && (
+            {filtered && (
               <button
                 type="button"
                 className="tk-bar__clear"
                 onClick={() => {
+                  setKind("");
                   setClient("");
                   setRange("any");
                   setSearch("");
@@ -211,33 +342,31 @@ export function TasksSection() {
       />
 
       <LoadState
-        query={query}
-        loadingText="Loading your tasks…"
-        isEmpty={!shown.length}
+        query={query.isPending ? query : projectsQ}
+        loadingText="Loading your tasks and projects…"
+        isEmpty={!all.length || (filtered && !shown.length)}
         empty={
           q
-            ? "No tasks match your search."
+            ? "Nothing matches your search."
             : span
-            ? "No tasks in these dates. Try another range."
-            : view === "open"
-              ? "No open tasks. When a client requests a task and picks you, it shows up here."
-              : "No finished tasks yet."
+              ? "Nothing in these dates. Try another range."
+              : picked || kind
+                ? "Nothing matches these filters."
+                : "No tasks or projects yet. When a client requests a task and picks you, or GoCWGL puts you on a project, it shows up here."
         }
       >
-        <div className="card tk-list" role="table" aria-label="Tasks">
-          <div className="tk-list__head" role="row">
-            <span role="columnheader">Task</span>
-            <span role="columnheader">Client</span>
-            <span role="columnheader">Status</span>
-            <span role="columnheader">Due</span>
-            <span role="columnheader" aria-label="Next step" />
-          </div>
-          {shown.map((t) => (
-            <TaskRow key={t.id} t={t} onOpen={() => setOpenId(t.id)} />
-          ))}
-        </div>
+        <TaskBoard
+          cards={shown}
+          columns={showCancelled === "show" ? [...COLUMNS, CANCELLED] : COLUMNS}
+          onOpen={(c) => setOpenId(c.id)}
+          manual={sort === "board"}
+          canMove={(c, to) => !readOnly && c.kind === "task" && c.column !== "cancelled" && to !== "requested" && to !== "cancelled"}
+          canReorder={(c) => !readOnly && c.column !== "cancelled"}
+          onMove={move}
+        />
       </LoadState>
-      {opened && <TaskDetails t={opened} readOnly={readOnly} onClose={() => setOpenId("")} />}
+      {openedTask && <TaskDetails t={openedTask} readOnly={readOnly} onClose={() => setOpenId("")} />}
+      {openedProject && <ProjectDetails p={openedProject} onClose={() => setOpenId("")} />}
     </div>
     </TimerNotice.Provider>
   );
@@ -353,78 +482,6 @@ function StatusPicker({ t }: { t: VaTaskOut }) {
   );
 }
 
-/** One task in the list; clicking it opens the full details. */
-function TaskRow({ t, onOpen }: { t: VaTaskOut; onOpen: () => void }) {
-  const myId = useMyVaId();
-  const overdue = isOverdue(t);
-  return (
-    <div
-      className={cn("tk-row", `is-${t.status}`, (t.unreadCount ?? 0) > 0 && "has-unread")}
-      role="row"
-      tabIndex={0}
-      aria-label={`${t.title}, ${PROJECT_STATUS[t.status].label}. Open details`}
-      onClick={onOpen}
-      onKeyDown={(e) => {
-        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
-          e.preventDefault();
-          onOpen();
-        }
-      }}
-    >
-      <span className="tk-row__main" role="cell">
-        <span className="tk-row__title">
-          {t.title}
-          {t.priority !== "normal" && (
-            <span className={cn("tk-chip", toneClass(PRIORITY[t.priority].tone))}>
-              <Icon name="bolt" size={11} /> {PRIORITY[t.priority].label}
-            </span>
-          )}
-          {(t.unreadCount ?? 0) > 0 && <UnreadMark count={t.unreadCount ?? 0} />}
-        </span>
-        <span className="tk-row__sub">
-          {t.details ? t.details.split("\n")[0] : "No details added"}
-          {t.links.length > 0 && (
-            <span className="tk-row__links">
-              <Icon name="link" size={11} /> {t.links.length}
-            </span>
-          )}
-          {(t.messageCount ?? 0) > 0 && (
-            <span className="tk-row__msgs">
-              <Icon name="message" size={11} /> {t.messageCount}
-            </span>
-          )}
-        </span>
-      </span>
-      <span className="tk-row__client" role="cell">
-        <Icon name="building" size={12} /> {t.clientName || "Your client"}
-        {roleNote(t, myId) && <span className="tk-row__muted"> · {roleNote(t, myId)}</span>}
-      </span>
-      <span role="cell">
-        <span className={cn("tk-status", toneClass(PROJECT_STATUS[t.status].tone))}>
-          <span className="tk-status__dot" aria-hidden="true" />
-          {PROJECT_STATUS[t.status].label}
-        </span>
-      </span>
-      <span className={cn("tk-row__due", overdue && "is-late")} role="cell">
-        {t.dueDate ? (overdue ? `Overdue · ${formatShort(t.dueDate)}` : formatShort(t.dueDate)) : "No due date"}
-      </span>
-      <span className="tk-row__action" role="cell">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpen();
-          }}
-        >
-          <Icon name="eye" size={12} /> Open task
-        </Button>
-        <Icon name="chevronRight" size={14} className="tk-row__chev" />
-      </span>
-    </div>
-  );
-}
-
 /** A pop-up with everything about one task: the client's full request (details, every link, priority, due date), GoCWGL's note, and the status change. */
 function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean; onClose: () => void }) {
   const myId = useMyVaId();
@@ -478,6 +535,93 @@ function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean
           />
         }
       />
+    </Modal>
+  );
+}
+
+/** A project's pop-up: what the client asked for (no budget or price), the client and the due date. */
+function ProjectDetails({ p, onClose }: { p: VaProjectOut; onClose: () => void }) {
+  const column = projectColumn(p);
+  const lists: Array<[string, IconName, string[]]> = [
+    ["What you’ll do", "clipboard", p.responsibilities],
+    ["Must have", "circleCheck", p.mustHave],
+    ["Nice to have", "star", p.niceToHave],
+  ];
+  const facts: Array<{ icon: IconName; label: string; value: string }> = [
+    { icon: "building", label: "Client", value: p.clientName || "Your client" },
+    { icon: "folder", label: "Category", value: p.category || "—" },
+    { icon: "clock", label: "Due date", value: p.dueDate ? formatShort(p.dueDate) : "No due date" },
+    { icon: "calendar", label: "You were put on it", value: p.matchedAt ? formatShort(p.matchedAt) : "—" },
+  ];
+  return (
+    <Modal
+      open
+      width={760}
+      onClose={onClose}
+      titleId="va-project"
+      kicker={`PROJECT FOR ${(p.clientName || "YOUR CLIENT").toUpperCase()}`}
+      title={p.role}
+      footer={
+        <>
+          <span className="text-small">One-time work. GoCWGL moves it to Done when it’s finished.</span>
+          <span className="u-spacer" />
+          <Button variant="primary" onClick={onClose}>
+            Close
+          </Button>
+        </>
+      }
+    >
+      <div className="tk-sheet">
+        <div className="tk-sheet__status">
+          <TaskStatus status={column} />
+        </div>
+        <section className="tk-sheet__section">
+          <h4 className="tk-sheet__h">
+            <Icon name="textLong" size={14} /> Overview
+          </h4>
+          {p.overview ? <div className="tk-sheet__details">{p.overview}</div> : <p className="tk-sheet__muted">No overview added.</p>}
+        </section>
+        {lists
+          .filter(([, , items]) => items.length)
+          .map(([label, icon, items]) => (
+            <section key={label} className="tk-sheet__section">
+              <h4 className="tk-sheet__h">
+                <Icon name={icon} size={14} /> {label}
+              </h4>
+              <ul className="tk-sheet__list">
+                {items.map((x) => (
+                  <li key={x}>{x}</li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        {p.important && (
+          <section className="rd-important">
+            <span className="rd-important__icon" aria-hidden="true">
+              <Icon name="message" size={15} />
+            </span>
+            <span className="stack stack--2">
+              <strong>Important to the client</strong>
+              <span className="va-pre">{p.important}</span>
+            </span>
+          </section>
+        )}
+        <section className="tk-sheet__section">
+          <h4 className="tk-sheet__h">
+            <Icon name="form" size={14} /> At a glance
+          </h4>
+          <dl className="tk-sheet__facts">
+            {facts.map((f) => (
+              <div key={f.label} className="tk-sheet__fact">
+                <dt>
+                  <Icon name={f.icon} size={13} /> {f.label}
+                </dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      </div>
     </Modal>
   );
 }

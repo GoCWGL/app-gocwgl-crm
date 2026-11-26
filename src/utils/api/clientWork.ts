@@ -68,6 +68,8 @@ export const requestVa = (body: VaRequestIn) => post<VaRequestOut>("/portal/va-r
 /** Edit your request while it's New or In review. */
 export const updateMyVaRequest = (id: string, body: VaRequestIn) => put<VaRequestOut>(`/portal/va-requests/${id}`, body);
 export const cancelVaRequest = (id: string) => post<VaRequestOut>(`/portal/va-requests/${id}/cancel`);
+/** Move an open project up or down its column on the Tasks & projects board. */
+export const placeMyProject = (id: string, position: number) => put<VaRequestOut>(`/portal/va-requests/${id}/position`, { position });
 /** The conversation on a request with GoCWGL (an open project's quote shows in it). */
 export const listMyRequestComments = (id: string) => get<RequestCommentOut[]>(`/portal/va-requests/${id}/comments`);
 export const commentOnMyRequest = (id: string, body: string) => post<RequestCommentOut>(`/portal/va-requests/${id}/comments`, { body });

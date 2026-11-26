@@ -1,51 +1,39 @@
 "use client";
 
-import { useState } from "react";
 import { Icon } from "@/components/ui";
 import { PORTAL_PAGE_GUIDE, type PortalGuideCompare, type PortalTab } from "@/data/portal";
 import { cn } from "@/lib/utils";
 
-const storageKey = (tab: PortalTab) => `portal:guide-hidden:${tab}`;
-
-function readHidden(tab: PortalTab): boolean {
-  try {
-    return window.localStorage.getItem(storageKey(tab)) === "1";
-  } catch {
-    return false;
-  }
+/** The round "?" next to the page title: shows or hides "About this page" (only on pages that have one). */
+export function PageGuideButton({ tab, open, onToggle }: { tab: PortalTab; open: boolean; onToggle: () => void }) {
+  if (!PORTAL_PAGE_GUIDE[tab]) return null;
+  return (
+    <button
+      type="button"
+      className={cn("page-guide-btn", open && "is-open")}
+      onClick={onToggle}
+      aria-expanded={open}
+      aria-controls="page-guide"
+      aria-label={open ? "Hide what this page is for" : "What’s this page for?"}
+      title={open ? "Hide" : "What’s this page for?"}
+    >
+      <Icon name="help" size={17} strokeWidth={2} />
+    </button>
+  );
 }
 
 /**
- * "About this page" under the page title: what the page is for and what you can do there. Open until the client
- * hides it; hidden pages keep a small "What's this page for?" button to bring it back (remembered per page).
+ * "About this page" under the page title: what the page is for and what you can do there. Closed until the client
+ * opens it with the "?" next to the title, so it takes no room on the page.
  */
-export function PageGuide({ tab }: { tab: PortalTab }) {
+export function PageGuide({ tab, onClose }: { tab: PortalTab; onClose: () => void }) {
   const guide = PORTAL_PAGE_GUIDE[tab];
-  const [hidden, setHidden] = useState(() => readHidden(tab));
-  const toggle = (next: boolean) => {
-    setHidden(next);
-    try {
-      if (next) window.localStorage.setItem(storageKey(tab), "1");
-      else window.localStorage.removeItem(storageKey(tab));
-    } catch {
-      // Private mode: it just stays this way until the page reloads.
-    }
-  };
-
   if (!guide) return null;
-  if (hidden) {
-    return (
-      <button type="button" className="page-guide-toggle" onClick={() => toggle(false)} aria-expanded={false}>
-        <Icon name="lifebuoy" size={14} strokeWidth={2} />
-        What&rsquo;s this page for?
-      </button>
-    );
-  }
   return (
-    <section className={cn("page-guide", guide.compare && "page-guide--compare")} aria-label="About this page">
+    <section id="page-guide" className={cn("page-guide", guide.compare && "page-guide--compare")} aria-label="About this page">
       <div className="page-guide__head">
         <span className="page-guide__icon" aria-hidden="true">
-          <Icon name="lifebuoy" size={18} strokeWidth={1.9} />
+          <Icon name="help" size={18} strokeWidth={1.9} />
         </span>
         <div className="page-guide__body">
           <span className="page-guide__kicker">ABOUT THIS PAGE</span>
@@ -71,7 +59,7 @@ export function PageGuide({ tab }: { tab: PortalTab }) {
           <CompareCard side={guide.compare[1]} />
         </div>
       )}
-      <button type="button" className="page-guide__close" onClick={() => toggle(true)} aria-label="Hide this explanation" title="Hide">
+      <button type="button" className="page-guide__close" onClick={onClose} aria-label="Hide this explanation" title="Hide">
         <Icon name="close" size={14} strokeWidth={2.2} />
       </button>
     </section>

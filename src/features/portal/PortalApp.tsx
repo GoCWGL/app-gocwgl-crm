@@ -2,7 +2,7 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, type ComponentType, type ReactNode } from "react";
+import { useEffect, useState, type ComponentType, type ReactNode } from "react";
 import { AppShell, PageHeader } from "@/components/layout";
 import { Button, Toast } from "@/components/ui";
 import { HIDDEN_PORTAL_TABS, PORTAL_GROUP_OF, PORTAL_PAGES, VA_ONLY_TABS, type PortalTab } from "@/data/portal";
@@ -34,7 +34,7 @@ import { TeamSection } from "./sections/TeamSection";
 import { VaTeamSection } from "./sections/VaTeamSection";
 import { WorkJournalSection } from "./sections/WorkJournalSection";
 import { useWorkTabs, WorkSection } from "./sections/WorkSection";
-import { PageGuide } from "./components/PageGuide";
+import { PageGuide, PageGuideButton } from "./components/PageGuide";
 import { BetaTesterBanner } from "./components/BetaTesterBanner";
 import { StaffClientBar } from "./components/StaffClientBar";
 import { PortalProvider, usePortal } from "./state/PortalContext";
@@ -173,6 +173,9 @@ function PortalLayout() {
   useSectionChangeSweep(state.tab);
 
   const tab = locked ? "dashboard" : state.tab;
+  // "What's this page for?": open on the page it was opened on, closed again on any other page.
+  const [guideTab, setGuideTab] = useState<string>("");
+  const guideOpen = guideTab === tab;
   const page = PORTAL_PAGES[tab];
   const Section = SECTIONS[tab];
 
@@ -193,8 +196,9 @@ function PortalLayout() {
         kicker={`${(PORTAL_GROUP_OF[tab] ?? "My account").toUpperCase()} // ${page.title.toUpperCase()}`}
         title={page.title}
         subtitle={page.subtitle}
+        titleAside={<PageGuideButton tab={tab} open={guideOpen} onToggle={() => setGuideTab(guideOpen ? "" : tab)} />}
       />
-      <PageGuide key={`guide-${tab}`} tab={tab} />
+      {guideOpen && <PageGuide tab={tab} onClose={() => setGuideTab("")} />}
       <Toast message={state.toast} onClose={() => update({ toast: "" })} />
       <div className="page-enter" key={tab}>
         <Section />

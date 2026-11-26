@@ -9,6 +9,7 @@ import type {
   MyFeedbackOut,
   MyApplication,
   MyReferralsOut,
+  VaProjectOut,
   VaTaskOut,
   VaTaskUpdate,
   OpenJobOut,
@@ -66,6 +67,9 @@ export const listInactiveAsks = () => get<InactiveAskOut[]>("/va/inactive-reques
 export const approveInactive = (requestId: string) => post<InactiveAskOut[]>(`/va/inactive-requests/${requestId}/approve`);
 export const listVaTasks = () => get<VaTaskOut[]>("/va/tasks");
 export const updateVaTask = (id: string, body: VaTaskUpdate) => patch<VaTaskOut>(`/va/tasks/${id}`, body);
+/** Open projects GoCWGL matched this VA to (shown beside their tasks). */
+export const listVaProjects = () => get<VaProjectOut[]>("/va/projects");
+export const placeVaProject = (id: string, position: number) => put<VaProjectOut[]>(`/va/projects/${id}/position`, { position });
 /** A task's conversation with the client, oldest first. */
 export const listVaTaskMessages = (id: string) => get<TaskMessageOut[]>(`/va/tasks/${id}/messages`);
 /** The VA has read the task's conversation (clears its unread mark). */

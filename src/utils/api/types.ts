@@ -1699,6 +1699,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/va/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Matched Projects
+         * @description Open projects you were matched to, newest first. GoCWGL moves them along; they show beside your tasks.
+         */
+        get: operations["my_matched_projects_api_va_projects_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/projects/{request_id}/position": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Place My Matched Project
+         * @description Reorder a project on your board (the client's board shows the same order).
+         */
+        put: operations["place_my_matched_project_api_va_projects__request_id__position_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/va/menu-counts": {
         parameters: {
             query?: never;
@@ -7169,6 +7209,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/va-requests/{request_id}/position": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Place My Project
+         * @description Reorder an open project on your Tasks & projects board (the VA on it sees the same order).
+         */
+        put: operations["place_my_project_api_portal_va_requests__request_id__position_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/va-requests/{request_id}/cancel": {
         parameters: {
             query?: never;
@@ -8860,6 +8920,11 @@ export interface components {
             /** Steps */
             steps?: (components["schemas"]["ActionStep"] | components["schemas"]["ConditionStep"])[] | null;
         };
+        /** BoardPositionIn */
+        BoardPositionIn: {
+            /** Position */
+            position: number;
+        };
         /** Body_add_document_api_admin_shareholders_documents_post */
         Body_add_document_api_admin_shareholders_documents_post: {
             /** File */
@@ -9913,6 +9978,11 @@ export interface components {
             unreadCount?: number;
             /** Clientreadat */
             clientReadAt?: string | null;
+            /**
+             * Position
+             * @default 0
+             */
+            position?: number;
         };
         /** ClientSopIn */
         ClientSopIn: {
@@ -14396,6 +14466,10 @@ export interface components {
             priority?: ("low" | "normal" | "high") | null;
             /** Duedate */
             dueDate?: string | null;
+            /** Status */
+            status?: ("requested" | "in_progress" | "review" | "done") | null;
+            /** Position */
+            position?: number | null;
             /**
              * Cancel
              * @default false
@@ -18648,6 +18722,62 @@ export interface components {
             /** Invitations */
             invitations: components["schemas"]["VaInvitationOut"][];
         };
+        /**
+         * VaProjectOut
+         * @description An open project (one-time work) a client requested and GoCWGL matched to you. No budget or price.
+         */
+        VaProjectOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Clientname */
+            clientName: string;
+            /** Role */
+            role: string;
+            /** Category */
+            category: string;
+            /** Overview */
+            overview: string;
+            /** Responsibilities */
+            responsibilities: string[];
+            /** Musthave */
+            mustHave: string[];
+            /** Nicetohave */
+            niceToHave: string[];
+            /** Important */
+            important: string;
+            /** Duedate */
+            dueDate: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "reviewing" | "approved" | "declined" | "posted" | "interviewing" | "matched" | "inactive" | "closed" | "cancelled";
+            /** Matchedat */
+            matchedAt: string | null;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+            /**
+             * Position
+             * @default 0
+             */
+            position?: number;
+        };
         /** VaQuestionOut */
         VaQuestionOut: {
             /** Id */
@@ -19031,6 +19161,11 @@ export interface components {
             inactiveRequestedAt?: string | null;
             /** Inactiveapprovedat */
             inactiveApprovedAt?: string | null;
+            /**
+             * Position
+             * @default 0
+             */
+            position?: number;
             /** Agreementacceptedat */
             agreementAcceptedAt?: string | null;
             /** Agreementfeecents */
@@ -19435,6 +19570,11 @@ export interface components {
             unreadCount?: number;
             /** Clientreadat */
             clientReadAt?: string | null;
+            /**
+             * Position
+             * @default 0
+             */
+            position?: number;
             /** Clientname */
             clientName: string;
             /**
@@ -19445,11 +19585,10 @@ export interface components {
         };
         /** VaTaskUpdate */
         VaTaskUpdate: {
-            /**
-             * Status
-             * @enum {string}
-             */
-            status: "in_progress" | "review" | "done";
+            /** Status */
+            status?: ("in_progress" | "review" | "done") | null;
+            /** Position */
+            position?: number | null;
         };
         /** VaTrainingOut */
         VaTrainingOut: {
@@ -23709,6 +23848,85 @@ export interface operations {
                     "application/json": {
                         /** Response Approve Inactive Api Va Inactive Requests  Request Id  Approve Post */
                         data: components["schemas"]["InactiveAskOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_matched_projects_api_va_projects_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Matched Projects Api Va Projects Get */
+                        data: components["schemas"]["VaProjectOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    place_my_matched_project_api_va_projects__request_id__position_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BoardPositionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Place My Matched Project Api Va Projects  Request Id  Position Put */
+                        data: components["schemas"]["VaProjectOut"][];
                     };
                 };
             };
@@ -41434,6 +41652,52 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["VaRequestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    place_my_project_api_portal_va_requests__request_id__position_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BoardPositionIn"];
             };
         };
         responses: {

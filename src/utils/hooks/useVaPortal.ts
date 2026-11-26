@@ -15,6 +15,10 @@ export const useApproveInactive = () => {
   const qc = useQueryClient();
   return useApiMutation(api.approveInactive, { onSuccess: (data) => qc.setQueryData(qk.vaInactiveAsks, data) });
 };
+export const useVaProjects = (enabled = true) =>
+  useQuery({ queryKey: [...qk.vaTasks, "projects"], queryFn: api.listVaProjects, enabled, refetchInterval: 120_000 });
+export const usePlaceVaProject = () =>
+  useApiMutation((v: { id: string; position: number }) => api.placeVaProject(v.id, v.position), { invalidate: [qk.vaTasks] });
 export const useVaTasks = (enabled = true) => useQuery({ queryKey: qk.vaTasks, queryFn: api.listVaTasks, enabled, refetchInterval: 30_000 }); // stays in step with the client's requests
 /** A task's conversation, refreshed every 15 s while open so the client's answers show up. */
 export const useVaTaskMessages = (id: string) =>
@@ -23,7 +27,7 @@ export const useMarkVaTaskRead = () => useApiMutation(api.markVaTaskMessagesRead
 export const usePostVaTaskMessage = () =>
   useApiMutation((v: { id: string; body: string }) => api.postVaTaskMessage(v.id, v.body), { invalidate: [qk.vaTasks] });
 export const useUpdateVaTask = () =>
-  useApiMutation((v: { id: string; status: VaTaskUpdate["status"] }) => api.updateVaTask(v.id, { status: v.status }), {
+  useApiMutation((v: { id: string; status?: VaTaskUpdate["status"]; position?: number }) => api.updateVaTask(v.id, { status: v.status, position: v.position }), {
     // Start task also starts the timer: refresh the time tracker too.
     invalidate: [qk.vaTasks, qk.myShift, qk.myTime],
   });

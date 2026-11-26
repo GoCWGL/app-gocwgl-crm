@@ -47,6 +47,8 @@ export const useRequestVa = () => useApiMutation(api.requestVa, { invalidate: [q
 export const useUpdateMyVaRequest = () =>
   useApiMutation((v: { id: string; body: VaRequestIn }) => api.updateMyVaRequest(v.id, v.body), { invalidate: [qk.portalVaRequests] });
 export const useCancelVaRequest = () => useApiMutation(api.cancelVaRequest, { invalidate: [qk.portalVaRequests] });
+export const usePlaceProject = () =>
+  useApiMutation((v: { id: string; position: number }) => api.placeMyProject(v.id, v.position), { invalidate: [qk.portalVaRequests] });
 /** A request's conversation with GoCWGL, refreshed every 20 s while open so replies and quotes show up. */
 export const useMyRequestComments = (id: string) =>
   useQuery({ queryKey: [...qk.portalVaRequests, id, "comments"], queryFn: () => api.listMyRequestComments(id), refetchInterval: 20_000 });

@@ -247,23 +247,51 @@
   }
 }
 
-.page-guide-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 14px;
-  padding: 6px 12px;
+// The round "?" next to the page title that opens and closes "About this page".
+.page-guide-btn {
+  @include button-reset;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 30px;
+  height: 30px;
   border: 1px solid $line;
-  border-radius: $radius-pill;
+  border-radius: 50%;
   background: $white;
   color: $muted;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 600;
   cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 
   &:hover {
-    border-color: $line-strong;
-    color: $ink;
+    border-color: $cyan-600;
+    color: $cyan-700;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $cyan-300;
+    outline-offset: 2px;
+  }
+
+  &.is-open {
+    border-color: $cyan-600;
+    background: $cyan-50;
+    color: $cyan-700;
+    box-shadow: 0 0 0 4px rgba(8, 145, 178, 0.08);
+  }
+}
+
+// Opening it: a short drop-in under the header.
+.page-guide {
+  animation: page-guide-in 0.18s ease both;
+}
+
+@keyframes page-guide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
 }

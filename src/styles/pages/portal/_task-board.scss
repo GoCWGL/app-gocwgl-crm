@@ -1,0 +1,586 @@
+@use "sass:list";
+@use "../../abstracts" as *;
+
+// Tasks and projects as a Trello-style board (client portal › Tasks & projects and VA portal › Tasks): a column per
+// stage, a card for each. Cards drag between columns; the columns that take the dragged card light up, and a card
+// that lands in a new column bounces in.
+.kb {
+  display: grid;
+  grid-template-columns: repeat(var(--kb-cols, 4), minmax(260px, 1fr));
+  align-items: start;
+  gap: 16px;
+  padding: 2px 2px 8px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+
+  @include down(md) {
+    grid-template-columns: repeat(var(--kb-cols, 4), minmax(270px, 84vw));
+    gap: 12px;
+  }
+}
+
+// Each stage's color: solid (icon, accents), soft (tints) and ring (drop and landing glow).
+$kb-stages: (
+  requested: (#0284c7, #e0f2fe, rgba(14, 165, 233, 0.22)),
+  in_progress: (#ea7a00, #fff1dc, rgba(255, 153, 0, 0.24)),
+  review: (#7c3aed, #f1eafe, rgba(124, 58, 237, 0.2)),
+  done: (#15803d, #dcfce7, rgba(34, 197, 94, 0.22)),
+  cancelled: (#64748b, #f1f5f9, rgba(100, 116, 139, 0.2)),
+);
+
+.kb-col {
+  --kb-c: #{$muted};
+  --kb-soft: #{$bg-soft};
+  --kb-ring: rgba(100, 116, 139, 0.2);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 12px 12px;
+  border: 1px solid #e7edf4;
+  border-radius: 18px;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--kb-soft) 55%, #f8fafc) 0, #f8fafc 120px);
+  scroll-snap-align: start;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
+
+  @each $status, $c in $kb-stages {
+    &.is-#{$status} {
+      --kb-c: #{list.nth($c, 1)};
+      --kb-soft: #{list.nth($c, 2)};
+      --kb-ring: #{list.nth($c, 3)};
+    }
+  }
+
+  // A thin line in the stage's color along the top.
+  &::before {
+    content: "";
+    position: absolute;
+    inset: -1px 18px auto;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    background: var(--kb-c);
+    opacity: 0.85;
+  }
+
+  // While a card is dragged: the columns it can go to are outlined, the one under it fills and lifts.
+  &.can-drop {
+    border-color: color-mix(in srgb, var(--kb-c) 45%, transparent);
+    border-style: dashed;
+  }
+
+  &.no-drop {
+    opacity: 0.55;
+  }
+
+  &.is-over {
+    border-style: solid;
+    border-color: var(--kb-c);
+    background: var(--kb-soft);
+    box-shadow: 0 0 0 4px var(--kb-ring);
+    transform: translateY(-2px);
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 2px 0;
+  }
+
+  &__icon {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    background: var(--kb-soft);
+    color: var(--kb-c);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--kb-c) 18%, transparent);
+  }
+
+  &__name {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    color: $ink;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+
+  &__hint {
+    overflow: hidden;
+    color: $muted;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__count {
+    flex: none;
+    min-width: 26px;
+    padding: 2px 8px;
+    border-radius: $radius-pill;
+    background: $white;
+    color: var(--kb-c);
+    font-size: 12px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--kb-c) 22%, transparent);
+    animation: kb-pop 0.35s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+  }
+
+  &__cards {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 72px;
+  }
+
+  &__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 72px;
+    border: 1.5px dashed #dbe3ec;
+    border-radius: 14px;
+    color: $muted-light;
+    font-size: 12.5px;
+    font-weight: 600;
+    transition:
+      border-color 0.2s ease,
+      color 0.2s ease,
+      background 0.2s ease;
+  }
+
+  &__empty {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &.can-drop &__empty {
+    border-color: color-mix(in srgb, var(--kb-c) 40%, transparent);
+    color: var(--kb-c);
+  }
+
+  &.is-over &__empty {
+    border-color: var(--kb-c);
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--kb-c);
+  }
+}
+
+// ------------------------------------------------------------------ Cards
+// Tasks are white; projects are a soft violet, so the two are easy to tell apart at a glance.
+.kb-card {
+  --card-bg: #{$white};
+  --card-line: #e4eaf1;
+  --card-line-hover: #cfd9e5;
+  --card-accent: #{$orange};
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px 12px;
+  border: 1px solid var(--card-line);
+  border-radius: 12px;
+  background: var(--card-bg);
+  box-shadow:
+    0 1px 1px rgba(11, 20, 36, 0.04),
+    0 1px 3px rgba(11, 20, 36, 0.04);
+  cursor: pointer;
+  transition:
+    box-shadow 0.2s ease,
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.2s ease,
+    opacity 0.2s ease;
+
+  &.is-project {
+    --card-bg: #f7f3ff;
+    --card-line: #e5dafc;
+    --card-line-hover: #cbb6f8;
+    --card-accent: #7c3aed;
+  }
+
+  &:hover {
+    border-color: var(--card-line-hover);
+    box-shadow:
+      0 1px 2px rgba(11, 20, 36, 0.05),
+      0 12px 24px -12px rgba(11, 20, 36, 0.22);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $cyan-300;
+    outline-offset: 2px;
+  }
+
+  &.is-draggable {
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  // Picked up: it fades in place, then folds away so the column closes the gap (the drop slot shows where it goes).
+  &.is-dragging {
+    opacity: 0.35;
+    box-shadow: none;
+  }
+
+  &.is-lifted {
+    height: 0;
+    margin: -5px 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    overflow: hidden;
+    border-width: 0;
+    opacity: 0;
+  }
+
+  &.is-saving {
+    opacity: 0.75;
+  }
+
+  // Just moved: it drops in with a bounce and a short glow in the column's color.
+  &.is-landed {
+    animation: kb-land 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  // New messages: a warm edge on the left.
+  &.has-unread {
+    box-shadow:
+      inset 3px 0 0 $orange,
+      0 1px 3px rgba(11, 20, 36, 0.05);
+  }
+
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    min-height: 20px;
+  }
+
+  // "Task" or "Project": the card's kind, in its color.
+  &__kind {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 5px;
+    color: var(--card-accent);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__priority {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 7px 1px 5px;
+    border-radius: $radius-pill;
+    font-size: 11px;
+    font-weight: 700;
+
+    &.is-high {
+      background: #fef2f2;
+      color: #dc2626;
+      box-shadow: inset 0 0 0 1px #fecaca;
+    }
+
+    &.is-low {
+      background: #f1f5f9;
+      color: $muted;
+      box-shadow: inset 0 0 0 1px #e2e8f0;
+    }
+  }
+
+  &__stage {
+    min-width: 0;
+    overflow: hidden;
+    color: $muted;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &::before {
+      content: "· ";
+      color: $muted-light;
+    }
+  }
+
+  &__unread {
+    display: grid;
+    flex: none;
+    place-items: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: $radius-pill;
+    background: $orange;
+    color: $white;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.18);
+  }
+
+  &__grip {
+    flex: none;
+    margin-right: -4px;
+    color: $muted-light;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  &:hover &__grip,
+  &:focus-visible &__grip {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    &__grip {
+      opacity: 1;
+    }
+  }
+
+  &__title {
+    margin: 2px 0 0;
+    color: $ink;
+    font-size: 14.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+
+  &.is-done &__title,
+  &.is-cancelled &__title {
+    color: $muted;
+    text-decoration: line-through;
+    text-decoration-color: $muted-light;
+  }
+
+  &__details {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: $muted;
+    font-size: 12.5px;
+    line-height: 1.5;
+    white-space: pre-line;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  // Who's on it on the left; links, messages and the due date on the right.
+  &__foot {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 1px solid color-mix(in srgb, var(--card-line) 70%, transparent);
+  }
+
+  &__who {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+    color: $ink-soft;
+    font-size: 12.5px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    > * {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    svg {
+      flex: none;
+      color: $muted-light;
+    }
+
+    .avatar {
+      flex: none;
+    }
+  }
+
+  &__meta {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 10px;
+    color: $muted;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  &__due {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(100, 116, 139, 0.08);
+    color: $ink-soft;
+
+    &.is-soon {
+      background: #fff7ed;
+      color: #c2410c;
+    }
+
+    &.is-late {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+  }
+
+  &__saving {
+    color: $cyan-700;
+  }
+}
+
+// Where the dragged card will land: a gap that opens between the cards.
+.kb-col__slot {
+  height: 56px;
+  border: 1.5px dashed var(--kb-c);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--kb-soft) 70%, $white);
+  animation: kb-slot 0.18s ease-out both;
+}
+
+@keyframes kb-slot {
+  from {
+    height: 0;
+    opacity: 0;
+  }
+}
+
+// A card landing in its new column: drops from above, overshoots, settles; a glow in the column's color fades out.
+@keyframes kb-land {
+  0% {
+    opacity: 0;
+    transform: translateY(-18px) scale(0.9);
+    box-shadow: 0 0 0 0 var(--kb-ring);
+  }
+  45% {
+    opacity: 1;
+    transform: translateY(4px) scale(1.035);
+    box-shadow: 0 0 0 6px var(--kb-ring);
+  }
+  65% {
+    transform: translateY(-3px) scale(0.99);
+  }
+  82% {
+    transform: translateY(1px) scale(1.005);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+// The column's count when it changes.
+@keyframes kb-pop {
+  from {
+    transform: scale(0.6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kb-card.is-landed,
+  .kb-col__slot,
+  .kb-col__count {
+    animation: none;
+  }
+
+  .kb-col.is-over,
+  .kb-card:hover {
+    transform: none;
+  }
+}
+
+// The client's "Move to" choice in the task pop-up: the board's four stages.
+.tk-status-pick--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  @include down(md) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tk-status-pick__opt.is-on.is-requested {
+  border-color: #38bdf8;
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+
+// "Drag a card to another column…", where the tabs used to be.
+.tk-bar__note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  color: $muted;
+  font-size: 12.5px;
+  font-weight: 600;
+
+  svg {
+    flex: none;
+    color: $muted-light;
+  }
+}
+
+// The VA's card: the client it's for (and their part on a shared task).
+.kb-card__client {
+  display: block;
+
+  svg {
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: -1px;
+  }
+}
+
+// A project's lists in the VA's pop-up (what you'll do, must have, nice to have).
+.tk-sheet__list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: $ink-soft;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
