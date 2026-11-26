@@ -1,0 +1,476 @@
+@use "../../abstracts" as *;
+
+// A task's pop-up (client portal › Tasks & projects and VA portal › Tasks), refined: a calm header with the status and
+// Edit task, the progress steps, the task's fields as label/value rows, the description, an Asana-style subtasks
+// checklist, links, and the stage actions last. Loaded after va-team, so these win over its first take.
+
+.tk-sheet {
+  gap: 22px;
+
+  &__top {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #edf1f6;
+  }
+
+  &__status {
+    min-height: 32px;
+  }
+
+  // Section headings: sentence case, quiet icon.
+  &__h {
+    gap: 8px;
+    color: $ink;
+    font-size: 13.5px;
+    font-weight: 750;
+    letter-spacing: 0;
+    text-transform: none;
+
+    svg {
+      color: $muted-light;
+    }
+  }
+
+  &__count {
+    background: #eef2f7;
+    color: $muted;
+  }
+
+  &__details {
+    padding: 14px 16px;
+    border: 1px solid #e8edf3;
+    border-radius: 12px;
+    background: #fbfcfd;
+    color: $ink-soft;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  &__add-details {
+    @include button-reset;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    border: 1px dashed #d5dee8;
+    border-radius: 12px;
+    color: $muted;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      color 0.15s ease,
+      background 0.15s ease;
+
+    &:hover {
+      border-color: $cyan-600;
+      background: #f7fcfd;
+      color: $cyan-700;
+    }
+  }
+
+  &__actions {
+    padding: 16px;
+    border: 1px solid #e8edf3;
+    border-radius: 14px;
+    background: #fbfcfd;
+  }
+}
+
+.tk-steps {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+// The task's fields, one row each (label on the left, value on the right), like a task tool.
+.tk-props {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 28px;
+  margin: 0;
+
+  @include down(sm) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: 128px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    min-height: 40px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f0f3f7;
+
+    dt {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: $muted-light;
+      font-size: 12.5px;
+      font-weight: 600;
+
+      svg {
+        flex: none;
+        color: #9aa8b9;
+      }
+    }
+
+    dd {
+      margin: 0;
+      color: $ink;
+      font-size: 13.5px;
+      font-weight: 650;
+      overflow-wrap: anywhere;
+
+      &.is-late {
+        color: #dc2626;
+      }
+    }
+  }
+
+  &__none {
+    color: #9aa8b9;
+    font-weight: 500;
+  }
+}
+
+// The edit form, in place of the fields and description while editing.
+.tk-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid $cyan-200;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #f6fdff, $white 120px);
+  box-shadow: 0 10px 30px -22px rgba(8, 145, 178, 0.6);
+  animation: tk-edit-in 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
+
+  .field {
+    margin: 0;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    strong {
+      color: $ink;
+      font-size: 14.5px;
+    }
+
+    span span {
+      color: $muted;
+      font-size: 12.5px;
+    }
+  }
+
+  &__badge {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: $cyan-50;
+    color: $cyan-700;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+
+    @include down(sm) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  &__foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 14px;
+    border-top: 1px solid #edf1f6;
+  }
+}
+
+@keyframes tk-edit-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+// Subtasks: an Asana-style checklist with round checks.
+.tk-subs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  &__tally {
+    color: $muted;
+    font-size: 12.5px;
+    font-weight: 650;
+
+    &.is-complete {
+      color: $green-700;
+    }
+  }
+
+  &__bar {
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #edf1f6;
+
+    span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #34d399, $green-500);
+      transition: width 0.35s cubic-bezier(0.2, 0.8, 0.3, 1);
+    }
+  }
+
+  &__list {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid #e8edf3;
+    border-radius: 12px;
+    list-style: none;
+  }
+
+  &__row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 6px 10px 6px 12px;
+    background: $white;
+    transition: background 0.12s ease;
+
+    & + & {
+      border-top: 1px solid #f0f3f7;
+    }
+
+    &:hover {
+      background: #f8fafc;
+    }
+
+    &.is-editing {
+      background: #f7fcfd;
+    }
+
+    &--new {
+      border: 1px solid $cyan-200;
+      border-radius: 12px;
+      background: #f7fcfd;
+    }
+  }
+
+  &__title {
+    @include button-reset;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 4px 0;
+    color: $ink;
+    font-size: 14px;
+    font-weight: 550;
+    line-height: 1.4;
+    text-align: left;
+    overflow-wrap: anywhere;
+    cursor: text;
+    transition: color 0.2s ease;
+
+    &:disabled {
+      cursor: default;
+    }
+
+    .is-done & {
+      color: #94a3b8;
+      text-decoration: line-through;
+      text-decoration-color: #cbd5e1;
+    }
+  }
+
+  &__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: $ink;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 550;
+    outline: none;
+
+    &:focus {
+      border-color: $cyan-300;
+      background: $white;
+      box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.15);
+    }
+
+    &::placeholder {
+      color: #9aa8b9;
+      font-weight: 500;
+    }
+  }
+
+  // Who added it shows on hover; who ticked it off always shows.
+  &__meta {
+    flex: none;
+    color: #9aa8b9;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+
+    .tk-subs__row:hover &,
+    .is-done & {
+      opacity: 1;
+    }
+
+    @include down(sm) {
+      display: none;
+    }
+  }
+
+  &__remove {
+    @include button-reset;
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    color: #94a3b8;
+    cursor: pointer;
+    opacity: 0;
+    transition:
+      opacity 0.12s ease,
+      background 0.12s ease,
+      color 0.12s ease;
+
+    .tk-subs__row:hover &,
+    &:focus-visible {
+      opacity: 1;
+    }
+
+    &:hover {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    @media (hover: none) {
+      opacity: 1;
+    }
+  }
+
+  &__add {
+    @include button-reset;
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px 7px 10px;
+    border-radius: 9px;
+    color: $muted;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+    transition:
+      background 0.12s ease,
+      color 0.12s ease;
+
+    &:hover {
+      background: #f1f5f9;
+      color: $ink;
+    }
+  }
+
+  &__empty {
+    margin: 0;
+    color: $muted-light;
+    font-size: 13px;
+  }
+}
+
+// The round check: an outline that fills green with a white check, with a little pop when ticked.
+.tk-check {
+  @include button-reset;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid #b8c4d2;
+  border-radius: 50%;
+  background: $white;
+  color: transparent;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+
+  &:hover:not(:disabled, .is-done) {
+    border-color: $green-500;
+    color: $green-500;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
+
+  &.is-done {
+    border-color: $green-500;
+    background: $green-500;
+    color: $white;
+
+    &:hover:not(:disabled) {
+      border-color: $green-700;
+      background: $green-700;
+    }
+  }
+
+  .is-pop & {
+    animation: tk-check-pop 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+  }
+}
+
+@keyframes tk-check-pop {
+  40% {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.18);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tk-edit,
+  .is-pop .tk-check {
+    animation: none;
+  }
+}

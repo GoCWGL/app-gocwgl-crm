@@ -18,6 +18,7 @@ import type {
   VaAgreementOut,
   ProjectClientUpdate,
   ProjectIn,
+  SubtaskUpdate,
   ProjectStaffUpdate,
   PublicResumeOut,
   RequestApplicant,
@@ -54,6 +55,11 @@ export const vaTeam = () => get<TeamVa[]>("/portal/va-team");
 export const listProjects = () => get<ClientProjectOut[]>("/portal/projects");
 export const requestProject = (body: ProjectIn) => post<ClientProjectOut>("/portal/projects", body);
 export const updateProject = (id: string, body: ProjectClientUpdate) => patch<ClientProjectOut>(`/portal/projects/${id}`, body);
+/** A task's checklist: each call returns the whole task. */
+export const addProjectSubtask = (id: string, title: string) => post<ClientProjectOut>(`/portal/projects/${id}/subtasks`, { title });
+export const updateProjectSubtask = (id: string, subtaskId: string, body: SubtaskUpdate) =>
+  patch<ClientProjectOut>(`/portal/projects/${id}/subtasks/${subtaskId}`, body);
+export const deleteProjectSubtask = (id: string, subtaskId: string) => del<ClientProjectOut>(`/portal/projects/${id}/subtasks/${subtaskId}`);
 /** A task's conversation with the VA, oldest first. */
 export const listProjectMessages = (id: string) => get<TaskMessageOut[]>(`/portal/projects/${id}/messages`);
 /** The client has read the task's conversation (clears its unread mark). */

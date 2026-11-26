@@ -5,7 +5,8 @@ import { Button, ConfirmDialog, GripIcon, Icon, Input, LoadState, Modal, StatGri
 import { TaskBoard, type BoardCard } from "@/features/portal/components/TaskBoard";
 import { TaskConversation } from "@/features/portal/components/TaskConversation";
 import { TaskBar, TaskFilter, TaskSearch, taskText } from "@/features/portal/components/TaskFilters";
-import { TaskSheet, TaskStatus } from "@/features/portal/components/TaskSheet";
+import { TaskSheet, TaskStatus, type TaskEdits } from "@/features/portal/components/TaskSheet";
+import { useVaTaskSubtasks } from "@/utils/hooks/useSubtasks";
 import { isOpenProject, vaNames, type ProjectStatus } from "@/features/portal/lib/projects";
 import { cn } from "@/lib/utils";
 import type { VaProjectOut, VaTaskOut, VaTaskUpdate } from "@/utils/api/models";
@@ -487,6 +488,10 @@ function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean
   const myId = useMyVaId();
   const messages = useVaTaskMessages(t.id);
   const post = usePostVaTaskMessage();
+  const update = useUpdateVaTask();
+  const subtasks = useVaTaskSubtasks();
+  const canEdit = !readOnly && isOpenProject(t);
+  const saveEdits = (e: TaskEdits, done: () => void) => update.mutate({ id: t.id, ...e }, { onSuccess: done });
   // Opening the task (or a new message arriving while it's open) reads the conversation.
   const { mutate: markRead } = useMarkVaTaskRead();
   const unread = t.unreadCount ?? 0;
@@ -503,7 +508,7 @@ function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean
       title={t.title}
       footer={
         <>
-          <span className="text-small">Updates every 30 seconds, in step with the client’s request.</span>
+          <span className="text-small">You and the client can both edit this task. Updates every 30 seconds.</span>
           <span className="u-spacer" />
           <Button variant="primary" onClick={onClose}>
             Close
@@ -520,6 +525,12 @@ function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean
         }}
         actions={readOnly ? undefined : <StatusPicker t={t} />}
         emptyDetails="The client didn’t add details. Ask them in the conversation if anything’s unclear."
+        edit={canEdit ? { save: saveEdits, saving: update.isPending, error: update.error, reset: update.reset } : undefined}
+        subtasks={{
+          actions: subtasks,
+          canEdit: !readOnly && t.status !== "cancelled",
+          emptyHint: `Break the work into steps. You and ${t.clientName || "the client"} can tick them off as you go.`,
+        }}
         conversation={
           <TaskConversation
             side="va"

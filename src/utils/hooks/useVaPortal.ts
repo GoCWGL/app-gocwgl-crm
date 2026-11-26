@@ -27,7 +27,7 @@ export const useMarkVaTaskRead = () => useApiMutation(api.markVaTaskMessagesRead
 export const usePostVaTaskMessage = () =>
   useApiMutation((v: { id: string; body: string }) => api.postVaTaskMessage(v.id, v.body), { invalidate: [qk.vaTasks] });
 export const useUpdateVaTask = () =>
-  useApiMutation((v: { id: string; status?: VaTaskUpdate["status"]; position?: number }) => api.updateVaTask(v.id, { status: v.status, position: v.position }), {
+  useApiMutation(({ id, ...body }: { id: string } & VaTaskUpdate) => api.updateVaTask(id, body), {
     // Start task also starts the timer: refresh the time tracker too.
     invalidate: [qk.vaTasks, qk.myShift, qk.myTime],
   });

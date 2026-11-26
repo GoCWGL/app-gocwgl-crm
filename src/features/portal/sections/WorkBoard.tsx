@@ -26,7 +26,8 @@ import { VaRequestModal } from "../components/VaRequestModal";
 import { TaskConversation } from "../components/TaskConversation";
 import { TaskBar, TaskFilter, TaskSearch, TaskTabs, taskText } from "../components/TaskFilters";
 import { WorkEmpty } from "../components/WorkEmpty";
-import { TaskSheet } from "../components/TaskSheet";
+import { TaskSheet, type TaskEdits } from "../components/TaskSheet";
+import { useProjectSubtasks } from "@/utils/hooks/useSubtasks";
 import { usePortal } from "../state/PortalContext";
 import { REQUEST_STATUS, RequestPopup } from "./TeamSection";
 
@@ -378,7 +379,20 @@ function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamV
     if (unread > 0 && !viewAsClientId) markRead(p.id);
   }, [p.id, unread, viewAsClientId, markRead, messages.data?.length]);
   const post = usePostProjectMessage();
+  const subtasks = useProjectSubtasks();
+  // Its own mutation, so a failed save shows only in the edit form.
+  const editTask = useUpdateProject();
   const canEdit = !readOnly && isOpenProject(p);
+  const saveEdits = (e: TaskEdits, done: () => void) =>
+    editTask.mutate(
+      { id: p.id, body: { ...e } },
+      {
+        onSuccess: () => {
+          notify("Task updated.");
+          done();
+        },
+      },
+    );
 
   const assign = canEdit ? (
     <div className="tk-sheet__row">
@@ -416,7 +430,7 @@ function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamV
       title={p.title}
       footer={
         <>
-          <span className="text-small">{p.vas.length > 1 ? "Every VA on it sees" : "Your VA sees"} exactly what’s here. Status updates show every 30 seconds.</span>
+          <span className="text-small">{p.vas.length > 1 ? "Every VA on it sees" : "Your VA sees"} exactly what’s here, and can edit it too. Updates show every 30 seconds.</span>
           <span className="u-spacer" />
           <Button variant="primary" onClick={onClose}>
             Close
@@ -435,6 +449,12 @@ function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamV
           }}
           actions={actions}
           emptyDetails="You didn’t add details to this request."
+          edit={canEdit ? { save: saveEdits, saving: editTask.isPending, error: editTask.error, reset: editTask.reset } : undefined}
+          subtasks={{
+            actions: subtasks,
+            canEdit: !readOnly && p.status !== "cancelled",
+            emptyHint: `Break the work into steps. You and ${p.vas.length > 1 ? "your VAs" : (p.vas[0]?.name ?? "your VA")} can tick them off as you go.`,
+          }}
           conversation={
             <TaskConversation
               side="client"

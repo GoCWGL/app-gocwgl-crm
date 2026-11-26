@@ -1,6 +1,7 @@
 import { api, apiUrl, del, download, get, patch, post, put } from "./client";
 import type {
   AgreementOut,
+  SubtaskUpdate,
   TaskMessageOut,
   InactiveAskOut,
   JournalEntryIn,
@@ -67,6 +68,10 @@ export const listInactiveAsks = () => get<InactiveAskOut[]>("/va/inactive-reques
 export const approveInactive = (requestId: string) => post<InactiveAskOut[]>(`/va/inactive-requests/${requestId}/approve`);
 export const listVaTasks = () => get<VaTaskOut[]>("/va/tasks");
 export const updateVaTask = (id: string, body: VaTaskUpdate) => patch<VaTaskOut>(`/va/tasks/${id}`, body);
+/** A task's checklist: each call returns the whole task. */
+export const addVaTaskSubtask = (id: string, title: string) => post<VaTaskOut>(`/va/tasks/${id}/subtasks`, { title });
+export const updateVaTaskSubtask = (id: string, subtaskId: string, body: SubtaskUpdate) => patch<VaTaskOut>(`/va/tasks/${id}/subtasks/${subtaskId}`, body);
+export const deleteVaTaskSubtask = (id: string, subtaskId: string) => del<VaTaskOut>(`/va/tasks/${id}/subtasks/${subtaskId}`);
 /** Open projects GoCWGL matched this VA to (shown beside their tasks). */
 export const listVaProjects = () => get<VaProjectOut[]>("/va/projects");
 export const placeVaProject = (id: string, position: number) => put<VaProjectOut[]>(`/va/projects/${id}/position`, { position });
