@@ -9,6 +9,9 @@ import { useApiMutation } from "./mutation";
 
 export const useTickets = (filters: { status?: string; type?: string; contact_id?: string } = {}) =>
   useQuery({ queryKey: [...qk.tickets, filters], queryFn: () => api.listTickets(filters), enabled: useCanUseMenu("bugs") });
+/** Clients › Client feedback: what clients sent as "Feedback" from Request support in their portal (any staff member). */
+export const useFeedbackTickets = () =>
+  useQuery({ queryKey: [...qk.tickets, { type: "feedback" }], queryFn: () => api.listTickets({ type: "feedback" }) });
 export const useCreateTicket = () => useApiMutation((v: StaffTicketIn) => api.createTicket(v), { invalidate: [qk.tickets, ["dashboard"]] });
 export const useUpdateTicket = () =>
   useApiMutation((v: { id: string; body: TicketPatch }) => api.updateTicket(v.id, v.body), { invalidate: [qk.tickets, ["dashboard"]] });

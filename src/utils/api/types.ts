@@ -17166,7 +17166,7 @@ export interface components {
          * TicketType
          * @enum {string}
          */
-        TicketType: "change" | "feature" | "bug" | "question";
+        TicketType: "change" | "feature" | "bug" | "question" | "feedback";
         /** TimeTagIn */
         TimeTagIn: {
             /** Name */

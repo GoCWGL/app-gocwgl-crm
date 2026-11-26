@@ -18,6 +18,7 @@ import { ViewAsClient } from "./modals/ViewAsClient";
 import { AffiliatesSection, ReferralBonusSection } from "./sections/affiliates/AffiliatesSection";
 import { AutomationSection } from "./sections/automation/AutomationSection";
 import { BugsSection } from "./sections/bugs/BugsSection";
+import { ClientFeedbackSection } from "./sections/engagement/ClientFeedbackSection";
 import { FeedbackSection } from "./sections/engagement/FeedbackSection";
 import { StatusSection } from "./sections/engagement/StatusSection";
 import { SupportSection } from "./sections/engagement/SupportSection";
@@ -93,6 +94,7 @@ const SECTIONS: Record<AdminTab, ComponentType> = {
   clientSops: ClientSopsSection,
   support: SupportSection,
   feedback: FeedbackSection,
+  clientFeedback: ClientFeedbackSection,
   jobs: JobPostingsSection,
   settings: SettingsSection,
 };

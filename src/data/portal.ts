@@ -345,6 +345,11 @@ export const REQUEST_TYPES = {
   feature: { label: "New feature", titlePh: "e.g. Add a second booking calendar", detailsPh: "Describe what you want and why it would help." },
   bug: { label: "Something is broken", titlePh: "e.g. My form is not sending emails", detailsPh: "What happened? What did you expect? When did it start?" },
   question: { label: "Question", titlePh: "e.g. How do I export my leads?", detailsPh: "Ask anything about your system." },
+  feedback: {
+    label: "Feedback",
+    titlePh: "e.g. The dashboard is easy to follow",
+    detailsPh: "What do you like about the portal, what’s confusing, and what would make it better?",
+  },
 } as const;
 
 export type RequestType = keyof typeof REQUEST_TYPES;

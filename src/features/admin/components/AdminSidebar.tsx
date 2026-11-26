@@ -74,7 +74,7 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
           },
           {
             title: "Client care",
-            items: [item("feedback", "Client feedback", "star")],
+            items: [item("feedback", "VA rating", "star"), item("clientFeedback", "Client feedback", "message")],
           },
         ],
       },

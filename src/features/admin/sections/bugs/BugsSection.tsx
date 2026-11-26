@@ -58,7 +58,8 @@ export function BugsSection() {
   // Every type by default: a client who sends a bug as a "change request" still shows up here.
   const [type, setType] = useState("");
   const query = useTickets(type ? { type } : {});
-  const tickets = query.data ?? [];
+  // Clients' portal feedback lives on Clients › Client feedback, not here.
+  const tickets = (query.data ?? []).filter((t) => t.type !== "feedback");
   const contacts = useAllContacts().data ?? [];
   const archived = useAllContacts({ archived: true }).data ?? [];
   const today = todayIso();
@@ -134,7 +135,7 @@ export function BugsSection() {
           <Input id="bug-q" type="search" placeholder="Title, client, reporter or ID" value={search} onChange={(e) => setSearch(e.target.value)} />
         </Field>
         <Field label={<span className="kicker kicker--sm">TYPE</span>} htmlFor="bug-type">
-          <Select id="bug-type" value={type} placeholder="Any type" options={TICKET_TYPES} onChange={(e) => setType(e.target.value)} />
+          <Select id="bug-type" value={type} placeholder="Any type" options={TICKET_TYPES.filter((t) => t.value !== "feedback")} onChange={(e) => setType(e.target.value)} />
         </Field>
         <Field label={<span className="kicker kicker--sm">CLIENT</span>} htmlFor="bug-client">
           <Select id="bug-client" value={client} placeholder="All clients" options={clients} onChange={(e) => setClient(e.target.value)} />
@@ -275,7 +276,7 @@ export function BugsSection() {
   );
 }
 
-function BugDetails({ ticket, client, canWrite, onClose }: { ticket: TicketOut; client: string; canWrite: boolean; onClose: () => void }) {
+export function BugDetails({ ticket, client, canWrite, onClose }: { ticket: TicketOut; client: string; canWrite: boolean; onClose: () => void }) {
   const [reply, setReply] = useState("");
   const update = useUpdateTicket();
   const post = usePostTicketMessage();

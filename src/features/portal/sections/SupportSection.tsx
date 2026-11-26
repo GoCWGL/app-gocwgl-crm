@@ -82,7 +82,8 @@ function RequestsView({ draft, setDraft }: { draft: SupportDraft; setDraft: (p: 
         title: draft.title.trim(),
         description: draft.details.trim(),
         area: draft.type === "bug" ? area : "",
-        priority,
+        // Feedback isn't urgent: it skips the "How urgent?" question.
+        priority: draft.type === "feedback" ? "Low" : priority,
         device: typeof navigator === "undefined" ? "" : navigator.userAgent.slice(0, 200),
       },
       {
@@ -177,14 +178,16 @@ function RequestsView({ draft, setDraft }: { draft: SupportDraft; setDraft: (p: 
             }}
           />
         </Field>
-        <Field label="How urgent?" htmlFor="sp-pri">
-          <Select
-            id="sp-pri"
-            value={priority}
-            options={PRIORITIES}
-            onChange={(e) => setPriority(e.target.value as (typeof PRIORITIES)[number]["value"])}
-          />
-        </Field>
+        {draft.type !== "feedback" && (
+          <Field label="How urgent?" htmlFor="sp-pri">
+            <Select
+              id="sp-pri"
+              value={priority}
+              options={PRIORITIES}
+              onChange={(e) => setPriority(e.target.value as (typeof PRIORITIES)[number]["value"])}
+            />
+          </Field>
+        )}
         {error && (
           <p className="text-error" role="alert">
             {error}

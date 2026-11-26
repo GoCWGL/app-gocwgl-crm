@@ -43,6 +43,7 @@ export type AdminTab =
   | "clientSops"
   | "support"
   | "feedback"
+  | "clientFeedback"
   | "jobs"
   | "funnels"
   | "settings";
@@ -109,7 +110,8 @@ export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> 
   clientSops: { title: "Client SOPs", subtitle: "Step-by-step guides for your clients. Draft them, then publish when they're ready." },
   support: { title: "Support", subtitle: "Every request for help from your clients and your VAs, in one place." },
   jobs: { title: "Job Postings", subtitle: "Client roles for your VAs: review them, post them, interview, and mark them filled." },
-  feedback: { title: "Feedback", subtitle: "What your clients say about their VAs: star ratings and comments." },
+  feedback: { title: "VA rating", subtitle: "What your clients say about their VAs: star ratings and comments." },
+  clientFeedback: { title: "Client feedback", subtitle: "What your clients think of their portal, sent as Feedback from Request support." },
   settings: { title: "Settings", subtitle: "Your profile, business details, team and preferences." },
 };
 
@@ -213,6 +215,7 @@ export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
   // Tickets belong to the "Report a bug" menu on the API.
   support: "bugs",
   feedback: null,
+  clientFeedback: null,
   jobs: null,
   // Funnel Requests used to be a Build Progress tab: same access.
   funnels: "progress",

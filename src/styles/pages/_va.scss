@@ -2924,6 +2924,25 @@
   padding: 16px 18px 18px;
 }
 
+// Clients › Client feedback: each card opens the details panel beside the list.
+.client-feedback-card {
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    border-color: rgba(255, 153, 0, 0.45);
+  }
+
+  &.is-selected {
+    border-color: $orange;
+    box-shadow: $glow-orange-soft;
+  }
+
+  &__open {
+    text-align: left;
+  }
+}
+
 .feedback-card {
   display: flex;
   flex-direction: column;

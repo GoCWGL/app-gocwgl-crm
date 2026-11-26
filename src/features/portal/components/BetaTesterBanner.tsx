@@ -26,7 +26,7 @@ export function BetaTesterBanner() {
         </span>
       </span>
       {!readOnly && (
-        <Button size="sm" variant="outline" className="beta-banner__action" onClick={() => openSupport()}>
+        <Button size="sm" variant="outline" className="beta-banner__action" onClick={() => openSupport({ type: "feedback" })}>
           <Icon name="mail" size={13} />
           Send feedback
         </Button>

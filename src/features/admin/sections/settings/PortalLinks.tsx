@@ -102,7 +102,13 @@ export function PortalLinks() {
           title={`View the ${confirming.title}?`}
           icon={confirming.icon}
           confirmLabel="Yes, view portal"
-          onConfirm={() => router.push(confirming.href)}
+          onConfirm={() => {
+            // Close it before leaving: the admin page keeps its state while you're in the portal, so a still-open
+            // pop-up would greet you again on "Back to admin".
+            const href = confirming.href;
+            setConfirming(null);
+            router.push(href);
+          }}
           onClose={() => setConfirming(null)}
         >
           {`You'll leave the admin and see ${confirming.who} portal as they do. `}

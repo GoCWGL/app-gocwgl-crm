@@ -136,7 +136,7 @@ function OpenFirstClient() {
 }
 
 function PortalLayout() {
-  const { state, update, openSupport, readOnly } = usePortal();
+  const { state, update, readOnly } = usePortal();
   // The API decides whose portal this is (the client's own, or X-Client-Id in "View as client").
   const business = useOverview(30).data?.business || "Your business";
   const { user, viewAsClientId } = useSession();
@@ -193,15 +193,6 @@ function PortalLayout() {
         kicker={`${(PORTAL_GROUP_OF[tab] ?? "My account").toUpperCase()} // ${page.title.toUpperCase()}`}
         title={page.title}
         subtitle={page.subtitle}
-        actions={
-          // Only on Support, where requests live.
-          !readOnly &&
-          tab === "support" && (
-            <Button variant="primary" size="lg" onClick={() => openSupport()}>
-              + New request
-            </Button>
-          )
-        }
       />
       <PageGuide key={`guide-${tab}`} tab={tab} />
       <Toast message={state.toast} onClose={() => update({ toast: "" })} />
