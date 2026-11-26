@@ -39,37 +39,57 @@ const PACKAGES: Array<{ key: PackageKey; label: string; menu: string; on: string
   },
 ];
 
-/** Per-client switches for their portal menu: Request CRM, the whole Funnel menu, and Request VA. */
+/** Per-client switches for their portal: Request CRM, the whole Funnel menu, Request VA and Beta tester. Each asks to confirm. */
 export function PortalMenuCard({ contact: c }: { contact: ContactOut }) {
   const { update } = useAdmin();
   const canWrite = canWriteCrm(useMe().data);
   const save = useUpdateContact();
 
-  const toggle = (key: PackageKey, menu: string, next: boolean) => {
+  // Every switch asks first: it opens a confirmation, and only "Yes" saves it.
+  const [pending, setPending] = useState<{ key: PackageKey | "betaTester"; next: boolean } | null>(null);
+  const ask = (key: PackageKey | "betaTester", next: boolean) => {
     if (!canWrite || save.isPending) return;
-    const body: ContactUpdate = { [key]: next };
+    save.reset();
+    setPending({ key, next });
+  };
+  const beta = c.betaTester ?? false;
+  const who = c.company || c.name || c.email;
+
+  const confirm = (() => {
+    if (!pending) return null;
+    const { key, next } = pending;
+    if (key === "betaTester") {
+      return {
+        title: next ? `Make ${who} a beta tester?` : `Remove ${who} as a beta tester?`,
+        label: next ? "Yes, make them a beta tester" : "Yes, remove",
+        body: next
+          ? "Their portal shows a Beta tester card at the top of every page and a label under the logo. You can turn it off any time."
+          : "The Beta tester card and label disappear from their portal.",
+        toast: next ? "This client is now a beta tester." : "This client is no longer a beta tester.",
+      };
+    }
+    const p = PACKAGES.find((x) => x.key === key)!;
+    return {
+      title: next ? `Show ${p.label} to ${who}?` : `Hide ${p.label} from ${who}?`,
+      label: next ? "Yes, show it" : "Yes, hide it",
+      body: next ? p.on : p.off,
+      toast: next ? `${p.menu} is on for this client.` : `${p.menu} is hidden for this client.`,
+    };
+  })();
+
+  const saveSwitch = () => {
+    if (!pending || !confirm || !canWrite || save.isPending) return;
+    const body: ContactUpdate = { [pending.key]: pending.next };
     save.mutate(
       { id: c.id, body },
-      { onSuccess: () => update({ toast: next ? `${menu} is on for this client.` : `${menu} is hidden for this client.` }) },
-    );
-  };
-
-  // Beta tester asks first: the switch opens a confirmation, and only "Yes" saves it.
-  const [confirmBeta, setConfirmBeta] = useState<boolean | null>(null);
-  const saveBeta = (next: boolean) => {
-    if (!canWrite || save.isPending) return;
-    save.mutate(
-      { id: c.id, body: { betaTester: next } },
       {
         onSuccess: () => {
-          setConfirmBeta(null);
-          update({ toast: next ? "This client is now a beta tester." : "This client is no longer a beta tester." });
+          setPending(null);
+          update({ toast: confirm.toast });
         },
       },
     );
   };
-  const beta = c.betaTester ?? false;
-  const who = c.company || c.name || c.email;
 
   return (
     <div className="inset portal-login">
@@ -90,7 +110,7 @@ export function PortalMenuCard({ contact: c }: { contact: ContactOut }) {
               <span className="text-small u-strong">{p.label}</span>
               <span className="text-tiny">{on ? p.on : p.off}</span>
             </span>
-            <Toggle label={`Show ${p.label}`} checked={on} onChange={(next) => toggle(p.key, p.menu, next)} />
+            <Toggle label={`Show ${p.label}`} checked={on} onChange={(next) => ask(p.key, next)} />
           </div>
         );
       })}
@@ -105,28 +125,9 @@ export function PortalMenuCard({ contact: c }: { contact: ContactOut }) {
         <Toggle
           label="Beta tester"
           checked={beta}
-          onChange={(next) => {
-            if (!canWrite || save.isPending) return;
-            save.reset();
-            setConfirmBeta(next);
-          }}
+          onChange={(next) => ask("betaTester", next)}
         />
       </div>
-      {confirmBeta !== null && (
-        <ConfirmDialog
-          title={confirmBeta ? `Make ${who} a beta tester?` : `Remove ${who} as a beta tester?`}
-          confirmLabel={confirmBeta ? "Yes, make them a beta tester" : "Yes, remove"}
-          icon="sparkle"
-          pending={save.isPending}
-          error={save.error}
-          onConfirm={() => saveBeta(confirmBeta)}
-          onClose={() => setConfirmBeta(null)}
-        >
-          {confirmBeta
-            ? "Their portal shows a Beta tester card at the top of every page and a label under the logo. You can turn it off any time."
-            : "The Beta tester card and label disappear from their portal."}
-        </ConfirmDialog>
-      )}
       {/* The VA agreement: the client ticks that they understand it (VA › Agreement) before their first VA request. */}
       <div className="cluster cluster--nowrap portal-menu-row">
         <span className="stack stack--2 u-grow">
@@ -139,7 +140,20 @@ export function PortalMenuCard({ contact: c }: { contact: ContactOut }) {
         </span>
         <Badge tone={c.vaAgreementAcceptedAt ? "green" : "slate"}>{c.vaAgreementAcceptedAt ? "Confirmed" : "Pending"}</Badge>
       </div>
-      <FormError error={save.error} />
+      {confirm && (
+        <ConfirmDialog
+          title={confirm.title}
+          confirmLabel={confirm.label}
+          icon="sparkle"
+          pending={save.isPending}
+          error={save.error}
+          onConfirm={saveSwitch}
+          onClose={() => setPending(null)}
+        >
+          {confirm.body}
+        </ConfirmDialog>
+      )}
+      {!pending && <FormError error={save.error} />}
     </div>
   );
 }
