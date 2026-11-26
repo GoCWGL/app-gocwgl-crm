@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import logoMark from "@/assets/images/logo-mark.png";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { NavItem, ProfileButton, Sidebar, SidebarGroup, useNavPanel } from "@/components/layout";
-import { Icon, type IconName } from "@/components/ui";
+import { Badge as Pill, Icon, type IconName } from "@/components/ui";
 import { MyAvatar } from "@/features/account/ProfilePhoto";
 import {
   HIDDEN_PORTAL_TABS,
@@ -21,7 +21,7 @@ import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import { usePortalBilling } from "@/utils/hooks/useBilling";
 import { useMyAffiliate } from "@/utils/hooks/useAffiliates";
-import { usePortalTodos } from "@/utils/hooks/usePortal";
+import { useOverview, usePortalTodos } from "@/utils/hooks/usePortal";
 import { useSession } from "@/utils/auth/session";
 import { useMe } from "@/utils/hooks/useUsers";
 import { useVaRequests } from "@/utils/hooks/useClientWork";
@@ -69,6 +69,8 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   // "My VA team" pages (VA Team, Tasks, VA tracker, Live work, ratings, Training, SOPs, Request support) appear once
   // the client has an active VA.
   const vaWork = useHasVaWork();
+  // The team marked this client as a beta tester (client profile › Portal menu): a label under the logo.
+  const betaTester = useOverview(30).data?.betaTester === true;
   // Training appears once GoCWGL assigns the client a training.
   const training = useHasTraining();
   // Request CRM shows unless the team turned it off for this client. The whole Funnel menu (Request Funnel, builds and
@@ -184,7 +186,16 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
         className={cn("sidebar--admin sidebar--portal", compact && "sidebar--compact", expanding && "sidebar--expanding")}
         brand={
           <>
-            <Image src={logoWordmark} alt="GoCWGL" width={168} priority className="sidebar__wordmark" />
+            {betaTester ? (
+              <span className="portal-brand">
+                <Image src={logoWordmark} alt="GoCWGL" width={168} priority className="sidebar__wordmark" />
+                <Pill tone="orange" mono size="xs">
+                  BETA TESTER
+                </Pill>
+              </span>
+            ) : (
+              <Image src={logoWordmark} alt="GoCWGL" width={168} priority className="sidebar__wordmark" />
+            )}
             <Image src={logoMark} alt="GoCWGL" width={36} height={36} className="sidebar__mark" />
             {openFlyout && (
               <button

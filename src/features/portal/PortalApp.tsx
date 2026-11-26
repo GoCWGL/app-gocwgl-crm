@@ -35,6 +35,7 @@ import { VaTeamSection } from "./sections/VaTeamSection";
 import { WorkJournalSection } from "./sections/WorkJournalSection";
 import { useWorkTabs, WorkSection } from "./sections/WorkSection";
 import { PageGuide } from "./components/PageGuide";
+import { BetaTesterBanner } from "./components/BetaTesterBanner";
 import { StaffClientBar } from "./components/StaffClientBar";
 import { PortalProvider, usePortal } from "./state/PortalContext";
 
@@ -187,6 +188,7 @@ function PortalLayout() {
       }
     >
       <StaffClientBar />
+      <BetaTesterBanner />
       <PageHeader
         kicker={`${(PORTAL_GROUP_OF[tab] ?? "My account").toUpperCase()} // ${page.title.toUpperCase()}`}
         title={page.title}

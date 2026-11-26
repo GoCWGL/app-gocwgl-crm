@@ -1,6 +1,7 @@
 "use client";
 
-import { Badge, FormError, Icon, Toggle } from "@/components/ui";
+import { useState } from "react";
+import { Badge, ConfirmDialog, FormError, Icon, Toggle } from "@/components/ui";
 import { formatShort } from "@/utils/format/dates";
 import type { ContactOut, ContactUpdate } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
@@ -53,6 +54,23 @@ export function PortalMenuCard({ contact: c }: { contact: ContactOut }) {
     );
   };
 
+  // Beta tester asks first: the switch opens a confirmation, and only "Yes" saves it.
+  const [confirmBeta, setConfirmBeta] = useState<boolean | null>(null);
+  const saveBeta = (next: boolean) => {
+    if (!canWrite || save.isPending) return;
+    save.mutate(
+      { id: c.id, body: { betaTester: next } },
+      {
+        onSuccess: () => {
+          setConfirmBeta(null);
+          update({ toast: next ? "This client is now a beta tester." : "This client is no longer a beta tester." });
+        },
+      },
+    );
+  };
+  const beta = c.betaTester ?? false;
+  const who = c.company || c.name || c.email;
+
   return (
     <div className="inset portal-login">
       <div className="cluster cluster--nowrap">
@@ -76,6 +94,39 @@ export function PortalMenuCard({ contact: c }: { contact: ContactOut }) {
           </div>
         );
       })}
+      {/* Beta tester: their portal shows a Beta tester card at the top of every page (and a label under the logo). */}
+      <div className="cluster cluster--nowrap portal-menu-row">
+        <span className="stack stack--2 u-grow">
+          <span className="text-small u-strong">Beta tester</span>
+          <span className="text-tiny">
+            {beta ? "Their portal shows a Beta tester card at the top of every page." : "Off (the default). Turn on to show a Beta tester card in their portal."}
+          </span>
+        </span>
+        <Toggle
+          label="Beta tester"
+          checked={beta}
+          onChange={(next) => {
+            if (!canWrite || save.isPending) return;
+            save.reset();
+            setConfirmBeta(next);
+          }}
+        />
+      </div>
+      {confirmBeta !== null && (
+        <ConfirmDialog
+          title={confirmBeta ? `Make ${who} a beta tester?` : `Remove ${who} as a beta tester?`}
+          confirmLabel={confirmBeta ? "Yes, make them a beta tester" : "Yes, remove"}
+          icon="sparkle"
+          pending={save.isPending}
+          error={save.error}
+          onConfirm={() => saveBeta(confirmBeta)}
+          onClose={() => setConfirmBeta(null)}
+        >
+          {confirmBeta
+            ? "Their portal shows a Beta tester card at the top of every page and a label under the logo. You can turn it off any time."
+            : "The Beta tester card and label disappear from their portal."}
+        </ConfirmDialog>
+      )}
       {/* The VA agreement: the client ticks that they understand it (VA › Agreement) before their first VA request. */}
       <div className="cluster cluster--nowrap portal-menu-row">
         <span className="stack stack--2 u-grow">

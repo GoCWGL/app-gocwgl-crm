@@ -10596,6 +10596,11 @@ export interface components {
              * @default true
              */
             showVaPackages?: boolean;
+            /**
+             * Betatester
+             * @default false
+             */
+            betaTester?: boolean;
             /** Vaagreementacceptedat */
             vaAgreementAcceptedAt?: string | null;
             /** Convertedto */
@@ -10682,6 +10687,8 @@ export interface components {
             showFunnelPackages?: boolean | null;
             /** Showvapackages */
             showVaPackages?: boolean | null;
+            /** Betatester */
+            betaTester?: boolean | null;
         };
         /**
          * CrmPackage
@@ -13759,6 +13766,11 @@ export interface components {
              * @default true
              */
             showVaPackages?: boolean;
+            /**
+             * Betatester
+             * @default false
+             */
+            betaTester?: boolean;
         };
         /** Page[ContactOut] */
         Page_ContactOut_: {

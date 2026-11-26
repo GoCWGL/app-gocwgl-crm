@@ -10,10 +10,20 @@
 // Main menu as icons only (desktop): no "Powered by".
 @include up(md) {
   .dual-nav > .sidebar--compact {
-    .portal-powered {
+    .portal-powered,
+    .portal-brand {
       display: none;
     }
   }
+}
+
+// A beta tester's portal: "BETA TESTER" under the logo (the team turns it on in the client's profile).
+.portal-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
 }
 
 // Request CRM / Request Funnel: first in their second sidebar, in the brand orange so they stand out.
@@ -90,4 +100,67 @@
   align-items: center;
   gap: 12px;
   margin-left: auto;
+}
+
+// A beta tester's portal: a card at the top of every page (BetaTesterBanner).
+.beta-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 153, 0, 0.45);
+  border-radius: $radius-2xl;
+  background: linear-gradient(90deg, rgba(255, 153, 0, 0.16), rgba(255, 178, 63, 0.05));
+  box-shadow: $glow-orange-soft;
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: $radius-lg;
+    background: $grad-orange;
+    color: $on-orange;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__kicker {
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #c2410c;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 700;
+    color: $ink;
+  }
+
+  &__body {
+    font-size: 13px;
+    color: $muted;
+  }
+
+  &__action {
+    flex: none;
+  }
+
+  @include down(sm) {
+    flex-wrap: wrap;
+
+    &__action {
+      width: 100%;
+    }
+  }
 }
