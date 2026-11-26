@@ -10,6 +10,7 @@ import { useUpdateJobPosting } from "@/utils/hooks/useJobPostings";
 import { useMyVaAgreement, useRequestVa, useStaffCreateVaRequest, useStaffUpdateVaRequest, useUpdateMyVaRequest, useVaRequests } from "@/utils/hooks/useClientWork";
 import { usePortal } from "../state/PortalContext";
 import { ClientVaAgreementTerms } from "./ClientVaAgreement";
+import { SubtaskDraftList } from "./TaskSubtasks";
 import { CATEGORY_GROUPS, CATEGORY_INFO, OTHER_CATEGORY, splitCategory } from "../lib/vaCategories";
 import {
   TRAINING_FEE_SHORT,
@@ -207,6 +208,8 @@ export function VaRequestForm({
   const [must, setMust] = useState<string[]>(() => lines(edit?.mustHave ?? []));
   const [nice, setNice] = useState<string[]>(() => lines(edit?.niceToHave ?? []));
   const [important, setImportant] = useState(edit?.important ?? "");
+  // Steps to tick off (the same checklist as in its pop-up). Editing keeps the ticks on steps that stay.
+  const [subtasks, setSubtasks] = useState<string[]>(() => (edit?.subtasks ?? []).map((x) => x.title));
   // An open project: the client's estimated budget and due date (GoCWGL quotes the payment).
   const [budget, setBudget] = useState(edit?.budgetCents != null ? centsToDollars(edit.budgetCents) : "");
   const [due, setDue] = useState(edit?.dueDate ?? "");
@@ -265,6 +268,7 @@ export function VaRequestForm({
       hoursPerWeek: load.hours,
       overview: overview.trim(),
       important: important.trim(),
+      subtasks: filled(subtasks),
       ...(project
         ? // A project has no working hours, lists or time tracking: just its budget and due date.
           {
@@ -365,7 +369,6 @@ export function VaRequestForm({
           agreed={agreed}
           onAgree={setAgreed}
           error={agreeTried && !agreed ? "Tick the box to accept the VA agreement before you continue." : undefined}
-          tools={{ timeTracker, attendance, setTimeTracker, setAttendance }}
         />
       </Modal>
     );
@@ -537,6 +540,17 @@ export function VaRequestForm({
           {project && hoursField}
         </Section>
 
+        <Section
+          title="Subtasks (optional)"
+          desc={
+            project
+              ? "Break the project into steps. You and your VA tick them off in the project as you go."
+              : "Steps for your new VA, like a first-week checklist. You tick them off in the request as they’re done."
+          }
+        >
+          <SubtaskDraftList value={subtasks} onChange={setSubtasks} idPrefix="vr-sub" />
+        </Section>
+
         {!project && (
           <>
             <Section title="Schedule" desc="When the VA works, in your time zone.">
@@ -574,9 +588,8 @@ export function VaRequestForm({
               {hoursField}
             </Section>
 
-            {/* Clients choose these on the agreement step; here only for staff, and when changing a request. */}
-            {(staff || edit) && (
-              <Section title="Time tracking" desc="Off unless you need it. Turn on what you want and it’s added to your menu (Time & activity) and your VA’s.">
+            {/* Chosen here, after the agreement (step 2), by clients and staff alike. */}
+            <Section title="Time tracking (optional)" desc="Both are off unless you turn them on. What you turn on is added to your menu under Time & activity, and to your VA’s portal.">
                 <ToolRow
                   icon="clock"
                   title="Time tracker"
@@ -586,13 +599,12 @@ export function VaRequestForm({
                 />
                 <ToolRow
                   icon="calendarCheck"
-                  title="Attendance"
+                  title="Attendance tracker"
                   hint="Your VA clocks in and out, so you see when they start and whether it’s on time for your schedule."
                   checked={attendance}
                   onChange={setAttendance}
                 />
               </Section>
-            )}
 
             <Section title="Responsibilities & experience" desc="One item per line. Press Enter to add another.">
               <BulletField label="Key responsibilities" required items={duties} onChange={setDuties} error={err("duties")} placeholder="e.g. Answer and sort the patient inbox" />
@@ -638,15 +650,12 @@ function VaAgreement({
   agreed,
   onAgree,
   error,
-  tools,
 }: {
   loadKey: LoadKey;
   onLoad: (key: LoadKey) => void;
   agreed: boolean;
   onAgree: (agreed: boolean) => void;
   error?: string;
-  /** Time tracker and Attendance for the VA: both off unless the client turns them on. */
-  tools: { timeTracker: boolean; attendance: boolean; setTimeTracker: (on: boolean) => void; setAttendance: (on: boolean) => void };
 }) {
   const load = LOADS.find((l) => l.value === loadKey) ?? LOADS[2];
   return (
@@ -713,27 +722,6 @@ function VaAgreement({
       ) : (
           <Section title="VA agreement" desc="Please read it before you request a VA.">
             <ClientVaAgreementTerms hours={load.hours} />
-            {/* Right before accepting: whether the VA uses the time tracker and the attendance tracker (both off unless turned on). */}
-            <div className="vra-tools" role="group" aria-labelledby="vra-tools-title">
-              <div className="vra-tools__head">
-                <strong id="vra-tools-title">Time tracking (optional)</strong>
-                <span>Both are off unless you turn them on. What you turn on is added to your menu under Time &amp; activity, and to your VA’s portal.</span>
-              </div>
-              <ToolRow
-                icon="clock"
-                title="Time tracker"
-                hint="Your VA tracks the time they spend on your work. You see it in VA tracker."
-                checked={tools.timeTracker}
-                onChange={tools.setTimeTracker}
-              />
-              <ToolRow
-                icon="calendarCheck"
-                title="Attendance tracker"
-                hint="Your VA clocks in and out, so you see when they start and whether they’re on time for your schedule."
-                checked={tools.attendance}
-                onChange={tools.setAttendance}
-              />
-            </div>
             <Field error={error}>
               <Checkbox
                 brand

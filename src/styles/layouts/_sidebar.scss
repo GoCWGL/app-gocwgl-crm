@@ -184,10 +184,11 @@
     &[aria-current="page"],
     &--active,
     &--open {
+      // Both run for 0.5s, starting right away.
       .nav-item__icon {
         animation:
           nav-icon-bounce 0.5s ease-in-out,
-          nav-icon-spin 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+          nav-icon-spin 0.5s ease-in-out;
       }
 
       // The text bounces in from the left; it moves but never changes size.

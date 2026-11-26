@@ -11,6 +11,11 @@ import { formatCentsExact } from "@/utils/format/money";
 import { useAcceptQuote, useCancelVaRequest, useCommentOnMyRequest, useMyRequestComments, useVaRequests, useVaTeam } from "@/utils/hooks/useClientWork";
 import { ClientVaAgreementCard } from "../components/ClientVaAgreement";
 import { RequestComments } from "../components/RequestComments";
+import { subtaskActivity } from "../components/CommentsActivity";
+import { useConfirmClose } from "../components/ConfirmClose";
+import { DetailLayout, SideCard, SideFacts } from "../components/TaskSheet";
+import { TaskSubtasks } from "../components/TaskSubtasks";
+import { useRequestSubtasks } from "@/utils/hooks/useSubtasks";
 import { agreementOf } from "../lib/vaAgreement";
 import { requestHours, requestLoad, VaRequestDetails } from "../components/VaRequestDetails";
 import { ApplicantsReview } from "../components/ApplicantsReview";
@@ -232,43 +237,55 @@ export function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => v
   const at = r.status === "matched" ? STAGES.length : STAGES.filter((x) => x.reached.includes(r.status)).length - 1;
   const canEdit = !readOnly && (r.status === "new" || r.status === "reviewing");
   const canCancel = !readOnly && ["new", "reviewing", "approved"].includes(r.status);
+  const subtasks = useRequestSubtasks();
+  const [askClose, closeDialog] = useConfirmClose(onClose, r.engagement === "project" ? "project" : "request");
 
   if (editing) return <VaRequestForm edit={r} notify={notify} pastVas={pastVas} onClose={() => setEditing(false)} />;
 
-  return (
-    <Modal
-      open
-      onClose={onClose}
-      titleId={`rq-${r.id}`}
-      kicker="VA REQUEST"
-      title={r.role}
-      subtitle={`${requestSummary(r)} · requested ${formatShort(r.createdAt)}`}
-      width={720}
-      className="rq-popup"
-      footer={
-        <>
-          {canCancel && (
-            <Button variant="danger" onClick={() => setConfirmCancel(true)}>
-              Cancel request
-            </Button>
-          )}
-          <span className="u-spacer" />
-          <Button onClick={onClose}>Close</Button>
-          {canEdit ? (
-            <Button variant="primary" onClick={() => setEditing(true)}>
-              <Icon name="edit" size={14} /> Edit request
-            </Button>
-          ) : null}
-        </>
-      }
-    >
-      <div className="stack stack--16">
+  const project = r.engagement === "project";
+  const va = r.matchedVa ?? r.requestedVa;
+  const main = (
+    <div className="tk-sheet">
+      <VaRequestDetails r={r} part="body" />
+      <TaskSubtasks
+        taskId={r.id}
+        subtasks={r.subtasks ?? []}
+        actions={subtasks}
+        canEdit={!readOnly && r.status !== "cancelled" && r.status !== "declined"}
+        emptyHint={project ? "Break the project into steps. You and your VA can tick them off as you go." : "Steps for your new VA, like a first-week checklist. Tick them off as they’re done."}
+      />
+      <RequestComments
+        side="client"
+        comments={comments}
+        send={(body, done) => comment.mutate({ id: r.id, body }, { onSuccess: done })}
+        sending={comment.isPending}
+        sendError={comment.error}
+        closed={r.status === "cancelled"}
+        readOnly={readOnly}
+        staffViewing={!!viewAsClientId}
+        activity={[
+          { id: "created", at: r.createdAt, who: r.requestedByName || "You", icon: "plus", text: project ? "requested this project" : "requested a VA" },
+          ...(r.reviewedAt && r.status !== "new"
+            ? [{ id: "reviewed", at: r.reviewedAt, who: "GoCWGL", icon: "eye" as const, text: r.status === "declined" ? "declined the request" : "reviewed the request" }]
+            : []),
+          ...(r.matchedVa && r.matchedAt ? [{ id: "matched", at: r.matchedAt, who: r.matchedVa.name, icon: "userPlus" as const, text: project ? "was assigned to this project" : "was matched to this request" }] : []),
+          ...subtaskActivity(r.subtasks),
+        ]}
+      />
+    </div>
+  );
+
+  const side = (
+    <>
+      <SideCard title="Status" className="tk-side--status">
         <div className="rq-popup__status">
-          <Badge tone={st.tone} dot>
-            {st.label}
-          </Badge>
+          {/* Ended: no progress to show, so the status itself. */}
+          {ended && (
+            <Badge tone={st.tone} dot>
+              {st.label}
+            </Badge>
+          )}
           <p className={`rq-card__status is-${r.status}`}>
-            <span className="rq-card__status-dot" aria-hidden="true" />
             {r.engagement === "project" && r.status === "inactive"
               ? "This project has ended."
               : r.engagement === "project" && r.quoteAcceptedAt && !r.matchedVa && !ended
@@ -279,9 +296,8 @@ export function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => v
             {who && <span className="rq-card__when">{who}</span>}
           </p>
         </div>
-
         {!ended && (
-          <ol className="rq-steps" aria-label="Progress">
+          <ol className="rq-steps rq-steps--vertical" aria-label="Status">
             {STAGES.map((x, i) => (
               <li key={x.label} className={i < at ? "is-done" : i === at ? "is-now" : ""}>
                 <span className="rq-steps__dot" aria-hidden="true">
@@ -292,29 +308,37 @@ export function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => v
             ))}
           </ol>
         )}
+      </SideCard>
 
-        {!canEdit && !ended && !readOnly && (
-          <p className="text-small">GoCWGL has approved this request, so it can’t be edited. Ask us through Request support if something needs to change.</p>
-        )}
+      {r.engagement === "project" && !ended && <QuoteCard r={r} />}
 
-        {r.matchedVa && !ended && (
-          <div className="rq-match">
-            <VaPresence id={r.matchedVa.id} name={r.matchedVa.name} state="offline" size="md" />
+      <SideCard
+        title={project ? "Assigned VA" : "Your VA"}
+        action={
+          r.matchedVa && !ended ? (
+            <button type="button" className="tk-side__link" onClick={() => setProfile(true)}>
+              View profile
+            </button>
+          ) : undefined
+        }
+      >
+        {va ? (
+          <div className="rq-match rq-match--side">
+            <VaPresence id={va.id} name={va.name} state="offline" size="md" />
             <div className="stack stack--2 u-grow">
-              <span className="rq-match__kicker">Your matched VA</span>
-              <strong className="rq-match__name">{r.matchedVa.name}</strong>
+              <strong className="rq-match__name">{va.name}</strong>
               <span className="rq-match__meta">
-                {[r.matchedVa.headline, r.matchedVa.location, r.matchedVa.yearsExperience && `${r.matchedVa.yearsExperience.replace(/\s*years?$/i, "")} yrs experience`]
-                  .filter(Boolean)
-                  .join(" · ") || "Virtual assistant"}
+                {r.matchedVa
+                  ? [r.matchedVa.headline, r.matchedVa.location, r.matchedVa.yearsExperience && `${r.matchedVa.yearsExperience.replace(/\s*years?$/i, "")} yrs experience`]
+                      .filter(Boolean)
+                      .join(" · ") || "Virtual assistant"
+                  : "You asked for them · GoCWGL assigns once approved"}
               </span>
             </div>
-            <Button size="sm" variant="primary" onClick={() => setProfile(true)}>
-              View profile
-            </Button>
           </div>
+        ) : (
+          <p className="tk-people__empty">{project ? "GoCWGL assigns a VA with the right skills once the project is approved." : "GoCWGL matches you with a trained VA."}</p>
         )}
-
         {(r.status === "posted" || r.status === "interviewing") && (
           <button type="button" className="rq-applicants" onClick={() => setReviewing(true)}>
             <span className="rq-applicants__count">{r.applicantCount ?? 0}</span>
@@ -329,32 +353,77 @@ export function RequestPopup({ r, onClose }: { r: VaRequestOut; onClose: () => v
             )}
           </button>
         )}
+      </SideCard>
 
-        {r.teamNote && (
-          <p className="rq-card__note">
-            <Icon name="message" size={13} />
-            <span>
-              <b>GoCWGL:</b> {r.teamNote}
-            </span>
-          </p>
-        )}
-
-        {r.engagement === "project" && !ended && <QuoteCard r={r} />}
-
-        <VaRequestDetails r={r} />
-
-        <RequestComments
-          side="client"
-          comments={comments}
-          send={(body, done) => comment.mutate({ id: r.id, body }, { onSuccess: done })}
-          sending={comment.isPending}
-          sendError={comment.error}
-          closed={r.status === "cancelled"}
-          readOnly={readOnly}
-          staffViewing={!!viewAsClientId}
+      <SideCard title="Details">
+        <SideFacts
+          facts={[
+            { icon: "user", label: "Requested by", value: r.requestedByName || "You" },
+            ...(project ? [{ icon: "clock" as const, label: "Deadline", value: r.dueDate ? formatShort(r.dueDate) : "No deadline" }] : []),
+            { icon: "calendar", label: "Requested on", value: formatShort(r.createdAt) },
+            { icon: "edit", label: "Last update", value: formatShort(r.updatedAt) },
+          ]}
         />
-      </div>
+        <VaRequestDetails r={r} part="facts" />
+      </SideCard>
 
+      {r.teamNote && (
+        <section className="rd-important">
+          <span className="rd-important__icon" aria-hidden="true">
+            <Icon name="message" size={15} />
+          </span>
+          <span className="stack stack--2">
+            <strong>Note from GoCWGL</strong>
+            <span className="va-pre">{r.teamNote}</span>
+          </span>
+        </section>
+      )}
+
+      {(canEdit || canCancel || (!canEdit && !ended && !readOnly)) && (
+        <SideCard title="Actions" className="tk-side--actions">
+          <div className="stack stack--8">
+            {canEdit && (
+              <Button size="sm" className="tk-side__btn" onClick={() => setEditing(true)}>
+                <Icon name="edit" size={13} /> Edit request
+              </Button>
+            )}
+            {canCancel && (
+              <Button size="sm" variant="danger" className="tk-side__btn" onClick={() => setConfirmCancel(true)}>
+                <Icon name="close" size={13} /> Cancel request
+              </Button>
+            )}
+            {!canEdit && !ended && !readOnly && (
+              <p className="text-small">GoCWGL has approved this request, so it can’t be edited. Ask us through Request support if something needs to change.</p>
+            )}
+          </div>
+        </SideCard>
+      )}
+    </>
+  );
+
+  return (
+    <Modal
+      open
+      onClose={askClose}
+      titleId={`rq-${r.id}`}
+      kicker={project ? "YOUR PROJECT" : "VA REQUEST"}
+      title={r.role}
+      subtitle={`${requestSummary(r)} · requested ${formatShort(r.createdAt)}`}
+      width={1120}
+      className="rq-popup tk-modal"
+      footer={
+        <>
+          <span className="text-small">GoCWGL sees everything here. Comments and the checklist save as you go.</span>
+          <span className="u-spacer" />
+          <Button variant="primary" onClick={askClose}>
+            Close
+          </Button>
+        </>
+      }
+    >
+      <DetailLayout main={main} side={side} />
+
+      {closeDialog}
       {confirmCancel && (
         <ConfirmDialog
           title={`Cancel your request for a ${r.role}?`}
@@ -392,7 +461,7 @@ function QuoteCard({ r }: { r: VaRequestOut }) {
         {state === "waiting" ? (
           <>
             <strong>Waiting for your quote</strong>
-            <span>GoCWGL reviews your project and posts the price in the comments below. Ask anything there meanwhile.</span>
+            <span>GoCWGL reviews your project and posts the price in the comments. Ask anything there meanwhile.</span>
           </>
         ) : state === "quoted" ? (
           <>

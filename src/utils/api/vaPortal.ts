@@ -74,6 +74,11 @@ export const updateVaTaskSubtask = (id: string, subtaskId: string, body: Subtask
 export const deleteVaTaskSubtask = (id: string, subtaskId: string) => del<VaTaskOut>(`/va/tasks/${id}/subtasks/${subtaskId}`);
 /** Open projects GoCWGL matched this VA to (shown beside their tasks). */
 export const listVaProjects = () => get<VaProjectOut[]>("/va/projects");
+/** A step on the checklist of a project this VA is on. */
+export const addVaProjectSubtask = (id: string, title: string) => post<VaProjectOut>(`/va/projects/${id}/subtasks`, { title });
+export const updateVaProjectSubtask = (id: string, subtaskId: string, body: SubtaskUpdate) =>
+  patch<VaProjectOut>(`/va/projects/${id}/subtasks/${subtaskId}`, body);
+export const deleteVaProjectSubtask = (id: string, subtaskId: string) => del<VaProjectOut>(`/va/projects/${id}/subtasks/${subtaskId}`);
 export const placeVaProject = (id: string, position: number) => put<VaProjectOut[]>(`/va/projects/${id}/position`, { position });
 /** A task's conversation with the client, oldest first. */
 export const listVaTaskMessages = (id: string) => get<TaskMessageOut[]>(`/va/tasks/${id}/messages`);

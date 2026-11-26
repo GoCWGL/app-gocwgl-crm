@@ -73,6 +73,11 @@ export const listVaRequests = () => get<VaRequestOut[]>("/portal/va-requests");
 export const requestVa = (body: VaRequestIn) => post<VaRequestOut>("/portal/va-requests", body);
 /** Edit your request while it's New or In review. */
 export const updateMyVaRequest = (id: string, body: VaRequestIn) => put<VaRequestOut>(`/portal/va-requests/${id}`, body);
+/** A step on a VA request's (or open project's) checklist. */
+export const addRequestSubtask = (id: string, title: string) => post<VaRequestOut>(`/portal/va-requests/${id}/subtasks`, { title });
+export const updateRequestSubtask = (id: string, subtaskId: string, body: SubtaskUpdate) =>
+  patch<VaRequestOut>(`/portal/va-requests/${id}/subtasks/${subtaskId}`, body);
+export const deleteRequestSubtask = (id: string, subtaskId: string) => del<VaRequestOut>(`/portal/va-requests/${id}/subtasks/${subtaskId}`);
 export const cancelVaRequest = (id: string) => post<VaRequestOut>(`/portal/va-requests/${id}/cancel`);
 /** Move an open project up or down its column on the Tasks & projects board. */
 export const placeMyProject = (id: string, position: number) => put<VaRequestOut>(`/portal/va-requests/${id}/position`, { position });

@@ -205,3 +205,60 @@ export function TaskSubtasks({
     </section>
   );
 }
+
+/**
+ * Subtasks on a request form, before the task or project exists: one step per line, Enter adds the next, Backspace on
+ * an empty line removes it. They become the checklist in its pop-up.
+ */
+export function SubtaskDraftList({ value, onChange, idPrefix, max = 50 }: { value: string[]; onChange: (next: string[]) => void; idPrefix: string; max?: number }) {
+  const list = useRef<HTMLDivElement>(null);
+  const items = value.length ? value : [""];
+  const focus = (i: number) => requestAnimationFrame(() => list.current?.querySelectorAll("input")[i]?.focus());
+  const set = (i: number, v: string) => onChange(items.map((x, k) => (k === i ? v : x)));
+  const add = (at: number) => {
+    if (items.length >= max) return;
+    onChange([...items.slice(0, at + 1), "", ...items.slice(at + 1)]);
+    focus(at + 1);
+  };
+  const remove = (i: number) => {
+    onChange(items.length === 1 ? [] : items.filter((_, k) => k !== i));
+    focus(Math.max(0, i - 1));
+  };
+  return (
+    <div className="bullet-field bullet-field--subtasks" ref={list}>
+      {items.map((x, i) => (
+        <div key={i} className="bullet-field__row">
+          <CheckCircle done={false} label={`Subtask ${i + 1}`} disabled />
+          <input
+            id={`${idPrefix}-${i}`}
+            className="input"
+            value={x}
+            maxLength={300}
+            aria-label={`Subtask ${i + 1}`}
+            placeholder={i === 0 ? "e.g. Export the contact list" : "Add another step…"}
+            onChange={(e) => set(i, e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                e.preventDefault();
+                add(i);
+              } else if (e.key === "Backspace" && !x && items.length > 1) {
+                e.preventDefault();
+                remove(i);
+              }
+            }}
+          />
+          {(items.length > 1 || x) && (
+            <button type="button" className="bullet-field__remove" aria-label={`Remove subtask ${i + 1}`} onClick={() => remove(i)}>
+              <Icon name="close" size={12} />
+            </button>
+          )}
+        </div>
+      ))}
+      {items.length < max && (
+        <button type="button" className="bullet-field__add" onClick={() => add(items.length - 1)}>
+          <Icon name="plus" size={12} /> Add subtask
+        </button>
+      )}
+    </div>
+  );
+}

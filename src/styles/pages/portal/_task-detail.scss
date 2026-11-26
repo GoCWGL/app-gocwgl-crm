@@ -1,0 +1,726 @@
+@use "../../abstracts" as *;
+
+// A task's or project's pop-up, laid out like a Trello card in a modern style: the work on the left (description,
+// subtasks, links, comments and activity) and its details on the right (status, who's on it, client, deadline,
+// priority, status, last update, actions), in quiet cards that stay in view while the left side scrolls.
+
+.tk-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 316px;
+  gap: 28px;
+  align-items: start;
+
+  @include down(lg) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  &__main {
+    min-width: 0;
+  }
+
+  &__side {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    @include down(lg) {
+      position: static;
+      order: -1;
+    }
+  }
+}
+
+// One card in the right column.
+.tk-side {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px 16px;
+  border: 1px solid #e8edf3;
+  border-radius: 14px;
+  background: $white;
+  box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    h4 {
+      margin: 0;
+      color: $muted-light;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+  }
+
+  &__link {
+    @include button-reset;
+    padding: 3px 8px;
+    border-radius: 7px;
+    color: $cyan-700;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &:hover {
+      background: $cyan-50;
+    }
+  }
+
+  &__btn {
+    justify-content: center;
+    width: 100%;
+  }
+
+  &__picker {
+    animation: tk-side-in 0.2s ease-out;
+  }
+
+  // Status first: a soft wash so it reads as the card's headline.
+  &--status {
+    background: linear-gradient(180deg, #f7fbff, $white 70%);
+
+    .tk-sheet__status {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      min-height: 0;
+    }
+  }
+
+  // Move to: one compact choice per row.
+  .tk-status-pick,
+  .tk-status-pick--4 {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .tk-status-pick__opt {
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 10px;
+
+    > svg {
+      margin-top: 0;
+    }
+
+    .stack > span {
+      display: none;
+    }
+
+    strong {
+      font-size: 13px;
+    }
+  }
+
+  // "Move to" inside the Actions card: the card's own heading is enough.
+  &--actions .tk-sheet__h {
+    color: $muted;
+    font-size: 12.5px;
+  }
+
+  // A request's facts (hours, budget, payment…) stacked to fit the column.
+  .rd {
+    gap: 0;
+  }
+
+  .rd-facts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f3f7;
+  }
+
+  .rd-fact {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .rq-popup__status {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  .rq-applicants {
+    width: 100%;
+  }
+}
+
+@keyframes tk-side-in {
+  from {
+    opacity: 0;
+    translate: 0 -4px;
+  }
+}
+
+// Label/value rows: label on the left, value on the right.
+.tk-facts {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 36px;
+    padding: 6px 0;
+    border-bottom: 1px solid #f2f5f8;
+
+    &:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    dt {
+      display: flex;
+      flex: none;
+      align-items: center;
+      gap: 7px;
+      color: $muted;
+      font-size: 12.5px;
+      font-weight: 600;
+
+      svg {
+        color: #9aa8b9;
+      }
+    }
+
+    dd {
+      margin: 0;
+      min-width: 0;
+      color: $ink;
+      font-size: 13px;
+      font-weight: 650;
+      text-align: right;
+      overflow-wrap: anywhere;
+
+      &.is-late {
+        color: #dc2626;
+      }
+    }
+  }
+}
+
+// Who's on it.
+.tk-people {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  strong {
+    color: $ink;
+    font-size: 13.5px;
+  }
+
+  span span {
+    color: $muted;
+    font-size: 12px;
+  }
+
+  &__empty {
+    margin: 0;
+    color: $muted;
+    font-size: 12.5px;
+    line-height: 1.5;
+  }
+}
+
+.rq-match--side {
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+// The project's progress, top to bottom in the narrow column.
+.rq-steps--vertical {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+
+  li {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+
+    &::after {
+      top: 16px;
+      right: auto;
+      bottom: -10px;
+      left: 7px;
+      width: 2px;
+      height: auto;
+    }
+  }
+}
+
+// "Edit" beside the Description heading.
+.tk-sheet__h-action {
+  margin-left: auto;
+}
+
+// The left column's sections, with a little more air between them, like a card.
+.tk-modal .tk-sheet {
+  gap: 26px;
+}
+
+// ------------------------------------------------------------------ Comments and activity
+.ca {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid #edf1f6;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+
+    .tk-sheet__h {
+      margin: 0;
+    }
+  }
+
+  &__sub {
+    margin: -8px 0 0;
+    color: $muted;
+    font-size: 12.5px;
+  }
+
+  &__toggle {
+    @include button-reset;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: #f1f4f8;
+    color: $ink-soft;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: #e6ebf2;
+    }
+  }
+
+  // Write a comment: one line until it's focused, then Save appears.
+  &__write {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+  }
+
+  &__write-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__input {
+    padding: 9px 12px;
+    border: 1px solid #dfe6ee;
+    border-radius: 10px;
+    background: $white;
+    box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04);
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    .is-open & {
+      border-color: $cyan-600;
+      box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.14);
+    }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 22px;
+      padding: 0;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: $ink;
+      font: inherit;
+      font-size: 14px;
+      line-height: 1.5;
+      resize: none;
+    }
+
+    .is-open & textarea {
+      min-height: 66px;
+    }
+  }
+
+  &__write-foot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__hint {
+    color: $muted-light;
+    font-size: 11.5px;
+  }
+
+  &__closed {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: $muted;
+    font-size: 12.5px;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px dashed #dbe3ec;
+    border-radius: 12px;
+    color: $muted;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    animation: tk-side-in 0.25s ease-out;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    min-height: 28px;
+    color: $muted;
+    font-size: 12px;
+
+    strong {
+      color: $ink;
+      font-size: 13.5px;
+    }
+
+    time {
+      color: $muted-light;
+    }
+  }
+
+  &__tag {
+    padding: 1px 7px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+
+    &--staff {
+      background: #f5f3ff;
+      color: #6d28d9;
+    }
+
+    &--va {
+      background: $cyan-50;
+      color: $cyan-700;
+    }
+
+    &--client {
+      background: #ecfdf5;
+      color: #047857;
+    }
+  }
+
+  &__bubble {
+    padding: 10px 14px;
+    border: 1px solid #e6ebf1;
+    border-radius: 4px 12px 12px 12px;
+    background: $white;
+    color: $ink;
+    font-size: 14px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    box-shadow: 0 1px 2px rgba(11, 20, 36, 0.05);
+  }
+
+  // Your own comments: a soft tint so they're easy to find.
+  &__item.is-mine &__bubble {
+    border-color: #cdeef5;
+    background: #f5fcfe;
+  }
+
+  // Activity: a small icon and one quiet line.
+  &__item--activity {
+    align-items: center;
+
+    .ca__body {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: baseline;
+      column-gap: 8px;
+      row-gap: 2px;
+    }
+
+    time {
+      color: $muted-light;
+      font-size: 11.5px;
+    }
+  }
+
+  &__dot {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f1f4f8;
+    color: $muted;
+  }
+
+  &__line {
+    color: $muted;
+    font-size: 13px;
+
+    strong,
+    b {
+      color: $ink-soft;
+      font-weight: 700;
+    }
+  }
+
+  &__item--agreed {
+    .ca__dot {
+      background: rgba(16, 185, 129, 0.12);
+      color: #047857;
+    }
+
+    .ca__body {
+      flex-direction: column;
+    }
+  }
+
+  &__next {
+    color: $muted;
+    font-size: 12px;
+  }
+
+  .tk-msg__receipt {
+    padding: 0;
+  }
+}
+
+// Activity: its own section under Comments, as a timeline with a line joining the dots.
+.ca__timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    bottom: 14px;
+    left: 13px;
+    width: 2px;
+    border-radius: 2px;
+    background: #edf1f6;
+  }
+
+  .ca__dot {
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 0 3px $white;
+  }
+}
+
+// A request form's subtasks: the same round checks as the checklist they become.
+.bullet-field--subtasks .tk-check {
+  flex: none;
+  cursor: default;
+}
+
+// An open project's quote, stacked to fit the right column.
+.tk-detail__side .rq-quote {
+  flex-wrap: wrap;
+  align-items: flex-start;
+  border-radius: 14px;
+
+  .rq-quote__text {
+    flex: 1 1 180px;
+  }
+
+  > .btn,
+  > button {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}
+
+// Status and progress in one: the stages top to bottom, the current one highlighted, and (when you can move it) each
+// other stage a button that moves the task there.
+.tk-side--status .tk-steps.rq-steps--vertical {
+  gap: 2px;
+
+  li {
+    display: block;
+
+    // The line between dots, under the buttons' padding.
+    &::after {
+      top: 26px;
+      bottom: -8px;
+      left: 17px;
+    }
+  }
+
+  .rq-steps__btn {
+    @include button-reset;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 36px;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    text-align: left;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .rq-steps__label {
+    flex: 1;
+    font-size: 13px;
+  }
+
+  li.is-done .rq-steps__label {
+    color: $ink-soft;
+  }
+
+  // The current stage is the status.
+  li.is-current .rq-steps__btn {
+    border-color: rgba(255, 153, 0, 0.35);
+    background: rgba(255, 153, 0, 0.08);
+  }
+
+  li.is-current .rq-steps__label {
+    color: $orange-ink;
+    font-weight: 800;
+  }
+
+  // Done: the last stage, in green.
+  li.is-current.is-done .rq-steps__btn {
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.08);
+  }
+
+  li.is-current.is-done .rq-steps__label {
+    color: #047857;
+  }
+
+  .rq-steps__now {
+    color: $muted;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  // Another stage you can move to: shows "Move here" on hover.
+  button.rq-steps__btn {
+    cursor: pointer;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      border-color: #dbe5ef;
+      background: #f6f9fc;
+
+      .rq-steps__go {
+        opacity: 1;
+        translate: 0 0;
+      }
+    }
+
+    &:disabled {
+      cursor: wait;
+      opacity: 0.6;
+    }
+  }
+
+  .rq-steps__go {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: $cyan-700;
+    font-size: 12px;
+    font-weight: 700;
+    opacity: 0;
+    translate: -4px 0;
+    transition:
+      opacity 0.15s ease,
+      translate 0.15s ease;
+  }
+}
+
+.tk-steps__hint {
+  margin: 0;
+  color: $muted;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+// A project's stages (GoCWGL moves those): the current one as a pill.
+.tk-side--status .rq-steps:not(.tk-steps) li.is-now .rq-steps__label {
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(255, 153, 0, 0.14);
+  color: $orange-ink;
+  font-weight: 800;
+}

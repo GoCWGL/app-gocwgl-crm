@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient, type QueryKey } from "@tanstack/react-query";
 import * as client from "@/utils/api/clientWork";
-import type { ClientProjectOut, SubtaskOut, SubtaskUpdate } from "@/utils/api/models";
+import type { SubtaskOut, SubtaskUpdate } from "@/utils/api/models";
 import * as va from "@/utils/api/vaPortal";
 import { qk } from "./keys";
 
@@ -27,10 +27,10 @@ export type SubtaskActions = {
 };
 
 /**
- * A task's subtasks: ticking one off, renaming or removing it shows at once (then the server's copy replaces it), and
+ * A task's (or a VA request's / project's) subtasks: ticking one off, renaming or removing it shows at once (then the server's copy replaces it), and
  * every change puts the task the server sends back straight into the board's list.
  */
-function useSubtasks<T extends ClientProjectOut>(key: QueryKey, ep: Endpoints<T>): SubtaskActions {
+function useSubtasks<T extends { id: string; subtasks?: SubtaskOut[] }>(key: QueryKey, ep: Endpoints<T>): SubtaskActions {
   const qc = useQueryClient();
   const patchTask = (taskId: string, fn: (subs: SubtaskOut[]) => SubtaskOut[]) =>
     qc.setQueryData<T[]>(key, (list) => list?.map((t) => (t.id === taskId ? { ...t, subtasks: fn(t.subtasks ?? []) } : t)));
@@ -68,3 +68,11 @@ export const useProjectSubtasks = () =>
 
 /** VA portal › a task's subtasks. */
 export const useVaTaskSubtasks = () => useSubtasks(qk.vaTasks, { add: va.addVaTaskSubtask, update: va.updateVaTaskSubtask, remove: va.deleteVaTaskSubtask });
+
+/** Client portal › a VA request's or open project's subtasks. */
+export const useRequestSubtasks = () =>
+  useSubtasks(qk.portalVaRequests, { add: client.addRequestSubtask, update: client.updateRequestSubtask, remove: client.deleteRequestSubtask });
+
+/** VA portal › the subtasks of a project the VA is on. */
+export const useVaProjectSubtasks = () =>
+  useSubtasks([...qk.vaTasks, "projects"], { add: va.addVaProjectSubtask, update: va.updateVaProjectSubtask, remove: va.deleteVaProjectSubtask });

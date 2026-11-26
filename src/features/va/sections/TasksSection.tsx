@@ -1,14 +1,17 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { Button, ConfirmDialog, GripIcon, Icon, Input, LoadState, Modal, StatGrid, type IconName } from "@/components/ui";
 import { TaskBoard, type BoardCard } from "@/features/portal/components/TaskBoard";
 import { TaskConversation } from "@/features/portal/components/TaskConversation";
 import { TaskBar, TaskFilter, TaskSearch, taskText } from "@/features/portal/components/TaskFilters";
-import { TaskSheet, TaskStatus, type TaskEdits } from "@/features/portal/components/TaskSheet";
-import { useVaTaskSubtasks } from "@/utils/hooks/useSubtasks";
+import { DetailLayout, PeopleCard, SideCard, SideFacts, StatusProgress, TaskSheet, TaskStatus, type StatusMove, type TaskEdits } from "@/features/portal/components/TaskSheet";
+import { subtaskActivity } from "@/features/portal/components/CommentsActivity";
+import { useConfirmClose } from "@/features/portal/components/ConfirmClose";
+import { NotMoved, useConfirmMove } from "@/features/portal/components/ConfirmMove";
+import { TaskSubtasks } from "@/features/portal/components/TaskSubtasks";
+import { useVaProjectSubtasks, useVaTaskSubtasks } from "@/utils/hooks/useSubtasks";
 import { isOpenProject, vaNames, type ProjectStatus } from "@/features/portal/lib/projects";
-import { cn } from "@/lib/utils";
 import type { VaProjectOut, VaTaskOut, VaTaskUpdate } from "@/utils/api/models";
 import { errorMessage } from "@/utils/errors";
 import { formatShort } from "@/utils/format/dates";
@@ -182,6 +185,7 @@ export function TasksSection() {
 
   // Dragging a task: In progress (also starts their timer, like Start task), In review or Done. Projects don't drag.
   // A drop: a task to another column and/or a new place in it; a project only up or down its own column.
+  const [askMove, moveDialog] = useConfirmMove();
   const move = (c: BoardCard, to: ProjectStatus, position: number) => {
     const t = myTasks.find((x) => `task:${x.id}` === c.id);
     if (!t) {
@@ -193,13 +197,35 @@ export function TasksSection() {
       });
     }
     const status = to !== t.status ? (to as VaTaskUpdate["status"]) : undefined;
-    return update.mutateAsync({ id: t.id, status, position }).then(
+    // A new column changes its status: ask first, as the pop-up does (Cancel puts the card back).
+    const o = VA_STATUSES.find((x) => x.value === to);
+    const asked = status
+      ? askMove({
+          title: t.title,
+          from: t.status,
+          to,
+          icon: o?.icon,
+          note: (
+            <>
+              <p>
+                {o?.confirm ?? ""} {t.clientName ? `${t.clientName} sees the change right away.` : ""}
+              </p>
+              {to === "in_progress" && t.status === "requested" && (
+                <p className="tk-confirm__note">
+                  <Icon name="play" size={12} /> This also starts your timer for {t.clientName || "this client"}.
+                </p>
+              )}
+            </>
+          ),
+        })
+      : Promise.resolve();
+    return asked.then(() => update.mutateAsync({ id: t.id, status, position })).then(
       (res) => {
         setMoveError("");
         if (res?.timerStarted) setTimerNote(`Timer started for ${res.clientName || "your client"}: “${res.title}”.`);
       },
       (err) => {
-        setMoveError(`Couldn’t move “${t.title}”: ${errorMessage(err)}`);
+        if (!(err instanceof NotMoved)) setMoveError(`Couldn’t move “${t.title}”: ${errorMessage(err)}`);
         throw err;
       },
     );
@@ -367,7 +393,8 @@ export function TasksSection() {
         />
       </LoadState>
       {openedTask && <TaskDetails t={openedTask} readOnly={readOnly} onClose={() => setOpenId("")} />}
-      {openedProject && <ProjectDetails p={openedProject} onClose={() => setOpenId("")} />}
+      {openedProject && <ProjectDetails p={openedProject} readOnly={readOnly} onClose={() => setOpenId("")} />}
+      {moveDialog}
     </div>
     </TimerNotice.Provider>
   );
@@ -399,14 +426,14 @@ const VA_STATUSES: Array<{ value: "in_progress" | "review" | "done"; label: stri
 ];
 
 /**
- * Change the task's status (in the details pop-up), after a confirmation. Starting a task also starts their timer
- * for the client.
+ * Moving the task from the Status card's stages (in the details pop-up), after a confirmation. Starting a task also
+ * starts their timer for the client. Returns the move for the stages and the confirmation to render.
  */
-function StatusPicker({ t }: { t: VaTaskOut }) {
+function useStatusMove(t: VaTaskOut, readOnly: boolean): [StatusMove | undefined, ReactNode] {
   const update = useUpdateVaTask();
   const onTimer = useTimerNotice();
   const [asking, setAsking] = useState<(typeof VA_STATUSES)[number] | null>(null);
-  if (t.status === "cancelled") return <p className="text-small">The client cancelled this task, so its status can’t be changed.</p>;
+  if (readOnly || t.status === "cancelled") return [undefined, null];
   const startsTimer = asking?.value === "in_progress" && t.status === "requested";
   const confirm = () =>
     asking &&
@@ -419,68 +446,46 @@ function StatusPicker({ t }: { t: VaTaskOut }) {
         },
       },
     );
-  return (
-    <div className="stack stack--8">
-      <div className="tk-sheet__h">
-        <Icon name="gauge" size={14} /> Update status
+  const move: StatusMove = {
+    can: (to) => VA_STATUSES.some((o) => o.value === to),
+    pick: (to) => {
+      const o = VA_STATUSES.find((x) => x.value === to);
+      if (!o) return;
+      update.reset();
+      setAsking(o);
+    },
+    pending: update.isPending,
+    hint: t.status === "requested" ? "Not started yet. Click “In progress” when you begin; it also starts your timer." : "Click a stage to move the task there.",
+  };
+  const dialog = asking && (
+    <ConfirmDialog
+      title={`Move this task to ${asking.label}?`}
+      confirmLabel={`Yes, mark ${asking.label.toLowerCase()}`}
+      icon={asking.icon}
+      pending={update.isPending}
+      error={update.error}
+      onConfirm={confirm}
+      onClose={() => setAsking(null)}
+    >
+      <div className="tk-confirm">
+        <p className="tk-confirm__task">“{t.title}”</p>
+        <div className="tk-confirm__move">
+          <TaskStatus status={t.status} />
+          <Icon name="arrowRight" size={14} />
+          <TaskStatus status={asking.value} />
+        </div>
+        <p>
+          {asking.confirm} {t.clientName ? `${t.clientName} sees the change right away.` : ""}
+        </p>
+        {startsTimer && (
+          <p className="tk-confirm__note">
+            <Icon name="play" size={12} /> This also starts your timer for {t.clientName || "this client"}.
+          </p>
+        )}
       </div>
-      <div className="tk-status-pick" role="radiogroup" aria-label="Task status">
-        {VA_STATUSES.map((o) => {
-          const on = t.status === o.value;
-          return (
-            <button
-              key={o.value}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              className={cn("tk-status-pick__opt", `is-${o.value}`, on && "is-on")}
-              disabled={update.isPending}
-              onClick={() => {
-                if (on) return;
-                update.reset();
-                setAsking(o);
-              }}
-            >
-              <Icon name={on ? "check" : o.icon} size={14} />
-              <span className="stack stack--0">
-                <strong>{o.label}</strong>
-                <span>{on ? "Current status" : o.hint}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      {t.status === "requested" && <span className="text-small">Not started yet. Pick “In progress” when you begin; it also starts your timer.</span>}
-      {asking && (
-        <ConfirmDialog
-          title={`Move this task to ${asking.label}?`}
-          confirmLabel={`Yes, mark ${asking.label.toLowerCase()}`}
-          icon={asking.icon}
-          pending={update.isPending}
-          error={update.error}
-          onConfirm={confirm}
-          onClose={() => setAsking(null)}
-        >
-          <div className="tk-confirm">
-            <p className="tk-confirm__task">“{t.title}”</p>
-            <div className="tk-confirm__move">
-              <TaskStatus status={t.status} />
-              <Icon name="arrowRight" size={14} />
-              <TaskStatus status={asking.value} />
-            </div>
-            <p>
-              {asking.confirm} {t.clientName ? `${t.clientName} sees the change right away.` : ""}
-            </p>
-            {startsTimer && (
-              <p className="tk-confirm__note">
-                <Icon name="play" size={12} /> This also starts your timer for {t.clientName || "this client"}.
-              </p>
-            )}
-          </div>
-        </ConfirmDialog>
-      )}
-    </div>
+    </ConfirmDialog>
   );
+  return [move, dialog];
 }
 
 /** A pop-up with everything about one task: the client's full request (details, every link, priority, due date), GoCWGL's note, and the status change. */
@@ -498,11 +503,14 @@ function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean
   useEffect(() => {
     if (unread > 0 && !readOnly) markRead(t.id);
   }, [t.id, unread, readOnly, markRead, messages.data?.length]);
+  const [askClose, closeDialog] = useConfirmClose(onClose, "task");
+  const [move, moveDialog] = useStatusMove(t, readOnly);
   return (
     <Modal
       open
-      width={1080}
-      onClose={onClose}
+      width={1120}
+      onClose={askClose}
+      className="tk-modal"
       titleId="va-task"
       kicker={`TASK FROM ${(t.clientName || "YOUR CLIENT").toUpperCase()}`}
       title={t.title}
@@ -510,7 +518,7 @@ function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean
         <>
           <span className="text-small">You and the client can both edit this task. Updates every 30 seconds.</span>
           <span className="u-spacer" />
-          <Button variant="primary" onClick={onClose}>
+          <Button variant="primary" onClick={askClose}>
             Close
           </Button>
         </>
@@ -518,13 +526,18 @@ function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean
     >
       <TaskSheet
         t={t}
-        people={{
-          icon: "building",
-          label: "Client",
-          value: `${t.clientName || "Your client"}${roleNote(t, myId) ? ` · ${roleNote(t, myId)}` : ""}`,
+        people={{ icon: "building", label: "Client", value: t.clientName || "Your client" }}
+        assignees={{
+          title: t.vas.length > 1 ? "Assigned VAs" : "Assigned VA",
+          people: t.vas.map((v) => ({
+            id: v.id,
+            name: v.id === myId ? `${v.name} (you)` : v.name,
+            note: t.vas.length > 1 ? (v.role === "backup" ? "Backup VA" : "Main VA") : roleNote(t, myId) || "Does this task",
+          })),
+          empty: "No VA on it yet.",
         }}
-        actions={readOnly ? undefined : <StatusPicker t={t} />}
-        emptyDetails="The client didn’t add details. Ask them in the conversation if anything’s unclear."
+        move={move}
+        emptyDetails="The client didn’t add a description. Ask them in the comments if anything’s unclear."
         edit={canEdit ? { save: saveEdits, saving: update.isPending, error: update.error, reset: update.reset } : undefined}
         subtasks={{
           actions: subtasks,
@@ -536,39 +549,103 @@ function TaskDetails({ t, readOnly, onClose }: { t: VaTaskOut; readOnly: boolean
             side="va"
             otherName={t.clientName || "the client"}
             vaName={vaNames(t.vas, "your VA")}
-            otherReadAt={t.clientReadAt}
             messages={messages}
             send={(body, done) => post.mutate({ id: t.id, body }, { onSuccess: done })}
             sending={post.isPending}
             sendError={post.error}
             closed={t.status === "cancelled"}
             readOnly={readOnly}
+            activity={[
+              { id: "created", at: t.createdAt, who: t.requestedByName || t.clientName || "The client", icon: "plus", text: "requested this task" },
+              ...subtaskActivity(t.subtasks),
+              ...(t.completedAt ? [{ id: "done", at: t.completedAt, who: "This task", icon: "circleCheck" as const, text: "was moved to Done" }] : []),
+            ]}
           />
         }
       />
+      {moveDialog}
+      {closeDialog}
     </Modal>
   );
 }
 
-/** A project's pop-up: what the client asked for (no budget or price), the client and the due date. */
-function ProjectDetails({ p, onClose }: { p: VaProjectOut; onClose: () => void }) {
+/** A project's pop-up: what the client asked for (no budget or price) and its checklist on the left; the client, deadline and status on the right. */
+function ProjectDetails({ p, onClose, readOnly }: { p: VaProjectOut; onClose: () => void; readOnly: boolean }) {
   const column = projectColumn(p);
+  const subtasks = useVaProjectSubtasks();
+  const [askClose, closeDialog] = useConfirmClose(onClose, "project");
   const lists: Array<[string, IconName, string[]]> = [
     ["What you’ll do", "clipboard", p.responsibilities],
     ["Must have", "circleCheck", p.mustHave],
     ["Nice to have", "star", p.niceToHave],
   ];
-  const facts: Array<{ icon: IconName; label: string; value: string }> = [
-    { icon: "building", label: "Client", value: p.clientName || "Your client" },
-    { icon: "folder", label: "Category", value: p.category || "—" },
-    { icon: "clock", label: "Due date", value: p.dueDate ? formatShort(p.dueDate) : "No due date" },
-    { icon: "calendar", label: "You were put on it", value: p.matchedAt ? formatShort(p.matchedAt) : "—" },
-  ];
+  const main = (
+    <div className="tk-sheet">
+      <section className="tk-sheet__section">
+        <h4 className="tk-sheet__h">
+          <Icon name="textLong" size={14} /> Description
+        </h4>
+        {p.overview ? <div className="tk-sheet__details">{p.overview}</div> : <p className="tk-sheet__muted">No description added.</p>}
+      </section>
+      <TaskSubtasks
+        taskId={p.id}
+        subtasks={p.subtasks ?? []}
+        actions={subtasks}
+        canEdit={!readOnly && column !== "cancelled"}
+        emptyHint={`Break the project into steps. You and ${p.clientName || "the client"} can tick them off as you go.`}
+      />
+      {lists
+        .filter(([, , items]) => items.length)
+        .map(([label, icon, items]) => (
+          <section key={label} className="tk-sheet__section">
+            <h4 className="tk-sheet__h">
+              <Icon name={icon} size={14} /> {label}
+            </h4>
+            <ul className="tk-sheet__list">
+              {items.map((x) => (
+                <li key={x}>{x}</li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      {p.important && (
+        <section className="rd-important">
+          <span className="rd-important__icon" aria-hidden="true">
+            <Icon name="message" size={15} />
+          </span>
+          <span className="stack stack--2">
+            <strong>Important to the client</strong>
+            <span className="va-pre">{p.important}</span>
+          </span>
+        </section>
+      )}
+    </div>
+  );
+  const side = (
+    <>
+      <SideCard title="Status" className="tk-side--status">
+        <StatusProgress status={column} />
+      </SideCard>
+      <PeopleCard title="Client" people={[{ id: p.contactId, name: p.clientName || "Your client", note: "Requested this project" }]} empty="" />
+      <SideCard title="Details">
+        <SideFacts
+          facts={[
+            { icon: "building", label: "Client", value: p.clientName || "Your client" },
+            { icon: "folder", label: "Category", value: p.category || "—" },
+            { icon: "clock", label: "Deadline", value: p.dueDate ? formatShort(p.dueDate) : "No deadline" },
+            { icon: "calendar", label: "You were put on it", value: p.matchedAt ? formatShort(p.matchedAt) : "—" },
+            { icon: "edit", label: "Last update", value: formatShort(p.updatedAt) },
+          ]}
+        />
+      </SideCard>
+    </>
+  );
   return (
     <Modal
       open
-      width={760}
-      onClose={onClose}
+      width={1120}
+      onClose={askClose}
+      className="tk-modal"
       titleId="va-project"
       kicker={`PROJECT FOR ${(p.clientName || "YOUR CLIENT").toUpperCase()}`}
       title={p.role}
@@ -576,63 +653,14 @@ function ProjectDetails({ p, onClose }: { p: VaProjectOut; onClose: () => void }
         <>
           <span className="text-small">One-time work. GoCWGL moves it to Done when it’s finished.</span>
           <span className="u-spacer" />
-          <Button variant="primary" onClick={onClose}>
+          <Button variant="primary" onClick={askClose}>
             Close
           </Button>
         </>
       }
     >
-      <div className="tk-sheet">
-        <div className="tk-sheet__status">
-          <TaskStatus status={column} />
-        </div>
-        <section className="tk-sheet__section">
-          <h4 className="tk-sheet__h">
-            <Icon name="textLong" size={14} /> Overview
-          </h4>
-          {p.overview ? <div className="tk-sheet__details">{p.overview}</div> : <p className="tk-sheet__muted">No overview added.</p>}
-        </section>
-        {lists
-          .filter(([, , items]) => items.length)
-          .map(([label, icon, items]) => (
-            <section key={label} className="tk-sheet__section">
-              <h4 className="tk-sheet__h">
-                <Icon name={icon} size={14} /> {label}
-              </h4>
-              <ul className="tk-sheet__list">
-                {items.map((x) => (
-                  <li key={x}>{x}</li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        {p.important && (
-          <section className="rd-important">
-            <span className="rd-important__icon" aria-hidden="true">
-              <Icon name="message" size={15} />
-            </span>
-            <span className="stack stack--2">
-              <strong>Important to the client</strong>
-              <span className="va-pre">{p.important}</span>
-            </span>
-          </section>
-        )}
-        <section className="tk-sheet__section">
-          <h4 className="tk-sheet__h">
-            <Icon name="form" size={14} /> At a glance
-          </h4>
-          <dl className="tk-sheet__facts">
-            {facts.map((f) => (
-              <div key={f.label} className="tk-sheet__fact">
-                <dt>
-                  <Icon name={f.icon} size={13} /> {f.label}
-                </dt>
-                <dd>{f.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
-      </div>
+      <DetailLayout main={main} side={side} />
+      {closeDialog}
     </Modal>
   );
 }

@@ -4,7 +4,6 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Avatar, Button, ConfirmDialog, Field, FormError, GripIcon, Icon, Input, LoadState, Modal, SegmentedControl, Textarea } from "@/components/ui";
 import { errorMessage } from "@/utils/errors";
 import { avatarTone } from "@/lib/tones";
-import { cn } from "@/lib/utils";
 import type { ClientProjectOut, ProjectClientUpdate, TeamVa, VaRequestOut } from "@/utils/api/models";
 import { useSession } from "@/utils/auth/session";
 import {
@@ -18,15 +17,19 @@ import {
   useVaRequests,
   useVaTeam,
 } from "@/utils/hooks/useClientWork";
-import { allReadAt, assigneeDetail, assigneeLabel, isOpenProject, PRIORITY, PROJECT_STATUS, vaNames, type ProjectPriority, type ProjectStatus } from "../lib/projects";
+import { assigneeDetail, assigneeLabel, isOpenProject, PRIORITY, PROJECT_STATUS, vaNames, type ProjectPriority, type ProjectStatus } from "../lib/projects";
 import { assignmentOf, VaAssign, type VaAssignment } from "../components/VaPicker";
 import { LinkInputs } from "../components/TaskLinks";
+import { SubtaskDraftList } from "../components/TaskSubtasks";
 import { TaskBoard, type BoardCard } from "../components/TaskBoard";
 import { VaRequestModal } from "../components/VaRequestModal";
 import { TaskConversation } from "../components/TaskConversation";
+import { subtaskActivity } from "../components/CommentsActivity";
+import { useConfirmClose } from "../components/ConfirmClose";
+import { NotMoved, useConfirmMove } from "../components/ConfirmMove";
 import { TaskBar, TaskFilter, TaskSearch, TaskTabs, taskText } from "../components/TaskFilters";
 import { WorkEmpty } from "../components/WorkEmpty";
-import { TaskSheet, type TaskEdits } from "../components/TaskSheet";
+import { TaskSheet, TaskStatus, type TaskEdits } from "../components/TaskSheet";
 import { useProjectSubtasks } from "@/utils/hooks/useSubtasks";
 import { usePortal } from "../state/PortalContext";
 import { REQUEST_STATUS, RequestPopup } from "./TeamSection";
@@ -163,10 +166,11 @@ export function WorkBoard({
     );
   const cancelledCount = all.filter((c) => c.column === "cancelled").length;
 
+  const [askMove, moveDialog] = useConfirmMove();
   // A drop: a task to another column and/or a new place in it; a project only up or down its own column.
   const move = (c: BoardCard, to: ProjectStatus, position: number) => {
     const failed = (err: unknown) => {
-      notify(`Couldn’t move “${c.title}”: ${errorMessage(err)}`);
+      if (!(err instanceof NotMoved)) notify(`Couldn’t move “${c.title}”: ${errorMessage(err)}`);
       throw err;
     };
     const p = tasks.find((t) => `task:${t.id}` === c.id);
@@ -175,8 +179,17 @@ export function WorkBoard({
       return r ? place.mutateAsync({ id: r.id, position }).catch(failed) : Promise.reject(new Error("Not found."));
     }
     const status = to !== p.status ? (to as NonNullable<ProjectClientUpdate["status"]>) : undefined;
-    return update
-      .mutateAsync({ id: p.id, body: { status, position } })
+    // A new column changes its status: ask first (Cancel puts the card back). Reordering in a column doesn't ask.
+    const asked = status
+      ? askMove({
+          title: p.title,
+          from: p.status,
+          to,
+          note: <p>{p.vas.length ? `${vaNames(p.vas)} ${p.vas.length > 1 ? "see" : "sees"} the change right away.` : "The change shows on your board right away."}</p>,
+        })
+      : Promise.resolve();
+    return asked
+      .then(() => update.mutateAsync({ id: p.id, body: { status, position } }))
       .then(() => status && notify(`“${p.title}” moved to ${PROJECT_STATUS[to].label}.`), failed);
   };
 
@@ -315,51 +328,10 @@ export function WorkBoard({
 
       {openedTask && <ProjectDetails p={openedTask} team={team.data ?? []} onClose={() => setOpenId("")} />}
       {openedProject && <RequestPopup r={openedProject} onClose={() => setOpenId("")} />}
+      {moveDialog}
 
       {asking === "tasks" && <RequestModal team={team.data ?? []} onClose={() => onAsk(null)} />}
       {asking === "projects" && <VaRequestModal project onClose={() => onAsk(null)} />}
-    </div>
-  );
-}
-
-/** Where the client can move a task (in the pop-up, for anyone who'd rather not drag): the board's four columns. */
-function MoveTo({ p }: { p: ClientProjectOut }) {
-  const { notify } = usePortal();
-  const update = useUpdateProject();
-  return (
-    <div className="stack stack--8">
-      <div className="tk-sheet__h">
-        <Icon name="gauge" size={14} /> Move to
-      </div>
-      <div className="tk-status-pick tk-status-pick--4" role="radiogroup" aria-label="Task stage">
-        {COLUMNS.map((c) => {
-          const on = p.status === c.status;
-          return (
-            <button
-              key={c.status}
-              type="button"
-              role="radio"
-              aria-checked={on}
-              className={cn("tk-status-pick__opt", `is-${c.status}`, on && "is-on")}
-              disabled={update.isPending}
-              onClick={() =>
-                !on &&
-                update.mutate(
-                  { id: p.id, body: { status: c.status as NonNullable<ProjectClientUpdate["status"]> } },
-                  { onSuccess: () => notify(`Moved to ${PROJECT_STATUS[c.status].label}.`) },
-                )
-              }
-            >
-              <Icon name={on ? "check" : "arrowRight"} size={14} />
-              <span className="stack stack--0">
-                <strong>{PROJECT_STATUS[c.status].label}</strong>
-                <span>{on ? "Current stage" : c.hint}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
-      <FormError error={update.error} />
     </div>
   );
 }
@@ -394,45 +366,41 @@ function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamV
       },
     );
 
-  const assign = canEdit ? (
-    <div className="tk-sheet__row">
-      <VaAssign
-        team={team}
-        idPrefix="pj-edit"
-        value={assignmentOf(p.vas)}
-        disabled={update.isPending}
-        onChange={(next) =>
-          update.mutate({ id: p.id, body: { mainVaId: next.main, backupVaIds: next.backups } }, { onSuccess: () => notify("VAs on this task updated.") })
-        }
-      />
-      {p.status === "requested" && (
-        <Button variant="danger" disabled={update.isPending} onClick={() => (update.reset(), setCancelling(true))}>
-          Cancel request
-        </Button>
-      )}
-    </div>
-  ) : undefined;
+  // Moving it: click a stage in the Status card, then confirm.
+  const [movingTo, setMovingTo] = useState<ProjectStatus | null>(null);
+  const move =
+    readOnly || p.status === "cancelled"
+      ? undefined
+      : {
+          can: (to: ProjectStatus) => to !== "cancelled",
+          // Asks first (below), so a stray click doesn't move it.
+          pick: (to: ProjectStatus) => (update.reset(), setMovingTo(to)),
+          pending: update.isPending,
+          hint: "Click a stage to move the task there.",
+        };
   const actions =
-    readOnly || p.status === "cancelled" ? undefined : (
-      <div className="stack stack--12">
-        <MoveTo p={p} />
-        {assign}
-      </div>
-    );
+    !readOnly && p.status === "requested" ? (
+      <Button variant="danger" size="sm" className="tk-side__btn" disabled={update.isPending} onClick={() => (update.reset(), setCancelling(true))}>
+        <Icon name="close" size={13} /> Cancel request
+      </Button>
+    ) : undefined;
+  const [askClose, closeDialog] = useConfirmClose(onClose, "task");
+  const vaWord = p.vas.length > 1 ? "your VAs" : (p.vas[0]?.name ?? "your VA");
 
   return (
     <Modal
       open
-      width={1080}
-      onClose={onClose}
+      width={1120}
+      onClose={askClose}
       titleId="client-task"
       kicker="YOUR TASK REQUEST"
       title={p.title}
+      className="tk-modal"
       footer={
         <>
           <span className="text-small">{p.vas.length > 1 ? "Every VA on it sees" : "Your VA sees"} exactly what’s here, and can edit it too. Updates show every 30 seconds.</span>
           <span className="u-spacer" />
-          <Button variant="primary" onClick={onClose}>
+          <Button variant="primary" onClick={askClose}>
             Close
           </Button>
         </>
@@ -442,26 +410,38 @@ function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamV
         {!cancelling && <FormError error={update.error} />}
         <TaskSheet
           t={p}
-          people={{
-            icon: "user",
-            label: p.vas.length > 1 ? "Main VA and backups" : "Assigned VA",
-            value: assigneeDetail(p.vas),
+          people={{ icon: "user", label: "Requested by", value: p.requestedByName || "You" }}
+          assignees={{
+            title: p.vas.length > 1 ? "Assigned VAs" : "Assigned VA",
+            people: p.vas.map((v) => ({ id: v.id, name: v.name, note: p.vas.length > 1 ? (v.role === "backup" ? "Backup VA" : "Main VA") : "Does this task" })),
+            empty: "GoCWGL is picking the VA for this task.",
+            change: canEdit ? (
+              <VaAssign
+                team={team}
+                idPrefix="pj-edit"
+                value={assignmentOf(p.vas)}
+                disabled={update.isPending}
+                onChange={(next) =>
+                  update.mutate({ id: p.id, body: { mainVaId: next.main, backupVaIds: next.backups } }, { onSuccess: () => notify("VAs on this task updated.") })
+                }
+              />
+            ) : undefined,
           }}
+          move={move}
           actions={actions}
           emptyDetails="You didn’t add details to this request."
           edit={canEdit ? { save: saveEdits, saving: editTask.isPending, error: editTask.error, reset: editTask.reset } : undefined}
           subtasks={{
             actions: subtasks,
             canEdit: !readOnly && p.status !== "cancelled",
-            emptyHint: `Break the work into steps. You and ${p.vas.length > 1 ? "your VAs" : (p.vas[0]?.name ?? "your VA")} can tick them off as you go.`,
+            emptyHint: `Break the work into steps. You and ${vaWord} can tick them off as you go.`,
           }}
           conversation={
             <TaskConversation
               side="client"
-              otherName={p.vas.length > 1 ? "your VAs" : (p.vas[0]?.name ?? "your VA")}
+              otherName={vaWord}
               otherPlural={p.vas.length > 1}
               vaName={p.vas.length ? vaNames(p.vas) : "your VA"}
-              otherReadAt={allReadAt(p.vas)}
               messages={messages}
               send={(body, done) => post.mutate({ id: p.id, body }, { onSuccess: done })}
               sending={post.isPending}
@@ -469,10 +449,47 @@ function ProjectDetails({ p, team, onClose }: { p: ClientProjectOut; team: TeamV
               closed={p.status === "cancelled"}
               readOnly={readOnly}
               staffViewing={!!viewAsClientId}
+              activity={[
+                { id: "created", at: p.createdAt, who: p.requestedByName || "You", icon: "plus", text: "requested this task" },
+                ...subtaskActivity(p.subtasks),
+                ...(p.completedAt ? [{ id: "done", at: p.completedAt, who: "This task", icon: "circleCheck" as const, text: "was moved to Done" }] : []),
+              ]}
             />
           }
         />
       </div>
+      {closeDialog}
+      {movingTo && (
+        <ConfirmDialog
+          title={`Move this task to ${PROJECT_STATUS[movingTo].label}?`}
+          confirmLabel={`Yes, move to ${PROJECT_STATUS[movingTo].label}`}
+          icon="arrowRight"
+          pending={update.isPending}
+          error={update.error}
+          onClose={() => setMovingTo(null)}
+          onConfirm={() =>
+            update.mutate(
+              { id: p.id, body: { status: movingTo as NonNullable<ProjectClientUpdate["status"]> } },
+              {
+                onSuccess: () => {
+                  notify(`Moved to ${PROJECT_STATUS[movingTo].label}.`);
+                  setMovingTo(null);
+                },
+              },
+            )
+          }
+        >
+          <div className="tk-confirm">
+            <p className="tk-confirm__task">“{p.title}”</p>
+            <div className="tk-confirm__move">
+              <TaskStatus status={p.status} />
+              <Icon name="arrowRight" size={14} />
+              <TaskStatus status={movingTo} />
+            </div>
+            <p>{p.vas.length ? `${vaNames(p.vas)} ${p.vas.length > 1 ? "see" : "sees"} the change right away.` : "The change shows on your board right away."}</p>
+          </div>
+        </ConfirmDialog>
+      )}
       {cancelling && (
         <ConfirmDialog
           title="Cancel this task request?"
@@ -507,6 +524,7 @@ function RequestModal({ team, onClose }: { team: TeamVa[]; onClose: () => void }
   const [title, setTitle] = useState("");
   const [details, setDetails] = useState("");
   const [links, setLinks] = useState<string[]>([]);
+  const [subtasks, setSubtasks] = useState<string[]>([]);
   const [assign, setAssign] = useState<VaAssignment>({ main: team.length === 1 ? team[0].vaId : null, backups: [] });
   const [priority, setPriority] = useState<ProjectPriority>("normal");
   const [dueDate, setDueDate] = useState("");
@@ -515,7 +533,15 @@ function RequestModal({ team, onClose }: { team: TeamVa[]; onClose: () => void }
     e.preventDefault();
     if (!title.trim()) return;
     request.mutate(
-      { title: title.trim(), details: details.trim(), links: links.map((l) => l.trim()).filter(Boolean), mainVaId: assign.main, backupVaIds: assign.backups, priority, dueDate: dueDate || null },
+      {
+        title: title.trim(),
+        details: details.trim(),
+        subtasks: subtasks.map((t) => t.trim()).filter(Boolean),
+        links: links.map((l) => l.trim()).filter(Boolean),
+        mainVaId: assign.main, backupVaIds: assign.backups,
+        priority,
+        dueDate: dueDate || null,
+      },
       {
         onSuccess: () => {
           notify(
@@ -560,7 +586,7 @@ function RequestModal({ team, onClose }: { team: TeamVa[]; onClose: () => void }
             <Field label="Title" htmlFor="pj-title" required>
               <Input id="pj-title" value={title} maxLength={160} placeholder="e.g. Clean up and tag our CRM contacts" onChange={(e) => setTitle(e.target.value)} autoFocus />
             </Field>
-            <Field label="Details" htmlFor="pj-details">
+            <Field label="Description" htmlFor="pj-details">
               <Textarea
                 id="pj-details"
                 rows={5}
@@ -570,6 +596,16 @@ function RequestModal({ team, onClose }: { team: TeamVa[]; onClose: () => void }
                 onChange={(e) => setDetails(e.target.value)}
               />
             </Field>
+          </div>
+        </section>
+
+        <section className="vrf-section">
+          <header className="vrf-section__head">
+            <h3>Subtasks (optional)</h3>
+            <p>Break the work into steps. You and your VA tick them off in the task as you go.</p>
+          </header>
+          <div className="vrf-section__body">
+            <SubtaskDraftList value={subtasks} onChange={setSubtasks} idPrefix="pj-sub" />
           </div>
         </section>
 
@@ -585,7 +621,7 @@ function RequestModal({ team, onClose }: { team: TeamVa[]; onClose: () => void }
 
         <section className="vrf-section">
           <header className="vrf-section__head">
-            <h3>Who and when</h3>
+            <h3>Assigned VA, priority and deadline</h3>
             <p>Pick the main VA and any backups, how urgent it is, and when you need it.</p>
           </header>
           <div className="vrf-section__body">
@@ -600,7 +636,7 @@ function RequestModal({ team, onClose }: { team: TeamVa[]; onClose: () => void }
                   options={(["low", "normal", "high"] as const).map((v) => ({ value: v, label: PRIORITY[v].label }))}
                 />
               </Field>
-              <Field label="Due date" htmlFor="pj-due">
+              <Field label="Deadline" htmlFor="pj-due">
                 <Input id="pj-due" type="date" value={dueDate} min={new Date().toISOString().slice(0, 10)} onChange={(e) => setDueDate(e.target.value)} />
               </Field>
             </div>

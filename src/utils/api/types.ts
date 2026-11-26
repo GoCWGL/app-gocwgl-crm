@@ -1783,6 +1783,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/va/projects/{request_id}/subtasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Project Step
+         * @description Add a step to the checklist of a project you're on.
+         */
+        post: operations["add_project_step_api_va_projects__request_id__subtasks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/va/projects/{request_id}/subtasks/{subtask_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Project Step */
+        delete: operations["delete_project_step_api_va_projects__request_id__subtasks__subtask_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Project Step
+         * @description Tick off, rename or move a step on a project you're on.
+         */
+        patch: operations["update_project_step_api_va_projects__request_id__subtasks__subtask_id__patch"];
+        trace?: never;
+    };
     "/api/va/menu-counts": {
         parameters: {
             query?: never;
@@ -7315,6 +7356,47 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-requests/{request_id}/subtasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Request Subtask
+         * @description Add a step to your request's (or open project's) checklist.
+         */
+        post: operations["add_request_subtask_api_portal_va_requests__request_id__subtasks_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/va-requests/{request_id}/subtasks/{subtask_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Request Subtask */
+        delete: operations["delete_request_subtask_api_portal_va_requests__request_id__subtasks__subtask_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Request Subtask
+         * @description Tick off, rename or move a step on your request's checklist.
+         */
+        patch: operations["update_request_subtask_api_portal_va_requests__request_id__subtasks__subtask_id__patch"];
         trace?: never;
     };
     "/api/portal/va-requests/{request_id}/cancel": {
@@ -14593,6 +14675,8 @@ export interface components {
             priority?: "low" | "normal" | "high";
             /** Duedate */
             dueDate?: string | null;
+            /** Subtasks */
+            subtasks?: string[];
         };
         /**
          * ProjectKind
@@ -16591,6 +16675,8 @@ export interface components {
              * @default false
              */
             wantsAttendance?: boolean;
+            /** Subtasks */
+            subtasks?: string[];
             /**
              * Agreementaccepted
              * @default false
@@ -18910,6 +18996,8 @@ export interface components {
              * @default 0
              */
             position?: number;
+            /** Subtasks */
+            subtasks?: components["schemas"]["SubtaskOut"][];
         };
         /** VaQuestionOut */
         VaQuestionOut: {
@@ -19167,6 +19255,8 @@ export interface components {
              * @default false
              */
             wantsAttendance?: boolean;
+            /** Subtasks */
+            subtasks?: string[];
             /**
              * Agreementaccepted
              * @default false
@@ -19299,6 +19389,8 @@ export interface components {
              * @default 0
              */
             position?: number;
+            /** Subtasks */
+            subtasks?: components["schemas"]["SubtaskOut"][];
             /** Agreementacceptedat */
             agreementAcceptedAt?: string | null;
             /** Agreementfeecents */
@@ -24208,6 +24300,142 @@ export interface operations {
                     "application/json": {
                         /** Response Place My Matched Project Api Va Projects  Request Id  Position Put */
                         data: components["schemas"]["VaProjectOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_project_step_api_va_projects__request_id__subtasks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubtaskIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaProjectOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_project_step_api_va_projects__request_id__subtasks__subtask_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                subtask_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaProjectOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_project_step_api_va_projects__request_id__subtasks__subtask_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                subtask_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubtaskUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaProjectOut"];
                     };
                 };
             };
@@ -42115,6 +42343,142 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["BoardPositionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_request_subtask_api_portal_va_requests__request_id__subtasks_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubtaskIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_request_subtask_api_portal_va_requests__request_id__subtasks__subtask_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                subtask_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["VaRequestOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_request_subtask_api_portal_va_requests__request_id__subtasks__subtask_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                request_id: string;
+                subtask_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubtaskUpdate"];
             };
         };
         responses: {

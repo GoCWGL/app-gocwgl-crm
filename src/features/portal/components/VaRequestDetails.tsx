@@ -53,122 +53,128 @@ export function jobDescriptionFrom(r: VaRequestOut): string {
  * Every section of a VA request, as the client wrote it (admin and client views). Staff always see the monthly
  * maintenance fee (to invoice it); clients see it once they've accepted the VA agreement.
  */
-export function VaRequestDetails({ r, staff }: { r: VaRequestOut; staff?: boolean }) {
+export function VaRequestDetails({ r, staff, part }: { r: VaRequestOut; staff?: boolean; part?: "facts" | "body" }) {
   const fee = maintenanceFeeOf(r);
   const project = r.engagement === "project";
   return (
     <div className="rd">
-      <div className="rd-facts">
-        {(r.category || staff) && <Fact icon="users" label="VA category" value={r.category || "Not chosen"} />}
-        {r.startDate && <Fact icon="calendar" label="Start date" value={formatLong(r.startDate)} />}
-        {project ? (
-          <>
-            <Fact icon="briefcase" label="Request" value="Open project" />
-            <Fact icon="invoice" label="Estimated budget" value={r.budgetCents != null ? formatCents(r.budgetCents) : "—"} />
-            <Fact icon="calendar" label="Due date" value={`${formatLong(r.dueDate)} · ends the day after`} />
-            {r.requestedVa && <Fact icon="users" label="Asked for" value={`${r.requestedVa.name} (worked with ${staff ? "this client" : "you"} before)`} />}
-            <Fact
-              icon="invoice"
-              label="Payment"
-              value={
-                r.quoteAcceptedAt
-                  ? `${formatCentsExact(r.quoteCents)} · ${staff ? "client" : "you"} agreed ${formatShort(r.quoteAcceptedAt)}`
-                  : r.quoteCents != null
-                    ? `${formatCentsExact(r.quoteCents)} quoted · waiting for ${staff ? "the client" : "you"} to agree`
-                    : "No maintenance fee · GoCWGL will quote the price"
-              }
-            />
-            {staff && <Fact icon="check" label="Project agreement" value={fee.acceptedAt ? `Accepted ${formatShort(fee.acceptedAt)}` : "Not accepted (added by GoCWGL)"} />}
-          </>
-        ) : (
-          <>
-            <Fact icon="clock" label="Working hours" value={r.schedule || "—"} />
-            <Fact icon="globe" label="Time zone" value={r.timezone || "—"} />
-            <Fact icon="briefcase" label="Commitment" value={requestLoad(r)} />
-            <Fact icon="calendarCheck" label="Time tracking" value={trackingLabel(r)} />
-            {(fee.agreed || staff) && (
+      {part !== "body" && (
+        <div className="rd-facts">
+          {(r.category || staff) && <Fact icon="users" label="VA category" value={r.category || "Not chosen"} />}
+          {r.startDate && <Fact icon="calendar" label="Start date" value={formatLong(r.startDate)} />}
+          {project ? (
+            <>
+              <Fact icon="briefcase" label="Request" value="Open project" />
+              <Fact icon="invoice" label="Estimated budget" value={r.budgetCents != null ? formatCents(r.budgetCents) : "—"} />
+              <Fact icon="calendar" label="Due date" value={`${formatLong(r.dueDate)} · ends the day after`} />
+              {r.requestedVa && <Fact icon="users" label="Asked for" value={`${r.requestedVa.name} (worked with ${staff ? "this client" : "you"} before)`} />}
               <Fact
                 icon="invoice"
-                label="Maintenance fee"
-                value={[fee.label, fee.hourlyLabel, fee.acceptedAt ? `agreed ${formatShort(fee.acceptedAt)}` : "standard rate, agreement not accepted"]
-                  .filter(Boolean)
-                  .join(" · ")}
+                label="Payment"
+                value={
+                  r.quoteAcceptedAt
+                    ? `${formatCentsExact(r.quoteCents)} · ${staff ? "client" : "you"} agreed ${formatShort(r.quoteAcceptedAt)}`
+                    : r.quoteCents != null
+                      ? `${formatCentsExact(r.quoteCents)} quoted · waiting for ${staff ? "the client" : "you"} to agree`
+                      : "No maintenance fee · GoCWGL will quote the price"
+                }
               />
-            )}
-          </>
-        )}
-      </div>
-
-      {r.overview && (
-        <section className="rd-block">
-          <h4 className="rd-block__title">
-            <Icon name="textLong" size={14} /> {project ? "Project details" : "Role overview"}
-          </h4>
-          <p className="rd-block__text">{r.overview}</p>
-        </section>
-      )}
-
-      {r.responsibilities.length > 0 && (
-        <section className="rd-block">
-          <h4 className="rd-block__title">
-            <Icon name="clipboard" size={14} /> Key responsibilities
-          </h4>
-          <ul className="rd-list">
-            {r.responsibilities.map((x, i) => (
-              <li key={i}>
-                <span className="rd-list__num">{i + 1}</span>
-                {x}
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      {(r.mustHave.length > 0 || r.niceToHave.length > 0) && (
-        <div className="rd-split">
-          {r.mustHave.length > 0 && (
-            <section className="rd-block rd-block--must">
-              <h4 className="rd-block__title">
-                <Icon name="circleCheck" size={14} /> Must-have experience
-              </h4>
-              <ul className="rd-checks">
-                {r.mustHave.map((x, i) => (
-                  <li key={i}>
-                    <Icon name="check" size={13} />
-                    {x}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-          {r.niceToHave.length > 0 && (
-            <section className="rd-block rd-block--nice">
-              <h4 className="rd-block__title">
-                <Icon name="sparkle" size={14} /> Good to have
-              </h4>
-              <ul className="rd-checks">
-                {r.niceToHave.map((x, i) => (
-                  <li key={i}>
-                    <Icon name="plus" size={13} />
-                    {x}
-                  </li>
-                ))}
-              </ul>
-            </section>
+              {staff && <Fact icon="check" label="Project agreement" value={fee.acceptedAt ? `Accepted ${formatShort(fee.acceptedAt)}` : "Not accepted (added by GoCWGL)"} />}
+            </>
+          ) : (
+            <>
+              <Fact icon="clock" label="Working hours" value={r.schedule || "—"} />
+              <Fact icon="globe" label="Time zone" value={r.timezone || "—"} />
+              <Fact icon="briefcase" label="Commitment" value={requestLoad(r)} />
+              <Fact icon="calendarCheck" label="Time tracking" value={trackingLabel(r)} />
+              {(fee.agreed || staff) && (
+                <Fact
+                  icon="invoice"
+                  label="Maintenance fee"
+                  value={[fee.label, fee.hourlyLabel, fee.acceptedAt ? `agreed ${formatShort(fee.acceptedAt)}` : "standard rate, agreement not accepted"]
+                    .filter(Boolean)
+                    .join(" · ")}
+                />
+              )}
+            </>
           )}
         </div>
       )}
 
-      {r.important && (
-        <section className="rd-important">
-          <span className="rd-important__icon" aria-hidden="true">
-            <Icon name="bolt" size={15} />
-          </span>
-          <span className="stack stack--2">
-            <strong>Important</strong>
-            <span>{r.important}</span>
-          </span>
-        </section>
+      {part !== "facts" && (
+        <>
+          {r.overview && (
+            <section className="rd-block">
+              <h4 className="rd-block__title">
+                <Icon name="textLong" size={14} /> {part === "body" ? "Description" : project ? "Project details" : "Role overview"}
+              </h4>
+              <p className="rd-block__text">{r.overview}</p>
+            </section>
+          )}
+
+          {r.responsibilities.length > 0 && (
+            <section className="rd-block">
+              <h4 className="rd-block__title">
+                <Icon name="clipboard" size={14} /> Key responsibilities
+              </h4>
+              <ul className="rd-list">
+                {r.responsibilities.map((x, i) => (
+                  <li key={i}>
+                    <span className="rd-list__num">{i + 1}</span>
+                    {x}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {(r.mustHave.length > 0 || r.niceToHave.length > 0) && (
+            <div className="rd-split">
+              {r.mustHave.length > 0 && (
+                <section className="rd-block rd-block--must">
+                  <h4 className="rd-block__title">
+                    <Icon name="circleCheck" size={14} /> Must-have experience
+                  </h4>
+                  <ul className="rd-checks">
+                    {r.mustHave.map((x, i) => (
+                      <li key={i}>
+                        <Icon name="check" size={13} />
+                        {x}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              {r.niceToHave.length > 0 && (
+                <section className="rd-block rd-block--nice">
+                  <h4 className="rd-block__title">
+                    <Icon name="sparkle" size={14} /> Good to have
+                  </h4>
+                  <ul className="rd-checks">
+                    {r.niceToHave.map((x, i) => (
+                      <li key={i}>
+                        <Icon name="plus" size={13} />
+                        {x}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
+          )}
+
+          {r.important && (
+            <section className="rd-important">
+              <span className="rd-important__icon" aria-hidden="true">
+                <Icon name="bolt" size={15} />
+              </span>
+              <span className="stack stack--2">
+                <strong>Important</strong>
+                <span>{r.important}</span>
+              </span>
+            </section>
+          )}
+        </>
       )}
     </div>
   );

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, type FormEvent, type ReactNode } from "react";
-import { Button, Field, FormError, Icon, Input, SegmentedControl, Textarea, type IconName } from "@/components/ui";
-import { toneClass } from "@/lib/tones";
+import { Avatar, Button, Field, FormError, Icon, Input, SegmentedControl, Textarea, type IconName } from "@/components/ui";
+import { avatarTone, toneClass } from "@/lib/tones";
 import { cn } from "@/lib/utils";
 import type { ClientProjectOut } from "@/utils/api/models";
 import { formatShort } from "@/utils/format/dates";
@@ -45,20 +45,52 @@ export function TaskStatus({ status }: { status: TaskFields["status"] }) {
   );
 }
 
-/** Requested → In progress → In review → Done. */
-export function TaskSteps({ status }: { status: TaskFields["status"] }) {
+/** Moving a task from its status steps: which steps it can go to, and what happens on a click. */
+export type StatusMove = {
+  can: (to: TaskFields["status"]) => boolean;
+  pick: (to: TaskFields["status"]) => void;
+  pending?: boolean;
+  /** A line under the steps, e.g. "Click a stage to move the task." */
+  hint?: ReactNode;
+};
+
+/**
+ * Requested → In progress → In review → Done, with the current stage marked. With `move`, each stage it can go to is a
+ * button: the status and moving it are one control.
+ */
+export function TaskSteps({ status, vertical, move }: { status: TaskFields["status"]; vertical?: boolean; move?: StatusMove }) {
   if (status === "cancelled") return null;
   const step = PROJECT_FLOW.indexOf(status);
   return (
-    <ol className="rq-steps tk-steps" aria-label="Progress">
+    <ol className={cn("rq-steps tk-steps", vertical && "rq-steps--vertical", move && "is-movable")} aria-label="Status">
       {PROJECT_FLOW.map((s, i) => {
         const done = i < step || status === "done";
-        return (
-          <li key={s} className={cn(done && "is-done", i === step && status !== "done" && "is-now")}>
+        const now = s === status;
+        const inner = (
+          <>
             <span className="rq-steps__dot" aria-hidden="true">
               {done && <Icon name="check" size={9} />}
             </span>
             <span className="rq-steps__label">{PROJECT_STATUS[s].label}</span>
+            {now && <span className="rq-steps__now">Current</span>}
+            {!now && move?.can(s) && (
+              <span className="rq-steps__go" aria-hidden="true">
+                Move here <Icon name="arrowRight" size={11} />
+              </span>
+            )}
+          </>
+        );
+        return (
+          <li key={s} className={cn(done && "is-done", now && status !== "done" && "is-now", now && "is-current")}>
+            {move && !now && move.can(s) ? (
+              <button type="button" className="rq-steps__btn" disabled={move.pending} onClick={() => move.pick(s)} aria-label={`Move to ${PROJECT_STATUS[s].label}`}>
+                {inner}
+              </button>
+            ) : (
+              <span className="rq-steps__btn" aria-current={now ? "step" : undefined}>
+                {inner}
+              </span>
+            )}
           </li>
         );
       })}
@@ -105,7 +137,7 @@ function TaskEditForm({
       <Field label="Title" htmlFor="tk-edit-title" required>
         <Input id="tk-edit-title" value={title} maxLength={160} autoFocus onChange={(e) => setTitle(e.target.value)} />
       </Field>
-      <Field label="Details" htmlFor="tk-edit-details">
+      <Field label="Description" htmlFor="tk-edit-details">
         <Textarea
           id="tk-edit-details"
           rows={6}
@@ -125,7 +157,7 @@ function TaskEditForm({
             options={(["low", "normal", "high"] as const).map((v) => ({ value: v, label: PRIORITY[v].label }))}
           />
         </Field>
-        <Field label="Due date" htmlFor="tk-edit-due">
+        <Field label="Deadline" htmlFor="tk-edit-due">
           <Input id="tk-edit-due" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
         </Field>
       </div>
@@ -144,14 +176,123 @@ function TaskEditForm({
   );
 }
 
+/** A pop-up's two columns: the work on the left (description, subtasks, links, comments), its details on the right. */
+export function DetailLayout({ main, side }: { main: ReactNode; side: ReactNode }) {
+  return (
+    <div className="tk-detail">
+      <div className="tk-detail__main">{main}</div>
+      <aside className="tk-detail__side" aria-label="Details">
+        {side}
+      </aside>
+    </div>
+  );
+}
+
+/** One card in the right column, with a small heading. */
+export function SideCard({ title, action, children, className }: { title: string; action?: ReactNode; children: ReactNode; className?: string }) {
+  return (
+    <section className={cn("tk-side", className)}>
+      <header className="tk-side__head">
+        <h4>{title}</h4>
+        {action}
+      </header>
+      {children}
+    </section>
+  );
+}
+
+export type SideFact = { icon: IconName; label: string; value: ReactNode; late?: boolean };
+
+/** Label/value rows in a side card (client, deadline, priority, status, last update…). */
+export function SideFacts({ facts }: { facts: SideFact[] }) {
+  return (
+    <dl className="tk-facts">
+      {facts.map((f) => (
+        <div key={f.label} className="tk-facts__row">
+          <dt>
+            <Icon name={f.icon} size={14} /> {f.label}
+          </dt>
+          <dd className={cn(f.late && "is-late")}>{f.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** The people on it, as avatars with their part (main VA, backup…). */
+export function PeopleList({ people, empty }: { people: Array<{ id: string; name: string; note?: string }>; empty: string }) {
+  if (!people.length) return <p className="tk-people__empty">{empty}</p>;
+  return (
+    <ul className="tk-people">
+      {people.map((p) => (
+        <li key={p.id}>
+          <Avatar name={p.name} tone={avatarTone(p.id)} size="sm" />
+          <span className="stack stack--0">
+            <strong>{p.name}</strong>
+            {p.note && <span>{p.note}</span>}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/** A side card for who's on it, with "Change" opening the picker when this person can change it. */
+export function PeopleCard({
+  title,
+  people,
+  empty,
+  change,
+}: {
+  title: string;
+  people: Array<{ id: string; name: string; note?: string }>;
+  empty: string;
+  change?: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <SideCard
+      title={title}
+      action={
+        change ? (
+          <button type="button" className="tk-side__link" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+            {open ? "Done" : "Change"}
+          </button>
+        ) : undefined
+      }
+    >
+      {open && change ? <div className="tk-side__picker">{change}</div> : <PeopleList people={people} empty={empty} />}
+    </SideCard>
+  );
+}
+
+/** The status and its progress as one: the steps with the current one marked (a cancelled task shows its pill). */
+export function StatusProgress({ status, extra, move }: { status: TaskFields["status"]; extra?: ReactNode; move?: StatusMove }) {
+  return (
+    <>
+      {(status === "cancelled" || extra) && (
+        <div className="tk-sheet__status">
+          {status === "cancelled" && <TaskStatus status={status} />}
+          {extra}
+        </div>
+      )}
+      <TaskSteps status={status} vertical move={move} />
+      {move?.hint && status !== "cancelled" && <p className="tk-steps__hint">{move.hint}</p>}
+    </>
+  );
+}
+
 /**
- * Everything about one task, laid out the same in the client portal and the VA portal: status and progress, the key
- * fields, the details (editable by the client and the task's VAs while it's open), the subtasks checklist, every link,
- * GoCWGL's note and the actions for whoever's looking, with the conversation beside it.
+ * Everything about one task, laid out the same in the client portal and the VA portal, like a Trello card: the
+ * description, subtasks checklist, links and the comments and activity on the left; on the right its status and
+ * progress, who's on it, the details (client, deadline, priority, status, last update), GoCWGL's note and the actions
+ * for whoever's looking.
  */
 export function TaskSheet({
   t,
   people,
+  assignees,
+  move,
   actions,
   emptyDetails,
   conversation,
@@ -159,12 +300,16 @@ export function TaskSheet({
   subtasks,
 }: {
   t: TaskFields;
-  /** Who's on it, from this side: the client (VA portal) or the assigned VA (client portal). */
-  people: { icon: IconName; label: string; value: ReactNode };
-  /** Status change (VA) or VA pick and cancel (client). */
+  /** Who it's for or from, as a detail row: the client (VA portal) or who asked for it (client portal). */
+  people: SideFact;
+  /** The VAs on it, with the picker to change them when this person can. */
+  assignees: { title: string; people: Array<{ id: string; name: string; note?: string }>; empty: string; change?: ReactNode };
+  /** Moving it from the Status card's steps (left out: read only). */
+  move?: StatusMove;
+  /** Anything else this person can do (e.g. cancelling a request). */
   actions?: ReactNode;
   emptyDetails: string;
-  /** The task's conversation, shown beside the details (below them on narrow screens). */
+  /** The task's comments and activity, below the links. */
   conversation?: ReactNode;
   /** Editing the task, when this person can (left out: read only). */
   edit?: { save: (edits: TaskEdits, done: () => void) => void; saving: boolean; error: unknown; reset: () => void };
@@ -173,12 +318,13 @@ export function TaskSheet({
 }) {
   const [editing, setEditing] = useState(false);
   const overdue = isTaskOverdue(t);
-  const facts: Array<{ icon: IconName; label: string; value: ReactNode; late?: boolean }> = [
+  const startEdit = edit ? () => (edit.reset(), setEditing(true)) : undefined;
+  const facts: SideFact[] = [
     people,
     {
       icon: "clock",
-      label: overdue ? "Overdue since" : "Due date",
-      value: t.dueDate ? formatShort(t.dueDate) : <span className="tk-props__none">No due date</span>,
+      label: overdue ? "Overdue since" : "Deadline",
+      value: t.dueDate ? formatShort(t.dueDate) : <span className="tk-props__none">No deadline</span>,
       late: overdue,
     },
     {
@@ -190,31 +336,12 @@ export function TaskSheet({
         </span>
       ),
     },
-    { icon: "user", label: "Requested by", value: t.requestedByName || "The client" },
     { icon: "calendar", label: "Requested on", value: formatShort(t.createdAt) },
-    { icon: t.completedAt ? "circleCheck" : "edit", label: t.completedAt ? "Completed" : "Last updated", value: formatShort(t.completedAt ?? t.updatedAt) },
+    { icon: t.completedAt ? "circleCheck" : "edit", label: t.completedAt ? "Completed" : "Last update", value: formatShort(t.completedAt ?? t.updatedAt) },
   ];
 
-  const sheet = (
+  const main = (
     <div className="tk-sheet">
-      <div className="tk-sheet__top">
-        <div className="tk-sheet__status">
-          <TaskStatus status={t.status} />
-          {overdue && (
-            <span className="tk-chip tk-chip--late">
-              <Icon name="clock" size={11} /> Overdue
-            </span>
-          )}
-          <span className="u-spacer" />
-          {edit && !editing && (
-            <Button size="sm" onClick={() => (edit.reset(), setEditing(true))}>
-              <Icon name="edit" size={13} /> Edit task
-            </Button>
-          )}
-        </div>
-        <TaskSteps status={t.status} />
-      </div>
-
       {editing && edit ? (
         <TaskEditForm
           t={t}
@@ -224,33 +351,25 @@ export function TaskSheet({
           onSave={(edits) => edit.save(edits, () => setEditing(false))}
         />
       ) : (
-        <>
-          <dl className="tk-props">
-            {facts.map((f) => (
-              <div key={f.label} className="tk-props__row">
-                <dt>
-                  <Icon name={f.icon} size={14} /> {f.label}
-                </dt>
-                <dd className={cn(f.late && "is-late")}>{f.value}</dd>
-              </div>
-            ))}
-          </dl>
-
-          <section className="tk-sheet__section">
-            <h4 className="tk-sheet__h">
-              <Icon name="textLong" size={14} /> Description
-            </h4>
-            {t.details ? (
-              <div className="tk-sheet__details">{t.details}</div>
-            ) : edit ? (
-              <button type="button" className="tk-sheet__add-details" onClick={() => (edit.reset(), setEditing(true))}>
-                <Icon name="plus" size={13} /> Add details about this task
+        <section className="tk-sheet__section">
+          <h4 className="tk-sheet__h">
+            <Icon name="textLong" size={14} /> Description
+            {startEdit && t.details && (
+              <button type="button" className="tk-side__link tk-sheet__h-action" onClick={startEdit}>
+                Edit
               </button>
-            ) : (
-              <p className="tk-sheet__muted">{emptyDetails}</p>
             )}
-          </section>
-        </>
+          </h4>
+          {t.details ? (
+            <div className="tk-sheet__details">{t.details}</div>
+          ) : startEdit ? (
+            <button type="button" className="tk-sheet__add-details" onClick={startEdit}>
+              <Icon name="plus" size={13} /> Add a more detailed description…
+            </button>
+          ) : (
+            <p className="tk-sheet__muted">{emptyDetails}</p>
+          )}
+        </section>
       )}
 
       {subtasks && <TaskSubtasks taskId={t.id} subtasks={t.subtasks ?? []} actions={subtasks.actions} canEdit={subtasks.canEdit} emptyHint={subtasks.emptyHint} />}
@@ -264,6 +383,37 @@ export function TaskSheet({
         </section>
       )}
 
+      {conversation}
+    </div>
+  );
+
+  const side = (
+    <>
+      <SideCard title="Status" className="tk-side--status">
+        <StatusProgress
+          status={t.status}
+          move={move}
+          extra={
+            overdue ? (
+              <span className="tk-chip tk-chip--late">
+                <Icon name="clock" size={11} /> Overdue
+              </span>
+            ) : undefined
+          }
+        />
+        {startEdit && !editing && (
+          <Button size="sm" className="tk-side__btn" onClick={startEdit}>
+            <Icon name="edit" size={13} /> Edit task
+          </Button>
+        )}
+      </SideCard>
+
+      <PeopleCard {...assignees} />
+
+      <SideCard title="Details">
+        <SideFacts facts={facts} />
+      </SideCard>
+
       {t.teamNote && (
         <section className="rd-important">
           <span className="rd-important__icon" aria-hidden="true">
@@ -276,14 +426,13 @@ export function TaskSheet({
         </section>
       )}
 
-      {actions && <div className="tk-sheet__actions">{actions}</div>}
-    </div>
+      {actions && (
+        <SideCard title="Actions" className="tk-side--actions">
+          {actions}
+        </SideCard>
+      )}
+    </>
   );
-  if (!conversation) return sheet;
-  return (
-    <div className="tk-sheet-wrap">
-      <div className="tk-sheet-wrap__main">{sheet}</div>
-      <div className="tk-sheet-wrap__side">{conversation}</div>
-    </div>
-  );
+
+  return <DetailLayout main={main} side={side} />;
 }
