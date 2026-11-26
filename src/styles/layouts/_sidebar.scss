@@ -178,13 +178,21 @@
     flex: 1 1 auto;
   }
 
-  // The icon bounces in alongside the highlight when the menu turns current or opens (the label stays still).
+  // The icon spins and bounces in, and the text bounces, alongside the highlight when the menu turns current or
+  // opens.
   @media (prefers-reduced-motion: no-preference) {
     &[aria-current="page"],
     &--active,
     &--open {
       .nav-item__icon {
-        animation: nav-icon-bounce 0.5s ease-in-out;
+        animation:
+          nav-icon-bounce 0.5s ease-in-out,
+          nav-icon-spin 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      // The text bounces in from the left; it moves but never changes size.
+      .nav-item__label {
+        animation: nav-label-bounce 0.5s ease-in-out;
       }
     }
   }
@@ -221,26 +229,63 @@
   }
 }
 
-// Grows in from small, overshoots, bounces back and settles, over the same 0.5s as the highlight behind it.
+// Grows in from small, overshoots well past full size (1.7x), bounces back and settles, over the same 0.5s as the
+// highlight behind it.
 // Animates `scale` (not `transform`) so it never fights another transform on the icon.
 @keyframes nav-icon-bounce {
   0% {
     scale: 0.4;
   }
   35% {
-    scale: 1.3;
+    scale: 1.7;
   }
   55% {
     scale: 0.85;
   }
   75% {
-    scale: 1.1;
+    scale: 1.2;
   }
   90% {
-    scale: 0.97;
+    scale: 0.96;
   }
   100% {
     scale: 1;
+  }
+}
+
+// Bounces in from the left, the way the highlight fills: slides in fading up, runs past its place, springs back and
+// settles. Moves only (`translate`), never resizes, and stacks with the reveal's `transform`.
+@keyframes nav-label-bounce {
+  0% {
+    translate: -14px 0;
+    opacity: 0;
+  }
+  35% {
+    translate: 6px 0;
+    opacity: 1;
+  }
+  55% {
+    translate: -3px 0;
+  }
+  75% {
+    translate: 1.5px 0;
+  }
+  90% {
+    translate: -0.5px 0;
+  }
+  100% {
+    translate: 0 0;
+  }
+}
+
+// One full turn anticlockwise, quick at first and slowing as it settles; runs together with nav-icon-bounce.
+// Animates `rotate` (not `transform`) so it stacks with the bounce's `scale`.
+@keyframes nav-icon-spin {
+  from {
+    rotate: 360deg;
+  }
+  to {
+    rotate: 0deg;
   }
 }
 
@@ -666,6 +711,15 @@
       :is(.profile-button__text, .profile-button__icon) {
         animation: nav-text-reveal 0.5s ease-in-out backwards;
       }
+    }
+
+    // The current menu's text keeps its reveal and bounces as well (below the compact menu, whose "none" wins there).
+    .dual-nav > .sidebar:not(.sidebar--compact)
+      .nav-item:is([aria-current="page"], .nav-item--active, .nav-item--open)
+      > .nav-item__label {
+      animation:
+        nav-text-reveal 0.5s ease-in-out backwards,
+        nav-label-bounce 0.5s ease-in-out;
     }
 
     // Headings and counts stay on screen as icons only: "none" here makes their reveal play when the menu grows back.
