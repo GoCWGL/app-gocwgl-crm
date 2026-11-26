@@ -113,13 +113,13 @@
       nav-bubble(60%, 30%, 4),
       nav-bubble(78%, 70%, 5),
       nav-bubble(95%, 35%, 6);
-    // Each bubble's turn: 1 to 6 when opening; 6 to 1 when closing, after the swell.
+    // Each bubble's turn: 1 to 6 when opening (0.07s apart); 6 to 1 when closing, after the swell.
     --nav-delay-1: calc(0.00s * var(--nav-bubbles, 0) + 0.35s * (1 - var(--nav-bubbles, 0)));
-    --nav-delay-2: calc(0.03s * var(--nav-bubbles, 0) + 0.32s * (1 - var(--nav-bubbles, 0)));
-    --nav-delay-3: calc(0.06s * var(--nav-bubbles, 0) + 0.29s * (1 - var(--nav-bubbles, 0)));
-    --nav-delay-4: calc(0.09s * var(--nav-bubbles, 0) + 0.26s * (1 - var(--nav-bubbles, 0)));
-    --nav-delay-5: calc(0.12s * var(--nav-bubbles, 0) + 0.23s * (1 - var(--nav-bubbles, 0)));
-    --nav-delay-6: calc(0.15s * var(--nav-bubbles, 0) + 0.20s * (1 - var(--nav-bubbles, 0)));
+    --nav-delay-2: calc(0.07s * var(--nav-bubbles, 0) + 0.32s * (1 - var(--nav-bubbles, 0)));
+    --nav-delay-3: calc(0.14s * var(--nav-bubbles, 0) + 0.29s * (1 - var(--nav-bubbles, 0)));
+    --nav-delay-4: calc(0.21s * var(--nav-bubbles, 0) + 0.26s * (1 - var(--nav-bubbles, 0)));
+    --nav-delay-5: calc(0.28s * var(--nav-bubbles, 0) + 0.23s * (1 - var(--nav-bubbles, 0)));
+    --nav-delay-6: calc(0.35s * var(--nav-bubbles, 0) + 0.20s * (1 - var(--nav-bubbles, 0)));
     transition:
       --nav-bubble-1 0.15s ease-in-out var(--nav-delay-1),
       --nav-bubble-2 0.15s ease-in-out var(--nav-delay-2),
@@ -178,6 +178,17 @@
     flex: 1 1 auto;
   }
 
+  // The icon bounces in alongside the highlight when the menu turns current or opens (the label stays still).
+  @media (prefers-reduced-motion: no-preference) {
+    &[aria-current="page"],
+    &--active,
+    &--open {
+      .nav-item__icon {
+        animation: nav-icon-bounce 0.5s ease-in-out;
+      }
+    }
+  }
+
   // Not available yet: greyed out, with a lock and a line on when it opens.
   &--locked {
     cursor: not-allowed;
@@ -207,6 +218,29 @@
     &--open {
       transform: rotate(90deg);
     }
+  }
+}
+
+// Grows in from small, overshoots, bounces back and settles, over the same 0.5s as the highlight behind it.
+// Animates `scale` (not `transform`) so it never fights another transform on the icon.
+@keyframes nav-icon-bounce {
+  0% {
+    scale: 0.4;
+  }
+  35% {
+    scale: 1.3;
+  }
+  55% {
+    scale: 0.85;
+  }
+  75% {
+    scale: 1.1;
+  }
+  90% {
+    scale: 0.97;
+  }
+  100% {
+    scale: 1;
   }
 }
 
