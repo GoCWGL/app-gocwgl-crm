@@ -6,11 +6,12 @@ import { useRef, useState, type FormEvent } from "react";
 import { Button, ErrorState, Icon, Loading, ProgressBar } from "@/components/ui";
 import type { SurveyQuestion } from "@/data/admin";
 import * as api from "@/utils/api/surveys";
-import { errorMessage, hasCode } from "@/utils/errors";
+import { errorMessage } from "@/utils/errors";
 import { useApiMutation } from "@/utils/hooks/mutation";
 import { answerErrors, useIsEmbedded } from "./embed";
-import { PublicMessage, PublicShell } from "./PublicShell";
+import { PublicMessage, PublicShell, linkMissing } from "./PublicShell";
 import { isUnanswered, SurveyQuestionField, type SurveyAnswer } from "./SurveyQuestionField";
+import { NotFoundPage } from "@/features/not-found/NotFoundPage";
 
 /** What the API expects for each question type (see the backend's survey validation). */
 function toApi(q: SurveyQuestion, a: SurveyAnswer | undefined, other: string): unknown {
@@ -50,7 +51,7 @@ export function PublicSurveyPage() {
   let body;
   if (survey.isPending) body = <Loading text="Loading survey…" />;
   else if (survey.isError)
-    body = hasCode(survey.error, "not_found") ? (
+    body = linkMissing(survey.error) ? (
       <PublicMessage title="This survey isn’t available">
         <p className="text-muted">It may be closed or still a draft.</p>
       </PublicMessage>
@@ -154,6 +155,9 @@ export function PublicSurveyPage() {
       </form>
     );
   }
+
+  // A link that doesn't exist gets the site's 404 page (embeds keep the small message above).
+  if (!embedded && survey.isError && linkMissing(survey.error)) return <NotFoundPage setTitle />;
 
   return (
     <PublicShell embedded={embedded} narrow>

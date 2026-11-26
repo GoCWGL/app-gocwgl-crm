@@ -12,6 +12,7 @@ import { BookingConfirmed } from "./BookingConfirmed";
 import { BookingDetailsForm } from "./BookingDetailsForm";
 import { BookingWidget } from "./BookingWidget";
 import { browserZone } from "./zones";
+import { NotFoundPage } from "@/features/not-found/NotFoundPage";
 
 type Picked = { slot: string; zone: string };
 
@@ -73,6 +74,9 @@ export function BookingPage() {
         onChange={() => setSlotTaken(false)}
       />
     );
+
+  // A link that doesn't exist gets the site's 404 page (embeds keep the small message above).
+  if (!embedded && page.isError && hasCode(page.error, "not_found")) return <NotFoundPage setTitle />;
 
   return (
     <PublicShell embedded={embedded} wide>

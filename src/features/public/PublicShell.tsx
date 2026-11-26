@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, type ReactNode } from "react";
 import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { cn } from "@/lib/utils";
+import { hasCode } from "@/utils/errors";
 import { useReportHeight } from "./embed";
 
 type PublicShellProps = {
@@ -41,4 +42,10 @@ export function PublicMessage({ title, icon, children }: { title: string; icon?:
       {children}
     </div>
   );
+}
+
+/** A form or survey link that doesn't exist. The API rejects an id that isn't a UUID as invalid input rather than
+ * "not found", and the id is the only input to these reads, so both mean the link leads nowhere. */
+export function linkMissing(error: unknown) {
+  return hasCode(error, "not_found") || hasCode(error, "validation_failed");
 }

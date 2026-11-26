@@ -6,10 +6,11 @@ import { useRef, useState, type FormEvent } from "react";
 import { Button, Checkbox, ErrorState, Field, Icon, Input, Loading, Select, Textarea } from "@/components/ui";
 import { FIELD_TYPES, type FormField } from "@/data/admin";
 import * as api from "@/utils/api/forms";
-import { errorMessage, hasCode } from "@/utils/errors";
+import { errorMessage } from "@/utils/errors";
 import { useApiMutation } from "@/utils/hooks/mutation";
 import { answerErrors, redirectTo, useIsEmbedded } from "./embed";
-import { PublicMessage, PublicShell } from "./PublicShell";
+import { PublicMessage, PublicShell, linkMissing } from "./PublicShell";
+import { NotFoundPage } from "@/features/not-found/NotFoundPage";
 
 type Value = string | boolean;
 
@@ -30,7 +31,7 @@ export function PublicFormPage() {
   let body;
   if (form.isPending) body = <Loading text="Loading form…" />;
   else if (form.isError)
-    body = hasCode(form.error, "not_found") ? (
+    body = linkMissing(form.error) ? (
       <PublicMessage title="This form isn’t available">
         <p className="text-muted">It may have been turned off.</p>
       </PublicMessage>
@@ -131,6 +132,9 @@ export function PublicFormPage() {
       </form>
     );
   }
+
+  // A link that doesn't exist gets the site's 404 page (embeds keep the small message above).
+  if (!embedded && form.isError && linkMissing(form.error)) return <NotFoundPage setTitle />;
 
   return (
     <PublicShell embedded={embedded} narrow>

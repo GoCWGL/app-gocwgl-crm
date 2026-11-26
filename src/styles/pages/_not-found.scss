@@ -1,0 +1,159 @@
+@use "../abstracts" as *;
+
+// =============================================================================
+// 404 page (src/app/not-found.tsx): a big glowing 404 on the grid paper, with
+// links home and back.
+// =============================================================================
+
+.not-found {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow: hidden;
+  background-color: $bg;
+  @include grid-paper(40px);
+
+  // Soft cyan and orange light behind the number.
+  &__glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: min(900px, 120vw);
+    aspect-ratio: 1;
+    transform: translate(-50%, -55%);
+    background:
+      radial-gradient(circle at 38% 45%, rgba(34, 211, 238, 0.22), transparent 55%),
+      radial-gradient(circle at 64% 58%, rgba(255, 153, 0, 0.16), transparent 50%);
+    filter: blur(20px);
+    pointer-events: none;
+  }
+
+  &__bar,
+  &__body,
+  &__foot {
+    position: relative;
+  }
+
+  &__bar {
+    padding: 22px 44px;
+
+    @include down(md) {
+      padding: 16px;
+    }
+  }
+
+  &__logo {
+    display: block;
+    width: 140px;
+    height: auto;
+  }
+
+  &__body {
+    @include stack(0);
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+    text-align: center;
+    animation: not-found-rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  &__label {
+    @include mono-label(12px, 0.2em);
+    margin-bottom: 8px;
+  }
+
+  &__code {
+    display: flex;
+    gap: 0.04em;
+    font-family: $font-mono;
+    font-size: clamp(112px, 22vw, 200px);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    background: linear-gradient(180deg, $ink 10%, $cyan-700 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    user-select: none;
+  }
+
+  // The zero is an orange ring that floats.
+  &__zero {
+    background: $grad-orange;
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 8px 24px rgba(255, 153, 0, 0.35));
+    animation: not-found-float 4s ease-in-out infinite;
+  }
+
+  &__title {
+    margin-top: 12px;
+    font-size: clamp(24px, 4vw, 32px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $ink;
+  }
+
+  &__text {
+    max-width: 460px;
+    margin-top: 10px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: $muted;
+  }
+
+  &__actions {
+    @include cluster(12px);
+    justify-content: center;
+    margin-top: 28px;
+  }
+
+  &__foot {
+    padding: 20px 16px 28px;
+    text-align: center;
+    font-size: 13px;
+    color: $muted-light;
+
+    a {
+      color: $cyan-700;
+      font-weight: 700;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
+@keyframes not-found-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes not-found-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .not-found__body,
+  .not-found__zero {
+    animation: none;
+  }
+}

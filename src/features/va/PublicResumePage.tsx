@@ -6,6 +6,8 @@ import logoWordmark from "@/assets/images/logo-wordmark.png";
 import { BrandLoader, Icon } from "@/components/ui";
 import { publicResumeDocumentUrl } from "@/utils/api/vaPortal";
 import { usePublicResume } from "@/utils/hooks/useVaPortal";
+import { NotFoundPage } from "@/features/not-found/NotFoundPage";
+import { hasCode } from "@/utils/errors";
 import { ResumePaper } from "./components/ResumePaper";
 import type { SocialNetwork } from "./lib/socials";
 
@@ -15,6 +17,9 @@ export function PublicResumePage() {
   const slug = params?.slug ?? "";
   const query = usePublicResume(slug);
   const r = query.data;
+
+  // A resume link that doesn't exist gets the site's 404 page.
+  if (query.isError && hasCode(query.error, "not_found")) return <NotFoundPage setTitle />;
 
   return (
     <main className="resume-public">
