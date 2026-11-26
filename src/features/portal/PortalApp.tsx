@@ -124,7 +124,7 @@ function OpenFirstClient() {
         <div className="empty-state stack stack--10">
           <span>{none ? "No clients yet. Add one in the admin to see their portal." : "Couldn't load your clients."}</span>
           <span>
-            <Button variant="outline" onClick={() => router.push("/admin?tab=settings&section=portals")}>
+            <Button variant="outline" onClick={() => router.push("/admin")}>
               Back to admin
             </Button>
           </span>

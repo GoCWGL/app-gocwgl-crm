@@ -217,7 +217,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
                 <NavItem
                   label="Back to admin"
                   tooltip={compact ? "Back to admin" : undefined}
-                  onClick={() => router.push("/admin?tab=settings&section=portals")}
+                  onClick={() => router.push("/admin")}
                   icon={<NavIcon icon="arrowLeft" />}
                 />
               </SidebarGroup>

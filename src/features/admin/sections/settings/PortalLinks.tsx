@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { ConfirmDialog, Icon, type IconName } from "@/components/ui";
 import { isStaffAdmin, useSession } from "@/utils/auth/session";
+import { useAdmin } from "../../state/AdminContext";
 
 type Portal = {
   id: "va" | "client";
@@ -58,6 +59,18 @@ export function PortalLinks() {
   const router = useRouter();
   // The portal waiting for "are you sure?".
   const [confirming, setConfirming] = useState<Portal | null>(null);
+  const { goTo } = useAdmin();
+  // The admin page stays alive (hidden) while you're in a portal. When it's hidden on the way into one, switch it
+  // to the Dashboard, so "Back to admin" lands there rather than back on Settings › Portals.
+  const leavingForPortal = useRef(false);
+  useLayoutEffect(
+    () => () => {
+      if (!leavingForPortal.current) return;
+      leavingForPortal.current = false;
+      goTo("dashboard");
+    },
+    [goTo],
+  );
   return (
     <div className="portal-cards">
       {PORTALS.map((p) => (
@@ -107,6 +120,7 @@ export function PortalLinks() {
             // pop-up would greet you again on "Back to admin".
             const href = confirming.href;
             setConfirming(null);
+            leavingForPortal.current = true;
             router.push(href);
           }}
           onClose={() => setConfirming(null)}
