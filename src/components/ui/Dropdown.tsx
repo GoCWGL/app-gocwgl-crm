@@ -26,18 +26,31 @@ type Props<T extends string> = {
   menuClassName?: string;
   align?: "left" | "right";
   disabled?: boolean;
+  /** The trigger's id, so a <label htmlFor> can point at it. */
+  id?: string;
 };
 
 /** A button that opens a list to pick one value from (Esc or a click outside closes it). */
-export function Dropdown<T extends string>({ label, value, items, onChange, children, className, menuClassName, align = "left", disabled }: Props<T>) {
+export function Dropdown<T extends string>({ label, value, items, onChange, children, className, menuClassName, align = "left", disabled, id }: Props<T>) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
+  const menu = useRef<HTMLUListElement>(null);
   const listId = useId();
+
+  // Inside a scrolling pop-up the list can open below the fold: bring it into view.
+  useEffect(() => {
+    if (open) menu.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
     const away = (e: MouseEvent) => !root.current?.contains(e.target as Node) && setOpen(false);
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    // Escape closes just the list, not a pop-up it sits in (that listens on window, after this).
+    const esc = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      e.stopPropagation();
+      setOpen(false);
+    };
     document.addEventListener("mousedown", away);
     document.addEventListener("keydown", esc);
     return () => {
@@ -50,6 +63,7 @@ export function Dropdown<T extends string>({ label, value, items, onChange, chil
     <div className={cn("dropdown", className)} ref={root}>
       <button
         type="button"
+        id={id}
         className="dropdown__trigger"
         aria-label={label}
         aria-haspopup="listbox"
@@ -62,7 +76,7 @@ export function Dropdown<T extends string>({ label, value, items, onChange, chil
         <Icon name="chevronDown" size={14} className="dropdown__chev" />
       </button>
       {open && (
-        <ul id={listId} role="listbox" aria-label={label} className={cn("dropdown__menu", align === "right" && "is-right", menuClassName)}>
+        <ul ref={menu} id={listId} role="listbox" aria-label={label} className={cn("dropdown__menu", align === "right" && "is-right", menuClassName)}>
           {items.map((it) => (
             <li key={it.value} role="presentation">
               {it.section && <span className="dropdown__section">{it.section}</span>}

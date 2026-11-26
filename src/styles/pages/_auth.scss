@@ -1053,3 +1053,317 @@ $brand-grid: 32px;
     }
   }
 }
+
+// "Become a client": the "What do you need help with?" cards at the top of the form.
+.apply-need {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed $line;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &__step {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: $radius-sm;
+    background: $ink;
+    color: $white;
+    font-family: $font-mono;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  &__label {
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: $ink;
+  }
+
+  &__choices {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  &__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr));
+    gap: 12px;
+    width: 100%;
+  }
+
+  // Each card carries its own accent: cyan for a VA, orange for a CRM.
+  &__card {
+    --accent: #{$orange};
+    --accent-2: #{$orange-light};
+    --accent-glow: rgba(255, 153, 0, 0.28);
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 16px;
+    border: 1.5px solid transparent;
+    border-radius: $radius-2xl;
+    background:
+      linear-gradient($white, $white) padding-box,
+      linear-gradient(135deg, $line, $line-faint) border-box;
+    box-shadow: $shadow-soft;
+    color: $ink;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      transform 0.2s cubic-bezier(0.2, 0.7, 0.2, 1),
+      box-shadow 0.2s ease,
+      background 0.2s ease;
+
+    &--cyan {
+      --accent: #{$cyan-600};
+      --accent-2: #{$cyan-glow};
+      --accent-glow: rgba(34, 211, 238, 0.3);
+    }
+
+    &:hover,
+    &:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(8, 145, 178, 0.14);
+    }
+
+    &[aria-checked="true"] {
+      background:
+        linear-gradient(160deg, color-mix(in srgb, var(--accent) 9%, $white), $white 70%) padding-box,
+        linear-gradient(135deg, var(--accent), var(--accent-2)) border-box;
+      box-shadow:
+        0 0 0 4px color-mix(in srgb, var(--accent) 12%, transparent),
+        0 14px 30px var(--accent-glow);
+    }
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 8px;
+    border-radius: $radius-lg;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    box-shadow: 0 6px 14px var(--accent-glow);
+    color: $white;
+    transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+
+    [aria-checked="true"] > & {
+      transform: scale(1.06) rotate(-4deg);
+    }
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+  }
+
+  &__text {
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: $muted;
+  }
+
+  // Empty ring until chosen, then a filled check in the card's accent.
+  &__tick {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid $line-strong;
+    border-radius: 50%;
+    color: transparent;
+    transition: all 0.2s ease;
+
+    [aria-checked="true"] > & {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: $white;
+      transform: scale(1.1);
+    }
+  }
+
+  &__unsure {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid $line;
+    border-radius: $radius-pill;
+    background: $white;
+    color: $muted;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      border-color: $line-strong;
+      color: $ink;
+    }
+
+    &[aria-checked="true"] {
+      border-color: transparent;
+      background: $ink;
+      color: $white;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__card,
+    &__icon,
+    &__tick {
+      transition: none;
+      transform: none !important;
+    }
+  }
+}
+
+// "How did you hear about us?": a full-width dropdown with an icon per source.
+.apply-heard {
+  display: flex;
+  width: 100%;
+
+  .dropdown__trigger {
+    flex: 1;
+    min-height: 46px;
+    padding: 6px 14px 6px 8px;
+    border: 1px solid $line-strong;
+    border-radius: $radius-lg;
+    box-shadow: 0 1px 2px rgba(11, 20, 36, 0.04);
+    font-size: 14px;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+
+    &:hover:not(:disabled) {
+      border-color: rgba(8, 145, 178, 0.45);
+    }
+
+    &:focus-visible,
+    &[aria-expanded="true"] {
+      outline: none;
+      border-color: $cyan-600;
+      box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.15);
+    }
+
+    &[aria-expanded="true"] .dropdown__chev {
+      transform: rotate(180deg);
+    }
+  }
+
+  .dropdown__chev {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+  }
+
+  &__value {
+    font-weight: 600;
+
+    &--empty {
+      color: $muted-light;
+      font-weight: 500;
+    }
+  }
+
+  // A soft square in the source's color (set inline as --c).
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: $radius-sm;
+    background: color-mix(in srgb, var(--c) 12%, $white);
+    color: var(--c);
+
+    &--empty {
+      --c: #{$muted-light};
+      background: $bg-soft;
+    }
+  }
+
+  &__menu {
+    right: 0;
+    width: auto;
+    max-width: none;
+    max-height: 320px;
+    padding: 6px;
+    // Room below when it scrolls into view (measured mid open-animation, slightly shrunk).
+    scroll-margin-bottom: 16px;
+    border-color: $line;
+    border-radius: $radius-xl;
+    box-shadow:
+      0 0 0 1px rgba(8, 145, 178, 0.04),
+      0 20px 44px rgba(11, 20, 36, 0.16);
+    animation: apply-heard-in 0.16s cubic-bezier(0.2, 0.7, 0.2, 1);
+
+    .dropdown__section {
+      padding: 10px 10px 6px;
+      color: $muted-light;
+      font-family: $font-mono;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+    }
+
+    .dropdown__item {
+      gap: 12px;
+      min-height: 42px;
+      padding: 6px 10px 6px 6px;
+      border-radius: $radius-md;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 0.12s ease;
+
+      &:hover,
+      &:focus-visible {
+        background: $bg-tint;
+      }
+
+      &[aria-selected="true"] {
+        background: rgba(255, 153, 0, 0.08);
+        font-weight: 700;
+      }
+    }
+
+    .dropdown__tick {
+      color: $orange;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__menu {
+      animation: none;
+    }
+
+    .dropdown__chev {
+      transition: none;
+    }
+  }
+}
+
+@keyframes apply-heard-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+}

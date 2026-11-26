@@ -1,9 +1,9 @@
 "use client";
 
 import { useMutation } from "@tanstack/react-query";
-import { useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, Field, FormError, Icon, IconTile, Input, Modal, Select, Textarea, type IconName } from "@/components/ui";
+import { Button, Dropdown, Field, FormError, Icon, IconTile, Input, Modal, Select, Textarea, type IconName } from "@/components/ui";
 import { browserZone, zoneOptions } from "@/features/booking/zones";
 import { isEmail } from "@/lib/utils";
 import { applyAsClient, applyAsVa } from "@/utils/api/applications";
@@ -141,17 +141,17 @@ function Honeypot({ onChange }: { onChange: (v: string) => void }) {
   );
 }
 
-/** "How did you hear about us?" (both forms). */
-const HEARD_FROM = [
-  "Google search",
-  "Facebook",
-  "Instagram",
-  "TikTok",
-  "YouTube",
-  "LinkedIn",
-  "A friend or referral",
-  "An event or webinar",
-  "Other",
+/** "How did you hear about us?" (both forms), with an icon and accent each. */
+const HEARD_FROM: Array<{ value: string; icon: IconName; color: string; section?: string }> = [
+  { value: "Google search", icon: "search", color: "#4285f4", section: "Search & social" },
+  { value: "Facebook", icon: "users", color: "#1877f2" },
+  { value: "Instagram", icon: "sparkle", color: "#e1306c" },
+  { value: "TikTok", icon: "video", color: "#0b1424" },
+  { value: "YouTube", icon: "play", color: "#ff0000" },
+  { value: "LinkedIn", icon: "briefcase", color: "#0a66c2" },
+  { value: "A friend or referral", icon: "userPlus", color: "#10b981", section: "People & events" },
+  { value: "An event or webinar", icon: "calendar", color: "#7c3aed" },
+  { value: "Other", icon: "grid", color: "#4f6280" },
 ];
 
 const REFERRAL = "A friend or referral";
@@ -159,6 +159,14 @@ const REFERRAL = "A friend or referral";
 /** What's sent as `heardFrom`: the choice, plus who referred them when it's a referral. */
 const heardFromValue = (heard: string, referrer: string) =>
   heard === REFERRAL && referrer.trim() ? `${REFERRAL}: ${referrer.trim()}` : heard;
+
+function HeardIcon({ icon, color }: { icon: IconName; color: string }) {
+  return (
+    <span className="apply-heard__icon" style={{ "--c": color } as CSSProperties} aria-hidden="true">
+      <Icon name={icon} size={14} strokeWidth={2.2} />
+    </span>
+  );
+}
 
 function HeardFromField({
   id,
@@ -173,10 +181,33 @@ function HeardFromField({
   referrer: string;
   onReferrerChange: (v: string) => void;
 }) {
+  const chosen = HEARD_FROM.find((h) => h.value === value);
   return (
     <div className="stack stack--8">
       <Field label="How did you hear about us?" htmlFor={id}>
-        <Select id={id} value={value} placeholder="Choose one" options={HEARD_FROM} onChange={(e) => onChange(e.target.value)} />
+        <Dropdown
+          id={id}
+          label="How did you hear about us?"
+          className="apply-heard"
+          menuClassName="apply-heard__menu"
+          value={value}
+          onChange={onChange}
+          items={HEARD_FROM.map((h) => ({ value: h.value, section: h.section, label: h.value, lead: <HeardIcon icon={h.icon} color={h.color} /> }))}
+        >
+          {chosen ? (
+            <>
+              <HeardIcon icon={chosen.icon} color={chosen.color} />
+              <span className="apply-heard__value">{chosen.value}</span>
+            </>
+          ) : (
+            <>
+              <span className="apply-heard__icon apply-heard__icon--empty" aria-hidden="true">
+                <Icon name="globe" size={14} strokeWidth={2.2} />
+              </span>
+              <span className="apply-heard__value apply-heard__value--empty">Choose one</span>
+            </>
+          )}
+        </Dropdown>
       </Field>
       {value === REFERRAL && (
         <Field label="Who referred you?" htmlFor={`${id}-who`}>
@@ -196,7 +227,60 @@ function HeardFromField({
 
 // ------------------------------------------------------------------ Become a client
 
-const INTERESTS = ["A CRM", "A virtual assistant", "Not sure yet"];
+/** The "What do you need help with?" cards. Values are what the API has always received. */
+const NEEDS: Array<{ value: string; icon: IconName; tone: "orange" | "cyan"; title: string; text: string }> = [
+  { value: "A virtual assistant", icon: "briefcase", tone: "cyan", title: "Needs a VA", text: "Inbox, calendar, support or admin, handled for you." },
+  { value: "A CRM", icon: "pipeline", tone: "orange", title: "Custom CRM", text: "Leads, pipelines and follow-ups, built for your business." },
+];
+const NOT_SURE = "Not sure yet";
+
+function NeedPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="apply-need">
+      <div className="apply-need__head">
+        <span className="apply-need__step" aria-hidden="true">
+          01
+        </span>
+        <span className="apply-need__label" id="ca-interest">
+          What do you need help with?
+        </span>
+      </div>
+      <div className="apply-need__choices" role="radiogroup" aria-labelledby="ca-interest">
+        <div className="apply-need__cards">
+          {NEEDS.map((n) => (
+            <button
+              key={n.value}
+              type="button"
+              role="radio"
+              aria-checked={value === n.value}
+              className={`apply-need__card apply-need__card--${n.tone}`}
+              onClick={() => onChange(n.value)}
+            >
+              <span className="apply-need__icon" aria-hidden="true">
+                <Icon name={n.icon} size={18} strokeWidth={2} />
+              </span>
+              <span className="apply-need__title">{n.title}</span>
+              <span className="apply-need__text">{n.text}</span>
+              <span className="apply-need__tick" aria-hidden="true">
+                <Icon name="check" size={11} strokeWidth={3.2} />
+              </span>
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          role="radio"
+          aria-checked={value === NOT_SURE}
+          className="apply-need__unsure"
+          onClick={() => onChange(value === NOT_SURE ? "" : NOT_SURE)}
+        >
+          <Icon name={value === NOT_SURE ? "check" : "sparkle"} size={12} strokeWidth={2.4} />
+          {value === NOT_SURE ? "Not sure yet: we'll help you decide" : "Not sure yet? We'll help you decide"}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function ClientApplyModal({ onClose }: { onClose: () => void }) {
   const bot = useBotCheck("apply_client");
@@ -239,6 +323,7 @@ function ClientApplyModal({ onClose }: { onClose: () => void }) {
     >
       <div className="stack stack--12">
         <FormError error={Object.keys(api).length ? null : send.error} />
+        <NeedPicker value={f.interest} onChange={(interest) => set({ interest })} />
         <div className="form-grid">
           <Field label="First name" htmlFor="ca-first" required error={(tried && !f.first.trim() && "Enter your first name.") || api.firstName}>
             <Input id="ca-first" autoComplete="given-name" value={f.first} onChange={(e) => set({ first: e.target.value })} autoFocus />
@@ -259,18 +344,13 @@ function ClientApplyModal({ onClose }: { onClose: () => void }) {
         <Field label="Website" htmlFor="ca-site" error={(tried && !siteOk && "Start with https://") || api.businessWebsite}>
           <Input id="ca-site" type="url" placeholder="https://" value={f.site} onChange={(e) => set({ site: e.target.value })} />
         </Field>
-        <div className="form-grid">
-          <Field label="What do you need help with?" htmlFor="ca-interest">
-            <Select id="ca-interest" value={f.interest} placeholder="Choose one" options={INTERESTS} onChange={(e) => set({ interest: e.target.value })} />
-          </Field>
-          <HeardFromField
-            id="ca-heard"
-            value={f.heard}
-            onChange={(heard) => set({ heard })}
-            referrer={f.referrer}
-            onReferrerChange={(referrer) => set({ referrer })}
-          />
-        </div>
+        <HeardFromField
+          id="ca-heard"
+          value={f.heard}
+          onChange={(heard) => set({ heard })}
+          referrer={f.referrer}
+          onReferrerChange={(referrer) => set({ referrer })}
+        />
         <Field label="Tell us about your business" htmlFor="ca-message">
           <Textarea
             id="ca-message"
