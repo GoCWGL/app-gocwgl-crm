@@ -507,6 +507,44 @@ export const CRM_PACKAGES: Record<
   },
 };
 
+/**
+ * "What is a custom CRM?": the highlighted explainer at the very top of Get a CRM. Each row sets a subscription CRM
+ * (HubSpot, GoHighLevel, Zoho and the like) against a custom CRM GoCWGL builds for the client.
+ */
+export const CRM_EXPLAINER = {
+  kicker: "Custom CRM, explained",
+  title: "What is a custom CRM?",
+  /** Written for any reader, including someone who has never used business software: short sentences, no jargon. */
+  definition: [
+    {
+      key: "what",
+      icon: "journal",
+      title: "What it is",
+      text: "Think of a CRM as your business’s address book, diary and filing cabinet, all kept together on the computer. It remembers every customer, every phone call, every appointment and every sale, so nothing slips through the cracks.",
+    },
+    {
+      key: "rent",
+      icon: "receipt",
+      title: "Renting one",
+      text: "Most businesses rent theirs, like renting a house. They pay every month, the rent keeps going up, and they pay extra for each person who uses it. If they stop paying, they lose it.",
+    },
+    {
+      key: "own",
+      icon: "building",
+      title: "Owning a custom one",
+      text: "A custom CRM is like having a house built just for you, then owning it. We make it to fit the way your business already works. You pay for it once, as many of your staff can use it as you like, and it’s yours to keep.",
+    },
+  ],
+  rows: [
+    { key: "cost", icon: "dollar", topic: "What you pay", rented: "A bill every month that never ends, and it keeps going up", own: "You pay once to have it built. No monthly bill" },
+    { key: "seats", icon: "users", topic: "Your staff", rented: "You pay extra, every month, for each person who uses it", own: "Everyone on your team can use it at no extra cost" },
+    { key: "fit", icon: "pipeline", topic: "How it works", rented: "Made for everyone, so you have to work their way", own: "Made for you, so it works the way you already do" },
+    { key: "features", icon: "lock", topic: "What it can do", rented: "The useful parts often cost more to unlock", own: "Has what you need, without extras you’ll never use" },
+    { key: "data", icon: "shield", topic: "Your records", rented: "Kept by another company, under their rules", own: "Yours to keep. No one can take them away" },
+    { key: "tools", icon: "grid", topic: "Everything in one place", rented: "Often needs several other programs to do the job", own: "Bookings, emails, invoices and more, all in one place" },
+  ],
+} as const;
+
 /** "Why own your CRM": the reasons shown above the packages, to show clients what owning one is worth. */
 export const CRM_WHY_OWN = [
   {

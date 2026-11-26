@@ -12,6 +12,7 @@ import {
   CRM_PAYMENT_PLANS,
   CRM_PRICE_BREAKDOWN,
   CRM_COMPARISON,
+  CRM_EXPLAINER,
   CRM_RENTED_OPTIONS,
   CRM_STEPS,
   CRM_WHY_OWN,
@@ -209,6 +210,7 @@ function CrmPackages({ onRequested }: { onRequested: () => void }) {
   return (
     <div className="crm-offer">
       <CrmHero onRequest={request && (() => request())} />
+      <CrmExplainer />
       <WhyOwnCrm />
       <CostComparison />
       <CrmPackageCards onRequest={request} />
@@ -237,6 +239,66 @@ function CrmPackages({ onRequested }: { onRequested: () => void }) {
         />
       )}
     </div>
+  );
+}
+
+/** Highlighted right under the hero: what a custom CRM is, and how it beats a subscription CRM point by point. */
+function CrmExplainer() {
+  const { kicker, title, definition, rows } = CRM_EXPLAINER;
+  return (
+    <section className="crm-explain" aria-labelledby="crm-explain-title">
+      <header className="crm-explain__head">
+        <span className="crm-explain__kicker">{kicker}</span>
+        <h2 className="crm-explain__title" id="crm-explain-title">
+          {title}
+        </h2>
+      </header>
+      <div className="crm-explain__points">
+        {definition.map((p) => (
+          <article className={`crm-explain__point crm-explain__point--${p.key}`} key={p.key}>
+            <span className="crm-explain__point-icon">
+              <Icon name={p.icon} size={18} />
+            </span>
+            <h3 className="crm-explain__point-title">{p.title}</h3>
+            <p className="crm-explain__text">{p.text}</p>
+          </article>
+        ))}
+      </div>
+      <div className="crm-explain__table" role="table" aria-label="Subscription CRM compared with a custom CRM">
+        <div className="crm-explain__row crm-explain__row--head" role="row">
+          <span className="crm-explain__corner" role="columnheader">
+            Compared on
+          </span>
+          <span className="crm-explain__col crm-explain__col--rented" role="columnheader">
+            <strong>Subscription CRM</strong>
+            <small>HubSpot, GoHighLevel, Zoho and others</small>
+          </span>
+          <span className="crm-explain__col crm-explain__col--own" role="columnheader">
+            <span className="crm-explain__pick">Recommended</span>
+            <strong>Your custom CRM</strong>
+            <small>Built for you by GoCWGL</small>
+          </span>
+        </div>
+        {rows.map((r) => (
+          <div className="crm-explain__row" role="row" key={r.key}>
+            <span className="crm-explain__topic" role="rowheader">
+              <span className="crm-explain__topic-icon">
+                <Icon name={r.icon} size={15} />
+              </span>
+              {r.topic}
+            </span>
+            <span className="crm-explain__cell crm-explain__cell--rented" role="cell">
+              <Icon name="close" size={14} strokeWidth={2.6} className="crm-explain__mark" />
+              <span>{r.rented}</span>
+            </span>
+            <span className="crm-explain__cell crm-explain__cell--own" role="cell">
+              <Icon name="check" size={14} strokeWidth={2.8} className="crm-explain__mark" />
+              <span>{r.own}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
