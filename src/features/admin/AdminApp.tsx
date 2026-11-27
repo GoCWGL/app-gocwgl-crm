@@ -19,6 +19,7 @@ import { AffiliatesSection, ReferralBonusSection } from "./sections/affiliates/A
 import { AutomationSection } from "./sections/automation/AutomationSection";
 import { BugsSection } from "./sections/bugs/BugsSection";
 import { ClientFeedbackSection } from "./sections/engagement/ClientFeedbackSection";
+import { AnnouncementsSection } from "./sections/engagement/AnnouncementsSection";
 import { FeedbackSection } from "./sections/engagement/FeedbackSection";
 import { StatusSection } from "./sections/engagement/StatusSection";
 import { SupportSection } from "./sections/engagement/SupportSection";
@@ -92,6 +93,7 @@ const SECTIONS: Record<AdminTab, ComponentType> = {
   clientStatus: ClientStatusSection,
   clientTraining: ClientTrainingsSection,
   clientSops: ClientSopsSection,
+  announcements: AnnouncementsSection,
   support: SupportSection,
   feedback: FeedbackSection,
   clientFeedback: ClientFeedbackSection,

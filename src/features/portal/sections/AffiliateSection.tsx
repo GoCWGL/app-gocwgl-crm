@@ -21,6 +21,12 @@ type Money = (cents: number) => string;
  * CRM bonus: in progress until the referred client has paid the full price, then the client claims it. VA bonus: a countdown of 30 days of 8+ hours by
  * their hourly VAs, then the client claims it. The GoCWGL team pays both.
  */
+/** The CRM bonus: one amount, or Growth's and Premium's when the program pays them differently. */
+function crmBonus(a: { simpleBonusCents: number; customBonusCents: number }, money: Money): string {
+  if (a.simpleBonusCents === a.customBonusCents) return money(a.customBonusCents);
+  return `${money(a.simpleBonusCents)} (Growth) or ${money(a.customBonusCents)} (Premium)`;
+}
+
 export function AffiliateSection() {
   const { notify } = usePortal();
   const query = useMyAffiliate();
@@ -54,7 +60,7 @@ export function AffiliateSection() {
           <div className="stack stack--4 u-grow">
             <span className="text-strong affiliate-hero__title">Refer a business and earn</span>
             <span className="text-small">
-              {money(a.customBonusCents)} when they fully pay for a CRM package, and {money(a.clientVaBonusCents)} when they work with VAs on
+              {crmBonus(a, money)} when they fully pay for a CRM package, and {money(a.clientVaBonusCents)} when they work with VAs on
               the hourly rate.
             </span>
           </div>
@@ -100,7 +106,7 @@ export function AffiliateSection() {
 
       {!accepted && (
         <>
-          <HowItWorks crm={money(a.customBonusCents)} va={money(a.clientVaBonusCents)} />
+          <HowItWorks crm={crmBonus(a, money)} va={money(a.clientVaBonusCents)} />
           <AcceptConditions />
         </>
       )}
@@ -157,7 +163,7 @@ export function AffiliateSection() {
 
       {accepted && (
         <>
-          <HowItWorks crm={money(a.customBonusCents)} va={money(a.clientVaBonusCents)} />
+          <HowItWorks crm={crmBonus(a, money)} va={money(a.clientVaBonusCents)} />
           <p className="text-small payout-card__secure">
             <Icon name="check" size={12} strokeWidth={2.6} /> You read and accepted these conditions on {formatShort(a.termsAcceptedAt)}.
           </p>
@@ -166,7 +172,7 @@ export function AffiliateSection() {
 
       <PayoutCard
         payout={a.payout}
-        bonuses={`${money(a.customBonusCents)} for a fully paid CRM package, and ${money(a.clientVaBonusCents)} for VAs on the hourly rate`}
+        bonuses={`${crmBonus(a, money)} for a fully paid CRM package, and ${money(a.clientVaBonusCents)} for VAs on the hourly rate`}
       />
     </div>
   );
@@ -338,7 +344,7 @@ function HowItWorks({ crm, va }: { crm: string; va: string }) {
         <span className="kicker">CRM PACKAGE · {crm}</span>
         <span className="text-strong">Earned once the CRM is paid in full</span>
         <ul className="affiliate-how__list">
-          <li>The client you referred buys a Custom CRM package from GoCWGL.</li>
+          <li>The client you referred buys a Growth or Premium CRM from GoCWGL.</li>
           <li>Paying once: you earn it when their full payment is verified.</li>
           <li>On a 6- or 12-month plan: you earn it after their last payment, not the first.</li>
           <li>Until then it shows as In progress. Once they’ve fully paid, claim your bonus in the list.</li>

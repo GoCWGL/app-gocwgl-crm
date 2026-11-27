@@ -29,7 +29,7 @@ import { usePortal } from "../state/PortalContext";
 import { useMenuCounts } from "@/utils/hooks/useMenuCounts";
 import { useHasTraining, useHasVaWork, useShowPackages, useVaTools } from "../lib/vaAccess";
 import { useCrmLaunched } from "../sections/CrmAfterLaunch";
-import { useCrmTab } from "../sections/CrmSection";
+import { useCrmTab, useHasCrm } from "../sections/CrmSection";
 import { useFunnelTab } from "../sections/FunnelsSection";
 import { useWorkTab, useWorkTabs } from "../sections/WorkSection";
 
@@ -88,12 +88,18 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
   const tools = useVaTools();
   // Revisions and New features (CRM menu) open once a CRM build is launched.
   const crmLaunched = useCrmLaunched();
+  // Each service menu shows when the team offers it to this client (a new client gets only the one they signed up
+  // for), or while they have work there to follow: CRM builds or requests, VA requests or a VA team.
+  const crm = useCrmTab();
+  const hasCrm = useHasCrm();
+  const hasVa = showVaPackages || hasVaRequests || vaWork.has;
   const shown = (i: PortalMenuItem, needsVa?: boolean) =>
     !HIDDEN_PORTAL_TABS.has(i.tab) &&
     // Tasks & projects sits under "Your team" but also shows before the first VA, so a client can follow a project request.
     (!(needsVa || i.needsVa) || vaWork.has || i.tab === "projects") &&
     (i.tab !== "training" || training.has) &&
     (i.tab !== "funnels" || showFunnelPackages) &&
+    (i.tab !== "agreement" || hasVa) &&
     ((i.view !== "revisions" && i.view !== "features") || crmLaunched) &&
     (i.view !== "packages" || i.tab !== "crm" || showCrmPackages) &&
     (i.tab !== "team" || showVaPackages || hasVaRequests) &&
@@ -105,6 +111,8 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
     items: g.items
       .map((e): PortalMenuEntry | null => {
         if (!isPortalFlyout(e)) return shown(e) ? e : null;
+        // The CRM menu (with My Sessions and Updates & Resources) only for clients with the CRM service.
+        if (e.key === "crm-menu" && !hasCrm) return null;
         const fg = e.groups.map((x) => ({ ...x, items: x.items.filter((i) => shown(i, x.needsVa)) })).filter((x) => x.items.length);
         return fg.length ? { ...e, groups: fg } : null;
       })
@@ -129,7 +137,7 @@ export function PortalSidebar({ business, subtitle }: PortalSidebarProps) {
     isPortalFlyout(e) ? flyoutItems(e).reduce((n, i) => n + Number(badges[i.key]?.text ?? 0), 0) : Number(badges[e.key]?.text ?? 0);
 
   // The tab showing on pages that have tabs, so the right entry is marked.
-  const crmTab = useCrmTab().tab;
+  const crmTab = crm.tab;
   const funnelTab = useFunnelTab().tab;
   const viewOf: Partial<Record<PortalTab, string>> = { crm: crmTab, funnels: funnelTab };
   const isActive = (i: PortalMenuItem) => i.tab === tab && (!i.view || viewOf[tab] === i.view);

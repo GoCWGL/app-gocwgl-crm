@@ -1,0 +1,103 @@
+@use "../../abstracts" as *;
+
+// CRM › My Sessions and Updates & Resources: recordings, appointments, announcements, documents and forms.
+.hub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.hub-bar {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.hub-heading {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: $ink;
+}
+
+.hub-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+
+  &__body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    text-align: left;
+  }
+
+  &__text {
+    margin: 6px 0 0;
+    color: $ink-soft;
+    font-size: 14px;
+    line-height: 1.55;
+    white-space: pre-line;
+  }
+
+  &--stack {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+}
+
+.hub-post {
+  gap: 6px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 800;
+    color: $ink;
+  }
+}
+
+.hub-answers {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid $line;
+
+  dt {
+    font-size: 12px;
+    font-weight: 700;
+    color: $ink-soft;
+  }
+
+  dd {
+    margin: 2px 0 0;
+    white-space: pre-line;
+  }
+}

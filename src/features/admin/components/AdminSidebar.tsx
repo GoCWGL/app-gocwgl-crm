@@ -70,7 +70,7 @@ const MENU: Array<{ title: string; items: Entry[] }> = [
           },
           {
             title: "Enablement",
-            items: [item("clientTraining", "Training", "graduation"), item("clientSops", "SOPs", "clipboard")],
+            items: [item("clientTraining", "Training", "graduation"), item("clientSops", "SOPs", "clipboard"), item("announcements", "Announcements", "bell")],
           },
           {
             title: "Client care",

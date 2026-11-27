@@ -23,7 +23,8 @@ import { AffiliateSection } from "./sections/AffiliateSection";
 import { AttendanceSection } from "./sections/AttendanceSection";
 import { VaAssetsSection } from "./sections/VaAssetsSection";
 import { BuildSection } from "./sections/BuildSection";
-import { CrmSection } from "./sections/CrmSection";
+import { CrmSection, useHasCrm } from "./sections/CrmSection";
+import { AnnouncementsSection, AppointmentsSection, DocumentsSection, FormsSection, RecordingsSection } from "./sections/CrmResources";
 import { DashboardSection } from "./sections/DashboardSection";
 import { FunnelsSection } from "./sections/FunnelsSection";
 import { InvoicesSection } from "./sections/InvoicesSection";
@@ -38,6 +39,9 @@ import { PageGuide, PageGuideButton } from "./components/PageGuide";
 import { BetaTesterBanner } from "./components/BetaTesterBanner";
 import { StaffClientBar } from "./components/StaffClientBar";
 import { PortalProvider, usePortal } from "./state/PortalContext";
+
+/** CRM menu pages that aren't the CRM page itself. */
+const CRM_ONLY_TABS = new Set<PortalTab>(["recordings", "appointments", "announcements", "documents", "forms"]);
 
 const SECTIONS: Record<PortalTab, ComponentType> = {
   dashboard: DashboardSection,
@@ -58,6 +62,11 @@ const SECTIONS: Record<PortalTab, ComponentType> = {
   sops: ClientSopsSection,
   affiliate: AffiliateSection,
   account: AccountSection,
+  recordings: RecordingsSection,
+  appointments: AppointmentsSection,
+  announcements: AnnouncementsSection,
+  documents: DocumentsSection,
+  forms: FormsSection,
 };
 
 /** Client portal: one page with a sidebar, switching sections in place. */
@@ -154,6 +163,9 @@ function PortalLayout() {
   const work = useWorkTabs();
   // VA tracker and Attendance open only once a VA request turned on the time tracker or the attendance tracker.
   const tools = useVaTools();
+  // My Sessions and Updates & Resources come with the CRM service.
+  const hasCrm = useHasCrm();
+  const crmKnown = useOverview(30).isSuccess;
   const locked =
     HIDDEN_PORTAL_TABS.has(state.tab) ||
     (vaWork.known && !vaWork.has && VA_ONLY_TABS.has(state.tab)) ||
@@ -161,7 +173,8 @@ function PortalLayout() {
     (state.tab === "funnels" && funnelMenu.known && !funnelMenu.has) ||
     (state.tab === "projects" && work.known && !work.any) ||
     (state.tab === "journal" && tools.known && !tools.timeTracker) ||
-    (state.tab === "attendance" && tools.known && !tools.attendance);
+    (state.tab === "attendance" && tools.known && !tools.attendance) ||
+    (CRM_ONLY_TABS.has(state.tab) && crmKnown && !hasCrm);
   useEffect(() => {
     if (locked) update({ tab: "dashboard" });
   }, [locked, update]);

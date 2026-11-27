@@ -2742,6 +2742,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/admin/contacts/{contact_id}/recordings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Client Recordings
+         * @description Recordings shown in this client's portal (CRM › My Sessions › My Recordings).
+         */
+        get: operations["client_recordings_api_admin_contacts__contact_id__recordings_get"];
+        put?: never;
+        /**
+         * Add Recording
+         * @description Add a session recording (a link) to the client's portal.
+         */
+        post: operations["add_recording_api_admin_contacts__contact_id__recordings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/recordings/{recording_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Recording */
+        delete: operations["delete_recording_api_admin_recordings__recording_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Recording */
+        patch: operations["update_recording_api_admin_recordings__recording_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Announcements
+         * @description Every announcement, drafts included: pinned first, then newest.
+         */
+        get: operations["list_announcements_api_admin_announcements_get"];
+        put?: never;
+        /** Create Announcement */
+        post: operations["create_announcement_api_admin_announcements_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/announcements/{announcement_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Announcement */
+        delete: operations["delete_announcement_api_admin_announcements__announcement_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Announcement */
+        patch: operations["update_announcement_api_admin_announcements__announcement_id__patch"];
+        trace?: never;
+    };
+    "/api/admin/contacts/{contact_id}/shared-forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Client Shared Forms
+         * @description GoCWGL forms this client is asked to fill in (CRM › Updates & Resources › My Forms).
+         */
+        get: operations["client_shared_forms_api_admin_contacts__contact_id__shared_forms_get"];
+        put?: never;
+        /** Share Form */
+        post: operations["share_form_api_admin_contacts__contact_id__shared_forms_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/shared-forms/{shared_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Unshare Form */
+        delete: operations["unshare_form_api_admin_shared_forms__shared_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/admin/subscriptions": {
         parameters: {
             query?: never;
@@ -6439,6 +6558,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/portal/recordings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Recordings
+         * @description Recordings of your sessions with GoCWGL, newest first.
+         */
+        get: operations["my_recordings_api_portal_recordings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/announcements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Announcements
+         * @description GoCWGL's updates and announcements for you: pinned first, then newest.
+         */
+        get: operations["my_announcements_api_portal_announcements_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Appointments
+         * @description Calls you booked with GoCWGL, newest first.
+         */
+        get: operations["my_appointments_api_portal_appointments_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/portal/my-forms": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Forms
+         * @description Forms to fill in, and the GoCWGL forms you've sent with your answers.
+         */
+        get: operations["my_forms_api_portal_my_forms_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/portal/builds": {
         parameters: {
             query?: never;
@@ -8637,6 +8836,84 @@ export interface components {
             /** Contactid */
             contactId?: string | null;
         };
+        /**
+         * AnnouncementAudience
+         * @description Who sees an announcement in their portal: every client, or only those offered the CRM or VA service.
+         * @enum {string}
+         */
+        AnnouncementAudience: "all" | "crm" | "va";
+        /** AnnouncementIn */
+        AnnouncementIn: {
+            /** Title */
+            title: string;
+            /**
+             * Body
+             * @default
+             */
+            body?: string;
+            /**
+             * Linkurl
+             * @default
+             */
+            linkUrl?: string;
+            /** @default all */
+            audience?: components["schemas"]["AnnouncementAudience"];
+            /**
+             * Pinned
+             * @default false
+             */
+            pinned?: boolean;
+            /**
+             * Published
+             * @default false
+             */
+            published?: boolean;
+        };
+        /** AnnouncementOut */
+        AnnouncementOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /** Body */
+            body: string;
+            /** Linkurl */
+            linkUrl: string;
+            audience: components["schemas"]["AnnouncementAudience"];
+            /** Pinned */
+            pinned: boolean;
+            /** Publishedat */
+            publishedAt: string | null;
+            /** Updatedbyname */
+            updatedByName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+            /**
+             * Updatedat
+             * Format: date-time
+             */
+            updatedAt: string;
+        };
+        /** AnnouncementUpdate */
+        AnnouncementUpdate: {
+            /** Title */
+            title?: string | null;
+            /** Body */
+            body?: string | null;
+            /** Linkurl */
+            linkUrl?: string | null;
+            audience?: components["schemas"]["AnnouncementAudience"] | null;
+            /** Pinned */
+            pinned?: boolean | null;
+            /** Published */
+            published?: boolean | null;
+        };
         /** AnswerOut */
         AnswerOut: {
             /** Fieldid */
@@ -8688,6 +8965,34 @@ export interface components {
              * @default
              */
             note?: string;
+        };
+        /** AppointmentOut */
+        AppointmentOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Title */
+            title: string;
+            /**
+             * Startsat
+             * Format: date-time
+             */
+            startsAt: string;
+            /**
+             * Endsat
+             * Format: date-time
+             */
+            endsAt: string;
+            /** Status */
+            status: string;
+            /** Location */
+            location: string;
+            /** Upcoming */
+            upcoming: boolean;
+            /** Meetingurl */
+            meetingUrl: string | null;
         };
         /** AssetClient */
         AssetClient: {
@@ -10936,10 +11241,10 @@ export interface components {
          * CrmPackage
          * @enum {string}
          */
-        CrmPackage: "simple" | "custom";
+        CrmPackage: "simple" | "growth" | "custom";
         /**
          * CrmPaymentPlan
-         * @description How a client pays for a Custom CRM: once, or the "Custom package option" (a set monthly payment).
+         * @description How a client pays for a Growth or Premium CRM: once, or over 6 or 12 monthly payments.
          * @enum {string}
          */
         CrmPaymentPlan: "one_time" | "6_months" | "12_months";
@@ -10958,7 +11263,7 @@ export interface components {
              * Package
              * @enum {string}
              */
-            package: "simple" | "custom";
+            package: "growth" | "custom";
             /** @default one_time */
             paymentPlan?: components["schemas"]["CrmPaymentPlan"];
             /** Name */
@@ -13626,6 +13931,42 @@ export interface components {
             /** Ratings */
             ratings: components["schemas"]["MyRatingOut"][];
         };
+        /** MyFormAnswerOut */
+        MyFormAnswerOut: {
+            /** Label */
+            label: string;
+            /** Value */
+            value: string;
+        };
+        /** MyFormSubmissionOut */
+        MyFormSubmissionOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Formid
+             * Format: uuid
+             */
+            formId: string;
+            /** Formname */
+            formName: string;
+            /**
+             * Submittedat
+             * Format: date-time
+             */
+            submittedAt: string;
+            /** Answers */
+            answers?: components["schemas"]["MyFormAnswerOut"][];
+        };
+        /** MyFormsOut */
+        MyFormsOut: {
+            /** Shared */
+            shared: components["schemas"]["MySharedFormOut"][];
+            /** Submissions */
+            submissions: components["schemas"]["MyFormSubmissionOut"][];
+        };
         /** MyPayoutOut */
         MyPayoutOut: {
             /**
@@ -13737,6 +14078,32 @@ export interface components {
             programBonusCents: number;
             /** Referrals */
             referrals: components["schemas"]["MyReferralOut"][];
+        };
+        /** MySharedFormOut */
+        MySharedFormOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Formid
+             * Format: uuid
+             */
+            formId: string;
+            /** Name */
+            name: string;
+            /** Note */
+            note: string;
+            /** Active */
+            active: boolean;
+            /**
+             * Sharedat
+             * Format: date-time
+             */
+            sharedAt: string;
+            /** Lastsubmittedat */
+            lastSubmittedAt: string | null;
         };
         /** MyShareholdingOut */
         MyShareholdingOut: {
@@ -15205,6 +15572,59 @@ export interface components {
              */
             lastDay: string;
         };
+        /** RecordingIn */
+        RecordingIn: {
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Recordedon */
+            recordedOn?: string | null;
+            /**
+             * Notes
+             * @default
+             */
+            notes?: string;
+        };
+        /** RecordingOut */
+        RecordingOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Contactid
+             * Format: uuid
+             */
+            contactId: string;
+            /** Title */
+            title: string;
+            /** Url */
+            url: string;
+            /** Recordedon */
+            recordedOn: string | null;
+            /** Notes */
+            notes: string;
+            /** Addedbyname */
+            addedByName: string;
+            /**
+             * Createdat
+             * Format: date-time
+             */
+            createdAt: string;
+        };
+        /** RecordingUpdate */
+        RecordingUpdate: {
+            /** Title */
+            title?: string | null;
+            /** Url */
+            url?: string | null;
+            /** Recordedon */
+            recordedOn?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
         /** RecoveryCodesOut */
         RecoveryCodesOut: {
             /** Recoverycodes */
@@ -16190,6 +16610,43 @@ export interface components {
              * Format: date-time
              */
             createdAt: string;
+        };
+        /** SharedFormIn */
+        SharedFormIn: {
+            /**
+             * Formid
+             * Format: uuid
+             */
+            formId: string;
+            /**
+             * Note
+             * @default
+             */
+            note?: string;
+        };
+        /** SharedFormOut */
+        SharedFormOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Formid
+             * Format: uuid
+             */
+            formId: string;
+            /** Name */
+            name: string;
+            /** Note */
+            note: string;
+            /** Active */
+            active: boolean;
+            /**
+             * Sharedat
+             * Format: date-time
+             */
+            sharedAt: string;
         };
         /** ShareholderLoginOut */
         ShareholderLoginOut: {
@@ -27408,6 +27865,466 @@ export interface operations {
                         data: components["schemas"]["CallInviteOut"];
                     };
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_recordings_api_admin_contacts__contact_id__recordings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Client Recordings Api Admin Contacts  Contact Id  Recordings Get */
+                        data: components["schemas"]["RecordingOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    add_recording_api_admin_contacts__contact_id__recordings_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordingIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecordingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_recording_api_admin_recordings__recording_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recording_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_recording_api_admin_recordings__recording_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recording_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecordingUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["RecordingOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    list_announcements_api_admin_announcements_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response List Announcements Api Admin Announcements Get */
+                        data: components["schemas"]["AnnouncementOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    create_announcement_api_admin_announcements_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AnnouncementOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    delete_announcement_api_admin_announcements__announcement_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    update_announcement_api_admin_announcements__announcement_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                announcement_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AnnouncementUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AnnouncementOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    client_shared_forms_api_admin_contacts__contact_id__shared_forms_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response Client Shared Forms Api Admin Contacts  Contact Id  Shared Forms Get */
+                        data: components["schemas"]["SharedFormOut"][];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    share_form_api_admin_contacts__contact_id__shared_forms_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                contact_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SharedFormIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["SharedFormOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    unshare_form_api_admin_shared_forms__shared_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                shared_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -39818,6 +40735,133 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_recordings_api_portal_recordings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Recordings Api Portal Recordings Get */
+                        data: components["schemas"]["RecordingOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_announcements_api_portal_announcements_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Announcements Api Portal Announcements Get */
+                        data: components["schemas"]["AnnouncementOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_appointments_api_portal_appointments_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** Response My Appointments Api Portal Appointments Get */
+                        data: components["schemas"]["AppointmentOut"][];
+                    };
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    my_forms_api_portal_my_forms_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["MyFormsOut"];
+                    };
                 };
             };
             /** @description Error */

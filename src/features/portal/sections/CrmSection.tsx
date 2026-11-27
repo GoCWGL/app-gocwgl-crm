@@ -9,7 +9,6 @@ import {
   CRM_FAQ,
   CRM_FEATURE_FROM_CENTS,
   CRM_PACKAGES,
-  CRM_PAYMENT_PLANS,
   CRM_PRICE_BREAKDOWN,
   CRM_COMPARISON,
   CRM_EXPLAINER,
@@ -18,6 +17,7 @@ import {
   CRM_WHY_OWN,
   OFFERED_CRM_PACKAGES,
   crmPlanOf,
+  crmPlansFor,
   type CrmPackageKey,
   type CrmPaymentPlanKey,
 } from "@/data/portal";
@@ -36,6 +36,7 @@ import { usePortal } from "../state/PortalContext";
 import { useShowPackages } from "../lib/vaAccess";
 
 const PACKAGE_KEYS = OFFERED_CRM_PACKAGES;
+type CrmOffer = (typeof OFFERED_CRM_PACKAGES)[number];
 
 type CrmTab = "builds" | "packages" | "progress" | "revisions" | "features";
 
@@ -56,6 +57,16 @@ export function useCrmTab() {
   const hidden = (picked === "packages" && !showPackages) || ((picked === "revisions" || picked === "features") && !launched);
   const tab: CrmTab = hidden ? "builds" : picked;
   return { query, builds, requests, tab, showPackages, launched };
+}
+
+/**
+ * Whether this client has the CRM service: the team offers it (sign-up as a Custom CRM client turns it on), or they
+ * already have CRM builds or requests to follow. Until then the whole CRM menu, My Sessions and Updates & Resources
+ * included, stays hidden.
+ */
+export function useHasCrm(): boolean {
+  const { builds, requests, showPackages } = useCrmTab();
+  return showPackages || builds.length > 0 || requests.length > 0;
 }
 
 /** CRM page: the client's CRM builds, the packages to start a new one, and Build progress (every build's timeline). */
@@ -161,7 +172,7 @@ function CrmRequestRow({ request: r, readOnly }: { request: ClientCrmRequestOut;
         <span className="text-small">
           Requested {formatShort(r.createdAt)} ·{" "}
           {r.paymentsTotal > 1 &&
-            `${crmPlanOf(r.paymentPlan).label}, ${formatCents(crmPlanOf(r.paymentPlan).paymentCents)} a month · ${r.paymentsPaid} of ${r.paymentsTotal} payments made · `}
+            `${crmPlanOf(r.paymentPlan, r.package).label}, ${formatCents(crmPlanOf(r.paymentPlan, r.package).paymentCents)} a month · ${r.paymentsPaid} of ${r.paymentsTotal} payments made · `}
           {inv
             ? `Invoice ${inv.number} · ${formatCents(inv.totalCents)}${inv.paidAt ? ` · paid ${formatShort(inv.paidAt)}` : inv.dueDate ? ` · due ${formatShort(inv.dueDate)}` : ""}`
             : r.status === "contacted"
@@ -203,9 +214,9 @@ function CrmRequestRow({ request: r, readOnly }: { request: ClientCrmRequestOut;
  */
 function CrmPackages({ onRequested }: { onRequested: () => void }) {
   const { readOnly } = usePortal();
-  const [requesting, setRequesting] = useState<CrmPaymentPlanKey | null>(null);
+  const [requesting, setRequesting] = useState<{ plan: CrmPaymentPlanKey; pkg: CrmOffer } | null>(null);
 
-  const request = readOnly ? undefined : (plan: CrmPaymentPlanKey = "one_time") => setRequesting(plan);
+  const request = readOnly ? undefined : (plan: CrmPaymentPlanKey = "one_time", pkg: CrmOffer = "growth") => setRequesting({ plan, pkg });
 
   return (
     <div className="crm-offer">
@@ -220,7 +231,7 @@ function CrmPackages({ onRequested }: { onRequested: () => void }) {
         <section className="crm-cta">
           <div className="stack stack--4">
             <h2 className="crm-cta__title">Ready to own your CRM?</h2>
-            <span className="crm-cta__text">Book a free discovery call. You approve the plan and the quote before anything is billed.</span>
+            <span className="crm-cta__text">Free discovery call. Nothing is billed until you approve the quote.</span>
           </div>
           <Button variant="primary" size="lg" aria-haspopup="dialog" onClick={() => request()}>
             Request a CRM
@@ -230,7 +241,8 @@ function CrmPackages({ onRequested }: { onRequested: () => void }) {
       )}
       {requesting && (
         <CrmRequestModal
-          initialPlan={requesting}
+          initialPlan={requesting.plan}
+          initialPackage={requesting.pkg}
           onClose={() => setRequesting(null)}
           onRequested={() => {
             setRequesting(null);
@@ -313,14 +325,14 @@ function CrmHero({ onRequest }: { onRequest?: () => void }) {
     <section className="crm-intro">
       <div className="crm-intro__copy">
         <span className="crm-intro__eyebrow">
-          <Icon name="sparkle" size={13} /> Custom CRM builds
+          <Icon name="sparkle" size={13} /> Custom CRM, built for you and owned by you
         </span>
         <h1 className="crm-intro__title">
           Stop renting the system <span className="crm-intro__accent">your business runs on.</span>
         </h1>
         <p className="crm-intro__lead">
-          Your CRM holds every lead, deal and client you’ve ever won. Most businesses rent theirs month after month and pay more
-          every time they hire. We build one around how you sell, and then it’s yours.
+          A CRM for coaches, consultants, and coaching and consulting firms. Most businesses rent theirs and pay more every time
+          they hire. Tell us how you work, and we build one you own, from {formatCents(CRM_PACKAGES.growth.priceCents)}.
         </p>
         <div className="crm-intro__actions">
           {onRequest && (
@@ -385,7 +397,8 @@ function CostComparison() {
   const [seats, setSeats] = useState(defaultSeats);
   const [years, setYears] = useState<(typeof periods)[number]>(periods[0]);
   // Owning: the one-time build plus the yearly Care plan after its free first year, so the comparison is like for like.
-  const buildCents = CRM_PACKAGES.custom.priceCents;
+  // Growth, the package most clients start with (Premium is shown under the bars).
+  const buildCents = CRM_PACKAGES.growth.priceCents;
   const { priceCents: careCents, freeYears } = CRM_CARE_PLAN;
   const ownAfter = (months: number) => buildCents + (careCents / 12) * Math.max(0, months - freeYears * 12);
   const ownCents = ownAfter(years * 12);
@@ -503,7 +516,7 @@ function CostComparison() {
             <div className="crm-cost__body">
               <div className="crm-cost__row-head">
                 <span className="crm-cost__name">
-                  Your own CRM <span className="crm-cost__plan">GoCWGL Custom CRM</span>
+                  Your own CRM <span className="crm-cost__plan">GoCWGL Growth CRM</span>
                 </span>
                 <span className="crm-cost__amount crm-cost__amount--own">{formatCents(ownCents)}</span>
               </div>
@@ -511,8 +524,8 @@ function CostComparison() {
                 <span className="crm-cost__fill crm-cost__fill--own" style={{ width: width(ownCents) }} />
               </div>
               <span className="crm-cost__detail">
-                {formatCents(buildCents)} one-time build · first year of care free, then {formatCents(careCents)}/year · unlimited
-                logins · yours to keep
+                {formatCents(buildCents)} one-time build (Premium {formatCents(CRM_PACKAGES.custom.priceCents)}) · first year of care free,
+                then {formatCents(careCents)}/year · unlimited logins · yours to keep
               </span>
             </div>
           </div>
@@ -527,31 +540,34 @@ function CostComparison() {
 }
 
 /** The CRM package (or packages) on offer: price and Request, what's included by area, what the price covers, care. */
-function CrmPackageCards({ onRequest }: { onRequest?: (plan?: CrmPaymentPlanKey) => void }) {
-  const [planKey, setPlanKey] = useState<CrmPaymentPlanKey>("one_time");
+function CrmPackageCards({ onRequest }: { onRequest?: (plan: CrmPaymentPlanKey, pkg: CrmOffer) => void }) {
+  const [planKeys, setPlanKeys] = useState<Record<CrmOffer, CrmPaymentPlanKey>>({ growth: "one_time", custom: "one_time" });
   return (
     <section className="crm-block">
       <header className="crm-block__head">
-        <span className="crm-block__kicker">Your build</span>
-        <h2 className="crm-block__title">One price. Built once. Yours for good.</h2>
+        <span className="crm-block__kicker">Two packages</span>
+        <h2 className="crm-block__title">Built once. Paid your way. Yours for good.</h2>
         <p className="crm-block__lead">
-          Big companies pay partners tens of thousands just to set up a CRM they still rent. Your price covers the whole build.
+          Both packages share one design and app. Growth is the complete CRM; Premium adds advanced automation, custom modules
+          and a course platform. Pay once, or over 6 or 12 months.
         </p>
       </header>
       {PACKAGE_KEYS.map((key) => {
         const p = CRM_PACKAGES[key];
-        const plan = crmPlanOf(key === "custom" ? planKey : "one_time");
+        const plan = crmPlanOf(planKeys[key], key);
         const monthly = plan.payments > 1;
         const groups = p.groups ?? [{ title: "Everything included", icon: "check" as const, items: p.includes }];
         return (
           <article className="crm-pkg" key={key}>
             <div className="crm-pkg__head">
               <div className="crm-pkg__intro">
+                <span className="crm-pkg__kind">{p.kind}</span>
                 <div className="crm-pkg__name-row">
                   <h3 className="crm-pkg__name">{p.label}</h3>
                   {p.tag && <span className="crm-pkg__tag">{p.tag}</span>}
                 </div>
                 <p className="crm-pkg__tagline">{p.tagline}</p>
+                <p className="crm-pkg__audience">{p.audience}</p>
                 <div className="crm-pkg__facts">
                   <span className="crm-pkg__fact">
                     <Icon name="clock" size={14} /> {p.timeline}
@@ -562,24 +578,26 @@ function CrmPackageCards({ onRequest }: { onRequest?: (plan?: CrmPaymentPlanKey)
                   <span className="crm-pkg__fact">
                     <Icon name="shield" size={14} /> First year of care free
                   </span>
+                  <span className="crm-pkg__fact">
+                    <Icon name="dollar" size={14} /> No subscription or per-login fees
+                  </span>
                 </div>
               </div>
               <div className="crm-pkg__buy">
-                <span className="crm-pkg__label">{monthly ? "Custom package option" : "One-time payment"}</span>
+                <span className="crm-pkg__label">{monthly ? plan.label : "One payment for the whole build"}</span>
                 <span className="crm-pkg__amount">
                   {formatCents(monthly ? plan.paymentCents : p.priceCents)}
                   {monthly && <small>/month</small>}
                 </span>
-                {key === "custom" && (
-                  <div className="crm-pkg__plans" role="radiogroup" aria-label="Payment option">
-                    {CRM_PAYMENT_PLANS.map((o) => (
+                <div className="crm-pkg__plans" role="radiogroup" aria-label={`${p.label} payment option`}>
+                    {crmPlansFor(key).map((o) => (
                       <button
                         key={o.key}
                         type="button"
                         role="radio"
-                        aria-checked={planKey === o.key}
+                        aria-checked={plan.key === o.key}
                         className="option-card crm-pkg__plan"
-                        onClick={() => setPlanKey(o.key)}
+                        onClick={() => setPlanKeys((k) => ({ ...k, [key]: o.key }))}
                       >
                         <span className="option-card__head">
                           {o.label}
@@ -588,20 +606,19 @@ function CrmPackageCards({ onRequest }: { onRequest?: (plan?: CrmPaymentPlanKey)
                         {o.payments > 1 && <span className="option-card__desc">{formatCents(o.paymentCents * o.payments)} in total</span>}
                       </button>
                     ))}
-                  </div>
-                )}
+                </div>
                 {onRequest && (
-                  <Button variant="primary" size="lg" block aria-haspopup="dialog" onClick={() => onRequest(plan.key)}>
-                    Request a CRM
+                  <Button variant="primary" size="lg" block aria-haspopup="dialog" onClick={() => onRequest(plan.key, key)}>
+                    Request {p.label}
                     <Icon name="arrowRight" strokeWidth={2.4} />
                   </Button>
                 )}
-                <span className="crm-pkg__fine">Book a call first. Nothing is billed until you approve the quote.</span>
+                <span className="crm-pkg__fine">Questions first? Book a free discovery call. Nothing is billed until you approve the quote.</span>
               </div>
             </div>
 
             <div className="crm-pkg__body">
-              <span className="crm-pkg__section-title">Everything included</span>
+              <span className="crm-pkg__section-title">{p.groupsLead ?? "What’s included"}</span>
               <div className="crm-pkg__groups">
                 {groups.map((g) => (
                   <div className="crm-pkg__group" key={g.title}>
@@ -624,6 +641,8 @@ function CrmPackageCards({ onRequest }: { onRequest?: (plan?: CrmPaymentPlanKey)
                   </div>
                 ))}
               </div>
+
+              {p.limits && <p className="crm-pkg__limits">{p.limits}</p>}
 
               <div className="crm-pkg__extras">
                 <div className="crm-pkg__extra">

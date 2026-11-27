@@ -41,6 +41,7 @@ export type AdminTab =
   | "clientStatus"
   | "clientTraining"
   | "clientSops"
+  | "announcements"
   | "support"
   | "feedback"
   | "clientFeedback"
@@ -108,6 +109,7 @@ export const ADMIN_PAGES: Record<AdminTab, { title: string; subtitle: string }> 
   clientStatus: { title: "Client live status", subtitle: "Which clients have their portal open right now, and when the others were last on." },
   clientTraining: { title: "Client training", subtitle: "Video and reading lessons for your clients, assigned to the clients who should see them." },
   clientSops: { title: "Client SOPs", subtitle: "Step-by-step guides for your clients. Draft them, then publish when they're ready." },
+  announcements: { title: "Announcements", subtitle: "Updates for your clients’ portals (CRM › Updates & Resources). Draft them, then publish." },
   support: { title: "Support", subtitle: "Every request for help from your clients and your VAs, in one place." },
   jobs: { title: "Job Postings", subtitle: "Client roles for your VAs: review them, post them, interview, and mark them filled." },
   feedback: { title: "VA rating", subtitle: "What your clients say about their VAs: star ratings and comments." },
@@ -212,6 +214,7 @@ export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
   clientStatus: "contacts",
   clientTraining: "contacts",
   clientSops: "contacts",
+  announcements: "contacts",
   // Tickets belong to the "Report a bug" menu on the API.
   support: "bugs",
   feedback: null,

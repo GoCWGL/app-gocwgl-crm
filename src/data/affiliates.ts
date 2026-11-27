@@ -13,7 +13,7 @@ export const CRM_PROGRESS: Record<CrmProgress, { label: string; tone: Tone }> = 
   paid: { label: "CRM paid", tone: "green" },
 };
 
-export const CRM_PACKAGE_LABELS: Record<CrmPackage, string> = { simple: "Simple CRM", custom: "Custom CRM" };
+export const CRM_PACKAGE_LABELS: Record<CrmPackage, string> = { simple: "Simple CRM", growth: "Growth CRM", custom: "Premium CRM" };
 
 /** The ways to be paid a bonus on offer. */
 export const PAYOUT_METHODS: Array<{ value: PayoutIn["method"]; label: string }> = [

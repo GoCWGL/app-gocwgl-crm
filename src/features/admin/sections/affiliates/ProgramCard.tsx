@@ -10,7 +10,7 @@ import { useAdmin } from "../../state/AdminContext";
 type Drafts = { simple: string | null; custom: string | null; clientVa: string | null; va: string | null };
 const NO_DRAFTS: Drafts = { simple: null, custom: null, clientVa: null, va: null };
 
-/** The program itself: on or off, and the bonus a client earns when someone they referred pays for a Simple or a Custom CRM. */
+/** The program itself: on or off, and the bonus a client earns when someone they referred pays for a Growth CRM (or an older Simple CRM) or a Premium CRM. */
 export function ProgramCard({ canManage }: { canManage: boolean }) {
   const { update } = useAdmin();
   const program = useAffiliateProgram().data;
@@ -37,7 +37,7 @@ export function ProgramCard({ canManage }: { canManage: boolean }) {
         onSuccess: (p) => {
           setDrafts(NO_DRAFTS);
           update({
-            toast: `Referral bonus: ${formatCents(p.simpleBonusCents, p.currency)} per Simple CRM, ${formatCents(p.customBonusCents, p.currency)} per Custom CRM, ${formatCents(p.clientVaBonusCents, p.currency)} per client with hourly VAs, ${formatCents(p.vaBonusCents, p.currency)} per VA referred.`,
+            toast: `Referral bonus: ${formatCents(p.simpleBonusCents, p.currency)} per Growth CRM, ${formatCents(p.customBonusCents, p.currency)} per Premium CRM, ${formatCents(p.clientVaBonusCents, p.currency)} per client with hourly VAs, ${formatCents(p.vaBonusCents, p.currency)} per VA referred.`,
           });
         },
       },
@@ -85,7 +85,7 @@ export function ProgramCard({ canManage }: { canManage: boolean }) {
       )}
 
       <form className="cluster cluster--8 affiliate-program__form" onSubmit={submit}>
-        <Field label={`Bonus per Simple CRM (${program?.currency ?? "USD"})`} htmlFor="aff-simple">
+        <Field label={`Bonus per Growth CRM (${program?.currency ?? "USD"})`} htmlFor="aff-simple">
           <Input
             id="aff-simple"
             inputMode="decimal"
@@ -96,7 +96,7 @@ export function ProgramCard({ canManage }: { canManage: boolean }) {
             onChange={(e) => setDrafts((d) => ({ ...d, simple: e.target.value }))}
           />
         </Field>
-        <Field label={`Bonus per Custom CRM (${program?.currency ?? "USD"})`} htmlFor="aff-custom">
+        <Field label={`Bonus per Premium CRM (${program?.currency ?? "USD"})`} htmlFor="aff-custom">
           <Input
             id="aff-custom"
             inputMode="decimal"

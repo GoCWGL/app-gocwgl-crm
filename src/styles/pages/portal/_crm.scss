@@ -1243,6 +1243,35 @@
     color: $muted;
   }
 
+  // "Business Growth CRM" above the name.
+  &__kind {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $cyan-700;
+  }
+
+  // Who the package is for.
+  &__audience {
+    margin: 0;
+    max-width: 520px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: $ink-muted;
+  }
+
+  // What's left out (Growth) or how far it goes (Premium).
+  &__limits {
+    margin: 0;
+    padding: 10px 14px;
+    border-radius: $radius-md;
+    background: $bg-soft;
+    font-size: 13px;
+    line-height: 1.5;
+    color: $ink-muted;
+  }
+
   &__facts {
     @include cluster(8px);
     margin-top: 4px;

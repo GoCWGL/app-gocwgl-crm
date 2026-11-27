@@ -2,12 +2,13 @@
 
 import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Button, Field, FormError, Icon, IconTile, Input, Modal, Textarea, buttonClass } from "@/components/ui";
-import { CRM_BOOKING_URL, CRM_PACKAGES, CRM_PAYMENT_PLANS, OFFERED_CRM_PACKAGES, crmPlanOf, type CrmPackageKey, type CrmPaymentPlanKey } from "@/data/portal";
+import { CRM_BOOKING_URL, CRM_PACKAGES, OFFERED_CRM_PACKAGES, crmPlanOf, crmPlansFor, type CrmPaymentPlanKey } from "@/data/portal";
 import { formatCents } from "@/utils/format/money";
 import { useCreateCrmRequest } from "@/utils/hooks/useDelivery";
 import { PaymentNotes } from "./PayConfirmModal";
 
 const PACKAGE_KEYS = OFFERED_CRM_PACKAGES;
+type CrmOffer = (typeof OFFERED_CRM_PACKAGES)[number];
 
 /** Portals a CRM can have (who logs in): the name saved, and who it's for. */
 const PORTAL_OPTIONS = [
@@ -48,17 +49,20 @@ type Step = "edit" | "review" | "saved";
  */
 export function CrmRequestModal({
   initialPlan = "one_time",
+  initialPackage = "growth",
   onClose,
   onRequested,
 }: {
   /** The payment option they tapped on the package. */
   initialPlan?: CrmPaymentPlanKey;
+  /** The package they tapped Request on. */
+  initialPackage?: CrmOffer;
   onClose: () => void;
   onRequested: () => void;
 }) {
   const create = useCreateCrmRequest();
   const [step, setStep] = useState<Step>("edit");
-  const [pkg, setPkg] = useState<CrmPackageKey>(OFFERED_CRM_PACKAGES[0]);
+  const [pkg, setPkg] = useState<CrmOffer>(initialPackage);
   const [planKey, setPlanKey] = useState<CrmPaymentPlanKey>(initialPlan);
   const [name, setName] = useState("");
   const [goal, setGoal] = useState("");
@@ -66,14 +70,14 @@ export function CrmRequestModal({
   const [menus, setMenus] = useState<string[]>([]);
   const [tried, setTried] = useState(false);
   const p = CRM_PACKAGES[pkg];
-  const plan = crmPlanOf(pkg === "custom" ? planKey : "one_time");
+  const plan = crmPlanOf(planKey, pkg);
   const price = plan.payments > 1 ? planPrice(plan) : formatCents(p.priceCents);
 
   // Only the package and the client's own answers go in the link (never their name or email); they add those on the booking page.
   const booking = new URL(CRM_BOOKING_URL);
   const notes = [
     `Package: ${p.label}`,
-    `Payment: ${plan.payments > 1 ? `Custom package option, ${price}` : `One-time payment, ${price}`}`,
+    `Payment: ${plan.payments > 1 ? `${plan.label}, ${price}` : `One-time payment, ${price}`}`,
     `CRM name: ${name.trim()}`,
     `Goal: ${goal.trim()}`,
     portals.length ? `Portals: ${portals.join(", ")}` : "",
@@ -140,7 +144,7 @@ export function CrmRequestModal({
       title={step === "saved" ? "Now book your call" : "Request a CRM"}
       subtitle={
         step === "edit"
-          ? "Tell us what you need, then book your discovery call. Nothing is billed until you approve the plan and quote."
+          ? "Pick Growth or Premium, tell us what you need, then book your free discovery call. Nothing is billed until you approve the blueprint and quote."
           : step === "review"
             ? "Make sure this is right. Confirming sends it to your team and opens the booking page in a new tab."
             : "Your team has your request. Your browser blocked the new tab, so use the button below to pick a time."
@@ -165,32 +169,28 @@ export function CrmRequestModal({
                     {option.label} · {formatCents(option.priceCents)}
                   </span>
                   <span className="option-card__desc">
-                    {option.tagline} {option.timeline}.
+                    {option.kind}. {option.tagline} {option.timeline}.
                   </span>
                 </button>
               );
             })}
           </div>
 
-          {pkg === "custom" && (
-            <>
-              <span className="kicker">02 · HOW YOU’LL PAY</span>
-              <div className="option-grid" role="radiogroup" aria-label="Payment option">
-                {CRM_PAYMENT_PLANS.map((o) => (
-                  <button key={o.key} type="button" role="radio" aria-checked={planKey === o.key} className="option-card" onClick={() => setPlanKey(o.key)}>
-                    <span className="option-card__head">{o.payments > 1 ? `${formatCents(o.paymentCents)} / month` : formatCents(o.paymentCents)}</span>
-                    <span className="option-card__desc">
-                      {o.payments > 1
-                        ? `Custom package option: ${o.payments} monthly payments, ${formatCents(o.paymentCents * o.payments)} in total.`
-                        : "One-time payment for the whole build."}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
+          <span className="kicker">02 · HOW YOU’LL PAY</span>
+          <div className="option-grid" role="radiogroup" aria-label="Payment option">
+            {crmPlansFor(pkg).map((o) => (
+              <button key={o.key} type="button" role="radio" aria-checked={plan.key === o.key} className="option-card" onClick={() => setPlanKey(o.key)}>
+                <span className="option-card__head">{o.payments > 1 ? `${formatCents(o.paymentCents)} / month` : formatCents(o.paymentCents)}</span>
+                <span className="option-card__desc">
+                  {o.payments > 1
+                    ? `${o.label}: ${o.payments} monthly payments, ${formatCents(o.paymentCents * o.payments)} in total.`
+                    : "One payment for the whole build."}
+                </span>
+              </button>
+            ))}
+          </div>
 
-          <span className="kicker">{pkg === "custom" ? "03" : "02"} · ABOUT IT</span>
+          <span className="kicker">03 · ABOUT IT</span>
           <Field label="Name of the CRM" htmlFor="crm-req-name" required hint="What you’d like to call it, e.g. “Acme Client Hub”.">
             <Input
               id="crm-req-name"
@@ -213,7 +213,7 @@ export function CrmRequestModal({
             />
           </Field>
 
-          <span className="kicker">{pkg === "custom" ? "04" : "03"} · MENUS AND PORTALS (OPTIONAL)</span>
+          <span className="kicker">04 · MENUS AND PORTALS (OPTIONAL)</span>
           <div className="crm-req-note">
             <Icon name="sparkle" size={15} />
             <span>
@@ -300,7 +300,7 @@ export function CrmRequestModal({
             </dd>
             <dt className="kicker kicker--sm kicker--muted">PAYMENT</dt>
             <dd className="text-strong">
-              {plan.payments > 1 ? "Custom package option" : "One-time payment"} · {price}
+              {plan.payments > 1 ? plan.label : "One-time payment"} · {price}
             </dd>
             <dt className="kicker kicker--sm kicker--muted">NAME</dt>
             <dd className="text-strong">{name.trim()}</dd>

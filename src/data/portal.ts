@@ -26,7 +26,12 @@ export type PortalTab =
   | "training"
   | "sops"
   | "affiliate"
-  | "account";
+  | "account"
+  | "recordings"
+  | "appointments"
+  | "announcements"
+  | "documents"
+  | "forms";
 
 /** Old ?tab= links that point at a page with a new name. */
 export const PORTAL_TAB_ALIASES: Record<string, PortalTab> = { va: "team", invoices: "billing", overview: "dashboard", feedback: "ratings", live: "attendance", vaprojects: "projects", tasks: "projects" };
@@ -34,7 +39,8 @@ export const PORTAL_TAB_ALIASES: Record<string, PortalTab> = { va: "team", invoi
 export type FunnelStatus = "live" | "build" | "pay" | "queued" | "quote";
 export type FunnelTypeKey = "lead" | "booking" | "webinar" | "sales" | "membership" | "custom";
 export type FunnelPackageKey = "foundation" | "bundle" | "vip";
-export type CrmPackageKey = "simple" | "custom";
+/** "growth" (Growth CRM) and "custom" (Premium CRM, which was called Custom CRM) are offered; "simple" only on older requests. */
+export type CrmPackageKey = "simple" | "growth" | "custom";
 
 /** What the client fills in when requesting a funnel (the API's FunnelRequestIn, minus the name). */
 export type FunnelRequestDetails = {
@@ -69,6 +75,11 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   sops: { title: "SOPs", subtitle: "Your own SOPs for your VAs, and step-by-step guides from GoCWGL." },
   affiliate: { title: "Affiliate", subtitle: "Everyone you referred to GoCWGL, and the bonus for each." },
   account: { title: "Account", subtitle: "Your profile, alerts, password & 2-step verification, and who can see this portal." },
+  recordings: { title: "My Recordings", subtitle: "Recordings of your sessions with GoCWGL, to watch again anytime." },
+  appointments: { title: "My Appointments", subtitle: "Your calls with GoCWGL: what's coming up, and the ones you've had." },
+  announcements: { title: "Updates & Announcements", subtitle: "News from GoCWGL: new features, changes and things to know." },
+  documents: { title: "My Documents", subtitle: "Files you and GoCWGL share: blueprints, guides, logos and anything else for your CRM." },
+  forms: { title: "My Forms", subtitle: "Forms GoCWGL asks you to fill in, and the answers you've sent." },
 };
 
 /**
@@ -97,7 +108,27 @@ export const PORTAL_PAGE_GUIDE: Record<PortalTab, { purpose: string; points: str
   },
   crm: {
     purpose: "Your CRM with GoCWGL, from choosing a package to the changes you want after it launches.",
-    points: ["Request CRM: the packages, and booking a call", "Your CRM builds and their build progress", "After launch: ask for revisions or new features"],
+    points: ["Request CRM: compare Growth and Premium, choose how to pay, and book a call", "Your CRM builds and their build progress", "After launch: ask for revisions or new features"],
+  },
+  recordings: {
+    purpose: "Every recorded session with GoCWGL (discovery, blueprint, training) in one place.",
+    points: ["Watch a recording again whenever you need it", "Read the notes your team added", "New recordings show up here after each session"],
+  },
+  appointments: {
+    purpose: "Your calls with GoCWGL, so you always know what's next.",
+    points: ["See your upcoming calls and join with one click", "Look back at the calls you've had", "Book a new call when you need one"],
+  },
+  announcements: {
+    purpose: "Updates from GoCWGL about your CRM and our services.",
+    points: ["Pinned updates stay at the top", "Read new features, changes and tips", "Open the link on an update for more"],
+  },
+  documents: {
+    purpose: "The files for your CRM, shared between you and GoCWGL.",
+    points: ["Download what your team shares with you", "Upload logos, spreadsheets or anything we need", "Remove files you uploaded"],
+  },
+  forms: {
+    purpose: "Forms GoCWGL needs from you, like onboarding questions before your blueprint call.",
+    points: ["Open a form and send your answers", "See when you last sent each one", "Read the answers you've sent"],
   },
   attendance: {
     purpose: "Checks that your VAs show up on time. It compares each VA's clock-ins and clock-outs to the schedule you set.",
@@ -256,6 +287,19 @@ export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
               page("crm", "New features", "bolt", { key: "crm-features", view: "features" }),
             ],
           },
+          { title: "My Account", items: [page("account", "My Profile", "user", { key: "crm-profile" })] },
+          {
+            title: "My Sessions",
+            items: [page("recordings", "My Recordings", "video"), page("appointments", "My Appointments", "calendar")],
+          },
+          {
+            title: "Updates & Resources",
+            items: [
+              page("announcements", "Updates & Announcements", "bell"),
+              page("documents", "My Documents", "folder"),
+              page("forms", "My Forms", "form"),
+            ],
+          },
         ],
       },
       {
@@ -312,7 +356,8 @@ const PORTAL_MENU_PAGES: Array<{ item: PortalMenuItem; group: string; needsVa: b
 
 /** The menu category a page belongs to ("VAs"), for the page kicker. */
 export const PORTAL_GROUP_OF: Partial<Record<PortalTab, string>> = Object.fromEntries(
-  PORTAL_MENU_PAGES.map((p) => [p.item.tab, p.group]),
+  // Account is also opened from the profile button, so it keeps its own "My account" kicker.
+  PORTAL_MENU_PAGES.filter((p) => p.item.tab !== "account").map((p) => [p.item.tab, p.group]),
 );
 
 export const ALERT_OPTIONS = [
@@ -399,116 +444,206 @@ export const FUNNEL_PACKAGE_COPY: Record<FunnelPackageKey, { tagline: string; ta
 /** Where "Book a call" sends clients for a CRM build: the CRM discovery call calendar (gets ?package=simple|custom). Invoiced by the team with a Wise payment link. */
 export const CRM_BOOKING_URL = "https://app.gocwgl.com/book/gocwgl-crm-discovery-call";
 
-/** The CRM packages clients can request (Simple CRM is no longer offered; older Simple requests keep their label). */
-export const OFFERED_CRM_PACKAGES: CrmPackageKey[] = ["custom"];
+/** The CRM packages clients can request (gocwgl.com/pricing/crm). Simple CRM is no longer offered; older Simple requests keep their label. */
+export const OFFERED_CRM_PACKAGES: Array<"growth" | "custom"> = ["growth", "custom"];
 
-/**
- * How a client pays for a Custom CRM: once, or the "Custom package option" (a set monthly payment). Same as the API's
- * CRM_PLAN_PAYMENTS.
- */
+/** How a client pays for a CRM build: once, or over 6 or 12 monthly payments. Same as the API's CRM_PACKAGE_PLANS. */
 export type CrmPaymentPlanKey = CrmPaymentPlan;
-export const CRM_PAYMENT_PLANS: Array<{ key: CrmPaymentPlanKey; label: string; payments: number; paymentCents: number }> = [
-  { key: "one_time", label: "One-time payment", payments: 1, paymentCents: 1_500_000 },
-  { key: "12_months", label: "12-month plan", payments: 12, paymentCents: 139_700 },
-  { key: "6_months", label: "6-month plan", payments: 6, paymentCents: 269_700 },
-];
-export const crmPlanOf = (key: string | undefined) => CRM_PAYMENT_PLANS.find((p) => p.key === key) ?? CRM_PAYMENT_PLANS[0];
+export type CrmPaymentPlanOption = { key: CrmPaymentPlanKey; label: string; payments: number; paymentCents: number };
+const CRM_PLANS: Record<"growth" | "custom", CrmPaymentPlanOption[]> = {
+  growth: [
+    { key: "one_time", label: "One-time payment", payments: 1, paymentCents: 850_000 },
+    { key: "12_months", label: "12-month plan", payments: 12, paymentCents: 79_700 },
+    { key: "6_months", label: "6-month plan", payments: 6, paymentCents: 152_700 },
+  ],
+  custom: [
+    { key: "one_time", label: "One-time payment", payments: 1, paymentCents: 1_500_000 },
+    { key: "12_months", label: "12-month plan", payments: 12, paymentCents: 139_700 },
+    { key: "6_months", label: "6-month plan", payments: 6, paymentCents: 269_700 },
+  ],
+};
+/** A package's payment options (Simple CRM was one-time only, at its own price). */
+export const crmPlansFor = (pkg: string | undefined): CrmPaymentPlanOption[] =>
+  pkg === "growth" || pkg === "custom"
+    ? CRM_PLANS[pkg]
+    : [{ key: "one_time", label: "One-time payment", payments: 1, paymentCents: CRM_PACKAGES.simple.priceCents }];
+export const crmPlanOf = (key: string | undefined, pkg: string | undefined = "custom") => {
+  const plans = crmPlansFor(pkg);
+  return plans.find((p) => p.key === key) ?? plans[0];
+};
 
-export const CRM_PACKAGES: Record<
-  CrmPackageKey,
+type CrmPackageCopy = {
+  label: string;
+  priceCents: number;
+  /** The pricing page's line above the name, e.g. "Business Growth CRM". */
+  kind: string;
+  tagline: string;
+  /** Who it's for. */
+  audience: string;
+  tag?: string;
+  timeline: string;
+  includes: string[];
+  /** `includes` sorted into headed groups for the package card (everything in `includes`, once). */
+  groups?: Array<{ title: string; icon: IconName; items: string[] }>;
+  /** Above the groups, e.g. "Everything in Growth, plus:". */
+  groupsLead?: string;
+  /** What's left out, shown under the groups. */
+  limits?: string;
+  /** Shown under the list, e.g. what changes cost after launch. */
+  note?: string;
+};
+
+const GROWTH_GROUPS: NonNullable<CrmPackageCopy["groups"]> = [
   {
-    label: string;
-    priceCents: number;
-    tagline: string;
-    tag?: string;
-    timeline: string;
-    includes: string[];
-    /** `includes` sorted into a few headed groups for the package card (everything in `includes`, once). */
-    groups?: Array<{ title: string; icon: IconName; items: string[] }>;
-    /** Shown under the list, e.g. what changes cost after launch. */
-    note?: string;
-  }
-> = {
+    title: "Sales",
+    icon: "pipeline",
+    items: [
+      "A dashboard with your key numbers",
+      "Leads with sources, scoring and follow-up reminders",
+      "Contacts, companies (basic), sales pipeline and deals",
+    ],
+  },
+  {
+    title: "Clients",
+    icon: "users",
+    items: [
+      "Client records and onboarding checklists",
+      "Programs & services, appointments & sessions",
+      "Client progress (basic): goals and milestones",
+      "A simple client portal: session recordings, announcements, shared documents and appointments",
+    ],
+  },
+  {
+    title: "Courses & learning",
+    icon: "graduation",
+    items: ["Course sales pages with descriptions and pricing", "Course inquiry and registration forms"],
+  },
+  {
+    title: "Operations",
+    icon: "clipboard",
+    items: ["Tasks and a shared calendar", "Forms, landing pages and your website pages", "Documents, stored with the right client"],
+  },
+  {
+    title: "Growth & finance",
+    icon: "dollar",
+    items: [
+      "Basic email campaigns and communication integrations",
+      "Standard automation workflows",
+      "Products & packages, invoices, payment tracking and standard online payments",
+      "Lead, sales, revenue and client reports",
+    ],
+  },
+  {
+    title: "Setup & administration",
+    icon: "settings",
+    items: [
+      "Your logo, accent colors and wording",
+      "Custom fields, pipeline and dashboard set up for you",
+      "Team members and standard roles, with unlimited logins",
+      "Selected integrations, workspace settings, and help & support",
+      "Team training and 90 days of priority support",
+    ],
+  },
+];
+
+const PREMIUM_GROUPS: NonNullable<CrmPackageCopy["groups"]> = [
+  {
+    title: "Sales",
+    icon: "pipeline",
+    items: [
+      "Custom CRM modules built for your business",
+      "Advanced pipeline, lead and deal management",
+      "Richer links between contacts, companies, deals and clients",
+    ],
+  },
+  {
+    title: "Clients",
+    icon: "users",
+    items: [
+      "Advanced client lifecycle and custom client records",
+      "Custom onboarding workflows",
+      "Advanced client progress tracking",
+      "An advanced client portal, with courses, lessons, quizzes and certificates",
+    ],
+  },
+  {
+    title: "Courses & learning",
+    icon: "graduation",
+    items: [
+      "Course and lesson management",
+      "Student accounts, enrollments and course access",
+      "Learning progress tracking and course automations",
+      "Optional, as scoped: quizzes, assignments, certificates, memberships and subscription courses",
+    ],
+  },
+  {
+    title: "Operations",
+    icon: "clipboard",
+    items: ["Advanced forms and page customization", "Complex document workflows", "Advanced team operations"],
+  },
+  {
+    title: "Growth & finance",
+    icon: "dollar",
+    items: [
+      "Advanced automation builder: multi-step workflows, conditions and branching",
+      "Automation monitoring and error handling",
+      "Subscriptions, recurring payments and custom invoice processes",
+      "Custom dashboards, KPIs, forecasting, and course and team reports",
+    ],
+  },
+  {
+    title: "Setup & administration",
+    icon: "settings",
+    items: [
+      "Custom roles, detailed permissions, and security and audit features as scoped",
+      "Multiple advanced integrations",
+      "Fuller branding, custom data structures and terminology",
+      "Your data moved over, as agreed",
+      "Dedicated implementation, team training and 90 days of priority support",
+    ],
+  },
+];
+
+const FEATURE_NOTE = "Once your CRM is launched and you and GoCWGL both mark it complete, each new feature starts at $100, depending on how complex it is.";
+
+export const CRM_PACKAGES: Record<CrmPackageKey, CrmPackageCopy> = {
   simple: {
     label: "Simple CRM",
     priceCents: 1_000_000,
+    kind: "Simple CRM",
     tagline: "Everything a growing business needs to track leads and close deals.",
+    audience: "No longer offered.",
     timeline: "About 8–10 weeks",
-    includes: [
-      "Contacts and companies, with tags and notes",
-      "Sales pipelines with drag-and-drop stages",
-      "Automations: follow-ups, reminders and task assignment",
-      "Email: templates, one-off emails and campaigns",
-      "Calendar with online booking",
-      "Forms that drop leads straight into your CRM",
-      "Surveys and feedback forms",
-      "Dashboard with your key numbers",
-      "Import your contacts from a spreadsheet",
-      "Up to 5 team logins",
-      "Training session and 30 days of support after launch",
-    ],
+    includes: [],
+  },
+  growth: {
+    label: "Growth CRM",
+    priceCents: 850_000,
+    kind: "Business Growth CRM",
+    tagline: "The complete CRM for coaches and consultants: leads, clients, sessions and payments in one place.",
+    audience: "For independent business, executive and online coaches, business consultants, and small coaching or consulting firms.",
+    timeline: "About 12–15 weeks",
+    includes: GROWTH_GROUPS.flatMap((g) => g.items),
+    groups: GROWTH_GROUPS,
+    limits:
+      "Not included: fully custom modules, complex automations, advanced reports, a full course platform with quizzes and certificates, complex integrations, advanced permissions, and large or complex data moves. Those come with Premium, or as a custom quote.",
+    note: FEATURE_NOTE,
   },
   custom: {
-    label: "Custom CRM",
+    label: "Premium CRM",
     priceCents: 1_500_000,
-    tag: "MOST COMPLETE",
-    tagline: "Built around exactly how your business runs, with room to grow.",
+    kind: "Advanced Business CRM",
+    tag: "MOST ADVANCED",
+    tagline: "Everything in Growth, plus advanced automation, custom modules and a full course platform.",
+    audience:
+      "For established coaching companies, growing consulting firms, multi-coach organizations, businesses with several teams, and coaches or consultants selling online courses or memberships.",
     timeline: "About 12–15 weeks",
-    includes: [
-      "Contacts, companies and sales pipelines, with tags and notes",
-      "Automations, email campaigns, calendar booking and forms",
-      "Custom records for your business (jobs, properties, cases, orders…)",
-      "Invoicing and online payments",
-      "A client portal for your own customers",
-      "Roles and permissions, with unlimited team logins",
-      "Integrations with the tools you already use (accounting, Zapier, webhooks, API)",
-      "SMS reminders and call logging",
-      "AI helpers: lead scoring, email drafts and call summaries",
-      "Custom reports and dashboards",
-      "Data moved over from your current CRM",
-      "Your branding, on your own domain",
-      "Team training and 90 days of priority support",
-    ],
-    groups: [
-      {
-        title: "Sales and contacts",
-        icon: "users",
-        items: [
-          "Contacts, companies and sales pipelines, with tags and notes",
-          "Custom records for your business (jobs, properties, cases, orders…)",
-          "Custom reports and dashboards",
-        ],
-      },
-      {
-        title: "Automation and messaging",
-        icon: "bolt",
-        items: [
-          "Automations, email campaigns, calendar booking and forms",
-          "SMS reminders and call logging",
-          "AI helpers: lead scoring, email drafts and call summaries",
-        ],
-      },
-      {
-        title: "Payments and portals",
-        icon: "card",
-        items: [
-          "Invoicing and online payments",
-          "A client portal for your own customers",
-          "Roles and permissions, with unlimited team logins",
-        ],
-      },
-      {
-        title: "Setup and launch",
-        icon: "rocket",
-        items: [
-          "Integrations with the tools you already use (accounting, Zapier, webhooks, API)",
-          "Data moved over from your current CRM",
-          "Your branding, on your own domain",
-          "Team training and 90 days of priority support",
-        ],
-      },
-    ],
-    note: "Once your CRM is launched and you and GoCWGL both mark it complete, each new feature starts at $100, depending on how complex it is.",
+    includes: PREMIUM_GROUPS.flatMap((g) => g.items),
+    groups: PREMIUM_GROUPS,
+    groupsLead: "Everything in Growth, plus:",
+    limits:
+      "Premium is a starting point for advanced work, not unlimited development: how many modules, integrations, automations and courses, and the size of your data move, are set in your blueprint and quote.",
+    note: FEATURE_NOTE,
   },
 };
 
@@ -562,7 +697,7 @@ export const CRM_WHY_OWN = [
     key: "fit",
     icon: "pipeline",
     title: "Built around how you sell",
-    desc: "No bending your process to fit generic software. Your stages, your records, your automations, set up the way your team already works.",
+    desc: "Your stages, fields, automations and your own words, like “Coaching Sessions” or “Consultations”. Menus you don’t need stay hidden.",
   },
   {
     key: "seats",
@@ -574,7 +709,7 @@ export const CRM_WHY_OWN = [
     key: "connected",
     icon: "bolt",
     title: "One place for everything",
-    desc: "Funnels, bookings, emails, invoices and your client portal in one system, instead of five tools held together with workarounds.",
+    desc: "Leads, clients, sessions, courses, emails and invoices in one system, instead of five tools held together with workarounds.",
   },
 ] as const;
 
@@ -659,40 +794,52 @@ export const CRM_CARE_PLAN = {
 /** New features (new menus, records, integrations, reports) start at this once the CRM is complete. */
 export const CRM_FEATURE_FROM_CENTS = 10_000;
 
-/** What the Custom CRM price pays for, shown under "Why it costs what it does". */
+/** What a CRM build's price pays for (both packages). */
 export const CRM_PRICE_BREAKDOWN = [
   "Discovery call and a blueprint of every screen and automation",
   "12–15 weeks of design, building and testing by our team",
-  "Your data moved over, and your branding on your own domain",
+  "Your data imported, and your branding on your own domain",
   "Team training and 90 days of priority support after launch",
 ];
 
 export const CRM_STEPS = [
-  { title: "Discovery call", desc: "We learn how you find, sell to and serve your clients." },
-  { title: "Blueprint", desc: "You get a plan of every screen and automation, and the final quote, to approve." },
-  { title: "Build", desc: "We build it and post weekly updates in Build progress." },
-  { title: "Training and launch", desc: "We move your data in, train your team and go live together." },
+  { title: "Request your CRM", desc: "Pick Growth or Premium, tell us what you need, choose how to pay and book your discovery call." },
+  { title: "Approve the blueprint", desc: "You get a plan of every screen and automation, and the final quote. Nothing is billed until you approve it." },
+  { title: "We build it", desc: "12–15 weeks of design, building and testing, with weekly updates in Build progress." },
+  { title: "Train and go live", desc: "We move your data in, train your team and launch together." },
 ];
 
 export const CRM_FAQ = [
-  { q: "Do I own my CRM and my data?", a: "Yes. Everything we build and every record in it is yours, and you can export your data at any time." },
+  {
+    q: "What’s the difference between Growth and Premium?",
+    a: "Both share the same design, menu, unlimited logins, branding and training. Premium adds custom modules, advanced automation, a full course platform, an advanced client portal, subscriptions, custom reports and roles, more integrations, and your data moved over.",
+  },
+  {
+    q: "Can I sell online courses?",
+    a: "Growth has course sales pages and inquiry and registration forms. Premium adds the full course platform: lessons, student accounts and progress, with quizzes, assignments, certificates and memberships as scoped.",
+  },
+  { q: "Can I use my own words and hide menus I don’t need?", a: "Yes. Your CRM uses your terms, and menus you don’t use stay hidden." },
+  { q: "Do I own my CRM and my data?", a: "Yes. Everything we build and every record in it is yours, on your domain with your branding, and you can export your data at any time." },
   {
     q: "Are there monthly fees?",
-    a: "No monthly or per-login fees. The build is one price, paid at once or spread over 6 or 12 monthly payments. Your first year after launch is free: security updates, keeping your code up to date, and unlimited revisions. After that, the Care plan is $800 a year.",
+    a: "No subscription or per-login fees. The build is one price, paid at once or over 6 or 12 monthly payments that end with the plan. Your first year after launch is free: security updates, keeping your code up to date, and unlimited revisions. After that, the Care plan is $800 a year.",
   },
   {
     q: "What’s the difference between a revision and a new feature?",
     a: "A revision changes something already in your CRM: wording, fields, layout, pipeline stages, an automation’s timing. A new feature adds something it doesn’t do yet: a new menu, record type, integration or report. Revisions are unlimited with the Care plan; new features are quoted.",
   },
-  { q: "Can you move my data from my current CRM?", a: "Yes. We import your spreadsheets and move your data over from your current CRM." },
-  { q: "Not sure it’s the right fit?", a: "Book a call. We go through what you need on the call, before you pay anything." },
+  {
+    q: "Can you move my data from my current CRM?",
+    a: "Yes, from GoHighLevel, HubSpot, Zoho or something else. Large or complex moves are part of Premium, or quoted separately with Growth.",
+  },
+  { q: "Will it work with my existing website?", a: "Yes. You get embed codes for your booking calendars and forms, and every submission becomes a contact in your CRM." },
   {
     q: "Can I add features after my CRM is built?",
     a: "Yes. Once your CRM is launched and you and GoCWGL both mark it complete, each new feature starts at $100, depending on how complex it is. Request it from New features in the CRM menu and we quote it before any work starts.",
   },
   {
     q: "How do I pay?",
-    a: "You choose when you request: one payment of $15,000, or the custom package option, either $1,397 a month for 12 months ($16,764 in total) or $2,697 a month for 6 months ($16,182 in total). After the call we send your invoice; on a monthly plan you get one invoice per payment. They show up in Invoices.",
+    a: "You choose when you request. Growth: $8,500 at once, $797 a month for 12 months ($9,564 in total) or $1,527 a month for 6 months ($9,162 in total). Premium: $15,000 at once, $1,397 a month for 12 months ($16,764 in total) or $2,697 a month for 6 months ($16,182 in total). Nothing is billed until you approve the quote; on a monthly plan you get one invoice per payment, in Invoices.",
   },
 ];
 

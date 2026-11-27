@@ -15,10 +15,10 @@ type PackageKey = "showCrmPackages" | "showFunnelPackages" | "showVaPackages";
 const PACKAGES: Array<{ key: PackageKey; label: string; menu: string; on: string; off: string; fallback: boolean }> = [
   {
     key: "showCrmPackages",
-    label: "CRM packages",
-    menu: "Request CRM",
-    on: "They see Request CRM with the CRM packages and prices.",
-    off: "Hidden: they can’t see the CRM packages or request a new CRM build.",
+    label: "CRM service",
+    menu: "The CRM menu",
+    on: "They see the CRM menu with Request CRM, the packages and prices. On when they signed up for a Custom CRM.",
+    off: "Hidden: no CRM menu and no new CRM builds; CRM builds or requests they already have still show. Off when they signed up for a VA.",
     fallback: true,
   },
   {
@@ -31,15 +31,15 @@ const PACKAGES: Array<{ key: PackageKey; label: string; menu: string; on: string
   },
   {
     key: "showVaPackages",
-    label: "VA packages",
-    menu: "Request VA",
-    on: "They see Request VA (the default) and can ask GoCWGL for a VA.",
-    off: "Hidden: they can’t request a VA. Requests they already sent still show.",
+    label: "VA service",
+    menu: "The VA menu",
+    on: "They see the VA menu with Request VA and can ask GoCWGL for a VA. On when they signed up for a VA.",
+    off: "Hidden: no VA menu and no VA requests; requests they already sent and their VA team still show. Off when they signed up for a Custom CRM.",
     fallback: true,
   },
 ];
 
-/** Per-client switches for their portal: Request CRM, the whole Funnel menu, Request VA and Beta tester. Each asks to confirm. */
+/** Per-client switches for their portal: the CRM menu, the Funnel menu, the VA menu and Beta tester. Sign-up sets CRM and VA from what the client picked. Each asks to confirm. */
 export function PortalMenuCard({ contact: c }: { contact: ContactOut }) {
   const { update } = useAdmin();
   const canWrite = canWriteCrm(useMe().data);

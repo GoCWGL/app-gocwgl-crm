@@ -113,7 +113,7 @@ function RequestCard({
   const { update } = useAdmin();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const pkg = CRM_PACKAGES[r.package as CrmPackageKey];
-  const plan = crmPlanOf(r.paymentPlan);
+  const plan = crmPlanOf(r.paymentPlan, r.package);
   const monthly = plan.payments > 1;
   const status = statusOf(r.status);
   const client = r.clientName || r.company || r.email;
