@@ -21,19 +21,28 @@ export function menuAccessLabel(access: string[] | null | undefined): string {
 /** Each menu's sidebar icon and colour, so the picker reads like the menu itself. */
 const MENU_LOOK: Record<MenuKey, { icon: IconName; tone: Tone }> = {
   dashboard: { icon: "grid", tone: "cyan" },
-  contacts: { icon: "users", tone: "purple" },
-  calendar: { icon: "calendar", tone: "orange" },
-  payments: { icon: "invoice", tone: "green" },
-  affiliates: { icon: "gift", tone: "amber" },
+  reporting: { icon: "chart", tone: "purple" },
   progress: { icon: "rocket", tone: "brand" },
   media: { icon: "folder", tone: "indigo" },
+  funnels: { icon: "funnel", tone: "pink" },
+  jobs: { icon: "briefcase", tone: "slate" },
+  contacts: { icon: "user", tone: "purple" },
+  vas: { icon: "briefcase", tone: "teal" },
+  surveys: { icon: "survey", tone: "purple" },
+  bugs: { icon: "lifebuoy", tone: "red" },
+  payments: { icon: "card", tone: "green" },
+  affiliates: { icon: "gift", tone: "amber" },
   email: { icon: "mail", tone: "sky" },
   forms: { icon: "form", tone: "indigo" },
-  surveys: { icon: "survey", tone: "purple" },
   automation: { icon: "bolt", tone: "amber" },
-  reporting: { icon: "chart", tone: "teal" },
-  bugs: { icon: "bug", tone: "red" },
+  calendar: { icon: "calendar", tone: "orange" },
 };
+
+/** The picker's sections, in sidebar order: Overview, People, Business, then Settings. */
+const MENU_GROUPS = [...new Set(VISIBLE_MENUS.map((m) => m.group))].map((group) => ({
+  group,
+  menus: VISIBLE_MENUS.filter((m) => m.group === group),
+}));
 
 /**
  * Every menu (a switch), or just the ones picked from a grid of menu tiles. Each tile is a real checkbox underneath,
@@ -74,30 +83,40 @@ export function MenuAccessPicker({ value, onChange, idPrefix }: { value: MenuAcc
               Clear
             </Button>
           </div>
-          <div className="menu-access__grid" role="group" aria-label="Menus they can use">
-            {VISIBLE_MENUS.map((m) => {
-              const on = chosen.has(m.key);
-              const look = MENU_LOOK[m.key];
-              return (
-                <label key={m.key} className={cn("menu-tile", on && "menu-tile--on")} htmlFor={`${idPrefix}-${m.key}`}>
-                  <input
-                    id={`${idPrefix}-${m.key}`}
-                    type="checkbox"
-                    className="menu-tile__input"
-                    checked={on}
-                    onChange={() => toggle(m.key)}
-                  />
-                  <IconTile tone={look.tone} size="sm">
-                    <Icon name={look.icon} size={14} strokeWidth={1.9} />
-                  </IconTile>
-                  <span className="menu-tile__label">{m.label}</span>
-                  <span className="menu-tile__check" aria-hidden="true">
-                    <Icon name="check" size={12} strokeWidth={3} />
-                  </span>
-                </label>
-              );
-            })}
-          </div>
+          {MENU_GROUPS.map(({ group, menus }) => (
+            <div key={group} className="menu-access__group">
+              <span className="menu-access__group-title" id={`${idPrefix}-group-${group}`}>
+                {group}
+              </span>
+              <div className="menu-access__grid" role="group" aria-labelledby={`${idPrefix}-group-${group}`}>
+                {menus.map((m) => {
+                  const on = chosen.has(m.key);
+                  const look = MENU_LOOK[m.key];
+                  return (
+                    <label key={m.key} className={cn("menu-tile", on && "menu-tile--on")} htmlFor={`${idPrefix}-${m.key}`} title={m.hint}>
+                      <input
+                        id={`${idPrefix}-${m.key}`}
+                        type="checkbox"
+                        className="menu-tile__input"
+                        checked={on}
+                        onChange={() => toggle(m.key)}
+                      />
+                      <IconTile tone={look.tone} size="sm">
+                        <Icon name={look.icon} size={14} strokeWidth={1.9} />
+                      </IconTile>
+                      <span className="menu-tile__text">
+                        <span className="menu-tile__label">{m.label}</span>
+                        {m.hint && <span className="menu-tile__hint">{m.hint}</span>}
+                      </span>
+                      <span className="menu-tile__check" aria-hidden="true">
+                        <Icon name="check" size={12} strokeWidth={3} />
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </>
       )}
       <span className={cn("field__hint", !all && value?.length === 0 && "field__hint--warn")}>
@@ -105,7 +124,7 @@ export function MenuAccessPicker({ value, onChange, idPrefix }: { value: MenuAcc
           ? "They’ll see every menu their role allows."
           : value && value.length === 0
             ? "Pick at least one menu."
-            : "They’ll only see the menus picked here; the others are hidden and locked for them. Settings (their profile) is always there."}
+            : "They’ll only see the menus picked here; the others are hidden and locked for them. Settings (their profile) is always there. Shareholders is for super admins only."}
       </span>
     </fieldset>
   );

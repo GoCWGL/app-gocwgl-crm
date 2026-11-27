@@ -130,33 +130,40 @@ export const CONTACT_VIEWS: Record<ContactView, { title: string; subtitle: strin
 /** The CRM menus a team member can be given (Settings › Team). Same keys as the API. */
 export type MenuKey =
   | "dashboard"
-  | "contacts"
-  | "calendar"
-  | "payments"
-  | "affiliates"
+  | "reporting"
   | "progress"
   | "media"
+  | "funnels"
+  | "jobs"
+  | "contacts"
+  | "vas"
+  | "surveys"
+  | "payments"
+  | "affiliates"
   | "email"
   | "forms"
-  | "surveys"
   | "automation"
-  | "reporting"
+  | "calendar"
   | "bugs";
 
-export const MENUS: Array<{ key: MenuKey; label: string }> = [
-  { key: "dashboard", label: "Dashboard › Overview" },
-  { key: "reporting", label: "Dashboard › Reports" },
-  { key: "contacts", label: "Contacts & Clients" },
-  { key: "calendar", label: "Calendar" },
-  { key: "progress", label: "CRM Requests › Build progress" },
-  { key: "media", label: "CRM Requests › Client media" },
-  { key: "payments", label: "Billing" },
-  { key: "affiliates", label: "Affiliates" },
-  { key: "email", label: "Email" },
-  { key: "forms", label: "Forms" },
-  { key: "surveys", label: "Surveys" },
-  { key: "automation", label: "Automation" },
-  { key: "bugs", label: "Report a bug" },
+/** Every menu, as the sidebar names and groups it, in sidebar order. `hint` lists the pages it opens. */
+export const MENUS: Array<{ key: MenuKey; label: string; group: string; hint?: string }> = [
+  { key: "dashboard", label: "Dashboard › Overview", group: "Overview" },
+  { key: "reporting", label: "Dashboard › Reports", group: "Overview" },
+  { key: "progress", label: "CRM Requests › Build progress", group: "Overview" },
+  { key: "media", label: "CRM Requests › Client media", group: "Overview" },
+  { key: "funnels", label: "Funnel Requests", group: "Overview" },
+  { key: "jobs", label: "Job Postings", group: "Overview" },
+  { key: "contacts", label: "Leads & Clients", group: "People", hint: "Leads, client directory, live status, training, SOPs, announcements, feedback and tags" },
+  { key: "vas", label: "VAs", group: "People", hint: "VA directory, live status, training and SOPs" },
+  { key: "surveys", label: "VAs › Surveys", group: "People" },
+  { key: "bugs", label: "Support desk & Report a bug", group: "People" },
+  { key: "payments", label: "Income & Billing", group: "Business", hint: "Overview, billing & invoices, products and expenses" },
+  { key: "affiliates", label: "Affiliates & referral payouts", group: "Business" },
+  { key: "email", label: "Email", group: "Business" },
+  { key: "forms", label: "Forms", group: "Business" },
+  { key: "automation", label: "Automation", group: "Business" },
+  { key: "calendar", label: "Calendar", group: "Settings", hint: "Settings › Calendar: booking calendars and connections" },
 ];
 
 /**
@@ -178,17 +185,15 @@ export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
   dashboard: "dashboard",
   leads: "contacts",
   clients: "contacts",
-  // No menu of its own yet: whoever can use Contacts & Clients sees VAs.
-  vas: "contacts",
+  vas: "vas",
   tags: "contacts",
   calendar: "calendar",
   bonuses: "affiliates",
-  // The overview shares the Billing menu permission.
+  // Income & Billing: the overview, invoices, products and expenses.
   billingOverview: "payments",
   payments: "payments",
-  // Expenses share it too, for owners and admins only (see ADMIN_ONLY_TABS).
+  // For owners and admins only (see ADMIN_ONLY_TABS).
   expenses: "payments",
-  // Products share the Billing menu permission.
   products: "payments",
   affiliates: "affiliates",
   // Super admins only (see SUPER_ADMIN_TABS).
@@ -206,21 +211,21 @@ export const TAB_MENU: Record<AdminTab, MenuKey | null> = {
   automation: "automation",
   reporting: "reporting",
   bugs: "bugs",
-  // Engagement pages without data yet have no menu of their own: everyone on the team sees them.
-  status: null,
-  training: null,
-  sops: null,
+  // The VAs menu's pages.
+  status: "vas",
+  training: "vas",
+  sops: "vas",
   // The Clients menu's pages: whoever can use Contacts & Clients sees them.
   clientStatus: "contacts",
   clientTraining: "contacts",
   clientSops: "contacts",
   announcements: "contacts",
-  // Tickets belong to the "Report a bug" menu on the API.
+  // Tickets belong to the "Support desk & Report a bug" menu on the API.
   support: "bugs",
-  feedback: null,
-  clientFeedback: null,
-  jobs: null,
-  // Funnel Requests used to be a Build Progress tab: same access.
-  funnels: "progress",
+  // Client care, in the Clients menu.
+  feedback: "contacts",
+  clientFeedback: "contacts",
+  jobs: "jobs",
+  funnels: "funnels",
   settings: null,
 };

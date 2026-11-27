@@ -13756,7 +13756,7 @@ export interface components {
         /** MenuAccessChange */
         MenuAccessChange: {
             /** Menuaccess */
-            menuAccess?: ("dashboard" | "contacts" | "calendar" | "payments" | "affiliates" | "progress" | "media" | "email" | "forms" | "surveys" | "automation" | "reporting" | "bugs")[] | null;
+            menuAccess?: ("dashboard" | "reporting" | "progress" | "media" | "funnels" | "jobs" | "contacts" | "vas" | "surveys" | "payments" | "affiliates" | "email" | "forms" | "automation" | "calendar" | "bugs")[] | null;
         };
         /** MessageOut */
         MessageOut: {
@@ -16904,7 +16904,7 @@ export interface components {
              */
             role?: "super_admin" | "admin" | "sales" | "viewer" | "shareholder";
             /** Menuaccess */
-            menuAccess?: ("dashboard" | "contacts" | "calendar" | "payments" | "affiliates" | "progress" | "media" | "email" | "forms" | "surveys" | "automation" | "reporting" | "bugs")[] | null;
+            menuAccess?: ("dashboard" | "reporting" | "progress" | "media" | "funnels" | "jobs" | "contacts" | "vas" | "surveys" | "payments" | "affiliates" | "email" | "forms" | "automation" | "calendar" | "bugs")[] | null;
         };
         /** StaffMessageIn */
         StaffMessageIn: {

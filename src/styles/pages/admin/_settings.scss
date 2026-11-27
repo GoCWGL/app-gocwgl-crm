@@ -115,9 +115,21 @@
     margin-bottom: -4px;
   }
 
+  &__group {
+    @include stack(6px);
+  }
+
+  &__group-title {
+    color: $ink-muted;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
   &__grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
     gap: 8px;
   }
 }
@@ -161,12 +173,27 @@
     outline-offset: 2px;
   }
 
-  &__label {
+  &__text {
+    @include stack(1px);
     flex: 1 1 auto;
     min-width: 0;
+  }
+
+  &__label {
     color: $ink-soft;
     font-size: 13px;
     font-weight: 700;
+  }
+
+  &__hint {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    color: $ink-muted;
+    font-size: 11px;
+    line-height: 1.35;
   }
 
   &__check {
