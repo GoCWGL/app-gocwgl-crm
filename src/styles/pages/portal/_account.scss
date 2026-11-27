@@ -123,3 +123,131 @@
     font-weight: 800;
   }
 }
+
+// ---------------------------------------------------------------- CRM plan (My Profile)
+// The client's current CRM plan, full width at the top, in its package's colors (.crm-tier--growth / --custom).
+.crm-plan-card {
+  @include stack(18px);
+  flex: 1 1 100%;
+  padding: 0;
+  overflow: hidden;
+  border-color: var(--tier-line, $line-faint);
+
+  &__hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 22px 24px;
+    color: $white;
+    background:
+      radial-gradient(420px 220px at 100% 0%, var(--tier-glow), transparent 65%),
+      linear-gradient(135deg, var(--tier-1), var(--tier-2));
+
+    .badge {
+      background: rgba(255, 255, 255, 0.95);
+    }
+  }
+
+  &__kicker {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  &__sub {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  &__facts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    margin: 0 24px;
+    border: 1px solid $line-faint;
+    border-radius: 14px;
+    background: $line-faint;
+    overflow: hidden;
+
+    @include down(lg) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include down(sm) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__fact {
+    @include stack(4px);
+    padding: 14px 16px;
+    background: $white;
+
+    dt {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: $muted-light;
+    }
+
+    dd {
+      @include stack(2px);
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      color: $ink;
+    }
+
+    small {
+      font-size: 12px;
+      font-weight: 500;
+      color: $muted;
+    }
+  }
+
+  > .progress {
+    margin: 0 24px;
+  }
+
+  &__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 24px 20px;
+  }
+
+  // No CRM yet: a single row pointing to the packages.
+  &--empty {
+    padding: 20px 22px;
+  }
+
+  &__empty {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+  }
+
+  &__empty-icon {
+    @include center;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    color: $white;
+    background: linear-gradient(135deg, #7c3aed, #4338ca);
+  }
+}

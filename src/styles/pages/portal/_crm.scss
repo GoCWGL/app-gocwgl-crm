@@ -86,6 +86,13 @@
   &__head {
     @include stack(6px);
     max-width: 640px;
+
+    // Centred over a full-width piece, like the package tabs.
+    &--center {
+      align-items: center;
+      margin: 0 auto;
+      text-align: center;
+    }
   }
 
   &__kicker {
@@ -1183,34 +1190,183 @@
   box-shadow: $shadow-soft;
 }
 
-// ---------------------------------------------------------------- The package card (Your build)
+// ---------------------------------------------------------------- Packages: Growth and Premium as tabs
+// The two packages as a pricing switch: each tab shows its name and price; the picked one lifts and turns violet.
+.crm-tiers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  width: 100%;
+  max-width: 760px;
+  margin: 10px auto 0;
+  padding: 6px;
+  border: 1px solid rgba(124, 77, 255, 0.16);
+  border-radius: 20px;
+  background: rgba(124, 77, 255, 0.05);
+
+  &__tab {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    padding: 14px 18px;
+    border: 1px solid transparent;
+    border-radius: 15px;
+    background: transparent;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background 0.18s ease,
+      border-color 0.18s ease,
+      box-shadow 0.18s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $violet-soft;
+      outline-offset: 2px;
+    }
+
+    &[aria-selected="true"] {
+      border-color: rgba(124, 77, 255, 0.28);
+      background: $white;
+      box-shadow: 0 10px 26px rgba(124, 77, 255, 0.14);
+    }
+
+    @include down(sm) {
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px;
+    }
+  }
+
+  &__radio {
+    @include center;
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(124, 77, 255, 0.3);
+    border-radius: 50%;
+    color: transparent;
+    transition: all 0.18s ease;
+
+    [aria-selected="true"] > & {
+      border-color: $violet-soft;
+      color: $white;
+      background: $violet-soft;
+    }
+  }
+
+  &__text {
+    @include stack(2px);
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    @include cluster(8px);
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: $ink;
+  }
+
+  // Sits on the tab's top edge, like a "most popular" badge.
+  &__tag {
+    position: absolute;
+    top: -9px;
+    right: 16px;
+    padding: 2px 8px;
+    border: 1px solid $peach-strong;
+    border-radius: $radius-pill;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: $orange-ink;
+    background: $peach;
+  }
+
+  &__kind {
+    font-size: 12px;
+    font-weight: 600;
+    color: $muted-light;
+  }
+
+  &__price {
+    @include stack(2px);
+    align-items: flex-end;
+    font-family: $font-mono;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: $ink;
+
+    small {
+      font-family: $font-sans;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0;
+      color: $muted-light;
+      white-space: nowrap;
+    }
+
+    @include down(sm) {
+      align-items: flex-start;
+      width: 100%;
+      padding-left: 28px;
+    }
+  }
+}
+
+@keyframes crm-tier-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// The picked package: who it's for and the price on top, then what's included.
 .crm-pkg {
-  border: 1px solid rgba(124, 77, 255, 0.22);
+  border: 1px solid rgba(124, 77, 255, 0.2);
   border-radius: 24px;
   background: $white;
-  box-shadow: 0 18px 44px rgba(124, 77, 255, 0.1);
+  box-shadow: 0 24px 56px -24px rgba(76, 29, 149, 0.22);
   overflow: hidden;
+  animation: crm-tier-in 0.25s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 
   // Header band: name, tagline and quick facts on the left; price and Request on the right.
   &__head {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
-    gap: 28px;
-    align-items: center;
-    padding: 28px 32px;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    gap: 32px;
+    align-items: start;
+    padding: 32px;
     background:
-      radial-gradient(520px 220px at 0% 0%, rgba(124, 77, 255, 0.12), transparent 65%),
-      linear-gradient(180deg, #faf8ff, #ffffff);
-    border-bottom: 1px solid rgba(124, 77, 255, 0.14);
+      radial-gradient(560px 260px at 0% 0%, rgba(124, 77, 255, 0.1), transparent 70%),
+      linear-gradient(180deg, #fbfaff, #ffffff);
+    border-bottom: 1px solid rgba(124, 77, 255, 0.12);
 
     @include down(lg) {
       grid-template-columns: 1fr;
+      gap: 24px;
       padding: 24px;
     }
   }
 
   &__intro {
-    @include stack(10px);
+    @include stack(12px);
+    padding-top: 4px;
   }
 
   &__name-row {
@@ -1219,9 +1375,10 @@
 
   &__name {
     margin: 0;
-    font-size: 28px;
+    font-size: 30px;
     font-weight: 800;
     letter-spacing: -0.03em;
+    line-height: 1.1;
     color: $ink;
   }
 
@@ -1237,74 +1394,79 @@
 
   &__tagline {
     margin: 0;
-    max-width: 520px;
-    font-size: 15px;
+    max-width: 540px;
+    font-size: 16px;
     line-height: 1.55;
-    color: $muted;
+    color: $ink-muted;
   }
 
   // "Business Growth CRM" above the name.
   &__kind {
     font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
-    color: $cyan-700;
+    color: $violet;
   }
 
   // Who the package is for.
   &__audience {
-    margin: 0;
-    max-width: 520px;
+    display: flex;
+    gap: 10px;
+    max-width: 560px;
+    padding: 12px 14px;
+    border-left: 3px solid rgba(124, 77, 255, 0.45);
+    border-radius: 0 $radius-lg $radius-lg 0;
+    background: rgba(124, 77, 255, 0.05);
     font-size: 13px;
     line-height: 1.5;
     color: $ink-muted;
-  }
 
-  // What's left out (Growth) or how far it goes (Premium).
-  &__limits {
-    margin: 0;
-    padding: 10px 14px;
-    border-radius: $radius-md;
-    background: $bg-soft;
-    font-size: 13px;
-    line-height: 1.5;
-    color: $ink-muted;
+    svg {
+      flex: none;
+      margin-top: 2px;
+      color: $violet;
+    }
   }
 
   &__facts {
-    @include cluster(8px);
-    margin-top: 4px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, max-content));
+    gap: 10px 22px;
+    margin: 6px 0 0;
+    padding: 0;
+    list-style: none;
+
+    @include down(sm) {
+      grid-template-columns: 1fr;
+    }
   }
 
   &__fact {
-    @include row(6px);
-    padding: 6px 12px;
-    border: 1px solid $line-faint;
-    border-radius: $radius-pill;
-    background: $white;
-    font-size: 12px;
-    font-weight: 700;
+    @include row(8px);
+    font-size: 13px;
+    font-weight: 600;
     color: $ink-soft;
 
     svg {
+      flex: none;
       color: $violet;
     }
   }
 
   &__buy {
     @include stack(10px);
-    padding: 20px;
-    border: 1px solid rgba(124, 77, 255, 0.2);
-    border-radius: 18px;
+    padding: 22px;
+    border: 1px solid rgba(124, 77, 255, 0.18);
+    border-radius: 20px;
     background: $white;
-    box-shadow: 0 10px 28px rgba(11, 20, 36, 0.06);
+    box-shadow: 0 14px 34px -12px rgba(11, 20, 36, 0.14);
   }
 
   &__label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: $muted-light;
   }
@@ -1325,75 +1487,164 @@
     color: $muted;
   }
 
-  // One-time, or the custom package option (6 or 12 monthly payments).
+  &__total {
+    margin-top: -2px;
+    font-size: 12px;
+    color: $muted-light;
+  }
+
+  // One payment, or 6 or 12 monthly payments.
   &__plans {
     @include stack(6px);
+    margin: 6px 0 4px;
   }
 
   &__plan {
-    padding: 9px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid $line-faint;
+    border-radius: $radius-lg;
+    background: $white;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      border-color 0.15s ease,
+      background 0.15s ease;
+
+    &:hover {
+      border-color: rgba(124, 77, 255, 0.35);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $violet-soft;
+      outline-offset: 2px;
+    }
+
+    &[aria-checked="true"] {
+      border-color: $violet-soft;
+      background: rgba(124, 77, 255, 0.06);
+      box-shadow: inset 0 0 0 1px $violet-soft;
+    }
+  }
+
+  &__plan-dot {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(124, 77, 255, 0.35);
+    border-radius: 50%;
+    transition: all 0.15s ease;
+
+    [aria-checked="true"] > & {
+      border: 5px solid $violet-soft;
+    }
+  }
+
+  &__plan-label {
+    flex: 1;
+    font-weight: 700;
+    color: $ink;
+  }
+
+  &__plan-price {
+    font-family: $font-mono;
+    font-size: 12px;
+    font-weight: 700;
+    color: $ink-muted;
   }
 
   &__fine {
+    @include row(6px);
+    justify-content: center;
     font-size: 12px;
     line-height: 1.45;
     color: $muted-light;
     text-align: center;
+
+    svg {
+      flex: none;
+      color: $green-500;
+    }
   }
 
   &__body {
     @include stack(18px);
-    padding: 28px 32px 30px;
+    padding: 28px 32px 32px;
 
     @include down(lg) {
       padding: 22px 24px 24px;
     }
   }
 
+  &__body-head {
+    @include cluster(10px);
+  }
+
   &__section-title {
     font-size: 12px;
     font-weight: 800;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: $muted-light;
   }
 
-  // Everything included, in four headed groups.
+  // "Everything in Growth, plus:" on Premium.
+  &__lead-pill {
+    padding: 4px 12px;
+    border-radius: $radius-pill;
+    font-size: 12px;
+    font-weight: 700;
+    color: $violet;
+    background: rgba(124, 77, 255, 0.08);
+  }
+
+  // Everything included: one panel split into an even grid of headed groups by hairlines (3 columns, 2 on tablets,
+  // 1 on phones), so every row lines up whatever the length of each list.
   &__groups {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    border: 1px solid $line-faint;
+    border-radius: 18px;
+    background: $line-faint;
+    overflow: hidden;
+
+    @include down(lg) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include down(sm) {
+      grid-template-columns: 1fr;
+    }
   }
 
   &__group {
-    @include stack(12px);
-    padding: 18px;
-    border: 1px solid $line-faint;
-    border-radius: 16px;
-    background: $bg-soft;
-    transition:
-      border-color 0.15s ease,
-      background 0.15s ease;
+    @include stack(14px);
+    padding: 22px 24px;
+    background: $white;
+    transition: background 0.15s ease;
 
     &:hover {
-      border-color: rgba(124, 77, 255, 0.3);
-      background: $white;
+      background: #fcfdff;
     }
   }
 
   &__group-head {
-    @include row(10px);
+    @include row(12px);
   }
 
   &__group-icon {
     @include center;
     flex: none;
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 10px;
-    color: $white;
-    background: linear-gradient(135deg, $violet-soft, $violet);
-    box-shadow: 0 4px 12px rgba(124, 77, 255, 0.28);
+    color: $violet;
+    background: rgba(124, 77, 255, 0.1);
   }
 
   &__group-title {
@@ -1422,30 +1673,27 @@
     }
   }
 
-  // What the price covers, beside the Care plan.
-  &__extras {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-    gap: 14px;
-  }
+  // What's left out (Growth) or how far it goes (Premium).
+  &__limits {
+    display: flex;
+    gap: 10px;
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: $radius-lg;
+    background: $bg-soft;
+    font-size: 13px;
+    line-height: 1.5;
+    color: $ink-muted;
 
-  &__extra {
-    @include stack(12px);
-    padding: 20px;
-    border: 1px solid $line-faint;
-    border-radius: 16px;
-    background: $white;
-
-    &--care {
-      border-color: rgba(16, 185, 129, 0.28);
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.06), rgba(8, 145, 178, 0.04));
+    svg {
+      flex: none;
+      margin-top: 2px;
+      color: $muted-light;
     }
   }
 
   &__covers {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
-    gap: 10px 18px;
+    @include stack(10px);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -1470,13 +1718,6 @@
     font-weight: 800;
     color: $violet;
     background: rgba(124, 77, 255, 0.12);
-  }
-
-  &__care-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
   }
 
   &__care-price {
@@ -1509,5 +1750,223 @@
       flex: none;
       margin-top: 2px;
     }
+  }
+}
+
+// What both packages share, shown once under the tabs.
+.crm-shared {
+  @include stack(12px);
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 14px;
+  }
+
+  &__card {
+    @include stack(14px);
+    padding: 20px 22px;
+    border: 1px solid $line-faint;
+    border-radius: 18px;
+    background: $white;
+
+    &--care {
+      border-color: rgba(16, 185, 129, 0.25);
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(8, 145, 178, 0.03));
+    }
+  }
+
+  &__card-head {
+    @include row(10px);
+
+    .crm-plan__care-free {
+      margin-left: auto;
+    }
+  }
+
+  &__icon {
+    @include center;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+    color: $violet;
+    background: rgba(124, 77, 255, 0.1);
+
+    &--green {
+      color: $green-700;
+      background: $green-50;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 800;
+    color: $ink;
+  }
+}
+
+// ---------------------------------------------------------------- Package colors
+// Each package has its own colors: Growth in teal and blue, Premium in violet and indigo with a warm glow. The tabs,
+// the panel's gradient header, its icons and the picked payment option all follow the package that's showing.
+.crm-tier--growth {
+  --tier-1: #0891b2;
+  --tier-2: #2563eb;
+  --tier-glow: rgba(45, 212, 191, 0.55);
+  --tier-soft: rgba(8, 145, 178, 0.1);
+  --tier-line: rgba(8, 145, 178, 0.28);
+  --tier-ink: #0e7490;
+}
+
+.crm-tier--custom {
+  --tier-1: #7c3aed;
+  --tier-2: #4338ca;
+  --tier-glow: rgba(251, 146, 60, 0.5);
+  --tier-soft: rgba(124, 77, 255, 0.1);
+  --tier-line: rgba(124, 77, 255, 0.3);
+  --tier-ink: #6d28d9;
+}
+
+.crm-tiers {
+  border-color: var(--tier-line);
+  background: linear-gradient(135deg, var(--tier-soft), rgba(255, 255, 255, 0.6) 55%, var(--tier-soft));
+  transition: background 0.25s ease, border-color 0.25s ease;
+
+  .crm-tiers__tab {
+    background: rgba(255, 255, 255, 0.75);
+    border-color: rgba(255, 255, 255, 0.9);
+
+    &:hover {
+      background: $white;
+      border-color: var(--tier-line);
+    }
+  }
+
+  .crm-tiers__radio {
+    border-color: var(--tier-line);
+  }
+
+  .crm-tiers__tab[aria-selected="true"] {
+    border-color: transparent;
+    background:
+      radial-gradient(240px 120px at 100% 0%, var(--tier-glow), transparent 70%),
+      linear-gradient(135deg, var(--tier-1), var(--tier-2));
+    box-shadow: 0 14px 30px -10px var(--tier-1);
+
+    .crm-tiers__name,
+    .crm-tiers__price {
+      color: $white;
+    }
+
+    .crm-tiers__kind,
+    .crm-tiers__price small {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .crm-tiers__radio {
+      border-color: $white;
+      color: var(--tier-1);
+      background: $white;
+    }
+  }
+}
+
+.crm-pkg {
+  border-color: var(--tier-line);
+  background: linear-gradient(180deg, var(--tier-soft), $white 260px);
+  box-shadow: 0 28px 60px -28px var(--tier-1);
+
+  // The header band in the package's gradient, with a soft glow and a faint grid.
+  .crm-pkg__head {
+    position: relative;
+    border-bottom: 0;
+    background:
+      radial-gradient(520px 300px at 100% 0%, var(--tier-glow), transparent 65%),
+      radial-gradient(420px 260px at 0% 100%, rgba(255, 255, 255, 0.14), transparent 70%),
+      linear-gradient(135deg, var(--tier-1), var(--tier-2));
+    isolation: isolate;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: linear-gradient(90deg, #000, transparent 75%);
+      pointer-events: none;
+    }
+  }
+
+  .crm-pkg__kind {
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .crm-pkg__name {
+    color: $white;
+  }
+
+  .crm-pkg__tagline {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .crm-pkg__audience {
+    border-left-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(4px);
+
+    svg {
+      color: $white;
+    }
+  }
+
+  .crm-pkg__fact {
+    color: $white;
+
+    svg {
+      color: rgba(255, 255, 255, 0.85);
+    }
+  }
+
+  .crm-pkg__buy {
+    border-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 22px 44px -16px rgba(11, 20, 36, 0.45);
+  }
+
+  .crm-pkg__plan:hover {
+    border-color: var(--tier-line);
+  }
+
+  .crm-pkg__plan[aria-checked="true"] {
+    border-color: var(--tier-1);
+    background: var(--tier-soft);
+    box-shadow: inset 0 0 0 1px var(--tier-1);
+  }
+
+  .crm-pkg__plan-dot {
+    border-color: var(--tier-line);
+  }
+
+  .crm-pkg__plan[aria-checked="true"] > .crm-pkg__plan-dot {
+    border-color: var(--tier-1);
+  }
+
+  .crm-pkg__lead-pill {
+    color: var(--tier-ink);
+    background: var(--tier-soft);
+  }
+
+  .crm-pkg__group-icon {
+    color: $white;
+    background: linear-gradient(135deg, var(--tier-1), var(--tier-2));
+    box-shadow: 0 6px 14px -6px var(--tier-1);
+  }
+
+  .crm-pkg__group:hover {
+    background: linear-gradient(180deg, var(--tier-soft), $white 70%);
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import { siHubspot, siZoho } from "simple-icons";
 import { GHL_MARK } from "../lib/crmLogos";
 import { Badge, Button, Icon, LoadState, SegmentedControl, TabBar, type TabOption } from "@/components/ui";
@@ -223,8 +223,8 @@ function CrmPackages({ onRequested }: { onRequested: () => void }) {
       <CrmHero onRequest={request && (() => request())} />
       <CrmExplainer />
       <WhyOwnCrm />
-      <CostComparison />
       <CrmPackageCards onRequest={request} />
+      <CostComparison />
       <CrmSteps />
       <CrmFaq />
       {request && (
@@ -341,6 +341,9 @@ function CrmHero({ onRequest }: { onRequest?: () => void }) {
               <Icon name="arrowRight" strokeWidth={2.4} />
             </Button>
           )}
+          <a className="crm-intro__link" href="#crm-packages">
+            See packages <Icon name="chevronDown" size={15} />
+          </a>
           <a className="crm-intro__link" href="#crm-cost">
             Compare the cost <Icon name="chevronDown" size={15} />
           </a>
@@ -539,157 +542,239 @@ function CostComparison() {
   );
 }
 
-/** The CRM package (or packages) on offer: price and Request, what's included by area, what the price covers, care. */
+/** The lowest monthly payment a package offers, for "or from $797/month" on its tab. */
+const fromMonthlyCents = (key: CrmOffer) => Math.min(...crmPlansFor(key).filter((o) => o.payments > 1).map((o) => o.paymentCents));
+
+/**
+ * The CRM packages in one section: Growth and Premium as tabs (price and Request, who it's for, what's included), then
+ * what both packages share (what the price covers, the Care plan, new features) once underneath.
+ */
 function CrmPackageCards({ onRequest }: { onRequest?: (plan: CrmPaymentPlanKey, pkg: CrmOffer) => void }) {
+  const [active, setActive] = useState<CrmOffer>(PACKAGE_KEYS[0]);
   const [planKeys, setPlanKeys] = useState<Record<CrmOffer, CrmPaymentPlanKey>>({ growth: "one_time", custom: "one_time" });
+  const key = active;
+  const p = CRM_PACKAGES[key];
+  const plan = crmPlanOf(planKeys[key], key);
+  const monthly = plan.payments > 1;
+  const groups = p.groups ?? [{ title: "Everything included", icon: "check" as const, items: p.includes }];
+
+  // Arrow keys (and Home / End) move between the package tabs.
+  const onTabKey = (e: KeyboardEvent<HTMLDivElement>) => {
+    const i = PACKAGE_KEYS.indexOf(active);
+    const n = PACKAGE_KEYS.length;
+    const next =
+      e.key === "ArrowRight" ? (i + 1) % n
+      : e.key === "ArrowLeft" ? (i - 1 + n) % n
+      : e.key === "Home" ? 0
+      : e.key === "End" ? n - 1
+      : -1;
+    if (next < 0) return;
+    e.preventDefault();
+    setActive(PACKAGE_KEYS[next]);
+    e.currentTarget.querySelectorAll<HTMLButtonElement>("[role=tab]")[next]?.focus();
+  };
+
   return (
-    <section className="crm-block">
-      <header className="crm-block__head">
-        <span className="crm-block__kicker">Two packages</span>
+    <section className="crm-block" id="crm-packages">
+      <header className="crm-block__head crm-block__head--center">
+        <span className="crm-block__kicker">Packages</span>
         <h2 className="crm-block__title">Built once. Paid your way. Yours for good.</h2>
         <p className="crm-block__lead">
           Both packages share one design and app. Growth is the complete CRM; Premium adds advanced automation, custom modules
           and a course platform. Pay once, or over 6 or 12 months.
         </p>
       </header>
-      {PACKAGE_KEYS.map((key) => {
-        const p = CRM_PACKAGES[key];
-        const plan = crmPlanOf(planKeys[key], key);
-        const monthly = plan.payments > 1;
-        const groups = p.groups ?? [{ title: "Everything included", icon: "check" as const, items: p.includes }];
-        return (
-          <article className="crm-pkg" key={key}>
-            <div className="crm-pkg__head">
-              <div className="crm-pkg__intro">
-                <span className="crm-pkg__kind">{p.kind}</span>
-                <div className="crm-pkg__name-row">
-                  <h3 className="crm-pkg__name">{p.label}</h3>
-                  {p.tag && <span className="crm-pkg__tag">{p.tag}</span>}
-                </div>
-                <p className="crm-pkg__tagline">{p.tagline}</p>
-                <p className="crm-pkg__audience">{p.audience}</p>
-                <div className="crm-pkg__facts">
-                  <span className="crm-pkg__fact">
-                    <Icon name="clock" size={14} /> {p.timeline}
-                  </span>
-                  <span className="crm-pkg__fact">
-                    <Icon name="users" size={14} /> Unlimited team logins
-                  </span>
-                  <span className="crm-pkg__fact">
-                    <Icon name="shield" size={14} /> First year of care free
-                  </span>
-                  <span className="crm-pkg__fact">
-                    <Icon name="dollar" size={14} /> No subscription or per-login fees
-                  </span>
-                </div>
-              </div>
-              <div className="crm-pkg__buy">
-                <span className="crm-pkg__label">{monthly ? plan.label : "One payment for the whole build"}</span>
-                <span className="crm-pkg__amount">
-                  {formatCents(monthly ? plan.paymentCents : p.priceCents)}
-                  {monthly && <small>/month</small>}
+
+      <div className={`crm-tiers crm-tier--${active}`} role="tablist" aria-label="CRM packages" onKeyDown={onTabKey}>
+        {PACKAGE_KEYS.map((k) => {
+          const t = CRM_PACKAGES[k];
+          const on = k === active;
+          return (
+            <button
+              key={k}
+              type="button"
+              role="tab"
+              id={`crm-tier-${k}`}
+              aria-selected={on}
+              aria-controls="crm-tier-panel"
+              tabIndex={on ? 0 : -1}
+              className={`crm-tiers__tab crm-tier--${k}`}
+              onClick={() => setActive(k)}
+            >
+              <span className="crm-tiers__radio" aria-hidden="true">
+                <Icon name="check" size={11} strokeWidth={3.2} />
+              </span>
+              <span className="crm-tiers__text">
+                <span className="crm-tiers__name">
+                  {t.label}
+                  {t.tag && <span className="crm-tiers__tag">{t.tag}</span>}
                 </span>
-                <div className="crm-pkg__plans" role="radiogroup" aria-label={`${p.label} payment option`}>
-                    {crmPlansFor(key).map((o) => (
-                      <button
-                        key={o.key}
-                        type="button"
-                        role="radio"
-                        aria-checked={plan.key === o.key}
-                        className="option-card crm-pkg__plan"
-                        onClick={() => setPlanKeys((k) => ({ ...k, [key]: o.key }))}
-                      >
-                        <span className="option-card__head">
-                          {o.label}
-                          <span className="option-card__price">{o.payments > 1 ? `${formatCents(o.paymentCents)} × ${o.payments}` : formatCents(o.paymentCents)}</span>
-                        </span>
-                        {o.payments > 1 && <span className="option-card__desc">{formatCents(o.paymentCents * o.payments)} in total</span>}
-                      </button>
-                    ))}
-                </div>
-                {onRequest && (
-                  <Button variant="primary" size="lg" block aria-haspopup="dialog" onClick={() => onRequest(plan.key, key)}>
-                    Request {p.label}
-                    <Icon name="arrowRight" strokeWidth={2.4} />
-                  </Button>
-                )}
-                <span className="crm-pkg__fine">Questions first? Book a free discovery call. Nothing is billed until you approve the quote.</span>
-              </div>
-            </div>
+                <span className="crm-tiers__kind">{t.kind}</span>
+              </span>
+              <span className="crm-tiers__price">
+                {formatCents(t.priceCents)}
+                <small>or from {formatCents(fromMonthlyCents(k))}/mo</small>
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
-            <div className="crm-pkg__body">
-              <span className="crm-pkg__section-title">{p.groupsLead ?? "What’s included"}</span>
-              <div className="crm-pkg__groups">
-                {groups.map((g) => (
-                  <div className="crm-pkg__group" key={g.title}>
-                    <div className="crm-pkg__group-head">
-                      <span className="crm-pkg__group-icon">
-                        <Icon name={g.icon} size={16} />
+      <article className={`crm-pkg crm-tier--${key}`} role="tabpanel" id="crm-tier-panel" aria-labelledby={`crm-tier-${key}`} key={key}>
+        <div className="crm-pkg__head">
+          <div className="crm-pkg__intro">
+            <span className="crm-pkg__kind">{p.kind}</span>
+            <div className="crm-pkg__name-row">
+              <h3 className="crm-pkg__name">{p.label}</h3>
+              {p.tag && <span className="crm-pkg__tag">{p.tag}</span>}
+            </div>
+            <p className="crm-pkg__tagline">{p.tagline}</p>
+            <div className="crm-pkg__audience">
+              <Icon name="users" size={15} />
+              <span>{p.audience}</span>
+            </div>
+            <ul className="crm-pkg__facts">
+              <li className="crm-pkg__fact">
+                <Icon name="clock" size={14} /> {p.timeline}
+              </li>
+              <li className="crm-pkg__fact">
+                <Icon name="users" size={14} /> Unlimited team logins
+              </li>
+              <li className="crm-pkg__fact">
+                <Icon name="shield" size={14} /> First year of care free
+              </li>
+              <li className="crm-pkg__fact">
+                <Icon name="dollar" size={14} /> No subscription or per-login fees
+              </li>
+            </ul>
+          </div>
+          <div className="crm-pkg__buy">
+            <span className="crm-pkg__label">{monthly ? plan.label : "One payment for the whole build"}</span>
+            <span className="crm-pkg__amount">
+              {formatCents(monthly ? plan.paymentCents : p.priceCents)}
+              {monthly && <small>/month</small>}
+            </span>
+            <span className="crm-pkg__total">
+              {monthly ? `${plan.payments} payments · ${formatCents(plan.paymentCents * plan.payments)} in total` : "Or spread it over 6 or 12 months"}
+            </span>
+            <div className="crm-pkg__plans" role="radiogroup" aria-label={`${p.label} payment option`}>
+              {crmPlansFor(key).map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={plan.key === o.key}
+                  className="crm-pkg__plan"
+                  onClick={() => setPlanKeys((k) => ({ ...k, [key]: o.key }))}
+                >
+                  <span className="crm-pkg__plan-dot" aria-hidden="true" />
+                  <span className="crm-pkg__plan-label">{o.label}</span>
+                  <span className="crm-pkg__plan-price">
+                    {o.payments > 1 ? `${formatCents(o.paymentCents)} × ${o.payments}` : formatCents(o.paymentCents)}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {onRequest && (
+              <Button variant="primary" size="lg" block aria-haspopup="dialog" onClick={() => onRequest(plan.key, key)}>
+                Request {p.label}
+                <Icon name="arrowRight" strokeWidth={2.4} />
+              </Button>
+            )}
+            <span className="crm-pkg__fine">
+              <Icon name="shield" size={13} /> Free discovery call first. Nothing is billed until you approve the quote.
+            </span>
+          </div>
+        </div>
+
+        <div className="crm-pkg__body">
+          <div className="crm-pkg__body-head">
+            <span className="crm-pkg__section-title">What’s included</span>
+            {p.groupsLead && <span className="crm-pkg__lead-pill">{p.groupsLead}</span>}
+          </div>
+          <div className="crm-pkg__groups">
+            {groups.map((g) => (
+              <div className="crm-pkg__group" key={g.title}>
+                <div className="crm-pkg__group-head">
+                  <span className="crm-pkg__group-icon">
+                    <Icon name={g.icon} size={16} />
+                  </span>
+                  <span className="crm-pkg__group-title">{g.title}</span>
+                </div>
+                <ul className="crm-pkg__list">
+                  {g.items.map((item) => (
+                    <li key={item}>
+                      <span className="crm-plan__check">
+                        <Icon name="check" size={11} strokeWidth={3} />
                       </span>
-                      <span className="crm-pkg__group-title">{g.title}</span>
-                    </div>
-                    <ul className="crm-pkg__list">
-                      {g.items.map((item) => (
-                        <li key={item}>
-                          <span className="crm-plan__check">
-                            <Icon name="check" size={11} strokeWidth={3} />
-                          </span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
+            ))}
+          </div>
+          {p.limits && (
+            <p className="crm-pkg__limits">
+              <Icon name="help" size={15} />
+              <span>{p.limits}</span>
+            </p>
+          )}
+        </div>
+      </article>
 
-              {p.limits && <p className="crm-pkg__limits">{p.limits}</p>}
-
-              <div className="crm-pkg__extras">
-                <div className="crm-pkg__extra">
-                  <span className="crm-pkg__section-title">What the price covers</span>
-                  <ol className="crm-pkg__covers">
-                    {CRM_PRICE_BREAKDOWN.map((item, i) => (
-                      <li key={item}>
-                        <span className="crm-pkg__covers-num">{i + 1}</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-                <div className="crm-pkg__extra crm-pkg__extra--care">
-                  <div className="crm-pkg__care-head">
-                    <span className="crm-pkg__section-title">After launch: Care plan</span>
-                    <span className="crm-plan__care-free">First year free</span>
-                  </div>
-                  <span className="crm-pkg__care-price">
-                    {formatCents(CRM_CARE_PLAN.priceCents)}
-                    <small>/year after that</small>
-                  </span>
-                  <ul className="crm-pkg__list">
-                    {CRM_CARE_PLAN.includes.map((item) => (
-                      <li key={item}>
-                        <span className="crm-plan__check">
-                          <Icon name="check" size={11} strokeWidth={3} />
-                        </span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {p.note && (
-                <p className="crm-pkg__note">
-                  <Icon name="sparkle" size={14} />
-                  <span>
-                    <strong>New features from {formatCents(CRM_FEATURE_FROM_CENTS)}.</strong> {p.note}
-                  </span>
-                </p>
-              )}
+      <div className="crm-shared">
+        <span className="crm-pkg__section-title">Included with both packages</span>
+        <div className="crm-shared__grid">
+          <div className="crm-shared__card">
+            <div className="crm-shared__card-head">
+              <span className="crm-shared__icon">
+                <Icon name="clipboard" size={16} />
+              </span>
+              <h3 className="crm-shared__title">What the price covers</h3>
             </div>
-          </article>
-        );
-      })}
+            <ol className="crm-pkg__covers">
+              {CRM_PRICE_BREAKDOWN.map((item, i) => (
+                <li key={item}>
+                  <span className="crm-pkg__covers-num">{i + 1}</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="crm-shared__card crm-shared__card--care">
+            <div className="crm-shared__card-head">
+              <span className="crm-shared__icon crm-shared__icon--green">
+                <Icon name="shield" size={16} />
+              </span>
+              <h3 className="crm-shared__title">Care plan after launch</h3>
+              <span className="crm-plan__care-free">First year free</span>
+            </div>
+            <span className="crm-pkg__care-price">
+              {formatCents(CRM_CARE_PLAN.priceCents)}
+              <small>/year after that</small>
+            </span>
+            <ul className="crm-pkg__list">
+              {CRM_CARE_PLAN.includes.map((item) => (
+                <li key={item}>
+                  <span className="crm-plan__check">
+                    <Icon name="check" size={11} strokeWidth={3} />
+                  </span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+        {p.note && (
+          <p className="crm-pkg__note">
+            <Icon name="sparkle" size={14} />
+            <span>
+              <strong>New features from {formatCents(CRM_FEATURE_FROM_CENTS)}.</strong> {p.note}
+            </span>
+          </p>
+        )}
+      </div>
     </section>
   );
 }

@@ -120,8 +120,8 @@ export function AppointmentsSection() {
   );
 }
 
-// ------------------------------------------------------------------ Updates & Resources › Updates & Announcements
-/** Client portal › CRM › Updates & Resources › Updates & Announcements: what the GoCWGL team publishes. */
+// ------------------------------------------------------------------ Updates & Resources › Announcements
+/** Client portal › CRM › Updates & Resources › Announcements: what the GoCWGL team publishes. */
 export function AnnouncementsSection() {
   const query = useMyAnnouncements();
   const items = query.data ?? [];

@@ -17,7 +17,7 @@ import type {
 export const listMyRecordings = () => get<RecordingOut[]>("/portal/recordings");
 /** My Sessions › My Appointments: calls they booked with GoCWGL. */
 export const listMyAppointments = () => get<AppointmentOut[]>("/portal/appointments");
-/** Updates & Resources › Updates & Announcements. */
+/** Updates & Resources › Announcements. */
 export const listMyAnnouncements = () => get<AnnouncementOut[]>("/portal/announcements");
 /** Updates & Resources › My Forms: forms to fill in, and the forms they sent. */
 export const getMyForms = () => get<MyFormsOut>("/portal/my-forms");

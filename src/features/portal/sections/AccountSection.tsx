@@ -21,6 +21,7 @@ import {
   useSetMyNotifications,
   useUpdateMe,
 } from "@/utils/hooks/useUsers";
+import { CrmPlanCard } from "../components/CrmPlanCard";
 import { ReferredByCard } from "../components/ReferredByCard";
 import { SocialLinksCard } from "../components/SocialLinksCard";
 import { usePortal } from "../state/PortalContext";
@@ -33,6 +34,7 @@ export function AccountSection() {
   const isStaff = !!useMe().data?.isStaff;
   return (
     <div className="card-row">
+      <CrmPlanCard />
       <ReferredByCard />
       <ProfileCard readOnly={readOnly} />
       {!isStaff && <SecurityCard />}

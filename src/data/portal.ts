@@ -77,7 +77,7 @@ export const PORTAL_PAGES: Record<PortalTab, { title: string; subtitle: string }
   account: { title: "Account", subtitle: "Your profile, alerts, password & 2-step verification, and who can see this portal." },
   recordings: { title: "My Recordings", subtitle: "Recordings of your sessions with GoCWGL, to watch again anytime." },
   appointments: { title: "My Appointments", subtitle: "Your calls with GoCWGL: what's coming up, and the ones you've had." },
-  announcements: { title: "Updates & Announcements", subtitle: "News from GoCWGL: new features, changes and things to know." },
+  announcements: { title: "Announcements", subtitle: "News from GoCWGL: new features, changes and things to know." },
   documents: { title: "My Documents", subtitle: "Files you and GoCWGL share: blueprints, guides, logos and anything else for your CRM." },
   forms: { title: "My Forms", subtitle: "Forms GoCWGL asks you to fill in, and the answers you've sent." },
 };
@@ -295,7 +295,7 @@ export const PORTAL_MENU: Array<{ title: string; items: PortalMenuEntry[] }> = [
           {
             title: "Updates & Resources",
             items: [
-              page("announcements", "Updates & Announcements", "bell"),
+              page("announcements", "Announcements", "bell"),
               page("documents", "My Documents", "folder"),
               page("forms", "My Forms", "form"),
             ],
