@@ -33,6 +33,9 @@ export const inviteStaff = (body: { email: string; fullName: string; role: Staff
   post<InvitationOut>("/admin/team/invitations", body);
 /** null = every menu. Super admins always have every menu. */
 export const changeMenuAccess = (userId: string, menuAccess: string[] | null) => put<MemberOut>(`/admin/team/${userId}/menus`, { menuAccess });
+/** A pending invite's role and menus (null = every menu), changed before they accept. */
+export const changeStaffInvitation = (id: string, body: { role: StaffRole; menuAccess: string[] | null }) =>
+  put<InvitationOut>(`/admin/team/invitations/${id}`, body);
 export const cancelStaffInvitation = (id: string) => del(`/admin/team/invitations/${id}`);
 export const changeStaffRole = (userId: string, role: StaffRole) => patch<MemberOut>(`/admin/team/${userId}`, { role });
 export const removeStaff = (userId: string) => del(`/admin/team/${userId}`);

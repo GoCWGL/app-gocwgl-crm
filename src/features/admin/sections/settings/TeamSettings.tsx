@@ -2,12 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { Avatar, Badge, Button, Field, FormError, Icon, IconTile, Input, LoadState, Modal, Select } from "@/components/ui";
-import { TEAM_ROLES } from "@/data/admin";
+import { TEAM_ROLES, type MenuKey } from "@/data/admin";
 import { avatarTone } from "@/lib/tones";
 import { isEmail } from "@/lib/utils";
 import type { StaffRole } from "@/utils/api/users";
 import { isStaffAdmin, isSuperAdmin } from "@/utils/auth/session";
-import type { MemberOut } from "@/utils/api/models";
+import type { InvitationOut, MemberOut } from "@/utils/api/models";
 import { fieldErrors } from "@/utils/errors";
 import {
   useCancelStaffInvitation,
@@ -15,9 +15,10 @@ import {
   useInviteStaff,
   useMe,
   useRemoveStaff,
+  useSaveTeamAccess,
   useStaffTeam,
 } from "@/utils/hooks/useUsers";
-import { MenuAccessDialog, MenuAccessPicker, menuAccessLabel, type MenuAccess } from "./MenuAccessPicker";
+import { MenuAccessPicker, menuAccessLabel, type MenuAccess } from "./MenuAccessPicker";
 
 export function TeamSettings({ onMessage }: { onMessage: (message: string) => void }) {
   const me = useMe().data;
@@ -27,7 +28,8 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
   const remove = useRemoveStaff();
   const cancelInvite = useCancelStaffInvitation();
   const [adding, setAdding] = useState(false);
-  const [editingMenus, setEditingMenus] = useState<MemberOut | null>(null);
+  // Edit access: a teammate's or a pending invite's role and menus.
+  const [editing, setEditing] = useState<{ kind: "member"; who: MemberOut } | { kind: "invite"; who: InvitationOut } | null>(null);
 
   // Only a super admin grants or takes away the admin and super admin roles (the API enforces it too).
   const superAdmin = isSuperAdmin(me);
@@ -57,7 +59,7 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
       <LoadState query={team}>
         {team.data?.members.map((m) => {
           const isSelf = m.id === me?.id;
-          const lockedOwner = !superAdmin && (m.role === "super_admin" || m.role === "admin");
+          const lockedOwner = !superAdmin && (m.role === "super_admin" || m.role === "admin" || m.role === "shareholder");
           return (
             <div className="team-row" key={m.id}>
               <Avatar name={m.fullName || m.email} tone={avatarTone(m.id)} size="md" />
@@ -72,9 +74,9 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
                 </span>
               </div>
               <Badge tone="green">{m.status ?? "Active"}</Badge>
-              {!isSelf && !lockedOwner && m.role !== "super_admin" && m.role !== "shareholder" && (
-                <Button size="sm" variant="outline" aria-label={`Menu access for ${m.fullName || m.email}`} onClick={() => setEditingMenus(m)}>
-                  Menus
+              {!isSelf && !lockedOwner && (
+                <Button size="sm" variant="outline" aria-label={`Edit access for ${m.fullName || m.email}`} onClick={() => setEditing({ kind: "member", who: m })}>
+                  Edit access
                 </Button>
               )}
               <Select
@@ -117,6 +119,11 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
             </div>
             <Badge tone="amber">Invited</Badge>
             <span className="text-small u-strong">{TEAM_ROLES.find((r) => r.value === inv.role)?.label ?? inv.role}</span>
+            {(superAdmin || (inv.role !== "super_admin" && inv.role !== "admin" && inv.role !== "shareholder")) && (
+              <Button size="sm" variant="outline" aria-label={`Edit access for ${inv.fullName || inv.email}`} onClick={() => setEditing({ kind: "invite", who: inv })}>
+                Edit access
+              </Button>
+            )}
             <Button
               variant="danger"
               size="sm"
@@ -129,12 +136,13 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
           </div>
         ))}
       </LoadState>
-      {editingMenus && (
-        <MenuAccessDialog
-          member={editingMenus}
-          onClose={() => setEditingMenus(null)}
+      {editing && (
+        <EditAccessDialog
+          target={editing}
+          roleOptions={roleOptions}
+          onClose={() => setEditing(null)}
           onSaved={(text) => {
-            setEditingMenus(null);
+            setEditing(null);
             onMessage(text);
           }}
         />
@@ -143,7 +151,7 @@ export function TeamSettings({ onMessage }: { onMessage: (message: string) => vo
       <span className="text-small">
         Super Admin: everything · Admin: everything except managing admins · Sales: contacts, calendar and email · Viewer: read only
         {superAdmin && " · Shareholder: only the shareholder dashboard, no CRM"}.
-        Use Menus to limit which pages someone can open.
+        Use Edit access to change someone’s role or limit which pages they can open, before or after they accept.
       </span>
     </div>
   );
@@ -254,6 +262,90 @@ function AddTeamMemberDialog({
       )}
       {tried && noMenus && <span className="field__error">Give them access to at least one menu.</span>}
       {invite.error && !api.email && !api.fullName ? <FormError error={invite.error} /> : null}
+    </Modal>
+  );
+}
+
+/**
+ * Edit access: change a teammate's (or a pending invite's) role and which menus they can open. A teammate's changes apply
+ * on their next click (a new role signs them out first); an invite's apply when they accept.
+ */
+function EditAccessDialog({
+  target,
+  roleOptions,
+  onClose,
+  onSaved,
+}: {
+  target: { kind: "member"; who: MemberOut } | { kind: "invite"; who: InvitationOut };
+  roleOptions: Array<{ value: StaffRole; label: string }>;
+  onClose: () => void;
+  onSaved: (message: string) => void;
+}) {
+  const save = useSaveTeamAccess();
+  const { who: p } = target;
+  const name = p.fullName || p.email;
+  const startRole = p.role as StaffRole;
+  const [role, setRole] = useState<StaffRole>(startRole);
+  const [menus, setMenus] = useState<MenuAccess>((p.menuAccess as MenuKey[] | null | undefined) ?? null);
+  const hasMenus = role !== "super_admin" && role !== "shareholder";
+  const noMenus = hasMenus && menus !== null && menus.length === 0;
+  // Their current role stays listed even when this admin couldn't give it.
+  const options = roleOptions.some((r) => r.value === startRole) ? roleOptions : [...TEAM_ROLES.filter((r) => r.value === startRole), ...roleOptions];
+  const roleLabel = TEAM_ROLES.find((r) => r.value === role)?.label ?? role;
+
+  return (
+    <Modal
+      open
+      width={640}
+      onClose={onClose}
+      titleId="access-title"
+      kicker={target.kind === "invite" ? "TEAM · INVITED" : "TEAM"}
+      title={`${name}’s access`}
+      subtitle={
+        target.kind === "invite"
+          ? "They haven’t accepted yet: they get this role and these menus when they do."
+          : role !== startRole
+            ? "Changing their role signs them out; they sign back in with the new role."
+            : "Changes apply straight away, on their next click."
+      }
+      media={
+        <IconTile brand size="lg">
+          <Icon name="grid" size={18} />
+        </IconTile>
+      }
+      footer={
+        <>
+          <Button onClick={onClose}>Cancel</Button>
+          <Button
+            variant="primary"
+            disabled={save.isPending || noMenus}
+            onClick={() =>
+              save.mutate(
+                { kind: target.kind, id: p.id, role, roleChanged: role !== startRole, menuAccess: hasMenus ? menus : null },
+                {
+                  onSuccess: () =>
+                    onSaved(
+                      `${name} is ${roleLabel} with ${!hasMenus || menus === null ? "every menu" : `${menus.length} menu${menus.length === 1 ? "" : "s"}`}.`,
+                    ),
+                },
+              )
+            }
+          >
+            {save.isPending ? "Saving…" : "Save"}
+          </Button>
+        </>
+      }
+    >
+      <Field label="Role" htmlFor="access-role" hint={ROLE_HELP[role]}>
+        <Select id="access-role" value={role} options={options} onChange={(e) => setRole(e.target.value as StaffRole)} />
+      </Field>
+      {!hasMenus ? (
+        <span className="text-small">{role === "shareholder" ? "Shareholders only see the shareholder dashboard: no CRM menus." : "Super admins always have every menu."}</span>
+      ) : (
+        <MenuAccessPicker value={menus} onChange={setMenus} idPrefix={`access-${p.id}`} />
+      )}
+      {noMenus && <span className="field__error">Give them access to at least one menu.</span>}
+      <FormError error={save.error} />
     </Modal>
   );
 }

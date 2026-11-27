@@ -221,6 +221,7 @@ export type InteractionOut = S["InteractionOut"];
 export type Interval = S["Interval"];
 export type InvestorUpdateIn = S["InvestorUpdateIn"];
 export type InvestorUpdateOut = S["InvestorUpdateOut"];
+export type InvitationAccessChange = S["InvitationAccessChange"];
 export type InvitationOut = S["InvitationOut"];
 export type InvitationPreview = S["InvitationPreview"];
 export type InvitationToken = S["InvitationToken"];

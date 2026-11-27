@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Button, FormError, Icon, IconTile, Modal, Toggle, type IconName } from "@/components/ui";
+import { Button, Icon, IconTile, Toggle, type IconName } from "@/components/ui";
 import { MENUS, VISIBLE_MENUS, type MenuKey } from "@/data/admin";
 import type { Tone } from "@/lib/tones";
 import { cn } from "@/lib/utils";
-import type { MemberOut } from "@/utils/api/models";
-import { useChangeMenuAccess } from "@/utils/hooks/useUsers";
 
 /** null = every menu. */
 export type MenuAccess = MenuKey[] | null;
@@ -127,49 +124,5 @@ export function MenuAccessPicker({ value, onChange, idPrefix }: { value: MenuAcc
             : "They’ll only see the menus picked here; the others are hidden and locked for them. Settings (their profile) is always there. Shareholders is for super admins only."}
       </span>
     </fieldset>
-  );
-}
-
-/** Change an existing teammate's menus. */
-export function MenuAccessDialog({ member: m, onClose, onSaved }: { member: MemberOut; onClose: () => void; onSaved: (message: string) => void }) {
-  const save = useChangeMenuAccess();
-  const [access, setAccess] = useState<MenuAccess>((m.menuAccess as MenuKey[] | null | undefined) ?? null);
-  const who = m.fullName || m.email;
-
-  return (
-    <Modal
-      open
-      width={640}
-      onClose={onClose}
-      titleId="menus-title"
-      kicker="TEAM"
-      title={`${who}’s menus`}
-      subtitle="Changes apply straight away, on their next click."
-      media={
-        <IconTile brand size="lg">
-          <Icon name="grid" size={18} />
-        </IconTile>
-      }
-      footer={
-        <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button
-            variant="primary"
-            disabled={save.isPending || (access !== null && access.length === 0)}
-            onClick={() =>
-              save.mutate(
-                { userId: m.id, menuAccess: access },
-                { onSuccess: () => onSaved(`${who} now has ${access === null ? "every menu" : `${access.length} menu${access.length === 1 ? "" : "s"}`}.`) },
-              )
-            }
-          >
-            {save.isPending ? "Saving…" : "Save"}
-          </Button>
-        </>
-      }
-    >
-      <MenuAccessPicker value={access} onChange={setAccess} idPrefix={`menus-${m.id}`} />
-      <FormError error={save.error} />
-    </Modal>
   );
 }

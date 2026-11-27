@@ -42,10 +42,17 @@ export const useInviteStaff = () => useApiMutation(api.inviteStaff, { invalidate
 export const useCancelStaffInvitation = () => useApiMutation(api.cancelStaffInvitation, { invalidate: [qk.staffTeam] });
 export const useChangeStaffRole = () =>
   useApiMutation((v: { userId: string; role: api.StaffRole }) => api.changeStaffRole(v.userId, v.role), { invalidate: [qk.staffTeam] });
-export const useChangeMenuAccess = () =>
-  useApiMutation((v: { userId: string; menuAccess: string[] | null }) => api.changeMenuAccess(v.userId, v.menuAccess), {
-    invalidate: [qk.staffTeam],
-  });
+/** Edit access: a teammate's role (when it changed), then their menus; or a pending invite's role and menus in one go. */
+export const useSaveTeamAccess = () =>
+  useApiMutation(
+    async (v: { kind: "member" | "invite"; id: string; role: api.StaffRole; roleChanged: boolean; menuAccess: string[] | null }) => {
+      if (v.kind === "invite") return void (await api.changeStaffInvitation(v.id, { role: v.role, menuAccess: v.menuAccess }));
+      if (v.roleChanged) await api.changeStaffRole(v.id, v.role);
+      // Super admins always have every menu; shareholders have none.
+      if (v.role !== "super_admin" && v.role !== "shareholder") await api.changeMenuAccess(v.id, v.menuAccess);
+    },
+    { invalidate: [qk.staffTeam] },
+  );
 export const useRemoveStaff = () => useApiMutation(api.removeStaff, { invalidate: [qk.staffTeam] });
 
 // ------------------------------------------------------------------ Portal team

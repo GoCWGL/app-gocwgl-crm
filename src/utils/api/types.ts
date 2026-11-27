@@ -561,7 +561,11 @@ export interface paths {
             cookie?: never;
         };
         get?: never;
-        put?: never;
+        /**
+         * Change Staff Invitation
+         * @description Change a pending invite's role and menus; they get them when they accept. Admin roles: super admins only.
+         */
+        put: operations["change_staff_invitation_api_admin_team_invitations__invitation_id__put"];
         post?: never;
         /** Revoke Staff Invitation */
         delete: operations["revoke_staff_invitation_api_admin_team_invitations__invitation_id__delete"];
@@ -12942,6 +12946,19 @@ export interface components {
              */
             createdAt: string;
         };
+        /**
+         * InvitationAccessChange
+         * @description A pending team invite's role and menus, changed before they accept.
+         */
+        InvitationAccessChange: {
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "super_admin" | "admin" | "sales" | "viewer" | "shareholder";
+            /** Menuaccess */
+            menuAccess?: ("dashboard" | "reporting" | "progress" | "media" | "funnels" | "jobs" | "contacts" | "vas" | "surveys" | "payments" | "affiliates" | "email" | "forms" | "automation" | "calendar" | "bugs")[] | null;
+        };
         /** InvitationOut */
         InvitationOut: {
             /**
@@ -21735,6 +21752,52 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["InvitationOut"];
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Error */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    change_staff_invitation_api_admin_team_invitations__invitation_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InvitationAccessChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
