@@ -806,10 +806,11 @@ export const CRM_PRICE_BREAKDOWN = [
 ];
 
 export const CRM_STEPS = [
-  { title: "Request your CRM", desc: "Pick Growth or Premium, tell us what you need, choose how to pay and book your discovery call." },
-  { title: "Approve the blueprint", desc: "You get a plan of every screen and automation, and the final quote. Nothing is billed until you approve it." },
-  { title: "We build it", desc: "12–15 weeks of design, building and testing, with weekly updates in Build progress." },
-  { title: "Train and go live", desc: "We move your data in, train your team and launch together." },
+  { title: "Discovery call", desc: "Pick Growth or Premium, tell us what you need and book a free call to walk through how your business runs." },
+  { title: "Proposal & design", desc: "You get the scope, timeline and final quote, with your main screens designed. Nothing is billed until you approve it." },
+  { title: "We build it", desc: "Your pipelines, records, forms, emails and automations, built in your branding, with updates in Build progress." },
+  { title: "Testing & your data", desc: "We test every step with test contacts, then move your contacts and records in." },
+  { title: "Train and go live", desc: "We train your team and launch together. Your first year of Care is included." },
 ];
 
 export const CRM_FAQ = [
