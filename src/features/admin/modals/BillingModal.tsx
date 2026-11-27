@@ -48,6 +48,12 @@ function presetGroups(options: PaymentOptionOut[]): { label: string; icon: IconN
     .filter((g) => g.options.length);
 }
 
+/** "month" / "months" for an interval. */
+const periodWord = (interval: string, n: number) => `${interval.toLowerCase()}${n === 1 ? "" : "s"}`;
+
+/** Choices for the days between reminder emails on an unpaid invoice. */
+const REMINDER_DAYS = [2, 3, 5, 7];
+
 const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
 
@@ -82,6 +88,11 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
   const [amount, setAmount] = useState("");
   const [interval, setInterval] = useState<BillingInterval>("Month");
   const [trial, setTrial] = useState("0");
+  // How long it runs: until cancelled, or a set number of periods (e.g. 6 months on a monthly plan).
+  const [lengthMode, setLengthMode] = useState<"unlimited" | "fixed">("unlimited");
+  const [cycles, setCycles] = useState("12");
+  // Days between follow-up emails while an invoice is unpaid (invoice and subscription).
+  const [reminderDays, setReminderDays] = useState("3");
   const [presetsOpen, setPresetsOpen] = useState(false);
   // Payment details (invoice and subscription).
   const [method, setMethod] = useState<PaymentMethod>("wise");
@@ -161,6 +172,7 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
             dueDate,
             note: note.trim(),
             send: !draft,
+            reminderDays: Number(reminderDays),
             // Empty: a single line that is exactly a saved product gets that product's link (on the server).
             ...(payUrl.trim() && { paymentUrl: payUrl.trim(), paymentMethod: method }),
           },
@@ -175,6 +187,9 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
     if (!(cents > 0)) return setError("Enter an amount above zero.");
     if (payUrl.trim() && !isPayUrl(payUrl)) return setError("The payment link must start with https://");
     const trialDays = Number(trial);
+    const billingCycles = lengthMode === "fixed" ? Number(cycles) : null;
+    if (billingCycles !== null && !(Number.isInteger(billingCycles) && billingCycles >= 1 && billingCycles <= 120))
+      return setError(`Enter how many ${periodWord(interval, 2)} it runs for (1 to 120).`);
     withSavedOption(() =>
       createSub.mutate(
         {
@@ -184,12 +199,19 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
           interval,
           nextBillingDate: addDaysIso(todayIso(), trialDays),
           status: trialDays ? "Trial" : "Awaiting payment",
+          billingCycles,
+          reminderDays: Number(reminderDays),
           // Empty: the API uses the saved plan's link when one matches.
           ...(payUrl.trim() && { paymentUrl: payUrl.trim(), paymentMethod: method }),
         },
         {
           onSuccess: (sub) =>
-            onCreated("subs", `Subscription for ${contactName(client)} created: ${formatCents(sub.amountCents, sub.currency)} per ${sub.interval.toLowerCase()}.`),
+            onCreated(
+              "subs",
+              `Subscription for ${contactName(client)} created: ${formatCents(sub.amountCents, sub.currency)} per ${sub.interval.toLowerCase()}${
+                sub.billingCycles ? ` for ${sub.billingCycles} ${periodWord(sub.interval, sub.billingCycles)}` : ""
+              }.`,
+            ),
           onError,
         },
       ),
@@ -262,12 +284,24 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
   );
 
   const dueField = (
-    <Field label="Due" htmlFor="bm-due" hint="A follow-up email goes out every 2 days until it’s paid.">
+    <Field label="Due" htmlFor="bm-due" hint="When the client should pay by.">
       <Select id="bm-due" value={due} onChange={(e) => setDue(e.target.value)}>
         <option value="0">On receipt</option>
         <option value="7">In 7 days</option>
         <option value="14">In 14 days</option>
         <option value="30">In 30 days</option>
+      </Select>
+    </Field>
+  );
+
+  const reminderField = (
+    <Field label="Reminder emails" htmlFor="bm-remind" hint="Sent until the invoice is marked paid.">
+      <Select id="bm-remind" value={reminderDays} onChange={(e) => setReminderDays(e.target.value)}>
+        {REMINDER_DAYS.map((d) => (
+          <option key={d} value={String(d)}>
+            Every {d} days
+          </option>
+        ))}
       </Select>
     </Field>
   );
@@ -470,7 +504,10 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
           <span className="kicker">PAYMENT</span>
           {linkFields}
           <div className="invoice-total">
-            {dueField}
+            <div className="form-grid">
+              {dueField}
+              {reminderField}
+            </div>
             <div className="invoice-total__amount">
               <span className="text-small">Estimated total</span>
               <span className="billing-summary__amount">{formatCentsExact(estimate)}</span>
@@ -501,15 +538,42 @@ export function BillingModal({ kind, onKind, onClose, onCreated }: BillingModalP
                 <option value="30">30 days</option>
               </Select>
             </Field>
+            <Field label="Duration" htmlFor="bm-length" hint="Billing stops by itself after the last invoice.">
+              <Select id="bm-length" value={lengthMode} onChange={(e) => setLengthMode(e.target.value as "unlimited" | "fixed")}>
+                <option value="unlimited">Unlimited (until cancelled)</option>
+                <option value="fixed">Set number of {periodWord(interval, 2)}</option>
+              </Select>
+            </Field>
+            {lengthMode === "fixed" && (
+              <Field label={`Number of ${periodWord(interval, 2)}`} htmlFor="bm-cycles" required hint={`One invoice per ${interval.toLowerCase()}.`}>
+                <Input
+                  id="bm-cycles"
+                  type="number"
+                  min={1}
+                  max={120}
+                  step={1}
+                  mono
+                  value={cycles}
+                  onChange={(e) => {
+                    setCycles(e.target.value);
+                    setError("");
+                  }}
+                />
+              </Field>
+            )}
+            {reminderField}
           </div>
           {linkFields}
           {saveBox}
           <div className="inset inset--soft text-body">
             {Number(trial) ? `After a ${trial}-day free trial, ` : ""}
             {client ? contactName(client) : "The client"} gets a {formatCents(dollarsToCents(amount))} invoice
-            {Number(trial) ? "" : " now"} and then every {interval.toLowerCase()} until it’s cancelled
+            {Number(trial) ? "" : " now"} and then every {interval.toLowerCase()}
+            {lengthMode === "fixed" && Number(cycles) >= 1
+              ? `, ${Number(cycles)} ${periodWord(interval, Number(cycles))} in all (or until it’s cancelled)`
+              : " until it’s cancelled"}
             {subLink ? `, with ${subLink}` : ""}. Nothing is charged automatically; the client pays each invoice. Unpaid invoices get a
-            follow-up every 2 days. You or the client can cancel anytime from Invoices.
+            reminder email every {reminderDays} days until they’re paid. You or the client can cancel anytime from Invoices.
           </div>
         </>
       )}

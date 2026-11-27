@@ -145,11 +145,22 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
                         <span>
                           {sub.plan} · per {sub.interval.toLowerCase()}
                         </span>
-                        {sub.paymentUrl && <span className="text-small text-muted">Paid with {paymentMethodLabel(sub.paymentMethod)}</span>}
+                        <span className="text-small text-muted">
+                          {sub.billingCycles ? `${sub.cyclesBilled ?? 0} of ${sub.billingCycles} invoices` : "Unlimited"}
+                          {sub.paymentUrl && ` · Paid with ${paymentMethodLabel(sub.paymentMethod)}`}
+                        </span>
                       </div>
                     </td>
                     <td className="data-table__mono">{formatCents(sub.amountCents, sub.currency)}</td>
-                    <td>{sub.status === "Paused" || sub.status === "Canceled" || !sub.nextBillingDate ? "—" : formatLong(sub.nextBillingDate)}</td>
+                    <td>
+                      {sub.status === "Paused" || sub.status === "Canceled"
+                        ? "—"
+                        : sub.nextBillingDate
+                          ? formatLong(sub.nextBillingDate)
+                          : sub.billingCycles && (sub.cyclesBilled ?? 0) >= sub.billingCycles
+                            ? "Ended (all invoices sent)"
+                            : "—"}
+                    </td>
                     <td>
                       <Badge tone={SUBSCRIPTION_TONES[sub.status as SubscriptionStatus] ?? "neutral"} dot>
                         {sub.status}
@@ -286,7 +297,7 @@ export function BillingTables({ views, view, onView, message, onMessage, onNew }
                           className="row-action row-action--brand"
                           aria-label={`Email ${iv.number} to ${c.name} again`}
                           disabled={rowBusy(iv.id)}
-                          onClick={() => send.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} emailed to ${c.email} again. The next follow-up is in 2 days.`) })}
+                          onClick={() => send.mutate(iv.id, { onSuccess: () => onMessage(`${iv.number} emailed to ${c.email} again. The next follow-up is in ${iv.reminderDays ?? 2} days.`) })}
                         >
                           {pendingLabel(send, iv.id, "Resend", "Sending…")}
                         </button>

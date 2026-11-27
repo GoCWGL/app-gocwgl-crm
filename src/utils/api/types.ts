@@ -12961,6 +12961,11 @@ export interface components {
             paymentMethod?: ("wise" | "paypal" | "stripe" | "paymongo" | "square" | "xendit" | "gcash" | "bank" | "other") | null;
             /** Vabilling */
             vaBilling?: components["schemas"]["VaBilling"][] | null;
+            /**
+             * Reminderdays
+             * @default 2
+             */
+            reminderDays?: number;
         };
         /** InvoiceItem */
         InvoiceItem: {
@@ -13050,6 +13055,11 @@ export interface components {
              * @default 0
              */
             remindersSent?: number;
+            /**
+             * Reminderdays
+             * @default 2
+             */
+            reminderDays?: number;
             /** Lastemailedat */
             lastEmailedAt?: string | null;
             /** Subscriptionid */
@@ -17316,6 +17326,13 @@ export interface components {
             paymentUrl?: string | null;
             /** Paymentmethod */
             paymentMethod?: ("wise" | "paypal" | "stripe" | "paymongo" | "square" | "xendit" | "gcash" | "bank" | "other") | null;
+            /** Billingcycles */
+            billingCycles?: number | null;
+            /**
+             * Reminderdays
+             * @default 2
+             */
+            reminderDays?: number;
         };
         /** SubscriptionOut */
         SubscriptionOut: {
@@ -17347,6 +17364,18 @@ export interface components {
             paymentUrl?: string | null;
             /** Paymentmethod */
             paymentMethod?: string | null;
+            /** Billingcycles */
+            billingCycles?: number | null;
+            /**
+             * Cyclesbilled
+             * @default 0
+             */
+            cyclesBilled?: number;
+            /**
+             * Reminderdays
+             * @default 2
+             */
+            reminderDays?: number;
         };
         /**
          * SubscriptionStatus
@@ -17367,6 +17396,10 @@ export interface components {
             paymentUrl?: string | null;
             /** Paymentmethod */
             paymentMethod?: ("wise" | "paypal" | "stripe" | "paymongo" | "square" | "xendit" | "gcash" | "bank" | "other") | null;
+            /** Billingcycles */
+            billingCycles?: number | null;
+            /** Reminderdays */
+            reminderDays?: number | null;
         };
         /** SubtaskIn */
         SubtaskIn: {
