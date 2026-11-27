@@ -3,10 +3,12 @@
 import { useMutation } from "@tanstack/react-query";
 import { useRef, useState, type CSSProperties, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Button, Dropdown, Field, FormError, Icon, IconTile, Input, Modal, Select, Textarea, type IconName } from "@/components/ui";
+import { Button, Checkbox, Dropdown, Field, FormError, Icon, IconTile, Input, Modal, Select, Textarea, type IconName } from "@/components/ui";
 import { browserZone, zoneOptions } from "@/features/booking/zones";
 import { isEmail } from "@/lib/utils";
+import { CRM_PACKAGES, OFFERED_CRM_PACKAGES, STRATEGY_CALL_URL } from "@/data/portal";
 import { applyAsClient, applyAsVa } from "@/utils/api/applications";
+import { formatCents } from "@/utils/format/money";
 import { fieldErrors } from "@/utils/errors";
 import { useBotCheck } from "./useBotCheck";
 
@@ -227,12 +229,58 @@ function HeardFromField({
 
 // ------------------------------------------------------------------ Become a client
 
+const NOT_SURE = "Not sure yet";
+/** The API matches this value exactly (it sets which service the new portal shows). */
+const WANTS_CRM = "A CRM";
+
 /** The "What do you need help with?" cards. Values are what the API has always received. */
 const NEEDS: Array<{ value: string; icon: IconName; tone: "orange" | "cyan"; title: string; text: string }> = [
+  { value: WANTS_CRM, icon: "pipeline", tone: "orange", title: "Custom CRM", text: "Leads, pipelines and follow-ups, built for your business." },
   { value: "A virtual assistant", icon: "briefcase", tone: "cyan", title: "Needs a VA", text: "Inbox, calendar, support or admin, handled for you." },
-  { value: "A CRM", icon: "pipeline", tone: "orange", title: "Custom CRM", text: "Leads, pipelines and follow-ups, built for your business." },
 ];
-const NOT_SURE = "Not sure yet";
+
+/** "Which CRM?" (shown once they pick Custom CRM): the packages on offer, or not sure yet. */
+const CRM_CHOICES: Array<{ value: string; title: string; text: string; icon: IconName; color: string }> = [
+  ...OFFERED_CRM_PACKAGES.map((k) => ({
+    value: CRM_PACKAGES[k].label,
+    title: CRM_PACKAGES[k].label,
+    text: `${CRM_PACKAGES[k].kind} · from ${formatCents(CRM_PACKAGES[k].priceCents)}`,
+    icon: (k === "growth" ? "pipeline" : "sparkle") as IconName,
+    color: k === "growth" ? "#f97316" : "#7c3aed",
+  })),
+  { value: NOT_SURE, title: "Not sure yet", text: "We'll help you choose on a call", icon: "grid", color: "#4f6280" },
+];
+
+function CrmChoiceField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const chosen = CRM_CHOICES.find((c) => c.value === value);
+  return (
+    <Field label="Which CRM do you want to go with?" htmlFor="ca-crm">
+      <Dropdown
+        id="ca-crm"
+        label="Which CRM do you want to go with?"
+        className="apply-heard"
+        menuClassName="apply-heard__menu"
+        value={value}
+        onChange={onChange}
+        items={CRM_CHOICES.map((c) => ({ value: c.value, label: c.title, meta: c.text, lead: <HeardIcon icon={c.icon} color={c.color} /> }))}
+      >
+        {chosen ? (
+          <>
+            <HeardIcon icon={chosen.icon} color={chosen.color} />
+            <span className="apply-heard__value">{chosen.title}</span>
+          </>
+        ) : (
+          <>
+            <span className="apply-heard__icon apply-heard__icon--empty" aria-hidden="true">
+              <Icon name="pipeline" size={14} strokeWidth={2.2} />
+            </span>
+            <span className="apply-heard__value apply-heard__value--empty">Choose a CRM</span>
+          </>
+        )}
+      </Dropdown>
+    </Field>
+  );
+}
 
 function NeedPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
@@ -285,8 +333,9 @@ function NeedPicker({ value, onChange }: { value: string; onChange: (v: string) 
 function ClientApplyModal({ onClose }: { onClose: () => void }) {
   const bot = useBotCheck("apply_client");
   const honeypot = useRef("");
+  const [redirecting, setRedirecting] = useState(false);
   const [tried, setTried] = useState(false);
-  const [f, setF] = useState({ first: "", last: "", email: "", phone: "", company: "", site: "", interest: "", heard: "", referrer: "", message: "" });
+  const [f, setF] = useState({ first: "", last: "", email: "", phone: "", company: "", site: "", interest: WANTS_CRM, crm: "", readNext: false, heard: "", referrer: "", message: "" });
   const set = (patch: Partial<typeof f>) => setF((d) => ({ ...d, ...patch }));
   const send = useMutation({ mutationFn: applyAsClient, onSettled: bot.reset });
   const api = fieldErrors(send.error);
@@ -295,7 +344,8 @@ function ClientApplyModal({ onClose }: { onClose: () => void }) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     setTried(true);
-    if (!f.first.trim() || !isEmail(f.email) || !siteOk || !bot.ready) return;
+    if (!f.first.trim() || !isEmail(f.email) || !siteOk || !f.readNext || !bot.ready) return;
+    const crm = f.interest === WANTS_CRM ? f.crm : "";
     send.mutate({
       firstName: f.first.trim(),
       lastName: f.last.trim(),
@@ -304,26 +354,38 @@ function ClientApplyModal({ onClose }: { onClose: () => void }) {
       company: f.company.trim(),
       businessWebsite: f.site.trim(),
       interest: f.interest,
+      crmPackage: crm,
       heardFrom: heardFromValue(f.heard, f.referrer),
       message: f.message.trim(),
+      bookCallAcknowledged: f.readNext,
       captchaToken: bot.token,
       website: honeypot.current,
+    }, {
+      // Picked a CRM: straight on to book the strategy call, with their choice as the booking's note.
+      onSuccess: () => {
+        if (!crm) return;
+        setRedirecting(true);
+        const call = new URL(STRATEGY_CALL_URL);
+        call.searchParams.set("notes", `CRM: ${crm}`);
+        window.location.assign(call.href);
+      },
     });
   };
 
   return (
     <ApplyModal
       kind="client"
-      done={send.data?.message ?? ""}
+      done={redirecting ? "" : (send.data?.message ?? "")}
       onClose={onClose}
       onSubmit={submit}
-      sending={send.isPending}
+      sending={send.isPending || redirecting}
       canSend={bot.ready || !tried}
       botNote={tried && !bot.ready ? <span className="field__error">{bot.message}</span> : null}
     >
       <div className="stack stack--12">
         <FormError error={Object.keys(api).length ? null : send.error} />
         <NeedPicker value={f.interest} onChange={(interest) => set({ interest })} />
+        {f.interest === WANTS_CRM && <CrmChoiceField value={f.crm} onChange={(crm) => set({ crm })} />}
         <div className="form-grid">
           <Field label="First name" htmlFor="ca-first" required error={(tried && !f.first.trim() && "Enter your first name.") || api.firstName}>
             <Input id="ca-first" autoComplete="given-name" value={f.first} onChange={(e) => set({ first: e.target.value })} autoFocus />
@@ -362,6 +424,28 @@ function ClientApplyModal({ onClose }: { onClose: () => void }) {
         </Field>
         <Honeypot onChange={(v) => (honeypot.current = v)} />
         {bot.widget}
+        <div className={`apply-next${tried && !f.readNext ? " apply-next--missing" : ""}`} role="note">
+          <div className="apply-next__body">
+            <span className="apply-next__icon" aria-hidden="true">
+              <Icon name="calendar" size={16} strokeWidth={2.2} />
+            </span>
+            <p>
+              <strong>Next: book a call with us</strong>
+              {f.interest === WANTS_CRM && f.crm
+                ? "Once you send your request, we'll take you to our calendar to book a strategy call about your project."
+                : "Once you send your request, book a call with us to talk through your project."}
+            </p>
+          </div>
+          <Checkbox
+            brand
+            className="apply-next__check"
+            checked={f.readNext}
+            onChange={(e) => set({ readNext: e.target.checked })}
+            label="I understand: I'll book a call with GoCWGL to discuss my project."
+            aria-invalid={tried && !f.readNext}
+          />
+          {tried && !f.readNext && <span className="field__error">Tick the box to confirm you’ve read this.</span>}
+        </div>
       </div>
     </ApplyModal>
   );

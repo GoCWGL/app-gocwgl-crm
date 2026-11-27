@@ -10178,6 +10178,71 @@ export interface components {
             /** Summary */
             summary: string;
         };
+        /**
+         * ClientApplicationAnswers
+         * @description What they sent with "Become a client" on the sign-in page.
+         */
+        ClientApplicationAnswers: {
+            /** Submittedat */
+            submittedAt?: string | null;
+            /**
+             * Firstname
+             * @default
+             */
+            firstName?: string;
+            /**
+             * Lastname
+             * @default
+             */
+            lastName?: string;
+            /**
+             * Email
+             * @default
+             */
+            email?: string;
+            /**
+             * Phone
+             * @default
+             */
+            phone?: string;
+            /**
+             * Company
+             * @default
+             */
+            company?: string;
+            /**
+             * Businesswebsite
+             * @default
+             */
+            businessWebsite?: string;
+            /**
+             * Interest
+             * @default
+             */
+            interest?: string;
+            /**
+             * Crmpackage
+             * @default
+             */
+            crmPackage?: string;
+            /**
+             * Heardfrom
+             * @default
+             */
+            heardFrom?: string;
+            /**
+             * Referrername
+             * @default
+             */
+            referrerName?: string;
+            /**
+             * Message
+             * @default
+             */
+            message?: string;
+            /** Bookcallacknowledgedat */
+            bookCallAcknowledgedAt?: string | null;
+        };
         /** ClientApplicationIn */
         ClientApplicationIn: {
             /** Firstname */
@@ -10213,6 +10278,11 @@ export interface components {
              */
             interest?: string;
             /**
+             * Crmpackage
+             * @default
+             */
+            crmPackage?: string;
+            /**
              * Heardfrom
              * @default
              */
@@ -10222,6 +10292,11 @@ export interface components {
              * @default
              */
             message?: string;
+            /**
+             * Bookcallacknowledged
+             * @default false
+             */
+            bookCallAcknowledged?: boolean;
             /** Captchatoken */
             captchaToken?: string | null;
             /**
@@ -11128,6 +11203,7 @@ export interface components {
             archivedAt: string | null;
             /** Tags */
             tags: components["schemas"]["TagOut"][];
+            application?: components["schemas"]["ClientApplicationAnswers"] | null;
             /**
              * Showcrmpackages
              * @default true

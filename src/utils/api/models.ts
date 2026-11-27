@@ -86,6 +86,7 @@ export type ChangePasswordRequest = S["ChangePasswordRequest"];
 export type ChatOut = S["ChatOut"];
 export type ChecklistAdd = S["ChecklistAdd"];
 export type ClientActivityOut = S["ClientActivityOut"];
+export type ClientApplicationAnswers = S["ClientApplicationAnswers"];
 export type ClientApplicationIn = S["ClientApplicationIn"];
 export type ClientAssetsOut = S["ClientAssetsOut"];
 export type ClientAttendanceDay = S["ClientAttendanceDay"];

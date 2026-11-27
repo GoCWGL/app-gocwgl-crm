@@ -444,6 +444,9 @@ export const FUNNEL_PACKAGE_COPY: Record<FunnelPackageKey, { tagline: string; ta
 /** Where "Book a call" sends clients for a CRM build: the CRM discovery call calendar (gets ?package=simple|custom). Invoiced by the team with a Wise payment link. */
 export const CRM_BOOKING_URL = "https://app.gocwgl.com/book/gocwgl-crm-discovery-call";
 
+/** Where "Become a client" on the sign-in page sends someone who picked a CRM, once their request is sent (gets ?notes=). */
+export const STRATEGY_CALL_URL = "https://app.gocwgl.com/book/gocwgl-strategy-call";
+
 /** The CRM packages clients can request (gocwgl.com/pricing/crm). Simple CRM is no longer offered; older Simple requests keep their label. */
 export const OFFERED_CRM_PACKAGES: Array<"growth" | "custom"> = ["growth", "custom"];
 

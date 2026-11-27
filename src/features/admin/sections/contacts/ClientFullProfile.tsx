@@ -5,7 +5,7 @@ import { Avatar, Badge, Button, FolderGlyph, Icon, IconTile, LoadState, type Ico
 import { SOCIAL_LABELS, SOURCE_LABELS, type LeadSource } from "@/data/admin";
 import { avatarTone, toneClass, type Tone } from "@/lib/tones";
 import { cn, copyToClipboard } from "@/lib/utils";
-import type { ContactOut } from "@/utils/api/models";
+import type { ClientApplicationAnswers, ContactOut } from "@/utils/api/models";
 import { canWriteCrm } from "@/utils/auth/session";
 import { formatShort } from "@/utils/format/dates";
 import { formatPerInterval } from "@/utils/format/money";
@@ -161,6 +161,7 @@ function Profile({ c }: { c: ContactOut }) {
           <section className="card vp-card vp-card--flush">
             <ContactOverviewCard contact={c} />
           </section>
+          {c.application && <ApplicationCard app={c.application} />}
           <ClientVasCard contactId={c.id} clientName={businessName(c)} />
           <section className="card vp-card vp-card--flush cw-card">
             <ClientVaWorkCard contactId={c.id} canEdit={canWrite} />
@@ -226,7 +227,20 @@ function Profile({ c }: { c: ContactOut }) {
   );
 }
 
-function ProfileCard({ icon, title, count, children }: { icon: IconName; title: string; count?: number; children: ReactNode }) {
+function ProfileCard({
+  icon,
+  title,
+  count,
+  action,
+  children,
+}: {
+  icon: IconName;
+  title: string;
+  count?: number;
+  /** Right of the title, e.g. "Applied Nov 26". */
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   return (
     <section className="card vp-card">
       <header className="vp-card__head">
@@ -235,9 +249,73 @@ function ProfileCard({ icon, title, count, children }: { icon: IconName; title: 
         </span>
         <h3 className="vp-card__title">{title}</h3>
         {count !== undefined && <span className="vp-card__count">{count}</span>}
+        {action && <span className="u-spacer" />}
+        {action}
       </header>
       {children}
     </section>
+  );
+}
+
+/** "What do you need help with?" as the sign-in page's cards name them. */
+const INTEREST_LABELS: Record<string, string> = { "A CRM": "Custom CRM", "A virtual assistant": "Needs a VA" };
+
+/** Their "Become a client" answers from the sign-in page, every field, as sent (contact details above may have changed since). */
+function ApplicationCard({ app }: { app: ClientApplicationAnswers }) {
+  const none = <span className="vp-empty">—</span>;
+  const text = (v: string | null | undefined) => (v?.trim() ? v : none);
+  const rows: Array<{ icon: IconName; label: string; value: ReactNode }> = [
+    { icon: "user", label: "Name", value: text(`${app.firstName ?? ""} ${app.lastName ?? ""}`.trim()) },
+    { icon: "mail", label: "Email", value: app.email ? <a href={`mailto:${app.email}`}>{app.email}</a> : none },
+    { icon: "phone", label: "Phone", value: text(app.phone) },
+    { icon: "building", label: "Business name", value: text(app.company) },
+    {
+      icon: "link",
+      label: "Website",
+      value: app.businessWebsite ? (
+        <a href={app.businessWebsite} target="_blank" rel="noreferrer">
+          {app.businessWebsite.replace(/^https?:\/\/(www\.)?/, "")}
+        </a>
+      ) : (
+        none
+      ),
+    },
+    { icon: "rocket", label: "Needs help with", value: text(app.interest ? (INTEREST_LABELS[app.interest] ?? app.interest) : "") },
+    ...(app.interest === "A CRM" ? [{ icon: "pipeline" as const, label: "CRM they want", value: text(app.crmPackage) }] : []),
+    { icon: "radio", label: "How they heard about us", value: text(app.heardFrom) },
+    ...(app.referrerName ? [{ icon: "gift" as const, label: "Referred by", value: app.referrerName }] : []),
+    {
+      icon: "calendarCheck",
+      label: "Will book a call",
+      value: app.bookCallAcknowledgedAt ? (
+        <Badge tone="green">Ticked {formatShort(app.bookCallAcknowledgedAt)}</Badge>
+      ) : (
+        <Badge tone="slate">Not ticked</Badge>
+      ),
+    },
+  ];
+  return (
+    <ProfileCard
+      icon="form"
+      title="Client application"
+      action={app.submittedAt ? <span className="text-small">Applied {formatShort(app.submittedAt)}</span> : undefined}
+    >
+      <dl className="vp-details">
+        {rows.map((r) => (
+          <div key={r.label} className="vp-details__row">
+            <dt>
+              <Icon name={r.icon} size={14} />
+              {r.label}
+            </dt>
+            <dd>{r.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="stack stack--4">
+        <span className="vp-app__label">About their business</span>
+        {app.message?.trim() ? <p className="va-pre">{app.message}</p> : <span className="vp-empty">They didn’t write anything.</span>}
+      </div>
+    </ProfileCard>
   );
 }
 
